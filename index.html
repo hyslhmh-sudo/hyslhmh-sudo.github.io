@@ -134,6 +134,18 @@
 
   .tema .tipo { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--c); }
   .tema .tipo .ms { font-size: 15px; }
+  /* Videos */
+  .videos { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .video { background: var(--blanco); border: 1px solid var(--linea); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+  .video-mini { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 0; background: #0D313F; cursor: pointer; }
+  .video-mini img, .video-mini iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
+  .video-mini .play { position: absolute; inset: 0; margin: auto; width: 64px; height: 64px; border-radius: 50%; background: rgba(13,49,63,.82); color: #fff; display: grid; place-items: center; transition: transform .15s, background .15s; }
+  .video-mini .play .ms { font-size: 38px; }
+  .video-mini:hover .play { transform: scale(1.08); background: #B4533E; }
+  .video-txt { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .video-txt h3 { margin: 0; font-size: 16.5px; line-height: 1.3; color: var(--az); }
+  .video-txt p { margin: 0; color: var(--mu); font-size: 14.5px; }
+  .video-txt a { margin-top: 2px; }
   /* Norma destacada (CCT) */
   .destacada { position: relative; overflow: hidden; background: linear-gradient(140deg, #0D313F 0%, #17485A 70%, #1F5A5E 100%); color: #fff; border-radius: 22px; padding: 26px 26px 24px; margin-bottom: 22px; }
   .destacada::after { content: ''; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(94,156,124,.35), transparent 70%); pointer-events: none; }
@@ -235,7 +247,7 @@
 <script>
 // Contenidos: planilla «PORTAL PÚBLICO HyS · contenidos» (pública, solo lectura). Se edita allá; acá solo se muestra.
 const PLANILLA = '1W8OlPk0lPxWjrZ9yGJzbx6iLQsm8NJ7z6xMOw_jE95c';
-const HOJAS = ['PORTADA', 'CAPACITACIONES', 'NORMATIVA', 'RECOMENDACIONES', 'AUTOSEGURO', 'RECURSOS', 'ACCESOS'];
+const HOJAS = ['PORTADA', 'CAPACITACIONES', 'NORMATIVA', 'RECOMENDACIONES', 'AUTOSEGURO', 'RECURSOS', 'VIDEOS', 'ACCESOS'];
 const GUARDADO = 'portalHyS_contenidos_v1';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -264,9 +276,9 @@ function leerHoja(nombre) {
 }
 
 const ATAJOS = { capacitaciones: ['school', 'Capacitaciones'], salud: ['health_and_safety', 'Salud del trabajador'], recomendaciones: ['verified_user', 'Recomendaciones'],
-  normativa: ['balance', 'Derechos y obligaciones'], recursos: ['lightbulb', 'Información y prevención'], accesos: ['handyman', 'Herramientas'] };
+  normativa: ['balance', 'Derechos y obligaciones'], recursos: ['lightbulb', 'Información y prevención'], videos: ['smart_display', 'Videos'], accesos: ['handyman', 'Herramientas'] };
 // Orden de los tarjetones del inicio
-const ORDEN_INICIO = ['capacitaciones', 'accesos', 'normativa', 'salud', 'recursos', 'recomendaciones'];
+const ORDEN_INICIO = ['capacitaciones', 'accesos', 'normativa', 'salud', 'recursos', 'videos', 'recomendaciones'];
 let mostradas = [];
 let SECC = [];
 function seccion(id, icono, titulo, intro, cuerpo) {
@@ -379,6 +391,16 @@ function dibujar(D) {
         '<ul>' + items.map(itemRec).join('') + '</ul></details>'; }).join('') + '</div>'
     : '');
 
+  // Videos: capacitaciones grabadas (YouTube). Se ven con la miniatura y se reproducen en la misma página al tocarlas
+  const idYT = u => (String(u || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/) || [])[1] || '';
+  const vids = ordenar((D.VIDEOS || []).filter(visible)).filter(v => idYT(v.ENLACE));
+  html += seccion('videos', 'smart_display', 'Videos', 'Capacitaciones grabadas de Higiene y Seguridad. Tocá un video para mirarlo acá mismo.',
+    vids.length ? '<div class="videos">' + vids.map(v => { const id = idYT(v.ENLACE);
+      return '<article class="video"><button class="video-mini" data-yt="' + id + '" aria-label="Reproducir: ' + esc(v.TITULO) + '"><img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy"><span class="play"><span class="ms">play_arrow</span></span></button>' +
+        '<div class="video-txt">' + (v.TEMA ? '<span class="etiqueta">' + esc(v.TEMA) + '</span>' : '') + '<h3>' + esc(v.TITULO) + '</h3>' + (v.DESCRIPCION ? '<p>' + esc(v.DESCRIPCION) + '</p>' : '') +
+        '<a class="chico" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Ver en YouTube' + (v.CANAL ? ' · ' + esc(v.CANAL) : '') + '</a></div></article>'; }).join('') + '</div>'
+    : '');
+
   // Accesos
   const icAcc = t => /agenda|capacit/i.test(t) ? 'event_available' : /residu/i.test(t) ? 'recycling' : /diagn|auditor/i.test(t) ? 'fact_check' : /gesti/i.test(t) ? 'admin_panel_settings' : /establec/i.test(t) ? 'local_hospital' : 'login';
   const acc = ordenar((D.ACCESOS || []).filter(visible)).filter(a => enlace(a.ENLACE));
@@ -390,7 +412,7 @@ function dibujar(D) {
 
   // Inicio: un tarjetón por sección; al tocarlo se abre solo esa sección (y «Inicio» vuelve)
   const TILE = { capacitaciones: ['#0D313F', '#E3EEF2'], salud: ['#3B7F67', '#E2F1EA'], normativa: ['#B26A12', '#FBEFDC'],
-    recomendaciones: ['#2F7F86', '#DDF0F0'], recursos: ['#6B5CA5', '#ECE9F6'], accesos: ['#2C5D9E', '#E3EBF7'] };
+    recomendaciones: ['#2F7F86', '#DDF0F0'], recursos: ['#6B5CA5', '#ECE9F6'], videos: ['#B4533E', '#FAE7E1'], accesos: ['#2C5D9E', '#E3EBF7'] };
   const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const RES = {
     capacitaciones: [caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad', caps.length ? 'Inscribite' : ''],
@@ -398,6 +420,7 @@ function dibujar(D) {
     normativa: ['Convenio colectivo, leyes, decretos y resoluciones: qué te corresponde y qué te toca cumplir', pl(nor.length + dest.length, 'norma', 'normas')],
     salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
     recursos: ['Riesgos de tu trabajo y cómo cuidarte: ergonomía, riesgo biológico, químicos, violencia laboral y más', pl(temasRec.length, 'tema', 'temas')],
+    videos: ['Capacitaciones grabadas de Higiene y Seguridad para mirar cuando quieras', pl(vids.length, 'video', 'videos')],
     recomendaciones: ['Medidas simples para cuidarte en el trabajo', pl(rec.length, 'recomendación', 'recomendaciones')] };
   SECC.sort((x, y) => ORDEN_INICIO.indexOf(x) - ORDEN_INICIO.indexOf(y));
   const inicio = '<section id="inicio" class="vista"><div class="tiles">' + SECC.map(id => { const t = TILE[id] || ['#5894A7', '#E3EEF2'], r = RES[id] || ['', ''];
@@ -421,7 +444,9 @@ window.addEventListener('hashchange', () => { cerrarTemas(); mostrarVista(true);
 // Tarjetas de tema plegables: se abre una por vez, y se cierran al tocar fuera de ellas
 function cerrarTemas(salvo) { document.querySelectorAll('details.tema[open]').forEach(d => { if (d !== salvo) d.open = false; }); }
 document.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details.tema') && d.open) cerrarTemas(d); }, true);
-document.addEventListener('click', e => { if (!e.target.closest('details.tema')) cerrarTemas(); });
+document.addEventListener('click', e => { if (!e.target.closest('details.tema')) cerrarTemas();
+  const b = e.target.closest('.video-mini'); if (!b) return;
+  b.outerHTML = '<div class="video-mini"><iframe src="https://www.youtube-nocookie.com/embed/' + b.dataset.yt + '?autoplay=1&rel=0" title="Video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>'; });
 
 (async function () {
   let guardado = null;
