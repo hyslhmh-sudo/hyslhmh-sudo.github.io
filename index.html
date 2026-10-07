@@ -17,32 +17,36 @@
     --tx: #2E3D44; --mu: #5B6B73; --linea: #DCE5E9; --radio: 14px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
   body { margin: 0; background: var(--fondo); color: var(--tx); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.55; }
   a { color: var(--az); }
   .ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased; width: 1em; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
   .envoltura { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
 
   /* Cabecera */
-  header.portada { background: var(--az); color: #fff; position: relative; overflow: hidden; }
-  header.portada::after { content: ''; position: absolute; right: -120px; top: -120px; width: 420px; height: 420px; border-radius: 50%; border: 60px solid rgba(88,148,167,.18); pointer-events: none; }
-  .marca { display: flex; align-items: center; gap: 12px; padding-top: 22px; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #BFD6DE; }
-  .marca .escudo { width: 40px; height: 40px; border-radius: 10px; background: var(--pa); display: grid; place-items: center; color: #fff; }
-  .portada h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1.1; margin: 28px 0 8px; font-weight: 800; letter-spacing: -.01em; max-width: 760px; }
-  .portada .sub { font-size: clamp(17px, 2.6vw, 21px); color: #CFE1E7; margin: 0 0 14px; font-weight: 500; }
-  .portada .pres { max-width: 720px; color: #E4EEF1; margin: 0 0 28px; }
-  nav.atajos { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 28px; position: relative; z-index: 1; }
-  nav.atajos a { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; border: 1px solid rgba(255,255,255,.18); }
-  nav.atajos a:hover { background: rgba(255,255,255,.2); }
-  nav.atajos .ms { font-size: 19px; }
+  header.portada { background: linear-gradient(160deg, #0D313F 0%, #11404F 100%); color: #fff; position: relative; }
+  .marca { display: flex; align-items: center; gap: 10px; padding-top: 26px; font-weight: 700; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: #A9C9D4; }
+  .marca .escudo { width: 34px; height: 34px; border-radius: 9px; background: rgba(88,148,167,.25); border: 1px solid rgba(169,201,212,.35); display: grid; place-items: center; color: #DCEBF0; }
+  .marca .escudo .ms { font-size: 20px; }
+  .portada h1 { font-size: clamp(32px, 6.4vw, 52px); line-height: 1.08; margin: 30px 0 10px; font-weight: 800; letter-spacing: -.02em; max-width: 780px; }
+  .portada .sub { font-size: clamp(17px, 2.6vw, 21px); color: #CFE1E7; margin: 0 0 12px; font-weight: 500; }
+  .portada .sub:empty { display: none; }
+  .portada .pres { max-width: 680px; color: #D6E6EB; margin: 0; font-size: 17px; }
+  .pulso { display: block; width: 100%; height: 54px; margin-top: 30px; }
+  nav.atajos { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--linea); }
+  nav.atajos .envoltura { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 10px; padding-bottom: 10px; }
+  nav.atajos .envoltura::-webkit-scrollbar { display: none; }
+  nav.atajos a { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; color: var(--az); text-decoration: none; font-weight: 700; font-size: 14px; background: var(--pa-claro); }
+  nav.atajos a:hover { background: #D2E4EA; }
+  nav.atajos .ms { font-size: 19px; color: var(--pa); }
 
   .aviso { background: #FFF6E5; border-left: 5px solid #B7791F; color: #5C3D06; padding: 14px 18px; border-radius: 10px; margin: 24px 0 0; font-weight: 600; }
 
   /* Secciones */
   main { padding-bottom: 40px; }
   section.bloque { margin-top: 44px; }
-  .bloque > h2 { display: flex; align-items: center; gap: 10px; font-size: 24px; color: var(--az); margin: 0 0 4px; font-weight: 800; }
-  .bloque > h2 .ms { color: var(--pa); font-size: 28px; }
+  .bloque > h2 { display: flex; align-items: center; gap: 12px; font-size: 24px; color: var(--az); margin: 0 0 4px; font-weight: 800; }
+  .bloque > h2 .ms { color: var(--az); background: var(--pa-claro); font-size: 24px; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: 0 0 42px; }
   .bloque > .intro { color: var(--mu); margin: 0 0 18px; }
   .grilla { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
   .tarjeta { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -79,6 +83,31 @@
   .norma a { font-weight: 700; font-size: 14px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
   .norma a .ms { font-size: 18px; }
 
+
+  /* Salud del trabajador */
+  .nota-azul { display: flex; gap: 12px; align-items: flex-start; background: var(--pa-claro); border-left: 5px solid var(--pa); border-radius: 10px; padding: 14px 16px; margin-bottom: 6px; }
+  .nota-azul .ms { color: var(--az); margin-top: 1px; }
+  .parrafo { margin: 0; max-width: 820px; }
+  .acordeon { display: flex; flex-direction: column; gap: 8px; }
+  .paso-ac { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; }
+  .paso-ac summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; font-weight: 700; color: var(--az); min-height: 44px; }
+  .paso-ac summary::-webkit-details-marker { display: none; }
+  .paso-ac summary:hover { background: #F7FAFB; }
+  .paso-ac .num { flex: 0 0 32px; height: 32px; border-radius: 50%; background: var(--pa); color: #fff; display: grid; place-items: center; font-weight: 800; }
+  .paso-ac .tit { flex: 1; min-width: 0; }
+  .paso-ac .chev { color: var(--pa); transition: transform .2s; }
+  .paso-ac[open] .chev { transform: rotate(180deg); }
+  .paso-ac[open] summary { border-bottom: 1px solid var(--linea); }
+  .paso-ac .resp { padding: 14px 16px 16px 62px; }
+  .contactos { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+  .tel { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tel .linea { font-size: 14px; color: var(--mu); font-weight: 600; }
+  .tel a { font-size: 22px; font-weight: 800; color: var(--az); text-decoration: none; }
+  .tel.destacado { background: var(--az); border-color: var(--az); }
+  .tel.destacado .linea, .tel.destacado .chico { color: #BFD6DE; }
+  .tel.destacado a { color: #fff; }
+  @media (max-width: 560px) { .paso-ac .resp { padding-left: 16px; } }
+
   /* Accidentes */
   .pasos { counter-reset: paso; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
   .paso { counter-increment: paso; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 18px 18px 18px 62px; position: relative; }
@@ -110,18 +139,16 @@
   <div class="envoltura">
     <div class="marca"><span class="escudo"><span class="ms">health_and_safety</span></span>Servicio de Higiene y Seguridad Laboral</div>
     <h1 id="titulo">Higiene y Seguridad Laboral</h1>
-    <p class="sub" id="subtitulo">Establecimientos de salud del Chubut</p>
+    <p class="sub" id="subtitulo"></p>
     <p class="pres" id="presentacion"></p>
-    <nav class="atajos" aria-label="Secciones">
-      <a href="#capacitaciones"><span class="ms">school</span>Capacitaciones</a>
-      <a href="#accidentes"><span class="ms">medical_services</span>Accidentes de trabajo</a>
-      <a href="#recomendaciones"><span class="ms">verified_user</span>Recomendaciones</a>
-      <a href="#normativa"><span class="ms">gavel</span>Normativa</a>
-      <a href="#recursos"><span class="ms">folder_open</span>Recursos</a>
-      <a href="#accesos"><span class="ms">login</span>Accesos</a>
-    </nav>
   </div>
+  <svg class="pulso" viewBox="0 0 1200 54" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="gp" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#5894A7" stop-opacity=".15"/><stop offset=".35" stop-color="#5894A7"/><stop offset=".7" stop-color="#5E9C7C"/><stop offset="1" stop-color="#5E9C7C" stop-opacity=".15"/></linearGradient></defs>
+    <polyline fill="none" stroke="url(#gp)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"
+      points="0,34 380,34 392,28 402,40 414,8 426,48 436,30 446,34 700,34 712,26 722,42 736,4 750,50 760,30 770,34 1200,34"/>
+  </svg>
 </header>
+<nav class="atajos" aria-label="Secciones"><div class="envoltura" id="atajos"></div></nav>
 
 <main class="envoltura">
   <div id="aviso"></div>
@@ -167,15 +194,21 @@ function leerHoja(nombre) {
   });
 }
 
+const ATAJOS = { capacitaciones: ['school', 'Capacitaciones'], salud: ['health_and_safety', 'Salud del trabajador'], recomendaciones: ['verified_user', 'Recomendaciones'],
+  normativa: ['gavel', 'Normativa'], recursos: ['folder_open', 'Recursos'], accesos: ['apps', 'Accesos'] };
+let mostradas = [];
 function seccion(id, icono, titulo, intro, cuerpo) {
+  if (!cuerpo) return '';                 // sección sin filas visibles: no se muestra
+  mostradas.push(id);
   return '<section class="bloque" id="' + id + '"><h2><span class="ms">' + icono + '</span>' + esc(titulo) + '</h2>' + (intro ? '<p class="intro">' + esc(intro) + '</p>' : '') + cuerpo + '</section>';
 }
 const vacio = t => '<div class="vacio">' + esc(t) + '</div>';
 
 function dibujar(D) {
+  mostradas = [];
   const P = {}; (D.PORTADA || []).forEach(f => { if (f.CLAVE) P[String(f.CLAVE).trim().toUpperCase()] = String(f.VALOR || '').trim(); });
   if (P.TITULO) { $('titulo').textContent = P.TITULO; document.title = P.TITULO + ' · Salud Chubut'; }
-  if (P.SUBTITULO) $('subtitulo').textContent = P.SUBTITULO;
+  $('subtitulo').textContent = P.SUBTITULO || '';
   $('presentacion').textContent = P.PRESENTACION || '';
   $('aviso').innerHTML = P.AVISO ? '<div class="aviso" role="status">' + esc(P.AVISO) + '</div>' : '';
   $('pie').textContent = P.PIE || 'Servicio de Higiene y Seguridad Laboral';
@@ -195,19 +228,31 @@ function dibujar(D) {
     : vacio('Por ahora no hay inscripciones abiertas. Las próximas jornadas se publican acá.');
   let html = seccion('capacitaciones', 'school', 'Próximas capacitaciones', 'Jornadas de Higiene y Seguridad con inscripción abierta.', cuerpoCaps);
 
-  // Accidentes de trabajo y Autoseguro
-  const auto = ordenar((D.AUTOSEGURO || []).filter(visible));
-  html += seccion('accidentes', 'medical_services', 'Accidentes de trabajo', 'Qué hacer si tenés un accidente de trabajo y cómo interviene el Autoseguro Público Provincial.',
-    auto.length ? '<div class="pasos">' + auto.map(a => '<div class="paso"><h3>' + esc(a.TITULO) + '</h3><p>' + esc(a.TEXTO) + '</p>' +
-      (enlace(a.ENLACE) ? '<p style="margin-top:8px"><a href="' + esc(enlace(a.ENLACE)) + '" target="_blank" rel="noopener">Más información</a></p>' : '') + '</div>').join('') + '</div>'
-    : vacio('Información en preparación.'));
+  // Salud del trabajador (pestaña AUTOSEGURO): aviso, introducción, primeras acciones, teléfonos, correo y enlaces
+  const st = ordenar((D.AUTOSEGURO || []).filter(visible)), bq = t => st.filter(f => String(f.BLOQUE || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === t);
+  const tarjetaEnlace = (f, icono) => enlace(f.ENLACE) ? '<a class="tarjeta acceso" href="' + esc(enlace(f.ENLACE)) + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">' + icono + '</span></span>' +
+    '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>' + esc(f.TITULO) + '</h3>' + (f.TEXTO ? '<span class="chico">' + esc(f.TEXTO) + '</span>' : '') + '</span><span class="ms ir">open_in_new</span></a>' : '';
+  let cuerpoSt = '';
+  bq('aviso').forEach(f => { cuerpoSt += '<div class="nota-azul"><span class="ms">info</span><div>' + (f.TITULO ? '<b>' + esc(f.TITULO) + '.</b> ' : '') + esc(f.TEXTO) + '</div></div>'; });
+  bq('introduccion').forEach(f => { cuerpoSt += (f.TITULO ? '<div class="subtitulo">' + esc(f.TITULO) + '</div>' : '') + '<p class="parrafo">' + esc(f.TEXTO) + '</p>'; });
+  const pasos = bq('paso');
+  if (pasos.length) cuerpoSt += '<div class="subtitulo">Primeras acciones ante un accidente laboral</div><div class="acordeon">' + pasos.map((f, i) =>
+    '<details class="paso-ac"' + (i === 0 ? ' open' : '') + '><summary><span class="num">' + (i + 1) + '</span><span class="tit">' + esc(f.TITULO) + '</span><span class="ms chev">expand_more</span></summary><div class="resp">' + esc(f.TEXTO) + '</div></details>').join('') + '</div>';
+  const tels = bq('telefono'), correos = bq('correo');
+  if (tels.length || correos.length) cuerpoSt += '<div class="subtitulo">Teléfonos y contacto</div><div class="contactos">' +
+    tels.map((f, i) => '<div class="tel' + (i === 0 ? ' destacado' : '') + '"><span class="linea">' + esc(f.TITULO) + '</span><a href="tel:' + esc(String(f.DATO || '').replace(/[^\d+]/g, '')) + '">' + esc(f.DATO) + '</a><span class="chico">' + esc(f.HORARIO && f.HORARIO !== '—' ? f.HORARIO : '') + '</span></div>').join('') +
+    correos.map(f => '<div class="tel"><span class="linea">' + esc(f.TITULO) + '</span><a href="mailto:' + esc(f.DATO) + '" style="font-size:15px;word-break:break-all">' + esc(f.DATO) + '</a></div>').join('') + '</div>';
+  const links = bq('enlace').map(f => tarjetaEnlace(f, 'shield')).filter(Boolean);
+  if (links.length) cuerpoSt += '<div class="grilla" style="margin-top:14px">' + links.join('') + '</div>';
+  bq('vacunacion').forEach(f => { cuerpoSt += '<div class="subtitulo">' + esc(f.TITULO) + '</div>' + '<div class="grilla">' + tarjetaEnlace({ TITULO: 'Ver ' + String(f.TITULO || 'esquema').toLowerCase(), TEXTO: f.TEXTO, ENLACE: f.ENLACE }, 'vaccines') + '</div>'; });
+  html += seccion('salud', 'health_and_safety', 'Salud del trabajador', 'Qué hacer ante un accidente de trabajo o una enfermedad profesional, y cuidados de la salud en el trabajo.', cuerpoSt);
 
   // Recomendaciones
   const rec = ordenar((D.RECOMENDACIONES || []).filter(visible));
   html += seccion('recomendaciones', 'verified_user', 'Recomendaciones', 'Medidas simples para cuidarte en el trabajo.',
     rec.length ? '<div class="grilla">' + rec.map(r => '<div class="tarjeta">' + (r.TEMA ? '<span class="etiqueta">' + esc(r.TEMA) + '</span>' : '') + '<h3>' + esc(r.TITULO) + '</h3><p>' + esc(r.TEXTO) + '</p>' +
       (r.BASE_NORMATIVA ? '<span class="chico">Base normativa: ' + esc(r.BASE_NORMATIVA) + '</span>' : '') + '</div>').join('') + '</div>'
-    : vacio('Recomendaciones en preparación.'));
+    : '');
 
   // Normativa (agrupada por tema)
   const nor = ordenar((D.NORMATIVA || []).filter(visible)), temas = [];
@@ -216,7 +261,7 @@ function dibujar(D) {
     nor.length ? '<div class="normas">' + temas.map(t => '<div class="grupo-norma"><h3>' + esc(t) + '</h3>' + nor.filter(n => String(n.TEMA || 'General').trim() === t).map(n =>
       '<div class="norma"><span><b>' + esc(n.NORMA) + '</b>' + (n.DESCRIPCION ? ' · ' + esc(n.DESCRIPCION) : '') + '</span>' +
       (enlace(n.ENLACE) ? '<a href="' + esc(enlace(n.ENLACE)) + '" target="_blank" rel="noopener">Ver texto<span class="ms">open_in_new</span></a>' : '') + '</div>').join('') + '</div>').join('') + '</div>'
-    : vacio('Normativa en preparación.'));
+    : '');
 
   // Recursos y videos
   const icRec = t => /video/i.test(t) ? 'play_circle' : /formul/i.test(t) ? 'description' : /afiche|cartel/i.test(t) ? 'image' : /gu[ií]a|manual/i.test(t) ? 'menu_book' : 'article';
@@ -225,18 +270,19 @@ function dibujar(D) {
     recs.length ? '<div class="grilla">' + recs.map(r => '<div class="tarjeta"><span class="etiqueta"><span class="ms" style="font-size:16px;vertical-align:-3px">' + icRec(r.TIPO) + '</span> ' + esc(r.TIPO || 'Recurso') + '</span><h3>' + esc(r.TITULO) + '</h3>' +
       (r.DESCRIPCION ? '<p>' + esc(r.DESCRIPCION) + '</p>' : '') + (r.TEMA ? '<span class="chico">' + esc(r.TEMA) + '</span>' : '') +
       (enlace(r.ENLACE) ? '<a class="boton sec" href="' + esc(enlace(r.ENLACE)) + '" target="_blank" rel="noopener">' + (/video/i.test(r.TIPO) ? 'Ver video' : 'Abrir') + '<span class="ms">arrow_forward</span></a>' : '') + '</div>').join('') + '</div>'
-    : vacio('Recursos en preparación.'));
+    : '');
 
   // Accesos
   const icAcc = t => /agenda|capacit/i.test(t) ? 'event_available' : /residu/i.test(t) ? 'recycling' : /diagn|auditor/i.test(t) ? 'fact_check' : /gesti/i.test(t) ? 'admin_panel_settings' : /establec/i.test(t) ? 'local_hospital' : 'login';
   const acc = ordenar((D.ACCESOS || []).filter(visible)).filter(a => enlace(a.ENLACE));
-  html += seccion('accesos', 'login', 'Accesos', 'Sistemas de Higiene y Seguridad. Algunos piden la clave de tu establecimiento.',
+  html += seccion('accesos', 'apps', 'Accesos', 'Aplicaciones de Higiene y Seguridad para el personal.',
     acc.length ? '<div class="grilla">' + acc.map(a => '<a class="tarjeta acceso" href="' + esc(enlace(a.ENLACE)) + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">' + icAcc(a.TITULO) + '</span></span>' +
       '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>' + esc(a.TITULO) + '</h3>' + (a.PARA_QUIEN ? '<span class="chico">' + esc(a.PARA_QUIEN) + '</span>' : '') + (a.DESCRIPCION ? '<span>' + esc(a.DESCRIPCION) + '</span>' : '') + '</span>' +
       '<span class="ms ir">chevron_right</span></a>').join('') + '</div>'
-    : vacio('Accesos en preparación.'));
+    : '');
 
   $('contenido').innerHTML = html;
+  $('atajos').innerHTML = mostradas.map(id => '<a href="#' + id + '"><span class="ms">' + ATAJOS[id][0] + '</span>' + ATAJOS[id][1] + '</a>').join('');
 }
 
 (async function () {
