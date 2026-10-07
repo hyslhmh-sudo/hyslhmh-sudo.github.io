@@ -127,6 +127,31 @@
   details.tema > summary:hover { filter: brightness(.985); }
   @media (max-width: 560px) { .tile { min-height: 0; padding: 18px; } .tile h3 { font-size: 19px; } .tile .fondo { font-size: 120px; } }
 
+
+  /* Norma destacada (CCT) */
+  .destacada { position: relative; overflow: hidden; background: linear-gradient(140deg, #0D313F 0%, #17485A 70%, #1F5A5E 100%); color: #fff; border-radius: 22px; padding: 26px 26px 24px; margin-bottom: 22px; }
+  .destacada::after { content: ''; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(94,156,124,.35), transparent 70%); pointer-events: none; }
+  .dest-cab { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+  .dest-ic { flex: 0 0 52px; height: 52px; border-radius: 15px; background: #E8B04B; color: #0D313F; display: grid; place-items: center; }
+  .dest-ic .ms { font-size: 28px; }
+  .dest-eti { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #E8B04B; }
+  .destacada h3 { margin: 2px 0 0; font-size: clamp(19px, 3vw, 24px); line-height: 1.2; }
+  .dest-desc { margin: 14px 0 0; color: #D6E6EB; max-width: 820px; position: relative; z-index: 1; }
+  .dest-sub { margin: 20px 0 10px; font-size: 13px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #A9C9D4; }
+  .dest-pts { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); position: relative; z-index: 1; }
+  .dest-pts li { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+  .dest-pts b { color: #E8B04B; font-size: 13.5px; }
+  .dest-pts span { color: #E4EEF1; font-size: 14.5px; line-height: 1.45; }
+  .destacada .boton { background: #E8B04B; color: #0D313F; position: relative; z-index: 1; }
+  .destacada .boton:hover { background: #F0C46E; }
+  .tile-dest { display: flex; align-items: center; gap: 16px; padding: 18px 22px; margin-bottom: 16px; border-radius: 22px; text-decoration: none; color: #fff; background: linear-gradient(120deg, #0D313F 0%, #17485A 75%, #1F5A5E 100%); transition: transform .15s, box-shadow .15s; }
+  .tile-dest:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -14px rgba(13,49,63,.5); }
+  .td-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .td-txt b { font-size: 19px; line-height: 1.25; }
+  .td-txt > span:last-child { color: #CFE1E7; font-size: 14.5px; }
+  .tile-dest > .ms { color: #E8B04B; }
+  @media (max-width: 560px) { .destacada { padding: 20px 18px; } .tile-dest { padding: 16px; align-items: flex-start; } .tile-dest > .ms { display: none; } }
+
   /* Salud del trabajador */
   .nota-azul { display: flex; gap: 12px; align-items: flex-start; background: var(--pa-claro); border-left: 5px solid var(--pa); border-radius: 10px; padding: 14px 16px; margin-bottom: 6px; }
   .nota-azul .ms { color: var(--az); margin-top: 1px; }
@@ -314,10 +339,18 @@ function dibujar(D) {
   const estiloTema = t => COL_TEMA.find(x => x[0].test(t)) || [null, '#5894A7', '#E3EEF2', 'description'];
   const itemNorma = n => { const u = enlace(n.ENLACE), dentro = '<span class="punto"></span><span class="txt"><b>' + esc(n.NORMA) + '</b>' + (n.DESCRIPCION ? '<span>' + esc(n.DESCRIPCION) + '</span>' : '') + '</span>';
     return '<li>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener" title="Abrir el texto">' + dentro + '<span class="ms flecha">north_east</span></a>' : '<span>' + dentro + '</span>') + '</li>'; };
-  const nor = ordenar((D.NORMATIVA || []).filter(visible)), temas = [];
+  const esDest = n => /^s[ií]$/i.test(String(n.DESTACADO || '').trim());
+  const dest = ordenar((D.NORMATIVA || []).filter(visible).filter(esDest));
+  const nor = ordenar((D.NORMATIVA || []).filter(visible).filter(n => !esDest(n))), temas = [];
+  // Norma destacada (columna DESTACADO = Sí): tarjeta grande arriba, con sus puntos clave (PUNTOS_CLAVE, separados por «|»)
+  const destHtml = dest.map(n => { const u = enlace(n.ENLACE), pts = String(n.PUNTOS_CLAVE || '').split('|').map(x => x.trim()).filter(Boolean);
+    return '<article class="destacada"><div class="dest-cab"><span class="dest-ic"><span class="ms">handshake</span></span><div><span class="dest-eti">' + esc(n.TEMA || 'Destacado') + '</span><h3>' + esc(n.NORMA) + '</h3></div></div>' +
+      (n.DESCRIPCION ? '<p class="dest-desc">' + esc(n.DESCRIPCION) + '</p>' : '') +
+      (pts.length ? '<div class="dest-sub">Lo que dice sobre higiene y seguridad</div><ul class="dest-pts">' + pts.map(x => { const m = x.match(/^(Arts?\.[^·]*)·\s*(.*)$/); return '<li>' + (m ? '<b>' + esc(m[1].trim()) + '</b><span>' + esc(m[2]) + '</span>' : '<span>' + esc(x) + '</span>') + '</li>'; }).join('') + '</ul>' : '') +
+      (u ? '<a class="boton" href="' + esc(u) + '" target="_blank" rel="noopener"><span class="ms">description</span>Abrir el convenio completo</a>' : '') + '</article>'; }).join('');
   nor.forEach(n => { const t = String(n.TEMA || 'General').trim(); if (temas.indexOf(t) < 0) temas.push(t); });
   html += seccion('normativa', 'gavel', 'Normativa y guías', 'Leyes, convenios y guías de referencia en las que se basa el trabajo de Higiene y Seguridad. Tocá una norma para abrir su texto oficial.',
-    nor.length ? '<div class="temas">' + temas.map(t => {
+    (nor.length || dest.length) ? destHtml + '<div class="temas">' + temas.map(t => {
       const items = nor.filter(n => String(n.TEMA || 'General').trim() === t), e = estiloTema(t);
       return '<details class="tema" style="--c:' + e[1] + ';--f:' + e[2] + '"><summary class="tema-cab"><span class="tema-ic"><span class="ms">' + e[3] + '</span></span><h3>' + esc(t) + '</h3><span class="tema-n">' + items.length + '</span><span class="ms chev">expand_more</span></summary>' +
         '<ul>' + items.map(itemNorma).join('') + '</ul></details>'; }).join('') + '</div>'
@@ -348,7 +381,7 @@ function dibujar(D) {
   const RES = {
     capacitaciones: [caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad', caps.length ? 'Inscribite' : ''],
     salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
-    normativa: ['Leyes, convenios OIT, OMS y guías de la SRT', pl(nor.length, 'documento', 'documentos') + ' · ' + pl(temas.length, 'tema', 'temas')],
+    normativa: ['Convenio Colectivo de Salud, leyes, convenios OIT, OMS y guías de la SRT', pl(nor.length + dest.length, 'documento', 'documentos')],
     recomendaciones: ['Medidas simples para cuidarte en el trabajo', pl(rec.length, 'recomendación', 'recomendaciones')],
     recursos: ['Guías, afiches, formularios y videos', pl(recs.length, 'recurso', 'recursos')],
     accesos: ['Aplicaciones de Higiene y Seguridad', pl(acc.length, 'aplicación', 'aplicaciones')] };
@@ -356,7 +389,8 @@ function dibujar(D) {
     return '<a class="tile' + (id === 'capacitaciones' && caps.length ? ' destacado' : '') + '" href="#' + id + '" style="--c:' + t[0] + ';--f:' + t[1] + '">' +
       '<span class="ms fondo">' + ATAJOS[id][0] + '</span><span class="tile-ic"><span class="ms">' + ATAJOS[id][0] + '</span></span>' +
       '<h3>' + esc(ATAJOS[id][1]) + '</h3><p>' + esc(r[0]) + '</p><span class="tile-pie">' + (r[1] ? '<span class="tile-n">' + esc(r[1]) + '</span>' : '<span></span>') + '<span class="ms">arrow_forward</span></span></a>'; }).join('') + '</div></section>';
-  $('contenido').innerHTML = inicio + html;
+  const inicioDest = dest.length ? '<a class="tile-dest" href="#normativa"><span class="dest-ic"><span class="ms">handshake</span></span><span class="td-txt"><span class="dest-eti">' + esc(dest[0].TEMA || 'Destacado') + '</span><b>' + esc(dest[0].NORMA) + '</b><span>Qué dice sobre higiene y seguridad: condiciones de trabajo, exámenes periódicos, tareas insalubres y servicio de HyS en cada hospital.</span></span><span class="ms">arrow_forward</span></a>' : '';
+  $('contenido').innerHTML = inicio.replace('<div class="tiles">', inicioDest + '<div class="tiles">') + html;
   mostrarVista(false);
 }
 
