@@ -17,7 +17,7 @@
     --tx: #2E3D44; --mu: #5B6B73; --linea: #DCE5E9; --radio: 14px;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  html { scroll-padding-top: 16px; }
   body { margin: 0; background: var(--fondo); color: var(--tx); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.55; }
   a { color: var(--az); }
   .ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased; width: 1em; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
@@ -99,6 +99,34 @@
   .tema details:not([open]) > summary .menos { display: none; }
   .tema details > ul { border-top: 1px solid #EEF3F5; padding-top: 0; }
 
+
+  /* Inicio: tarjetones de sección */
+  #inicio { margin-top: 34px; }
+  .tiles { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+  .tile { --c: var(--az); --f: var(--pa-claro); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 6px; min-height: 196px; padding: 22px 22px 18px; border-radius: 22px;
+    background: linear-gradient(155deg, var(--f) 0%, #fff 78%); border: 1px solid var(--linea); text-decoration: none; color: var(--tx); transition: transform .15s, box-shadow .15s, border-color .15s; }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 12px 28px -14px rgba(13,49,63,.35); border-color: var(--c); }
+  .tile .fondo { position: absolute; right: -18px; bottom: -26px; font-size: 150px; color: var(--c); opacity: .07; pointer-events: none; }
+  .tile-ic { width: 54px; height: 54px; border-radius: 16px; background: var(--c); color: #fff; display: grid; place-items: center; margin-bottom: 8px; box-shadow: 0 6px 16px -6px var(--c); }
+  .tile-ic .ms { font-size: 28px; }
+  .tile h3 { margin: 0; font-size: 21px; line-height: 1.2; color: var(--az); font-weight: 800; }
+  .tile p { margin: 0; color: var(--mu); font-size: 15px; max-width: 34ch; }
+  .tile-pie { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--c); }
+  .tile-n { font-size: 13px; font-weight: 800; color: var(--c); background: #fff; border: 1px solid var(--f); padding: 4px 11px; border-radius: 999px; }
+  .tile.destacado .tile-n { background: var(--c); color: #fff; border-color: var(--c); }
+  .vista[hidden] { display: none !important; }
+  .volver { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 16px; padding: 8px 14px 8px 10px; border-radius: 999px; background: var(--blanco); border: 1px solid var(--linea); color: var(--az); font-weight: 700; font-size: 14px; text-decoration: none; min-height: 40px; }
+  .volver:hover { border-color: var(--pa); }
+  .volver .ms { font-size: 20px; }
+  /* Normativa: temas plegados */
+  details.tema > summary { list-style: none; cursor: pointer; border-bottom: 0; }
+  details.tema > summary::-webkit-details-marker { display: none; }
+  details.tema[open] > summary { border-bottom: 1px solid var(--linea); }
+  details.tema .chev { color: var(--c); transition: transform .2s; }
+  details.tema[open] .chev { transform: rotate(180deg); }
+  details.tema > summary:hover { filter: brightness(.985); }
+  @media (max-width: 560px) { .tile { min-height: 0; padding: 18px; } .tile h3 { font-size: 19px; } .tile .fondo { font-size: 120px; } }
+
   /* Salud del trabajador */
   .nota-azul { display: flex; gap: 12px; align-items: flex-start; background: var(--pa-claro); border-left: 5px solid var(--pa); border-radius: 10px; padding: 14px 16px; margin-bottom: 6px; }
   .nota-azul .ms { color: var(--az); margin-top: 1px; }
@@ -163,7 +191,6 @@
       points="0,34 380,34 392,28 402,40 414,8 426,48 436,30 446,34 700,34 712,26 722,42 736,4 750,50 760,30 770,34 1200,34"/>
   </svg>
 </header>
-<nav class="atajos" aria-label="Secciones"><div class="envoltura" id="atajos"></div></nav>
 
 <main class="envoltura">
   <div id="aviso"></div>
@@ -212,15 +239,17 @@ function leerHoja(nombre) {
 const ATAJOS = { capacitaciones: ['school', 'Capacitaciones'], salud: ['health_and_safety', 'Salud del trabajador'], recomendaciones: ['verified_user', 'Recomendaciones'],
   normativa: ['gavel', 'Normativa y guías'], recursos: ['folder_open', 'Recursos'], accesos: ['apps', 'Accesos'] };
 let mostradas = [];
+let SECC = [];
 function seccion(id, icono, titulo, intro, cuerpo) {
   if (!cuerpo) return '';                 // sección sin filas visibles: no se muestra
   mostradas.push(id);
-  return '<section class="bloque" id="' + id + '"><h2><span class="ms">' + icono + '</span>' + esc(titulo) + '</h2>' + (intro ? '<p class="intro">' + esc(intro) + '</p>' : '') + cuerpo + '</section>';
+  SECC.push(id);
+  return '<section class="bloque vista" id="' + id + '" hidden><a class="volver" href="#inicio"><span class="ms">arrow_back</span>Inicio</a><h2><span class="ms">' + icono + '</span>' + esc(titulo) + '</h2>' + (intro ? '<p class="intro">' + esc(intro) + '</p>' : '') + cuerpo + '</section>';
 }
 const vacio = t => '<div class="vacio">' + esc(t) + '</div>';
 
 function dibujar(D) {
-  mostradas = [];
+  mostradas = []; SECC = [];
   const P = {}; (D.PORTADA || []).forEach(f => { if (f.CLAVE) P[String(f.CLAVE).trim().toUpperCase()] = String(f.VALOR || '').trim(); });
   if (P.TITULO) { $('titulo').textContent = P.TITULO; document.title = P.TITULO + ' · Salud Chubut'; }
   $('subtitulo').textContent = P.SUBTITULO || '';
@@ -289,11 +318,9 @@ function dibujar(D) {
   nor.forEach(n => { const t = String(n.TEMA || 'General').trim(); if (temas.indexOf(t) < 0) temas.push(t); });
   html += seccion('normativa', 'gavel', 'Normativa y guías', 'Leyes, convenios y guías de referencia en las que se basa el trabajo de Higiene y Seguridad. Tocá una norma para abrir su texto oficial.',
     nor.length ? '<div class="temas">' + temas.map(t => {
-      const items = nor.filter(n => String(n.TEMA || 'General').trim() === t), e = estiloTema(t), VER = window.innerWidth < 600 ? 2 : 4;
-      return '<article class="tema" style="--c:' + e[1] + ';--f:' + e[2] + '"><div class="tema-cab"><span class="tema-ic"><span class="ms">' + e[3] + '</span></span><h3>' + esc(t) + '</h3><span class="tema-n">' + items.length + '</span></div>' +
-        '<ul>' + items.slice(0, VER).map(itemNorma).join('') + '</ul>' +
-        (items.length > VER ? '<details><summary><span class="mas">Ver ' + (items.length - VER) + ' más</span><span class="menos">Ver menos</span><span class="ms">expand_more</span></summary><ul>' + items.slice(VER).map(itemNorma).join('') + '</ul></details>' : '') +
-        '</article>'; }).join('') + '</div>'
+      const items = nor.filter(n => String(n.TEMA || 'General').trim() === t), e = estiloTema(t);
+      return '<details class="tema" style="--c:' + e[1] + ';--f:' + e[2] + '"><summary class="tema-cab"><span class="tema-ic"><span class="ms">' + e[3] + '</span></span><h3>' + esc(t) + '</h3><span class="tema-n">' + items.length + '</span><span class="ms chev">expand_more</span></summary>' +
+        '<ul>' + items.map(itemNorma).join('') + '</ul></details>'; }).join('') + '</div>'
     : '');
 
   // Recursos y videos
@@ -314,9 +341,33 @@ function dibujar(D) {
       '<span class="ms ir">chevron_right</span></a>').join('') + '</div>'
     : '');
 
-  $('contenido').innerHTML = html;
-  $('atajos').innerHTML = mostradas.map(id => '<a href="#' + id + '"><span class="ms">' + ATAJOS[id][0] + '</span>' + ATAJOS[id][1] + '</a>').join('');
+  // Inicio: un tarjetón por sección; al tocarlo se abre solo esa sección (y «Inicio» vuelve)
+  const TILE = { capacitaciones: ['#0D313F', '#E3EEF2'], salud: ['#3B7F67', '#E2F1EA'], normativa: ['#B26A12', '#FBEFDC'],
+    recomendaciones: ['#2F7F86', '#DDF0F0'], recursos: ['#6B5CA5', '#ECE9F6'], accesos: ['#2C5D9E', '#E3EBF7'] };
+  const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
+  const RES = {
+    capacitaciones: [caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad', caps.length ? 'Inscribite' : ''],
+    salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
+    normativa: ['Leyes, convenios OIT, OMS y guías de la SRT', pl(nor.length, 'documento', 'documentos') + ' · ' + pl(temas.length, 'tema', 'temas')],
+    recomendaciones: ['Medidas simples para cuidarte en el trabajo', pl(rec.length, 'recomendación', 'recomendaciones')],
+    recursos: ['Guías, afiches, formularios y videos', pl(recs.length, 'recurso', 'recursos')],
+    accesos: ['Aplicaciones de Higiene y Seguridad', pl(acc.length, 'aplicación', 'aplicaciones')] };
+  const inicio = '<section id="inicio" class="vista"><div class="tiles">' + SECC.map(id => { const t = TILE[id] || ['#5894A7', '#E3EEF2'], r = RES[id] || ['', ''];
+    return '<a class="tile' + (id === 'capacitaciones' && caps.length ? ' destacado' : '') + '" href="#' + id + '" style="--c:' + t[0] + ';--f:' + t[1] + '">' +
+      '<span class="ms fondo">' + ATAJOS[id][0] + '</span><span class="tile-ic"><span class="ms">' + ATAJOS[id][0] + '</span></span>' +
+      '<h3>' + esc(ATAJOS[id][1]) + '</h3><p>' + esc(r[0]) + '</p><span class="tile-pie">' + (r[1] ? '<span class="tile-n">' + esc(r[1]) + '</span>' : '<span></span>') + '<span class="ms">arrow_forward</span></span></a>'; }).join('') + '</div></section>';
+  $('contenido').innerHTML = inicio + html;
+  mostrarVista(false);
 }
+
+// Muestra el inicio o una sola sección según la dirección (#capacitaciones, #normativa…); el botón «atrás» del navegador también funciona
+function mostrarVista(subir) {
+  const id = location.hash.slice(1), hay = SECC.indexOf(id) >= 0;
+  document.querySelectorAll('.vista').forEach(v => { v.hidden = hay ? v.id !== id : v.id !== 'inicio'; });
+  $('aviso').hidden = hay;
+  if (subir !== false) window.scrollTo(0, hay ? Math.max(0, $('contenido').getBoundingClientRect().top + window.scrollY - 16) : 0);
+}
+window.addEventListener('hashchange', () => mostrarVista(true));
 
 (async function () {
   let guardado = null;
