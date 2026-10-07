@@ -128,6 +128,8 @@
   @media (max-width: 560px) { .tile { min-height: 0; padding: 18px; } .tile h3 { font-size: 19px; } .tile .fondo { font-size: 120px; } }
 
 
+  .tema .tipo { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 12px; font-weight: 700; color: var(--c); }
+  .tema .tipo .ms { font-size: 15px; }
   /* Norma destacada (CCT) */
   .destacada { position: relative; overflow: hidden; background: linear-gradient(140deg, #0D313F 0%, #17485A 70%, #1F5A5E 100%); color: #fff; border-radius: 22px; padding: 26px 26px 24px; margin-bottom: 22px; }
   .destacada::after { content: ''; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(94,156,124,.35), transparent 70%); pointer-events: none; }
@@ -262,7 +264,9 @@ function leerHoja(nombre) {
 }
 
 const ATAJOS = { capacitaciones: ['school', 'Capacitaciones'], salud: ['health_and_safety', 'Salud del trabajador'], recomendaciones: ['verified_user', 'Recomendaciones'],
-  normativa: ['gavel', 'Normativa y guías'], recursos: ['folder_open', 'Recursos'], accesos: ['apps', 'Accesos'] };
+  normativa: ['balance', 'Derechos y obligaciones'], recursos: ['lightbulb', 'Información y prevención'], accesos: ['handyman', 'Herramientas'] };
+// Orden de los tarjetones del inicio
+const ORDEN_INICIO = ['capacitaciones', 'accesos', 'normativa', 'salud', 'recursos', 'recomendaciones'];
 let mostradas = [];
 let SECC = [];
 function seccion(id, icono, titulo, intro, cuerpo) {
@@ -324,17 +328,23 @@ function dibujar(D) {
     : '');
 
   // Normativa: una tarjeta por tema (en el orden de la planilla), con color e ícono propios; muestra 4 y el resto se despliega
+  // Color e ícono de cada tema (normativa e información), según el nombre del tema en la planilla
   const COL_TEMA = [
-    [/oms|salud\b|personal de salud/i, '#3B7F67', '#E2F1EA', 'medical_services'],
-    [/gu[ií]a|srt$/i, '#3E7F95', '#E1EEF3', 'menu_book'],
-    [/riesgos del trabajo|autoseguro/i, '#B26A12', '#FBEFDC', 'shield_person'],
-    [/agentes/i, '#2F7F86', '#DDF0F0', 'sensors'],
-    [/ergonom/i, '#4E7F3A', '#E7F1E0', 'accessibility_new'],
+    [/^leyes/i, '#0D313F', '#E3EEF2', 'gavel'],
+    [/decreto/i, '#2C5D9E', '#E3EBF7', 'article'],
+    [/resoluc/i, '#2F7F86', '#DDF0F0', 'description'],
+    [/chubut|provinc/i, '#B26A12', '#FBEFDC', 'location_on'],
+    [/internacional|oit/i, '#6B5CA5', '#ECE9F6', 'public'],
+    [/derecho|accidente/i, '#B26A12', '#FBEFDC', 'shield_person'],
+    [/protecci[oó]n|epp/i, '#2F7F86', '#DDF0F0', 'masks'],
+    [/biol[oó]g/i, '#3B7F67', '#E2F1EA', 'coronavirus'],
+    [/vacuna/i, '#2C5D9E', '#E3EBF7', 'vaccines'],
     [/qu[ií]mic/i, '#6B5CA5', '#ECE9F6', 'science'],
-    [/radiac/i, '#B4533E', '#FAE7E1', 'radiology'],
+    [/ergonom/i, '#4E7F3A', '#E7F1E0', 'accessibility_new'],
     [/violencia/i, '#A3476B', '#F6E5ED', 'diversity_3'],
-    [/oit/i, '#2C5D9E', '#E3EBF7', 'public'],
-    [/general/i, '#0D313F', '#E3EEF2', 'gavel'],
+    [/mental|estr[eé]s/i, '#5B6FB0', '#E8EBF6', 'self_improvement'],
+    [/incendio|evacua/i, '#C0563F', '#FAE7E1', 'local_fire_department'],
+    [/radiac/i, '#B4533E', '#FAE7E1', 'radiology'],
   ];
   const estiloTema = t => COL_TEMA.find(x => x[0].test(t)) || [null, '#5894A7', '#E3EEF2', 'description'];
   const itemNorma = n => { const u = enlace(n.ENLACE), dentro = '<span class="punto"></span><span class="txt"><b>' + esc(n.NORMA) + '</b>' + (n.DESCRIPCION ? '<span>' + esc(n.DESCRIPCION) + '</span>' : '') + '</span>';
@@ -346,29 +356,33 @@ function dibujar(D) {
   const destHtml = dest.map(n => { const u = enlace(n.ENLACE), pts = String(n.PUNTOS_CLAVE || '').split('|').map(x => x.trim()).filter(Boolean);
     return '<article class="destacada"><div class="dest-cab"><span class="dest-ic"><span class="ms">handshake</span></span><div><span class="dest-eti">' + esc(n.TEMA || 'Destacado') + '</span><h3>' + esc(n.NORMA) + '</h3></div></div>' +
       (n.DESCRIPCION ? '<p class="dest-desc">' + esc(n.DESCRIPCION) + '</p>' : '') +
-      (pts.length ? '<div class="dest-sub">Lo que dice sobre higiene y seguridad</div><ul class="dest-pts">' + pts.map(x => { const m = x.match(/^(Arts?\.[^·]*)·\s*(.*)$/); return '<li>' + (m ? '<b>' + esc(m[1].trim()) + '</b><span>' + esc(m[2]) + '</span>' : '<span>' + esc(x) + '</span>') + '</li>'; }).join('') + '</ul>' : '') +
+      (pts.length ? '<div class="dest-sub">Lo que dice sobre seguridad y salud en el trabajo</div><ul class="dest-pts">' + pts.map(x => { const m = x.match(/^(Arts?\.[^·]*)·\s*(.*)$/); return '<li>' + (m ? '<b>' + esc(m[1].trim()) + '</b><span>' + esc(m[2]) + '</span>' : '<span>' + esc(x) + '</span>') + '</li>'; }).join('') + '</ul>' : '') +
       (u ? '<a class="boton" href="' + esc(u) + '" target="_blank" rel="noopener"><span class="ms">description</span>Abrir el convenio completo</a>' : '') + '</article>'; }).join('');
   nor.forEach(n => { const t = String(n.TEMA || 'General').trim(); if (temas.indexOf(t) < 0) temas.push(t); });
-  html += seccion('normativa', 'gavel', 'Normativa y guías', 'Leyes, convenios y guías de referencia en las que se basa el trabajo de Higiene y Seguridad. Tocá una norma para abrir su texto oficial.',
+  html += seccion('normativa', 'balance', 'Derechos y obligaciones', 'Qué dicen el convenio colectivo, las leyes, los decretos y las resoluciones sobre tus derechos y tus obligaciones en seguridad y salud en el trabajo. Tocá una norma para leer el texto oficial.',
     (nor.length || dest.length) ? destHtml + '<div class="temas">' + temas.map(t => {
       const items = nor.filter(n => String(n.TEMA || 'General').trim() === t), e = estiloTema(t);
       return '<details class="tema" style="--c:' + e[1] + ';--f:' + e[2] + '"><summary class="tema-cab"><span class="tema-ic"><span class="ms">' + e[3] + '</span></span><h3>' + esc(t) + '</h3><span class="tema-n">' + items.length + '</span><span class="ms chev">expand_more</span></summary>' +
         '<ul>' + items.map(itemNorma).join('') + '</ul></details>'; }).join('') + '</div>'
     : '');
 
-  // Recursos y videos
-  const icRec = t => /video/i.test(t) ? 'play_circle' : /formul/i.test(t) ? 'description' : /afiche|cartel/i.test(t) ? 'image' : /gu[ií]a|manual/i.test(t) ? 'menu_book' : 'article';
-  const recs = ordenar((D.RECURSOS || []).filter(visible));
-  html += seccion('recursos', 'folder_open', 'Recursos y videos', 'Guías, afiches, formularios y videos para descargar o mirar.',
-    recs.length ? '<div class="grilla">' + recs.map(r => '<div class="tarjeta"><span class="etiqueta"><span class="ms" style="font-size:16px;vertical-align:-3px">' + icRec(r.TIPO) + '</span> ' + esc(r.TIPO || 'Recurso') + '</span><h3>' + esc(r.TITULO) + '</h3>' +
-      (r.DESCRIPCION ? '<p>' + esc(r.DESCRIPCION) + '</p>' : '') + (r.TEMA ? '<span class="chico">' + esc(r.TEMA) + '</span>' : '') +
-      (enlace(r.ENLACE) ? '<a class="boton sec" href="' + esc(enlace(r.ENLACE)) + '" target="_blank" rel="noopener">' + (/video/i.test(r.TIPO) ? 'Ver video' : 'Abrir') + '<span class="ms">arrow_forward</span></a>' : '') + '</div>').join('') + '</div>'
+  // Información y prevención: material para el trabajador, en tarjetas plegadas por tema
+  const icRec = t => /video/i.test(t) ? 'play_circle' : /formul/i.test(t) ? 'description' : /afiche|cartel/i.test(t) ? 'image' : /gu[ií]a|manual/i.test(t) ? 'menu_book' : /ficha/i.test(t) ? 'sticky_note_2' : 'language';
+  const recs = ordenar((D.RECURSOS || []).filter(visible)), temasRec = [];
+  recs.forEach(r => { const t = String(r.TEMA || 'General').trim(); if (temasRec.indexOf(t) < 0) temasRec.push(t); });
+  const itemRec = r => { const u = enlace(r.ENLACE), dentro = '<span class="punto"></span><span class="txt"><b>' + esc(r.TITULO) + '</b>' + (r.DESCRIPCION ? '<span>' + esc(r.DESCRIPCION) + '</span>' : '') +
+      '<span class="tipo"><span class="ms">' + icRec(r.TIPO) + '</span>' + esc(r.TIPO || 'Recurso') + '</span></span>';
+    return '<li>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + dentro + '<span class="ms flecha">north_east</span></a>' : '<span>' + dentro + '</span>') + '</li>'; };
+  html += seccion('recursos', 'lightbulb', 'Información y prevención', 'Material de referencia para conocer los riesgos de tu trabajo y cómo cuidarte. Tocá un tema para ver lo que hay.',
+    recs.length ? '<div class="temas">' + temasRec.map(t => { const items = recs.filter(r => String(r.TEMA || 'General').trim() === t), e = estiloTema(t);
+      return '<details class="tema" style="--c:' + e[1] + ';--f:' + e[2] + '"><summary class="tema-cab"><span class="tema-ic"><span class="ms">' + e[3] + '</span></span><h3>' + esc(t) + '</h3><span class="tema-n">' + items.length + '</span><span class="ms chev">expand_more</span></summary>' +
+        '<ul>' + items.map(itemRec).join('') + '</ul></details>'; }).join('') + '</div>'
     : '');
 
   // Accesos
   const icAcc = t => /agenda|capacit/i.test(t) ? 'event_available' : /residu/i.test(t) ? 'recycling' : /diagn|auditor/i.test(t) ? 'fact_check' : /gesti/i.test(t) ? 'admin_panel_settings' : /establec/i.test(t) ? 'local_hospital' : 'login';
   const acc = ordenar((D.ACCESOS || []).filter(visible)).filter(a => enlace(a.ENLACE));
-  html += seccion('accesos', 'apps', 'Accesos', 'Aplicaciones de Higiene y Seguridad para el personal.',
+  html += seccion('accesos', 'handyman', 'Herramientas', 'Aplicaciones para cargar información e inscribirte: gestión de residuos, agenda de capacitaciones y la carga de tu establecimiento.',
     acc.length ? '<div class="grilla">' + acc.map(a => '<a class="tarjeta acceso" href="' + esc(enlace(a.ENLACE)) + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">' + icAcc(a.TITULO) + '</span></span>' +
       '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>' + esc(a.TITULO) + '</h3>' + (a.PARA_QUIEN ? '<span class="chico">' + esc(a.PARA_QUIEN) + '</span>' : '') + (a.DESCRIPCION ? '<span>' + esc(a.DESCRIPCION) + '</span>' : '') + '</span>' +
       '<span class="ms ir">chevron_right</span></a>').join('') + '</div>'
@@ -380,16 +394,17 @@ function dibujar(D) {
   const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const RES = {
     capacitaciones: [caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad', caps.length ? 'Inscribite' : ''],
+    accesos: ['Gestión de residuos, agenda de capacitaciones y carga de tu establecimiento', pl(acc.length, 'aplicación', 'aplicaciones')],
+    normativa: ['Convenio colectivo, leyes, decretos y resoluciones: qué te corresponde y qué te toca cumplir', pl(nor.length + dest.length, 'norma', 'normas')],
     salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
-    normativa: ['Convenio Colectivo de Salud, leyes, convenios OIT, OMS y guías de la SRT', pl(nor.length + dest.length, 'documento', 'documentos')],
-    recomendaciones: ['Medidas simples para cuidarte en el trabajo', pl(rec.length, 'recomendación', 'recomendaciones')],
-    recursos: ['Guías, afiches, formularios y videos', pl(recs.length, 'recurso', 'recursos')],
-    accesos: ['Aplicaciones de Higiene y Seguridad', pl(acc.length, 'aplicación', 'aplicaciones')] };
+    recursos: ['Riesgos de tu trabajo y cómo cuidarte: ergonomía, riesgo biológico, químicos, violencia laboral y más', pl(temasRec.length, 'tema', 'temas')],
+    recomendaciones: ['Medidas simples para cuidarte en el trabajo', pl(rec.length, 'recomendación', 'recomendaciones')] };
+  SECC.sort((x, y) => ORDEN_INICIO.indexOf(x) - ORDEN_INICIO.indexOf(y));
   const inicio = '<section id="inicio" class="vista"><div class="tiles">' + SECC.map(id => { const t = TILE[id] || ['#5894A7', '#E3EEF2'], r = RES[id] || ['', ''];
     return '<a class="tile' + (id === 'capacitaciones' && caps.length ? ' destacado' : '') + '" href="#' + id + '" style="--c:' + t[0] + ';--f:' + t[1] + '">' +
       '<span class="ms fondo">' + ATAJOS[id][0] + '</span><span class="tile-ic"><span class="ms">' + ATAJOS[id][0] + '</span></span>' +
       '<h3>' + esc(ATAJOS[id][1]) + '</h3><p>' + esc(r[0]) + '</p><span class="tile-pie">' + (r[1] ? '<span class="tile-n">' + esc(r[1]) + '</span>' : '<span></span>') + '<span class="ms">arrow_forward</span></span></a>'; }).join('') + '</div></section>';
-  const inicioDest = dest.length ? '<a class="tile-dest" href="#normativa"><span class="dest-ic"><span class="ms">handshake</span></span><span class="td-txt"><span class="dest-eti">' + esc(dest[0].TEMA || 'Destacado') + '</span><b>' + esc(dest[0].NORMA) + '</b><span>Qué dice sobre higiene y seguridad: condiciones de trabajo, exámenes periódicos, tareas insalubres y servicio de HyS en cada hospital.</span></span><span class="ms">arrow_forward</span></a>' : '';
+  const inicioDest = dest.length ? '<a class="tile-dest" href="#normativa"><span class="dest-ic"><span class="ms">handshake</span></span><span class="td-txt"><span class="dest-eti">' + esc(dest[0].TEMA || 'Destacado') + '</span><b>' + esc(dest[0].NORMA) + '</b><span>Tus derechos en seguridad y salud: condiciones de trabajo, exámenes periódicos, tareas insalubres y licencias.</span></span><span class="ms">arrow_forward</span></a>' : '';
   $('contenido').innerHTML = inicio.replace('<div class="tiles">', inicioDest + '<div class="tiles">') + html;
   mostrarVista(false);
 }
