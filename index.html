@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D313F">
+<title>Higiene y Seguridad Laboral · Salud Chubut</title>
+<meta name="description" content="Capacitaciones, normativa, recomendaciones, accidentes de trabajo y accesos del Servicio de Higiene y Seguridad Laboral.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230D313F'/><path d='M32 12l16 6v12c0 10-7 18-16 22-9-4-16-12-16-22V18z' fill='%235894A7'/><path d='M29 24h6v6h6v6h-6v6h-6v-6h-6v-6h6z' fill='%23fff'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0,0&display=block" rel="stylesheet">
+<style>
+  :root {
+    --az: #0D313F; --pa: #5894A7; --pa-claro: #E3EEF2; --fondo: #F4F7F8; --blanco: #FFFFFF;
+    --tx: #2E3D44; --mu: #5B6B73; --linea: #DCE5E9; --radio: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body { margin: 0; background: var(--fondo); color: var(--tx); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.55; }
+  a { color: var(--az); }
+  .ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased; width: 1em; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
+  .envoltura { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+  /* Cabecera */
+  header.portada { background: var(--az); color: #fff; position: relative; overflow: hidden; }
+  header.portada::after { content: ''; position: absolute; right: -120px; top: -120px; width: 420px; height: 420px; border-radius: 50%; border: 60px solid rgba(88,148,167,.18); pointer-events: none; }
+  .marca { display: flex; align-items: center; gap: 12px; padding-top: 22px; font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: #BFD6DE; }
+  .marca .escudo { width: 40px; height: 40px; border-radius: 10px; background: var(--pa); display: grid; place-items: center; color: #fff; }
+  .portada h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1.1; margin: 28px 0 8px; font-weight: 800; letter-spacing: -.01em; max-width: 760px; }
+  .portada .sub { font-size: clamp(17px, 2.6vw, 21px); color: #CFE1E7; margin: 0 0 14px; font-weight: 500; }
+  .portada .pres { max-width: 720px; color: #E4EEF1; margin: 0 0 28px; }
+  nav.atajos { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 28px; position: relative; z-index: 1; }
+  nav.atajos a { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; text-decoration: none; font-weight: 600; font-size: 14px; border: 1px solid rgba(255,255,255,.18); }
+  nav.atajos a:hover { background: rgba(255,255,255,.2); }
+  nav.atajos .ms { font-size: 19px; }
+
+  .aviso { background: #FFF6E5; border-left: 5px solid #B7791F; color: #5C3D06; padding: 14px 18px; border-radius: 10px; margin: 24px 0 0; font-weight: 600; }
+
+  /* Secciones */
+  main { padding-bottom: 40px; }
+  section.bloque { margin-top: 44px; }
+  .bloque > h2 { display: flex; align-items: center; gap: 10px; font-size: 24px; color: var(--az); margin: 0 0 4px; font-weight: 800; }
+  .bloque > h2 .ms { color: var(--pa); font-size: 28px; }
+  .bloque > .intro { color: var(--mu); margin: 0 0 18px; }
+  .grilla { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .tarjeta { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .tarjeta h3 { margin: 0; font-size: 17px; color: var(--az); line-height: 1.3; }
+  .tarjeta p { margin: 0; color: var(--tx); }
+  .chico { font-size: 13.5px; color: var(--mu); }
+  .etiqueta { display: inline-block; width: fit-content; font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--az); background: var(--pa-claro); padding: 3px 10px; border-radius: 999px; }
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 10px; background: var(--az); color: #fff; text-decoration: none; font-weight: 700; font-size: 15px; width: fit-content; }
+  .boton:hover { background: #164a5e; }
+  .boton.sec { background: transparent; color: var(--az); border: 1.5px solid var(--az); }
+  .boton.sec:hover { background: var(--pa-claro); }
+  .tarjeta .boton { margin-top: auto; }
+  .vacio { color: var(--mu); background: var(--blanco); border: 1px dashed var(--linea); border-radius: var(--radio); padding: 18px; }
+
+  /* Capacitaciones */
+  .fechas { display: flex; flex-direction: column; gap: 10px; }
+  .fecha { display: flex; gap: 14px; align-items: stretch; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 14px; }
+  .dia { flex: 0 0 64px; border-radius: 10px; background: var(--az); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0; }
+  .dia b { font-size: 24px; line-height: 1; }
+  .dia span { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #BFD6DE; }
+  .fecha .datos { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fecha .datos b { color: var(--az); }
+  .subtitulo { font-size: 15px; font-weight: 800; color: var(--pa); text-transform: uppercase; letter-spacing: .06em; margin: 22px 0 10px; }
+  .fila-botones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+  /* Normativa */
+  .normas { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; }
+  .grupo-norma { padding: 6px 18px 12px; border-top: 1px solid var(--linea); }
+  .grupo-norma:first-child { border-top: 0; }
+  .grupo-norma h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--pa); margin: 12px 0 4px; }
+  .norma { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid #EEF3F5; flex-wrap: wrap; }
+  .norma:first-of-type { border-top: 0; }
+  .norma b { color: var(--az); }
+  .norma a { font-weight: 700; font-size: 14px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+  .norma a .ms { font-size: 18px; }
+
+  /* Accidentes */
+  .pasos { counter-reset: paso; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+  .paso { counter-increment: paso; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 18px 18px 18px 62px; position: relative; }
+  .paso::before { content: counter(paso); position: absolute; left: 16px; top: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--pa); color: #fff; font-weight: 800; display: grid; place-items: center; }
+  .paso h3 { margin: 0 0 4px; font-size: 16px; color: var(--az); }
+  .paso p { margin: 0; }
+
+  /* Accesos */
+  .acceso { text-decoration: none; color: inherit; flex-direction: row; align-items: flex-start; gap: 14px; transition: border-color .15s, box-shadow .15s; }
+  .acceso:hover { border-color: var(--pa); box-shadow: 0 4px 18px rgba(13,49,63,.08); }
+  .acceso .icono { flex: 0 0 46px; height: 46px; border-radius: 12px; background: var(--pa-claro); color: var(--az); display: grid; place-items: center; }
+  .acceso .ir { margin-left: auto; color: var(--pa); align-self: center; }
+
+  .firma { background: var(--blanco); border-top: 1px solid var(--linea); padding: 22px 16px; display: flex; justify-content: center; }
+  .firma img { width: 100%; max-width: 900px; height: auto; display: block; }
+  footer { background: var(--az); color: #CFE1E7; padding: 28px 0 36px; font-size: 14px; }
+  footer a { color: #fff; }
+  footer .pie { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; }
+
+  .cargando { color: var(--mu); padding: 30px 0; display: flex; align-items: center; gap: 10px; }
+  .cargando::before { content: ''; width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--linea); border-top-color: var(--pa); animation: gira 1s linear infinite; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  @media (max-width: 560px) { .fecha { padding: 12px; } .dia { flex-basis: 56px; } .boton { width: 100%; } .tarjeta .boton { width: 100%; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .cargando::before { animation: none; } }
+</style>
+</head>
+<body>
+<header class="portada">
+  <div class="envoltura">
+    <div class="marca"><span class="escudo"><span class="ms">health_and_safety</span></span>Servicio de Higiene y Seguridad Laboral</div>
+    <h1 id="titulo">Higiene y Seguridad Laboral</h1>
+    <p class="sub" id="subtitulo">Establecimientos de salud del Chubut</p>
+    <p class="pres" id="presentacion"></p>
+    <nav class="atajos" aria-label="Secciones">
+      <a href="#capacitaciones"><span class="ms">school</span>Capacitaciones</a>
+      <a href="#accidentes"><span class="ms">medical_services</span>Accidentes de trabajo</a>
+      <a href="#recomendaciones"><span class="ms">verified_user</span>Recomendaciones</a>
+      <a href="#normativa"><span class="ms">gavel</span>Normativa</a>
+      <a href="#recursos"><span class="ms">folder_open</span>Recursos</a>
+      <a href="#accesos"><span class="ms">login</span>Accesos</a>
+    </nav>
+  </div>
+</header>
+
+<main class="envoltura">
+  <div id="aviso"></div>
+  <div id="contenido"><div class="cargando">Cargando la información…</div></div>
+</main>
+
+<div class="firma"><img src="logo-hysl.png" alt="Hospitales más seguros para las personas · Higiene y Seguridad Laboral" width="1600" height="145"></div>
+<footer>
+  <div class="envoltura pie">
+    <div id="pie">Servicio de Higiene y Seguridad Laboral</div>
+    <div id="contacto"></div>
+  </div>
+</footer>
+
+<script>
+// Contenidos: planilla «PORTAL PÚBLICO HyS · contenidos» (pública, solo lectura). Se edita allá; acá solo se muestra.
+const PLANILLA = '1W8OlPk0lPxWjrZ9yGJzbx6iLQsm8NJ7z6xMOw_jE95c';
+const HOJAS = ['PORTADA', 'CAPACITACIONES', 'NORMATIVA', 'RECOMENDACIONES', 'AUTOSEGURO', 'RECURSOS', 'ACCESOS'];
+const GUARDADO = 'portalHyS_contenidos_v1';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const enlace = u => /^https:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '';
+const visible = f => /^s[ií]$/i.test(String(f.VISIBLE || '').trim());
+const ordenar = l => l.slice().sort((a, b) => (Number(a.ORDEN) || 9999) - (Number(b.ORDEN) || 9999));
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+// Lectura de una pestaña con la consulta pública de Google (JSONP: funciona desde cualquier página)
+function leerHoja(nombre) {
+  return new Promise((ok, mal) => {
+    const cb = 'cb_' + nombre + '_' + Date.now(), s = document.createElement('script');
+    const corte = setTimeout(() => { limpiar(); mal(new Error('tiempo')); }, 20000);
+    function limpiar() { clearTimeout(corte); delete window[cb]; s.remove(); }
+    window[cb] = r => { limpiar();
+      if (!r || r.status === 'error' || !r.table) return mal(new Error('sin datos'));
+      const cols = r.table.cols.map(c => String(c.label || '').trim());
+      ok(r.table.rows.map(fila => { const o = {}; cols.forEach((c, j) => { const v = fila.c && fila.c[j]; o[c] = v ? (v.f != null ? v.f : v.v) : ''; }); return o; })
+        .filter(o => Object.values(o).some(v => String(v).trim() !== '')));
+    };
+    s.src = 'https://docs.google.com/spreadsheets/d/' + PLANILLA + '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&headers=1&sheet=' + encodeURIComponent(nombre) + '&_=' + Date.now();
+    s.onerror = () => { limpiar(); mal(new Error('red')); };
+    document.head.appendChild(s);
+  });
+}
+
+function seccion(id, icono, titulo, intro, cuerpo) {
+  return '<section class="bloque" id="' + id + '"><h2><span class="ms">' + icono + '</span>' + esc(titulo) + '</h2>' + (intro ? '<p class="intro">' + esc(intro) + '</p>' : '') + cuerpo + '</section>';
+}
+const vacio = t => '<div class="vacio">' + esc(t) + '</div>';
+
+function dibujar(D) {
+  const P = {}; (D.PORTADA || []).forEach(f => { if (f.CLAVE) P[String(f.CLAVE).trim().toUpperCase()] = String(f.VALOR || '').trim(); });
+  if (P.TITULO) { $('titulo').textContent = P.TITULO; document.title = P.TITULO + ' · Salud Chubut'; }
+  if (P.SUBTITULO) $('subtitulo').textContent = P.SUBTITULO;
+  $('presentacion').textContent = P.PRESENTACION || '';
+  $('aviso').innerHTML = P.AVISO ? '<div class="aviso" role="status">' + esc(P.AVISO) + '</div>' : '';
+  $('pie').textContent = P.PIE || 'Servicio de Higiene y Seguridad Laboral';
+  $('contacto').innerHTML = [P.CORREO ? '<a href="mailto:' + esc(P.CORREO) + '">' + esc(P.CORREO) + '</a>' : '', P.TELEFONO ? esc(P.TELEFONO) : '',
+    P.ACTUALIZADO ? '<span style="opacity:.75">Actualizado: ' + esc(P.ACTUALIZADO) + '</span>' : ''].filter(Boolean).join(' · ');
+
+  // Capacitaciones
+  const caps = D.CAPACITACIONES || [], agenda = caps.filter(c => c.TIPO === 'Agenda'), abiertas = caps.filter(c => c.TIPO === 'Abierta');
+  const urlAgenda = (agenda.find(c => enlace(c.ENLACE)) || {}).ENLACE || 'https://hyslhmh-sudo.github.io/capacitaciones/agenda.html?yo=1';
+  const fechaBloque = f => { const m = String(f || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (!m) return '<div class="dia"><b>—</b></div>';
+    const d = new Date(+m[3], +m[2] - 1, +m[1]); return '<div class="dia"><span>' + DIAS[d.getDay()].slice(0, 3) + '</span><b>' + (+m[1]) + '</b><span>' + MESES[+m[2] - 1] + '</span></div>'; };
+  let cuerpoCaps = '<div class="subtitulo">Próximas fechas</div>' + (agenda.length ? '<div class="fechas">' + agenda.map(c =>
+      '<div class="fecha">' + fechaBloque(c.FECHA) + '<div class="datos"><b>' + esc(c.CAPACITACION) + '</b><span class="chico">' + [c.HORA ? c.HORA + ' h' : '', c.MODALIDAD, c.LUGAR].filter(Boolean).map(esc).join(' · ') + '</span>' +
+      (c.DETALLE ? '<span class="chico">' + esc(c.DETALLE) + '</span>' : '') + '</div></div>').join('') + '</div>'
+    : vacio('Por ahora no hay fechas publicadas. Podés consultar la agenda para ver los turnos disponibles.'));
+  cuerpoCaps += '<div class="fila-botones"><a class="boton" href="' + esc(enlace(urlAgenda)) + '" target="_blank" rel="noopener"><span class="ms">event_available</span>Anotarme en la agenda</a></div>';
+  if (abiertas.length) cuerpoCaps += '<div class="subtitulo">Abiertas: hacelas a tu ritmo</div><div class="grilla">' + abiertas.map(c =>
+      '<div class="tarjeta"><span class="etiqueta">' + esc(c.MODALIDAD || 'Virtual') + '</span><h3>' + esc(c.CAPACITACION) + '</h3>' + (c.DETALLE ? '<span class="chico">' + esc(c.DETALLE) + '</span>' : '') +
+      (enlace(c.ENLACE) ? '<a class="boton sec" href="' + esc(enlace(c.ENLACE)) + '" target="_blank" rel="noopener">Hacer la capacitación<span class="ms">arrow_forward</span></a>' : '') + '</div>').join('') + '</div>';
+  let html = seccion('capacitaciones', 'school', 'Capacitaciones', 'Fechas de las capacitaciones de Higiene y Seguridad y capacitaciones abiertas para hacer en cualquier momento.', cuerpoCaps);
+
+  // Accidentes de trabajo y Autoseguro
+  const auto = ordenar((D.AUTOSEGURO || []).filter(visible));
+  html += seccion('accidentes', 'medical_services', 'Accidentes de trabajo', 'Qué hacer si tenés un accidente de trabajo y cómo interviene el Autoseguro Público Provincial.',
+    auto.length ? '<div class="pasos">' + auto.map(a => '<div class="paso"><h3>' + esc(a.TITULO) + '</h3><p>' + esc(a.TEXTO) + '</p>' +
+      (enlace(a.ENLACE) ? '<p style="margin-top:8px"><a href="' + esc(enlace(a.ENLACE)) + '" target="_blank" rel="noopener">Más información</a></p>' : '') + '</div>').join('') + '</div>'
+    : vacio('Información en preparación.'));
+
+  // Recomendaciones
+  const rec = ordenar((D.RECOMENDACIONES || []).filter(visible));
+  html += seccion('recomendaciones', 'verified_user', 'Recomendaciones', 'Medidas simples para cuidarte en el trabajo.',
+    rec.length ? '<div class="grilla">' + rec.map(r => '<div class="tarjeta">' + (r.TEMA ? '<span class="etiqueta">' + esc(r.TEMA) + '</span>' : '') + '<h3>' + esc(r.TITULO) + '</h3><p>' + esc(r.TEXTO) + '</p>' +
+      (r.BASE_NORMATIVA ? '<span class="chico">Base normativa: ' + esc(r.BASE_NORMATIVA) + '</span>' : '') + '</div>').join('') + '</div>'
+    : vacio('Recomendaciones en preparación.'));
+
+  // Normativa (agrupada por tema)
+  const nor = ordenar((D.NORMATIVA || []).filter(visible)), temas = [];
+  nor.forEach(n => { const t = String(n.TEMA || 'General').trim(); if (temas.indexOf(t) < 0) temas.push(t); });
+  html += seccion('normativa', 'gavel', 'Normativa', 'Leyes, decretos y resoluciones en las que se basa el trabajo de Higiene y Seguridad.',
+    nor.length ? '<div class="normas">' + temas.map(t => '<div class="grupo-norma"><h3>' + esc(t) + '</h3>' + nor.filter(n => String(n.TEMA || 'General').trim() === t).map(n =>
+      '<div class="norma"><span><b>' + esc(n.NORMA) + '</b>' + (n.DESCRIPCION ? ' · ' + esc(n.DESCRIPCION) : '') + '</span>' +
+      (enlace(n.ENLACE) ? '<a href="' + esc(enlace(n.ENLACE)) + '" target="_blank" rel="noopener">Ver texto<span class="ms">open_in_new</span></a>' : '') + '</div>').join('') + '</div>').join('') + '</div>'
+    : vacio('Normativa en preparación.'));
+
+  // Recursos y videos
+  const icRec = t => /video/i.test(t) ? 'play_circle' : /formul/i.test(t) ? 'description' : /afiche|cartel/i.test(t) ? 'image' : /gu[ií]a|manual/i.test(t) ? 'menu_book' : 'article';
+  const recs = ordenar((D.RECURSOS || []).filter(visible));
+  html += seccion('recursos', 'folder_open', 'Recursos y videos', 'Guías, afiches, formularios y videos para descargar o mirar.',
+    recs.length ? '<div class="grilla">' + recs.map(r => '<div class="tarjeta"><span class="etiqueta"><span class="ms" style="font-size:16px;vertical-align:-3px">' + icRec(r.TIPO) + '</span> ' + esc(r.TIPO || 'Recurso') + '</span><h3>' + esc(r.TITULO) + '</h3>' +
+      (r.DESCRIPCION ? '<p>' + esc(r.DESCRIPCION) + '</p>' : '') + (r.TEMA ? '<span class="chico">' + esc(r.TEMA) + '</span>' : '') +
+      (enlace(r.ENLACE) ? '<a class="boton sec" href="' + esc(enlace(r.ENLACE)) + '" target="_blank" rel="noopener">' + (/video/i.test(r.TIPO) ? 'Ver video' : 'Abrir') + '<span class="ms">arrow_forward</span></a>' : '') + '</div>').join('') + '</div>'
+    : vacio('Recursos en preparación.'));
+
+  // Accesos
+  const icAcc = t => /agenda|capacit/i.test(t) ? 'event_available' : /residu/i.test(t) ? 'recycling' : /diagn|auditor/i.test(t) ? 'fact_check' : /gesti/i.test(t) ? 'admin_panel_settings' : /establec/i.test(t) ? 'local_hospital' : 'login';
+  const acc = ordenar((D.ACCESOS || []).filter(visible)).filter(a => enlace(a.ENLACE));
+  html += seccion('accesos', 'login', 'Accesos', 'Sistemas de Higiene y Seguridad. Algunos piden la clave de tu establecimiento.',
+    acc.length ? '<div class="grilla">' + acc.map(a => '<a class="tarjeta acceso" href="' + esc(enlace(a.ENLACE)) + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">' + icAcc(a.TITULO) + '</span></span>' +
+      '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>' + esc(a.TITULO) + '</h3>' + (a.PARA_QUIEN ? '<span class="chico">' + esc(a.PARA_QUIEN) + '</span>' : '') + (a.DESCRIPCION ? '<span>' + esc(a.DESCRIPCION) + '</span>' : '') + '</span>' +
+      '<span class="ms ir">chevron_right</span></a>').join('') + '</div>'
+    : vacio('Accesos en preparación.'));
+
+  $('contenido').innerHTML = html;
+}
+
+(async function () {
+  let guardado = null;
+  try { guardado = JSON.parse(localStorage.getItem(GUARDADO) || 'null'); } catch (e) {}
+  if (guardado) dibujar(guardado);   // se ve al instante lo de la última visita y se actualiza al llegar lo nuevo
+  const D = {}; let faltan = 0;
+  await Promise.all(HOJAS.map(h => leerHoja(h).then(f => { D[h] = f; }).catch(() => { faltan++; D[h] = guardado ? guardado[h] : []; })));
+  if (faltan === HOJAS.length && !guardado) { $('contenido').innerHTML = vacio('No se pudo cargar la información. Revisá la conexión y volvé a intentar en unos minutos.'); return; }
+  dibujar(D);
+  try { if (!faltan) localStorage.setItem(GUARDADO, JSON.stringify(D)); } catch (e) {}
+})();
+</script>
+</body>
+</html>
