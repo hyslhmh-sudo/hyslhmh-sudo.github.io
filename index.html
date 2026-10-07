@@ -416,7 +416,12 @@ function mostrarVista(subir) {
   $('aviso').hidden = hay;
   if (subir !== false) window.scrollTo(0, hay ? Math.max(0, $('contenido').getBoundingClientRect().top + window.scrollY - 16) : 0);
 }
-window.addEventListener('hashchange', () => mostrarVista(true));
+window.addEventListener('hashchange', () => { cerrarTemas(); mostrarVista(true); });
+
+// Tarjetas de tema plegables: se abre una por vez, y se cierran al tocar fuera de ellas
+function cerrarTemas(salvo) { document.querySelectorAll('details.tema[open]').forEach(d => { if (d !== salvo) d.open = false; }); }
+document.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('details.tema') && d.open) cerrarTemas(d); }, true);
+document.addEventListener('click', e => { if (!e.target.closest('details.tema')) cerrarTemas(); });
 
 (async function () {
   let guardado = null;
