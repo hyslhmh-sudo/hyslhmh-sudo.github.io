@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0D313F">
+<meta name="theme-color" content="#FFFFFF">
 <title>Higiene y Seguridad Laboral · Salud Chubut</title>
 <meta name="description" content="Capacitaciones, normativa, recomendaciones, accidentes de trabajo y accesos del Servicio de Higiene y Seguridad Laboral.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230D313F'/><path d='M32 12l16 6v12c0 10-7 18-16 22-9-4-16-12-16-22V18z' fill='%235894A7'/><path d='M29 24h6v6h6v6h-6v6h-6v-6h-6v-6h6z' fill='%23fff'/></svg>">
@@ -23,15 +23,19 @@
   .ms { font-family: 'Material Symbols Outlined'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; vertical-align: middle; -webkit-font-smoothing: antialiased; width: 1em; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
   .envoltura { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
 
-  /* Cabecera */
-  header.portada { background: linear-gradient(160deg, #0D313F 0%, #11404F 100%); color: #fff; position: relative; }
-  .marca { display: flex; align-items: center; gap: 10px; padding-top: 26px; font-weight: 700; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: #A9C9D4; }
-  .marca .escudo { width: 34px; height: 34px; border-radius: 9px; background: rgba(88,148,167,.25); border: 1px solid rgba(169,201,212,.35); display: grid; place-items: center; color: #DCEBF0; }
+  /* Cabecera: imagen de encabezado (encabezado.jpg) con el título sobre la franja blanca de abajo */
+  header.portada { background: #fff; color: var(--az); position: relative; border-bottom: 1px solid var(--linea); }
+  .banner { position: relative; width: 100%; aspect-ratio: 2048 / 700; max-height: 480px; overflow: hidden; background: #E3EEF2; }
+  .banner img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+  .portada .envoltura { position: relative; padding-top: 6px; padding-bottom: 26px; }
+  .marca { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--pa); }
+  .marca .escudo { width: 34px; height: 34px; border-radius: 9px; background: var(--az); display: grid; place-items: center; color: #fff; }
   .marca .escudo .ms { font-size: 20px; }
-  .portada h1 { font-size: clamp(32px, 6.4vw, 52px); line-height: 1.08; margin: 30px 0 10px; font-weight: 800; letter-spacing: -.02em; max-width: 780px; }
-  .portada .sub { font-size: clamp(17px, 2.6vw, 21px); color: #CFE1E7; margin: 0 0 12px; font-weight: 500; }
+  .portada h1 { font-size: clamp(30px, 5.6vw, 50px); line-height: 1.08; margin: 12px 0 8px; font-weight: 800; letter-spacing: -.02em; max-width: 780px; color: var(--az); }
+  .portada .sub { font-size: clamp(17px, 2.6vw, 21px); color: var(--mu); margin: 0 0 12px; font-weight: 500; }
   .portada .sub:empty { display: none; }
-  .portada .pres { max-width: 680px; color: #D6E6EB; margin: 0; font-size: 17px; }
+  .portada .pres { max-width: 720px; color: var(--tx); margin: 0; font-size: 17px; }
+  @media (max-width: 560px) { .banner { aspect-ratio: auto; height: 190px; } .banner img { object-position: 30% top; } .portada .envoltura { padding-top: 14px; } }
   .pulso { display: block; width: 100%; height: 54px; margin-top: 30px; }
   nav.atajos { position: sticky; top: 0; z-index: 5; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--linea); }
   nav.atajos .envoltura { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 10px; padding-bottom: 10px; }
@@ -206,17 +210,13 @@
 </head>
 <body>
 <header class="portada">
+  <div class="banner"><img src="encabezado.jpg" srcset="encabezado-chico.jpg 1000w, encabezado.jpg 2048w" sizes="100vw" alt="Agua, ambiente, ergonomía, residuos, normativa, riesgos e incendio en el hospital" width="2048" height="768" fetchpriority="high"></div>
   <div class="envoltura">
     <div class="marca"><span class="escudo"><span class="ms">health_and_safety</span></span>Servicio de Higiene y Seguridad Laboral</div>
     <h1 id="titulo">Higiene y Seguridad Laboral</h1>
     <p class="sub" id="subtitulo"></p>
     <p class="pres" id="presentacion"></p>
   </div>
-  <svg class="pulso" viewBox="0 0 1200 54" preserveAspectRatio="none" aria-hidden="true">
-    <defs><linearGradient id="gp" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#5894A7" stop-opacity=".15"/><stop offset=".35" stop-color="#5894A7"/><stop offset=".7" stop-color="#5E9C7C"/><stop offset="1" stop-color="#5E9C7C" stop-opacity=".15"/></linearGradient></defs>
-    <polyline fill="none" stroke="url(#gp)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"
-      points="0,34 380,34 392,28 402,40 414,8 426,48 436,30 446,34 700,34 712,26 722,42 736,4 750,50 760,30 770,34 1200,34"/>
-  </svg>
 </header>
 
 <main class="envoltura">
