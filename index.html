@@ -72,17 +72,32 @@
   .subtitulo { font-size: 15px; font-weight: 800; color: var(--pa); text-transform: uppercase; letter-spacing: .06em; margin: 22px 0 10px; }
   .fila-botones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 
-  /* Normativa */
-  .normas { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); overflow: hidden; }
-  .grupo-norma { padding: 6px 18px 12px; border-top: 1px solid var(--linea); }
-  .grupo-norma:first-child { border-top: 0; }
-  .grupo-norma h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--pa); margin: 12px 0 4px; }
-  .norma { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid #EEF3F5; flex-wrap: wrap; }
-  .norma:first-of-type { border-top: 0; }
-  .norma b { color: var(--az); }
-  .norma a { font-weight: 700; font-size: 14px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
-  .norma a .ms { font-size: 18px; }
-
+  /* Normativa: una tarjeta por tema, cada tema con su color */
+  .temas { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); align-items: start; }
+  .tema { --c: var(--az); --f: var(--pa-claro); background: var(--blanco); border: 1px solid var(--linea); border-radius: 18px; overflow: hidden; box-shadow: 0 1px 2px rgba(13,49,63,.04); min-width: 0; }
+  .tema-cab { display: flex; align-items: center; gap: 12px; padding: 16px 18px 14px; background: linear-gradient(135deg, var(--f) 0%, #fff 90%); border-bottom: 1px solid var(--linea); position: relative; }
+  .tema-cab::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--c); }
+  .tema-ic { flex: 0 0 44px; height: 44px; border-radius: 13px; background: var(--c); color: #fff; display: grid; place-items: center; box-shadow: 0 4px 12px -4px var(--c); }
+  .tema-ic .ms { font-size: 24px; }
+  .tema-cab h3 { margin: 0; font-size: 17px; line-height: 1.25; color: var(--az); flex: 1; min-width: 0; }
+  .tema-n { font-size: 12px; font-weight: 800; color: var(--c); background: #fff; border: 1px solid var(--f); padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+  .tema ul { list-style: none; margin: 0; padding: 6px 0; }
+  .tema li a, .tema li > span { display: flex; gap: 12px; align-items: flex-start; padding: 11px 18px; text-decoration: none; color: var(--tx); }
+  .tema li a:hover { background: #F7FAFB; }
+  .tema li a:hover .flecha { color: var(--c); transform: translate(2px, -2px); }
+  .tema li + li { border-top: 1px solid #EEF3F5; }
+  .tema .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .tema .txt b { color: var(--az); font-size: 15px; line-height: 1.35; }
+  .tema .txt span { color: var(--mu); font-size: 13.5px; line-height: 1.45; }
+  .tema .punto { flex: 0 0 8px; height: 8px; border-radius: 50%; background: var(--c); margin-top: 7px; opacity: .8; }
+  .tema .flecha { color: #A9BAC1; font-size: 20px; margin-top: 1px; transition: transform .15s, color .15s; }
+  .tema details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 11px 18px; font-weight: 700; font-size: 14px; color: var(--c); border-top: 1px solid #EEF3F5; min-height: 44px; }
+  .tema details > summary::-webkit-details-marker { display: none; }
+  .tema details > summary:hover { background: #F7FAFB; }
+  .tema details[open] > summary .ms { transform: rotate(180deg); }
+  .tema details[open] > summary .mas { display: none; }
+  .tema details:not([open]) > summary .menos { display: none; }
+  .tema details > ul { border-top: 1px solid #EEF3F5; padding-top: 0; }
 
   /* Salud del trabajador */
   .nota-azul { display: flex; gap: 12px; align-items: flex-start; background: var(--pa-claro); border-left: 5px solid var(--pa); border-radius: 10px; padding: 14px 16px; margin-bottom: 6px; }
@@ -195,7 +210,7 @@ function leerHoja(nombre) {
 }
 
 const ATAJOS = { capacitaciones: ['school', 'Capacitaciones'], salud: ['health_and_safety', 'Salud del trabajador'], recomendaciones: ['verified_user', 'Recomendaciones'],
-  normativa: ['gavel', 'Normativa'], recursos: ['folder_open', 'Recursos'], accesos: ['apps', 'Accesos'] };
+  normativa: ['gavel', 'Normativa y guías'], recursos: ['folder_open', 'Recursos'], accesos: ['apps', 'Accesos'] };
 let mostradas = [];
 function seccion(id, icono, titulo, intro, cuerpo) {
   if (!cuerpo) return '';                 // sección sin filas visibles: no se muestra
@@ -254,13 +269,31 @@ function dibujar(D) {
       (r.BASE_NORMATIVA ? '<span class="chico">Base normativa: ' + esc(r.BASE_NORMATIVA) + '</span>' : '') + '</div>').join('') + '</div>'
     : '');
 
-  // Normativa (agrupada por tema)
+  // Normativa: una tarjeta por tema (en el orden de la planilla), con color e ícono propios; muestra 4 y el resto se despliega
+  const COL_TEMA = [
+    [/oms|salud\b|personal de salud/i, '#3B7F67', '#E2F1EA', 'medical_services'],
+    [/gu[ií]a|srt$/i, '#3E7F95', '#E1EEF3', 'menu_book'],
+    [/riesgos del trabajo|autoseguro/i, '#B26A12', '#FBEFDC', 'shield_person'],
+    [/agentes/i, '#2F7F86', '#DDF0F0', 'sensors'],
+    [/ergonom/i, '#4E7F3A', '#E7F1E0', 'accessibility_new'],
+    [/qu[ií]mic/i, '#6B5CA5', '#ECE9F6', 'science'],
+    [/radiac/i, '#B4533E', '#FAE7E1', 'radiology'],
+    [/violencia/i, '#A3476B', '#F6E5ED', 'diversity_3'],
+    [/oit/i, '#2C5D9E', '#E3EBF7', 'public'],
+    [/general/i, '#0D313F', '#E3EEF2', 'gavel'],
+  ];
+  const estiloTema = t => COL_TEMA.find(x => x[0].test(t)) || [null, '#5894A7', '#E3EEF2', 'description'];
+  const itemNorma = n => { const u = enlace(n.ENLACE), dentro = '<span class="punto"></span><span class="txt"><b>' + esc(n.NORMA) + '</b>' + (n.DESCRIPCION ? '<span>' + esc(n.DESCRIPCION) + '</span>' : '') + '</span>';
+    return '<li>' + (u ? '<a href="' + esc(u) + '" target="_blank" rel="noopener" title="Abrir el texto">' + dentro + '<span class="ms flecha">north_east</span></a>' : '<span>' + dentro + '</span>') + '</li>'; };
   const nor = ordenar((D.NORMATIVA || []).filter(visible)), temas = [];
   nor.forEach(n => { const t = String(n.TEMA || 'General').trim(); if (temas.indexOf(t) < 0) temas.push(t); });
-  html += seccion('normativa', 'gavel', 'Normativa', 'Leyes, decretos y resoluciones en las que se basa el trabajo de Higiene y Seguridad.',
-    nor.length ? '<div class="normas">' + temas.map(t => '<div class="grupo-norma"><h3>' + esc(t) + '</h3>' + nor.filter(n => String(n.TEMA || 'General').trim() === t).map(n =>
-      '<div class="norma"><span><b>' + esc(n.NORMA) + '</b>' + (n.DESCRIPCION ? ' · ' + esc(n.DESCRIPCION) : '') + '</span>' +
-      (enlace(n.ENLACE) ? '<a href="' + esc(enlace(n.ENLACE)) + '" target="_blank" rel="noopener">Ver texto<span class="ms">open_in_new</span></a>' : '') + '</div>').join('') + '</div>').join('') + '</div>'
+  html += seccion('normativa', 'gavel', 'Normativa y guías', 'Leyes, convenios y guías de referencia en las que se basa el trabajo de Higiene y Seguridad. Tocá una norma para abrir su texto oficial.',
+    nor.length ? '<div class="temas">' + temas.map(t => {
+      const items = nor.filter(n => String(n.TEMA || 'General').trim() === t), e = estiloTema(t), VER = window.innerWidth < 600 ? 2 : 4;
+      return '<article class="tema" style="--c:' + e[1] + ';--f:' + e[2] + '"><div class="tema-cab"><span class="tema-ic"><span class="ms">' + e[3] + '</span></span><h3>' + esc(t) + '</h3><span class="tema-n">' + items.length + '</span></div>' +
+        '<ul>' + items.slice(0, VER).map(itemNorma).join('') + '</ul>' +
+        (items.length > VER ? '<details><summary><span class="mas">Ver ' + (items.length - VER) + ' más</span><span class="menos">Ver menos</span><span class="ms">expand_more</span></summary><ul>' + items.slice(VER).map(itemNorma).join('') + '</ul></details>' : '') +
+        '</article>'; }).join('') + '</div>'
     : '');
 
   // Recursos y videos
