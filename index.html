@@ -60,7 +60,7 @@
   /* Capacitaciones */
   .fechas { display: flex; flex-direction: column; gap: 10px; }
   .fecha { display: flex; gap: 14px; align-items: stretch; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio); padding: 14px; }
-  .dia { flex: 0 0 64px; border-radius: 10px; background: var(--az); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0; }
+  .dia { align-self: flex-start; min-height: 70px; flex: 0 0 64px; border-radius: 10px; background: var(--az); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0; }
   .dia b { font-size: 24px; line-height: 1; }
   .dia span { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #BFD6DE; }
   .fecha .datos { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -182,20 +182,18 @@ function dibujar(D) {
   $('contacto').innerHTML = [P.CORREO ? '<a href="mailto:' + esc(P.CORREO) + '">' + esc(P.CORREO) + '</a>' : '', P.TELEFONO ? esc(P.TELEFONO) : '',
     P.ACTUALIZADO ? '<span style="opacity:.75">Actualizado: ' + esc(P.ACTUALIZADO) + '</span>' : ''].filter(Boolean).join(' · ');
 
-  // Capacitaciones
-  const caps = D.CAPACITACIONES || [], agenda = caps.filter(c => c.TIPO === 'Agenda'), abiertas = caps.filter(c => c.TIPO === 'Abierta');
-  const urlAgenda = (agenda.find(c => enlace(c.ENLACE)) || {}).ENLACE || 'https://hyslhmh-sudo.github.io/capacitaciones/agenda.html?yo=1';
-  const fechaBloque = f => { const m = String(f || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (!m) return '<div class="dia"><b>—</b></div>';
-    const d = new Date(+m[3], +m[2] - 1, +m[1]); return '<div class="dia"><span>' + DIAS[d.getDay()].slice(0, 3) + '</span><b>' + (+m[1]) + '</b><span>' + MESES[+m[2] - 1] + '</span></div>'; };
-  let cuerpoCaps = '<div class="subtitulo">Próximas fechas</div>' + (agenda.length ? '<div class="fechas">' + agenda.map(c =>
-      '<div class="fecha">' + fechaBloque(c.FECHA) + '<div class="datos"><b>' + esc(c.CAPACITACION) + '</b><span class="chico">' + [c.HORA ? c.HORA + ' h' : '', c.MODALIDAD, c.LUGAR].filter(Boolean).map(esc).join(' · ') + '</span>' +
-      (c.DETALLE ? '<span class="chico">' + esc(c.DETALLE) + '</span>' : '') + '</div></div>').join('') + '</div>'
-    : vacio('Por ahora no hay fechas publicadas. Podés consultar la agenda para ver los turnos disponibles.'));
-  cuerpoCaps += '<div class="fila-botones"><a class="boton" href="' + esc(enlace(urlAgenda)) + '" target="_blank" rel="noopener"><span class="ms">event_available</span>Anotarme en la agenda</a></div>';
-  if (abiertas.length) cuerpoCaps += '<div class="subtitulo">Abiertas: hacelas a tu ritmo</div><div class="grilla">' + abiertas.map(c =>
-      '<div class="tarjeta"><span class="etiqueta">' + esc(c.MODALIDAD || 'Virtual') + '</span><h3>' + esc(c.CAPACITACION) + '</h3>' + (c.DETALLE ? '<span class="chico">' + esc(c.DETALLE) + '</span>' : '') +
-      (enlace(c.ENLACE) ? '<a class="boton sec" href="' + esc(enlace(c.ENLACE)) + '" target="_blank" rel="noopener">Hacer la capacitación<span class="ms">arrow_forward</span></a>' : '') + '</div>').join('') + '</div>';
-  let html = seccion('capacitaciones', 'school', 'Capacitaciones', 'Fechas de las capacitaciones de Higiene y Seguridad y capacitaciones abiertas para hacer en cualquier momento.', cuerpoCaps);
+  // Capacitaciones: solo jornadas con formulario de inscripción abierto. Se ocultan solas al pasar el cierre (o el inicio).
+  const aFecha = s => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+  const hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
+  const caps = ordenar((D.CAPACITACIONES || []).filter(visible).filter(c => enlace(c.ENLACE_INSCRIPCION)).filter(c => { const lim = aFecha(c.CIERRE_INSCRIPCION) || aFecha(c.INICIO); return !lim || lim >= hoy0; }));
+  const fechaBloque = f => { const d = aFecha(f); return d ? '<div class="dia"><span>' + DIAS[d.getDay()].slice(0, 3) + '</span><b>' + d.getDate() + '</b><span>' + MESES[d.getMonth()] + '</span></div>' : '<div class="dia"><b>—</b></div>'; };
+  const cuerpoCaps = caps.length ? '<div class="fechas">' + caps.map(c =>
+      '<div class="fecha">' + fechaBloque(c.INICIO) + '<div class="datos" style="flex:1"><b>' + esc(c.CAPACITACION) + '</b><span class="chico">' + [c.INICIO ? 'Empieza el ' + c.INICIO : '', c.DIAS_Y_HORARIO, c.MODALIDAD].filter(Boolean).map(esc).join(' · ') + '</span>' +
+      (c.DESTINATARIOS ? '<span class="chico">Para: ' + esc(c.DESTINATARIOS) + '</span>' : '') + (c.DETALLE ? '<span class="chico">' + esc(c.DETALLE) + '</span>' : '') +
+      (c.CIERRE_INSCRIPCION ? '<span class="chico"><b style="color:inherit">Inscripción hasta el ' + esc(c.CIERRE_INSCRIPCION) + '</b></span>' : '') +
+      '<a class="boton" style="margin-top:10px" href="' + esc(enlace(c.ENLACE_INSCRIPCION)) + '" target="_blank" rel="noopener"><span class="ms">how_to_reg</span>Inscribirme</a></div></div>').join('') + '</div>'
+    : vacio('Por ahora no hay inscripciones abiertas. Las próximas jornadas se publican acá.');
+  let html = seccion('capacitaciones', 'school', 'Próximas capacitaciones', 'Jornadas de Higiene y Seguridad con inscripción abierta.', cuerpoCaps);
 
   // Accidentes de trabajo y Autoseguro
   const auto = ordenar((D.AUTOSEGURO || []).filter(visible));
