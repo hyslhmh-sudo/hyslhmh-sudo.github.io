@@ -247,6 +247,7 @@
 <script>
 // Contenidos: planilla «PORTAL PÚBLICO HyS · contenidos» (pública, solo lectura). Se edita allá; acá solo se muestra.
 const PLANILLA = '1W8OlPk0lPxWjrZ9yGJzbx6iLQsm8NJ7z6xMOw_jE95c';
+const MIS_CERTIFICADOS = 'https://script.google.com/macros/s/AKfycbxXz2AuN9nx5JkiNVI0LFYpEG-0ciYTXH9pN6QnO3SIaIltljCi8sbRB4PwiDx9Jf4Ugw/exec?m=1';   // página «Mis certificados» del libro CAPACITACIONES
 const HOJAS = ['PORTADA', 'CAPACITACIONES', 'NORMATIVA', 'RECOMENDACIONES', 'AUTOSEGURO', 'RECURSOS', 'VIDEOS', 'ACCESOS'];
 const GUARDADO = 'portalHyS_contenidos_v1';
 const $ = id => document.getElementById(id);
@@ -311,7 +312,10 @@ function dibujar(D) {
       (c.CIERRE_INSCRIPCION ? '<span class="chico"><b style="color:inherit">Inscripción hasta el ' + esc(c.CIERRE_INSCRIPCION) + '</b></span>' : '') +
       '<a class="boton" style="margin-top:10px" href="' + esc(enlace(c.ENLACE_INSCRIPCION)) + '" target="_blank" rel="noopener"><span class="ms">how_to_reg</span>Inscribirme</a></div></div>').join('') + '</div>'
     : vacio('Por ahora no hay inscripciones abiertas. Las próximas jornadas se publican acá.');
-  let html = seccion('capacitaciones', 'school', 'Próximas capacitaciones', 'Jornadas de Higiene y Seguridad con inscripción abierta.', cuerpoCaps);
+  // «Mis certificados»: siempre visible, haya o no inscripciones abiertas
+  const misCert = '<a class="tarjeta acceso" style="margin-top:14px" href="' + MIS_CERTIFICADOS + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">workspace_premium</span></span>' +
+    '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>Mis certificados</h3><span class="chico">¿Ya hiciste una capacitación? Descargá tus certificados y constancias con tu DNI.</span></span><span class="ms ir">open_in_new</span></a>';
+  let html = seccion('capacitaciones', 'school', 'Capacitaciones', 'Jornadas de Higiene y Seguridad con inscripción abierta y tus certificados.', cuerpoCaps + misCert);
 
   // Salud del trabajador (pestaña AUTOSEGURO): aviso, introducción, primeras acciones, teléfonos, correo y enlaces
   const st = ordenar((D.AUTOSEGURO || []).filter(visible)), bq = t => st.filter(f => String(f.BLOQUE || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === t);
@@ -415,7 +419,7 @@ function dibujar(D) {
     recomendaciones: ['#2F7F86', '#DDF0F0'], recursos: ['#6B5CA5', '#ECE9F6'], videos: ['#B4533E', '#FAE7E1'], accesos: ['#2C5D9E', '#E3EBF7'] };
   const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const RES = {
-    capacitaciones: [caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad', caps.length ? 'Inscribite' : ''],
+    capacitaciones: [(caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad') + ' · Mis certificados', caps.length ? 'Inscribite' : ''],
     accesos: ['Gestión de residuos, agenda de capacitaciones y carga de tu establecimiento', pl(acc.length, 'aplicación', 'aplicaciones')],
     normativa: ['Convenio colectivo, leyes, decretos y resoluciones: qué te corresponde y qué te toca cumplir', pl(nor.length + dest.length, 'norma', 'normas')],
     salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
