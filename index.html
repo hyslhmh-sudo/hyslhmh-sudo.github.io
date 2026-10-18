@@ -416,7 +416,7 @@ function dibujar(D) {
   const icAcc = t => /agenda|capacit/i.test(t) ? 'event_available' : /residu/i.test(t) ? 'recycling' : /diagn|auditor/i.test(t) ? 'fact_check' : /gesti/i.test(t) ? 'admin_panel_settings' : /establec/i.test(t) ? 'local_hospital' : 'login';
   // La agenda y Mis certificados viven en la sección Capacitaciones: en Herramientas no se repiten
   const acc = ordenar((D.ACCESOS || []).filter(visible)).filter(a => enlace(a.ENLACE)).filter(a => !/\/capacitaciones\//i.test(enlace(a.ENLACE)));
-  html += seccion('accesos', 'handyman', 'Herramientas', 'Aplicaciones para cargar y consultar información: gestión de residuos y la carga de tu establecimiento. La agenda y los certificados están en Capacitaciones.',
+  html += seccion('accesos', 'handyman', 'Herramientas', 'Gestión de residuos y acceso a gestión. La agenda y los certificados están en Capacitaciones.',
     acc.length ? '<div class="grilla">' + acc.map(a => '<a class="tarjeta acceso" href="' + esc(enlace(a.ENLACE)) + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">' + icAcc(a.TITULO) + '</span></span>' +
       '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>' + esc(a.TITULO) + '</h3>' + (a.PARA_QUIEN ? '<span class="chico">' + esc(a.PARA_QUIEN) + '</span>' : '') + (a.DESCRIPCION ? '<span>' + esc(a.DESCRIPCION) + '</span>' : '') + '</span>' +
       '<span class="ms ir">chevron_right</span></a>').join('') + '</div>'
@@ -428,7 +428,7 @@ function dibujar(D) {
   const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const RES = {
     capacitaciones: [(caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad') + ' · Agenda · Mis certificados', caps.length ? pl(caps.length, 'jornada', 'jornadas') + ' · Inscribite' : 'Mis certificados'],
-    accesos: ['Gestión de residuos y carga de tu establecimiento', pl(acc.length, 'aplicación', 'aplicaciones')],
+    accesos: ['Gestión de residuos y acceso a gestión', pl(acc.length, 'aplicación', 'aplicaciones')],
     normativa: ['Convenio colectivo, leyes, decretos y resoluciones: qué te corresponde y qué te toca cumplir', pl(nor.length + dest.length, 'norma', 'normas')],
     salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
     recursos: ['Riesgos de tu trabajo y cómo cuidarte: ergonomía, riesgo biológico, químicos, violencia laboral y más', pl(temasRec.length, 'tema', 'temas')],
