@@ -118,6 +118,11 @@
   .tile-pie { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--c); }
   .tile-n { font-size: 13px; font-weight: 800; color: var(--c); background: #fff; border: 1px solid var(--f); padding: 4px 11px; border-radius: 999px; }
   .tile.destacado .tile-n { background: var(--c); color: #fff; border-color: var(--c); }
+  @media (min-width: 620px) { .tile.destacado { grid-column: span 2; } }
+  .tile-prox { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; position: relative; }
+  .tile-prox li { display: flex; gap: 10px; align-items: baseline; font-size: 15px; color: var(--az); line-height: 1.3; }
+  .tile-prox .cuando { flex: none; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #fff; background: var(--c); padding: 3px 9px; border-radius: 8px; letter-spacing: .02em; }
+  .tile-prox .mas { font-size: 13px; color: var(--mu); }
   .vista[hidden] { display: none !important; }
   .volver { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 16px; padding: 8px 14px 8px 10px; border-radius: 999px; background: var(--blanco); border: 1px solid var(--linea); color: var(--az); font-weight: 700; font-size: 14px; text-decoration: none; min-height: 40px; }
   .volver:hover { border-color: var(--pa); }
@@ -315,7 +320,9 @@ function dibujar(D) {
   // «Mis certificados»: siempre visible, haya o no inscripciones abiertas
   const misCert = '<a class="tarjeta acceso" style="margin-top:14px" href="' + MIS_CERTIFICADOS + '" target="_blank" rel="noopener"><span class="icono"><span class="ms">workspace_premium</span></span>' +
     '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>Mis certificados</h3><span class="chico">¿Ya hiciste una capacitación? Descargá tus certificados y constancias con tu DNI.</span></span><span class="ms ir">open_in_new</span></a>';
-  let html = seccion('capacitaciones', 'school', 'Capacitaciones', 'Jornadas de Higiene y Seguridad con inscripción abierta y tus certificados.', cuerpoCaps + misCert);
+  const agendaCap = '<a class="tarjeta acceso" style="margin-top:14px" href="https://hyslhmh-sudo.github.io/capacitaciones/agenda.html?yo=1" target="_blank" rel="noopener"><span class="icono"><span class="ms">event_available</span></span>' +
+    '<span style="display:flex;flex-direction:column;gap:4px;min-width:0"><h3>Agenda de capacitaciones</h3><span class="chico">Todas las clases abiertas de la semana y los horarios para que tu servicio reserve una capacitación.</span></span><span class="ms ir">open_in_new</span></a>';
+  let html = seccion('capacitaciones', 'school', 'Capacitaciones', 'Jornadas de Higiene y Seguridad con inscripción abierta, la agenda y tus certificados.', cuerpoCaps + agendaCap + misCert);
 
   // Salud del trabajador (pestaña AUTOSEGURO): aviso, introducción, primeras acciones, teléfonos, correo y enlaces
   const st = ordenar((D.AUTOSEGURO || []).filter(visible)), bq = t => st.filter(f => String(f.BLOQUE || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') === t);
@@ -419,18 +426,21 @@ function dibujar(D) {
     recomendaciones: ['#2F7F86', '#DDF0F0'], recursos: ['#6B5CA5', '#ECE9F6'], videos: ['#B4533E', '#FAE7E1'], accesos: ['#2C5D9E', '#E3EBF7'] };
   const pl = (n, a, b) => n + ' ' + (n === 1 ? a : b);
   const RES = {
-    capacitaciones: [(caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad') + ' · Mis certificados', caps.length ? 'Inscribite' : ''],
+    capacitaciones: [(caps.length ? pl(caps.length, 'jornada con inscripción abierta', 'jornadas con inscripción abierta') : 'Próximas jornadas de Higiene y Seguridad') + ' · Agenda · Mis certificados', caps.length ? pl(caps.length, 'jornada', 'jornadas') + ' · Inscribite' : 'Mis certificados'],
     accesos: ['Gestión de residuos, agenda de capacitaciones y carga de tu establecimiento', pl(acc.length, 'aplicación', 'aplicaciones')],
     normativa: ['Convenio colectivo, leyes, decretos y resoluciones: qué te corresponde y qué te toca cumplir', pl(nor.length + dest.length, 'norma', 'normas')],
     salud: ['Qué hacer ante un accidente de trabajo, teléfonos y vacunación', 'CeCAP 0800-348-1033'],
     recursos: ['Riesgos de tu trabajo y cómo cuidarte: ergonomía, riesgo biológico, químicos, violencia laboral y más', pl(temasRec.length, 'tema', 'temas')],
     videos: ['Capacitaciones grabadas de Higiene y Seguridad para mirar cuando quieras', pl(vids.length, 'video', 'videos')],
     recomendaciones: ['Medidas simples para cuidarte en el trabajo', pl(rec.length, 'recomendación', 'recomendaciones')] };
+  // Tarjetón de Capacitaciones: muestra las próximas jornadas con fecha (es el lugar natural para enterarse y anotarse)
+  const proxCaps = '<ul class="tile-prox">' + caps.slice(0, 3).map(c => '<li><span class="cuando">' + esc(String(c.DIAS_Y_HORARIO || c.INICIO || '').split(' · ').slice(0, 2).join(' · ').replace(/ a \d{1,2}:\d{2} h$/, ' h')) + '</span><span>' + esc(c.CAPACITACION) + '</span></li>').join('') +
+    (caps.length > 3 ? '<li class="mas">y ' + pl(caps.length - 3, 'jornada más', 'jornadas más') + '</li>' : '') + '</ul>';
   SECC.sort((x, y) => ORDEN_INICIO.indexOf(x) - ORDEN_INICIO.indexOf(y));
   const inicio = '<section id="inicio" class="vista"><div class="tiles">' + SECC.map(id => { const t = TILE[id] || ['#5894A7', '#E3EEF2'], r = RES[id] || ['', ''];
     return '<a class="tile' + (id === 'capacitaciones' && caps.length ? ' destacado' : '') + '" href="#' + id + '" style="--c:' + t[0] + ';--f:' + t[1] + '">' +
       '<span class="ms fondo">' + ATAJOS[id][0] + '</span><span class="tile-ic"><span class="ms">' + ATAJOS[id][0] + '</span></span>' +
-      '<h3>' + esc(ATAJOS[id][1]) + '</h3><p>' + esc(r[0]) + '</p><span class="tile-pie">' + (r[1] ? '<span class="tile-n">' + esc(r[1]) + '</span>' : '<span></span>') + '<span class="ms">arrow_forward</span></span></a>'; }).join('') + '</div></section>';
+      '<h3>' + esc(ATAJOS[id][1]) + '</h3>' + (id === 'capacitaciones' && caps.length ? proxCaps : '<p>' + esc(r[0]) + '</p>') + '<span class="tile-pie">' + (r[1] ? '<span class="tile-n">' + esc(r[1]) + '</span>' : '<span></span>') + '<span class="ms">arrow_forward</span></span></a>'; }).join('') + '</div></section>';
   const inicioDest = dest.length ? '<a class="tile-dest" href="#normativa"><span class="dest-ic"><span class="ms">handshake</span></span><span class="td-txt"><span class="dest-eti">' + esc(dest[0].TEMA || 'Destacado') + '</span><b>' + esc(dest[0].NORMA) + '</b><span>Tus derechos en seguridad y salud: condiciones de trabajo, exámenes periódicos, tareas insalubres y licencias.</span></span><span class="ms">arrow_forward</span></a>' : '';
   $('contenido').innerHTML = inicio.replace('<div class="tiles">', inicioDest + '<div class="tiles">') + html;
   mostrarVista(false);
