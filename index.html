@@ -404,10 +404,15 @@ function dibujar(D) {
   // Videos: capacitaciones grabadas (YouTube). Se ven con la miniatura y se reproducen en la misma página al tocarlas
   const idYT = u => (String(u || '').match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/) || [])[1] || '';
   const vids = ordenar((D.VIDEOS || []).filter(visible)).filter(v => idYT(v.ENLACE));
-  html += seccion('videos', 'smart_display', 'Videos', 'Capacitaciones grabadas de Higiene y Seguridad. Tocá un video para mirarlo acá mismo.',
+  // Capacitación autoadministrada (columna CODIGO de la hoja VIDEOS): video + evaluación o constancia, en el sistema de capacitaciones
+  const codVid = v => /^CAP-[\w-]+$/i.test(String(v.CODIGO || '').trim()) ? String(v.CODIGO).trim().toUpperCase() : '';
+  const partes = v => vids.filter(x => codVid(x) === codVid(v)).length;
+  html += seccion('videos', 'smart_display', 'Videos', 'Capacitaciones grabadas de Higiene y Seguridad. Tocá un video para mirarlo acá mismo, o hacelo como capacitación autoadministrada para obtener tu certificado.',
     vids.length ? '<div class="videos">' + vids.map(v => { const id = idYT(v.ENLACE);
       return '<article class="video"><button class="video-mini" data-yt="' + id + '" aria-label="Reproducir: ' + esc(v.TITULO) + '"><img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy"><span class="play"><span class="ms">play_arrow</span></span></button>' +
         '<div class="video-txt">' + (v.TEMA ? '<span class="etiqueta">' + esc(v.TEMA) + '</span>' : '') + '<h3>' + esc(v.TITULO) + '</h3>' + (v.DESCRIPCION ? '<p>' + esc(v.DESCRIPCION) + '</p>' : '') +
+        (codVid(v) ? '<a class="boton" style="margin-top:6px" href="https://hyslhmh-sudo.github.io/capacitaciones/?av=' + encodeURIComponent(codVid(v)) + '" target="_blank" rel="noopener"><span class="ms">workspace_premium</span>Hacerla como capacitación</a>' +
+          '<p style="font-size:13px">' + (partes(v) > 1 ? 'Incluye las ' + partes(v) + ' partes. ' : '') + 'Mirás al menos el 80 % ' + (partes(v) > 1 ? 'de cada video' : 'del video') + ' y seguís los pasos para obtener tu certificado.</p>' : '') +
         '<a class="chico" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Ver en YouTube' + (v.CANAL ? ' · ' + esc(v.CANAL) : '') + '</a></div></article>'; }).join('') + '</div>'
     : '');
 
