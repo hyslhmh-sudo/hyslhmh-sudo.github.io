@@ -221,6 +221,19 @@
   .cargando::before { content: ''; width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--linea); border-top-color: var(--pa); animation: gira 1s linear infinite; }
   @keyframes gira { to { transform: rotate(360deg); } }
   @media (max-width: 560px) { .fecha { padding: 12px; } .dia { flex-basis: 56px; } .boton { width: 100%; } .tarjeta .boton { width: 100%; } }
+  /* Ayuda: botón fijo (en todas las vistas) y ventana con la guía rápida */
+  .btn-ayuda { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 20; display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 10px 18px 10px 14px; border: 0; border-radius: 999px; background: var(--az); color: #fff; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 8px 22px -8px rgba(13,49,63,.55); }
+  .btn-ayuda:hover { background: #164a5e; }
+  dialog.ayuda { width: min(560px, calc(100% - 32px)); max-height: calc(100dvh - 48px); border: 0; border-radius: 18px; padding: 0; color: var(--tx); box-shadow: 0 24px 60px -20px rgba(13,49,63,.5); }
+  dialog.ayuda::backdrop { background: rgba(13,49,63,.45); }
+  .ayuda-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--linea); position: sticky; top: 0; background: #fff; }
+  .ayuda-cab h2 { margin: 0; font-size: 19px; color: var(--az); display: flex; align-items: center; gap: 8px; }
+  .ayuda-cab button { min-width: 44px; min-height: 44px; border: 0; border-radius: 10px; background: var(--pa-claro); color: var(--az); cursor: pointer; display: grid; place-items: center; }
+  .ayuda-cuerpo { padding: 6px 18px 18px; }
+  .ayuda-cuerpo h3 { font-size: 15.5px; color: var(--az); margin: 16px 0 4px; }
+  .ayuda-cuerpo p, .ayuda-cuerpo li { margin: 0; font-size: 15px; }
+  .ayuda-cuerpo ul { margin: 4px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+  footer { padding-bottom: 84px; }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .cargando::before { animation: none; } }
 </style>
 </head>
@@ -240,13 +253,31 @@
   <div id="contenido"><div class="cargando">Cargando la información…</div></div>
 </main>
 
-<div class="firma"><img src="logo-hysl.png" alt="Hospitales más seguros para las personas · Higiene y Seguridad Laboral" width="1600" height="145"></div>
+<div class="firma"><img src="logo-hysl.png" loading="lazy" decoding="async" alt="Hospitales más seguros para las personas · Higiene y Seguridad Laboral" width="1600" height="145"></div>
 <footer>
   <div class="envoltura pie">
     <div id="pie">Servicio de Higiene y Seguridad Laboral</div>
     <div id="contacto"></div>
   </div>
 </footer>
+
+<button type="button" class="btn-ayuda" id="btnAyuda" aria-haspopup="dialog"><span class="ms" aria-hidden="true">help</span>Ayuda</button>
+<dialog class="ayuda" id="dlgAyuda" aria-labelledby="ayudaTit">
+  <div class="ayuda-cab"><h2 id="ayudaTit"><span class="ms" aria-hidden="true">help</span>Cómo usar esta página</h2><button type="button" id="cerrarAyuda" aria-label="Cerrar la ayuda"><span class="ms" aria-hidden="true">close</span></button></div>
+  <div class="ayuda-cuerpo">
+    <h3>Para moverte</h3>
+    <ul><li>Tocá un tarjetón del inicio para abrir esa sección.</li><li>Con «Inicio» (arriba de cada sección) o con el botón «atrás» del teléfono volvés al inicio.</li></ul>
+    <h3>Capacitaciones</h3>
+    <ul><li><b>Inscribirme</b>: abre el formulario de la jornada. Solo se ven las que tienen la inscripción abierta.</li><li><b>Agenda</b>: clases abiertas de la semana y horarios para que tu servicio reserve una capacitación.</li><li><b>Mis certificados</b>: los descargás con tu DNI.</li><li>Las páginas de la agenda y de los certificados pueden tardar entre 10 y 30 segundos en abrir la primera vez. Es normal: no las cierres.</li></ul>
+    <h3>Accidente de trabajo</h3>
+    <p>Entrá a «Salud del trabajador»: ahí están los primeros pasos y los teléfonos.</p>
+    <h3>Videos</h3>
+    <p>Tocá la imagen para mirarlo acá mismo. Si dice «Hacerla como capacitación», al terminar obtenés tu certificado.</p>
+    <p id="ayudaExtra" style="margin-top:16px"></p>
+    <h3>¿Algo no funciona?</h3>
+    <p id="ayudaContacto">Escribile al Servicio de Higiene y Seguridad Laboral.</p>
+  </div>
+</dialog>
 
 <script>
 // Contenidos: planilla «PORTAL PÚBLICO HyS · contenidos» (pública, solo lectura). Se edita allá; acá solo se muestra.
@@ -302,6 +333,8 @@ function dibujar(D) {
   $('presentacion').textContent = P.PRESENTACION || '';
   $('aviso').innerHTML = P.AVISO ? '<div class="aviso" role="status">' + esc(P.AVISO) + '</div>' : '';
   $('pie').textContent = P.PIE || 'Servicio de Higiene y Seguridad Laboral';
+  $('ayudaExtra').textContent = P.AYUDA || '';   // texto extra de ayuda: clave AYUDA en la pestaña PORTADA (opcional)
+  $('ayudaContacto').innerHTML = 'Escribile al Servicio de Higiene y Seguridad Laboral' + (P.CORREO ? ': <a href="mailto:' + esc(P.CORREO) + '">' + esc(P.CORREO) + '</a>' : '') + (P.TELEFONO ? ' · ' + esc(P.TELEFONO) : '') + '.';
   $('contacto').innerHTML = [P.CORREO ? '<a href="mailto:' + esc(P.CORREO) + '">' + esc(P.CORREO) + '</a>' : '', P.TELEFONO ? esc(P.TELEFONO) : '',
     P.ACTUALIZADO ? '<span style="opacity:.75">Actualizado: ' + esc(P.ACTUALIZADO) + '</span>' : ''].filter(Boolean).join(' · ');
 
@@ -458,6 +491,10 @@ function mostrarVista(subir) {
   $('aviso').hidden = hay;
   if (subir !== false) window.scrollTo(0, hay ? Math.max(0, $('contenido').getBoundingClientRect().top + window.scrollY - 16) : 0);
 }
+// Ayuda: el botón está siempre visible (inicio y secciones)
+$('btnAyuda').onclick = () => { const d = $('dlgAyuda'); if (d.showModal) d.showModal(); else d.setAttribute('open', ''); };
+$('cerrarAyuda').onclick = () => { const d = $('dlgAyuda'); if (d.close) d.close(); else d.removeAttribute('open'); };
+$('dlgAyuda').addEventListener('click', e => { if (e.target === e.currentTarget && e.currentTarget.close) e.currentTarget.close(); });   // tocar fuera la cierra
 window.addEventListener('hashchange', () => { cerrarTemas(); mostrarVista(true); });
 
 // Tarjetas de tema plegables: se abre una por vez, y se cierran al tocar fuera de ellas
