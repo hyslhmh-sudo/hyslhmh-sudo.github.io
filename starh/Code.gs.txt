@@ -1,0 +1,441 @@
+/**
+ * STAR-H · App de relevamiento y tablero · Backend (versión 0)
+ * ------------------------------------------------------------------
+ * Va pegado en el Apps Script del libro «STAR-H · Tablero comparativo HySL»
+ * (Extensiones › Apps Script). Lee la hoja REDES de ese libro para saber
+ * qué planilla corresponde a cada red, y escribe las evaluaciones en la
+ * hoja EVALUACIÓN de cada planilla de red.
+ *
+ * Nunca escribe en las columnas con fórmulas (Gravedad, Impacto, Riesgo,
+ * Nivel): las calcula la planilla de cada red.
+ *
+ * Hojas que crea en este libro (menú STAR-H app › Preparar hojas de la app):
+ *   ACCESOS STAR-H  → quién entra, con qué rol, a qué redes y establecimientos.
+ *   REGISTRO APP    → cada ingreso y cada cambio hecho desde la app.
+ */
+
+const CFG = {
+  HOJA_REDES: 'REDES',
+  HOJA_ACCESOS: 'ACCESOS STAR-H',
+  HOJA_REGISTRO: 'REGISTRO APP',
+  DIAS_SESION: 30,          // la sesión dura 30 días (permite trabajar sin señal)
+  INTENTOS_MAX: 5,          // intentos de clave fallidos antes de bloquear
+  MINUTOS_BLOQUEO: 15,
+  ROLES: ['Administración', 'Referente', 'Consulta'],
+  ESTADOS_RELEV: ['Pendiente', 'Convocado', 'En curso', 'Evaluado', 'Validado por la Dirección']
+};
+
+// Columnas de la hoja EVALUACIÓN de cada red (1 = A)
+const C = {
+  codigo: 1, id: 2, estab: 3, red: 4, origen: 5, grupo: 6, amenaza: 7,
+  aplica: 8, A: 9, B1: 10, B2: 11, B3: 12, Cv: 13, D: 14,
+  grav: 15, imp: 16, riesgo: 17, nivel: 18,
+  fuente: 19, antec: 20, medidas: 21, accion: 22, area: 23, fecha: 24, evaluador: 25
+};
+
+/* =========================================================
+ *  MENÚ EN LA PLANILLA
+ * ========================================================= */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('STAR-H app')
+    .addItem('Ayuda', 'menuAyuda')
+    .addSeparator()
+    .addItem('Preparar hojas de la app', 'prepararHojas')
+    .addItem('Generar o reiniciar clave (fila seleccionada en ACCESOS)', 'menuGenerarClave')
+    .addItem('Probar conexión con las planillas de las redes', 'menuProbarConexion')
+    .addToUi();
+}
+
+function menuAyuda() {
+  const html = HtmlService.createHtmlOutput(
+    '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#3A4A52">' +
+    '<h3 style="color:#0D313F;margin:0 0 8px">STAR-H app · Ayuda para la administración</h3>' +
+    '<b>1. Primera vez</b><br>Menú <i>STAR-H app › Preparar hojas de la app</i>. Crea ACCESOS STAR-H y REGISTRO APP.<br><br>' +
+    '<b>2. Dar acceso a una persona</b><br>En ACCESOS STAR-H completá DNI, nombre, rol, redes y establecimientos. ' +
+    'Seleccioná la fila y elegí <i>Generar o reiniciar clave</i>. La clave se muestra una sola vez: pasala a la persona.<br>' +
+    '· <b>Administración</b>: carga y ve todo, incluido el comparativo.<br>' +
+    '· <b>Referente</b>: carga en los establecimientos asignados y ve el tablero de su red.<br>' +
+    '· <b>Consulta</b>: solo ve el tablero de sus redes (por ejemplo, una Dirección).<br>' +
+    'En Redes y Establecimientos podés poner «Todas» / «Todos» o una lista separada por punto y coma ' +
+    '(por ejemplo «Red Rawson» y «RW-01; RW-02»).<br><br>' +
+    '<b>3. Quitar un acceso</b><br>Cambiá Estado a «Inactivo». Rige desde la siguiente acción de esa persona.<br><br>' +
+    '<b>4. Sumar una red</b><br>Agregá la fila en REDES (nombre, enlace y Estado «Activa»). La app la toma sola.<br><br>' +
+    '<b>5. Qué escribe la app</b><br>Solo las columnas de carga de EVALUACIÓN (¿Aplica?, A, B1, B2, B3, C, D y textos) y los datos del relevamiento en ESTABLECIMIENTOS. ' +
+    'Gravedad, Impacto, Riesgo y Nivel los sigue calculando cada planilla. Todo cambio queda en REGISTRO APP.<br><br>' +
+    '<b>6. Si la app no está disponible</b><br>Se carga directo en la planilla de la red, como siempre: la app y la planilla usan los mismos datos.' +
+    '</div>').setWidth(560).setHeight(520);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Ayuda');
+}
+
+function prepararHojas() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName(CFG.HOJA_ACCESOS);
+  if (!sh) {
+    sh = ss.insertSheet(CFG.HOJA_ACCESOS);
+    sh.getRange(1, 1, 1, 10).setValues([[
+      'DNI', 'Apellido y nombre', 'Rol', 'Redes', 'Establecimientos', 'Estado',
+      'Clave (cifrada, no editar)', 'Clave generada el', 'Último ingreso', 'Observaciones']]);
+    sh.setFrozenRows(1);
+    sh.getRange('A1:J1').setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#0D313F');
+    sh.setColumnWidths(1, 10, 150);
+    sh.setColumnWidth(2, 220); sh.setColumnWidth(7, 120);
+    sh.getRange('A2:A').setNumberFormat('@');
+    sh.getRange('C2:C').setDataValidation(SpreadsheetApp.newDataValidation()
+      .requireValueInList(CFG.ROLES, true).setAllowInvalid(false).build());
+    sh.getRange('F2:F').setDataValidation(SpreadsheetApp.newDataValidation()
+      .requireValueInList(['Activo', 'Inactivo'], true).setAllowInvalid(false).build());
+    sh.getRange('G2:I').setFontColor('#8A979E');
+    sh.getRange('A2:F2').setValues([['s/d', 'Belén Pellegrini', 'Administración', 'Todas', 'Todos', 'Activo']]);
+    sh.getRange('A2').setNote('Escribí tu DNI sin puntos y después generá tu clave desde el menú STAR-H app.');
+  }
+  let rg = ss.getSheetByName(CFG.HOJA_REGISTRO);
+  if (!rg) {
+    rg = ss.insertSheet(CFG.HOJA_REGISTRO);
+    rg.getRange(1, 1, 1, 8).setValues([['Fecha y hora', 'DNI', 'Nombre', 'Acción', 'Red', 'Establecimiento', 'Amenaza', 'Detalle']]);
+    rg.setFrozenRows(1);
+    rg.getRange('A1:H1').setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#0D313F');
+    rg.setColumnWidth(1, 150); rg.setColumnWidth(8, 420);
+    rg.protect().setDescription('Registro automático de la app').setWarningOnly(true);
+  }
+  props_();
+  SpreadsheetApp.getUi().alert('Listo. Completá tu DNI en ACCESOS STAR-H (fila 2) y generá tu clave desde el menú.');
+}
+
+function menuGenerarClave() {
+  const ui = SpreadsheetApp.getUi();
+  const sh = SpreadsheetApp.getActiveSheet();
+  if (sh.getName() !== CFG.HOJA_ACCESOS) { ui.alert('Primero seleccioná una fila de la hoja ' + CFG.HOJA_ACCESOS + '.'); return; }
+  const fila = sh.getActiveRange().getRow();
+  if (fila < 2) { ui.alert('Seleccioná la fila de la persona (no el encabezado).'); return; }
+  const dni = limpiarDni_(sh.getRange(fila, 1).getDisplayValue());
+  const nombre = sh.getRange(fila, 2).getDisplayValue();
+  if (!dni) { ui.alert('La fila no tiene un DNI válido.'); return; }
+  const clave = String(Math.floor(100000 + Math.random() * 900000));
+  sh.getRange(fila, 7, 1, 2).setValues([[hashClave_(dni, clave), new Date()]]);
+  if (!sh.getRange(fila, 6).getValue()) sh.getRange(fila, 6).setValue('Activo');
+  CacheService.getScriptCache().remove('fallos_' + dni);
+  registrar_({ dni: 'admin', nombre: 'Administración' }, 'Clave generada', '', '', '', 'Para DNI ' + dni);
+  volcarRegistro_();
+  ui.alert('Clave de ' + nombre + ' (DNI ' + dni + '):\n\n' + clave +
+    '\n\nAnotala y pasala a la persona: no se vuelve a mostrar. Si se pierde, generá una nueva.');
+}
+
+function menuProbarConexion() {
+  const out = redes_().map(r => {
+    try {
+      const ss = SpreadsheetApp.openById(r.id);
+      const n = ss.getSheetByName('EVALUACIÓN').getLastRow() - 1;
+      return '✔ ' + r.nombre + ': ' + n + ' filas de evaluación';
+    } catch (e) { return '✖ ' + r.nombre + ': ' + e.message; }
+  });
+  SpreadsheetApp.getUi().alert(out.join('\n') || 'No hay redes activas en REDES.');
+}
+
+/* =========================================================
+ *  API WEB (la llaman la app y el tablero)
+ * ========================================================= */
+function doGet() {
+  return json_({ ok: true, app: 'STAR-H', version: 0 });
+}
+
+function doPost(e) {
+  try { return atender_(e); } finally { volcarRegistro_(); }
+}
+
+function atender_(e) {
+  let req;
+  try { req = JSON.parse(e.postData.contents); } catch (err) { return json_({ ok: false, error: 'Pedido inválido' }); }
+  try {
+    if (req.accion === 'login') return json_(login_(req.dni, req.clave));
+    const u = usuario_(req.token);
+    switch (req.accion) {
+      case 'catalogo': return json_(catalogo_(u));
+      case 'guardar':  return json_(guardar_(u, req.items || []));
+      case 'estado':   return json_(estado_(u, req));
+      case 'tablero':  return json_(tablero_(u));
+      default: return json_({ ok: false, error: 'Acción desconocida' });
+    }
+  } catch (err) {
+    return json_({ ok: false, error: err.message, sesion: err.sesion === true });
+  }
+}
+
+/* ---------- Ingreso ---------- */
+function login_(dniIn, clave) {
+  const dni = limpiarDni_(dniIn);
+  if (!dni || !/^\d{6}$/.test(String(clave || ''))) return { ok: false, error: 'Revisá el DNI y la clave (6 números).' };
+  const cache = CacheService.getScriptCache();
+  const fallos = Number(cache.get('fallos_' + dni) || 0);
+  if (fallos >= CFG.INTENTOS_MAX) return { ok: false, error: 'Demasiados intentos. Probá de nuevo en ' + CFG.MINUTOS_BLOQUEO + ' minutos.' };
+  const f = filaAcceso_(dni);
+  if (!f || f.estado !== 'Activo' || !f.hash || f.hash !== hashClave_(dni, String(clave))) {
+    cache.put('fallos_' + dni, String(fallos + 1), CFG.MINUTOS_BLOQUEO * 60);
+    return { ok: false, error: 'DNI o clave incorrectos, o acceso inactivo.' };
+  }
+  cache.remove('fallos_' + dni);
+  f.sh.getRange(f.fila, 9).setValue(new Date());
+  const u = perfil_(f);
+  registrar_(u, 'Ingreso', '', '', '', '');
+  return { ok: true, token: firmar_(dni), usuario: publico_(u) };
+}
+
+function usuario_(token) {
+  const dni = verificar_(token);
+  const f = dni && filaAcceso_(dni);
+  if (!f || f.estado !== 'Activo') { const e = new Error('La sesión venció o el acceso fue dado de baja. Volvé a ingresar.'); e.sesion = true; throw e; }
+  return perfil_(f);
+}
+
+function perfil_(f) {
+  const lista = s => String(s || '').split(/[;,]/).map(x => x.trim()).filter(Boolean);
+  const redesTxt = String(f.redes || '').trim();
+  const estTxt = String(f.estab || '').trim();
+  return {
+    dni: f.dni, nombre: f.nombre, rol: f.rol,
+    todasRedes: /^todas?$/i.test(redesTxt), redes: lista(redesTxt),
+    todosEstab: /^todos?$/i.test(estTxt) || estTxt === '', estab: lista(estTxt).map(x => x.toUpperCase())
+  };
+}
+function publico_(u) {
+  return { nombre: u.nombre, rol: u.rol, comparativo: u.rol === 'Administración',
+           puedeCargar: u.rol === 'Administración' || u.rol === 'Referente' };
+}
+function veRed_(u, red) { return u.rol === 'Administración' || u.todasRedes || u.redes.indexOf(red) >= 0; }
+function veEstab_(u, codigo) { return u.rol === 'Administración' || u.todosEstab || u.estab.indexOf(String(codigo).toUpperCase()) >= 0; }
+function cargaEstab_(u, red, codigo) {
+  if (u.rol === 'Administración') return true;
+  return u.rol === 'Referente' && veRed_(u, red) && veEstab_(u, codigo);
+}
+
+/* ---------- Catálogo para trabajar (también sin señal) ---------- */
+function catalogo_(u) {
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), redes: [] };
+  redes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
+    const ss = SpreadsheetApp.openById(r.id);
+    const est = ss.getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && veEstab_(u, x[0]))
+      .map(x => ({ codigo: x[0], tipo: x[2], nombre: x[3], dependencia: x[4], referente: x[6], fechaReunion: x[7], estado: x[8], ish: x[9], puedeCargar: cargaEstab_(u, r.nombre, x[0]) }));
+    if (!est.length) return;
+    const codigos = est.map(x => x.codigo);
+    const amen = ss.getSheetByName('AMENAZAS').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0])
+      .map(x => ({ id: x[0], origen: x[1], grupo: x[2], subgrupo: x[3], amenaza: x[4], escenario: x[5], aplicaA: x[6], fuentes: x[7] }));
+    const ev = ss.getSheetByName('EVALUACIÓN').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && codigos.indexOf(x[0]) >= 0)
+      .map(filaAObjeto_);
+    salida.redes.push({ nombre: r.nombre, establecimientos: est, amenazas: amen, evaluaciones: ev, escalas: escalas_(ss) });
+  });
+  return salida;
+}
+
+function escalas_(ss) {
+  const e = ss.getSheetByName('ESCALAS');
+  const v = e.getRange('A1:E43').getDisplayValues();
+  const num = s => Number(String(s).replace(',', '.'));
+  return {
+    A: v.slice(4, 9).map(x => ({ valor: num(x[0]), etiqueta: x[1], desc: x[2] })),
+    B: v.slice(12, 17).map(x => ({ valor: num(x[0]), etiqueta: x[1], b1: x[2], b2: x[3], b3: x[4] })),
+    C: v.slice(20, 23).map(x => ({ etiqueta: x[0], valor: num(x[2]), desc: x[3] })),
+    D: v.slice(26, 29).map(x => ({ etiqueta: x[0], valor: num(x[2]), desc: x[3] })),
+    niveles: v.slice(32, 37).map(x => ({ desde: num(x[0]), nivel: x[1], rango: x[2] })),
+    pesos: v.slice(40, 43).map(x => num(x[1]))
+  };
+}
+
+function filaAObjeto_(x) {
+  return {
+    codigo: x[0], id: x[1], estab: x[2], red: x[3], origen: x[4], grupo: x[5], amenaza: x[6],
+    aplica: x[7], A: x[8], B1: x[9], B2: x[10], B3: x[11], C: x[12], D: x[13],
+    grav: x[14], imp: x[15], riesgo: x[16], nivel: x[17],
+    fuente: x[18], antec: x[19], medidas: x[20], accion: x[21], area: x[22], fecha: x[23], evaluador: x[24]
+  };
+}
+
+/* ---------- Guardar evaluaciones (llegan de a lotes, también los que quedaron sin señal) ---------- */
+function guardar_(u, items) {
+  if (!items.length) return { ok: true, resultados: [] };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  const resultados = [];
+  try {
+    const porRed = {};
+    items.forEach(it => { (porRed[it.red] = porRed[it.red] || []).push(it); });
+    const mapaRedes = {};
+    redes_().forEach(r => mapaRedes[r.nombre] = r);
+
+    Object.keys(porRed).forEach(red => {
+      const r = mapaRedes[red];
+      if (!r) { porRed[red].forEach(it => resultados.push({ uid: it.uid, ok: false, error: 'Red no activa: ' + red })); return; }
+      const ss = SpreadsheetApp.openById(r.id);
+      const sh = ss.getSheetByName('EVALUACIÓN');
+      const esc = escalas_(ss);
+      const listas = {
+        A: esc.A.map(x => x.etiqueta), B: esc.B.map(x => x.etiqueta),
+        C: esc.C.map(x => x.etiqueta), D: esc.D.map(x => x.etiqueta)
+      };
+      const est = {};
+      ss.getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1).forEach(x => est[x[0]] = x[3]);
+      const claves = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 2).getDisplayValues();
+      const fila = {};
+      claves.forEach((k, i) => { if (k[0]) fila[k[0] + '|' + k[1]] = i + 2; });
+      const tocadas = [];
+
+      porRed[red].forEach(it => {
+        try {
+          if (!est[it.codigo]) throw new Error('Establecimiento inexistente: ' + it.codigo);
+          if (!cargaEstab_(u, red, it.codigo)) throw new Error('Sin permiso de carga en ' + it.codigo);
+          const val = (v, lista, campo) => {
+            v = String(v == null ? '' : v).trim();
+            if (v && lista.indexOf(v) < 0) throw new Error('Valor no válido en ' + campo + ': ' + v);
+            return v;
+          };
+          const aplica = it.aplica === 'No aplica' ? 'No aplica' : 'Sí';
+          const carga = aplica === 'No aplica' ? ['No aplica', '', '', '', '', '', ''] : [
+            'Sí', val(it.A, listas.A, 'A'), val(it.B1, listas.B, 'B1'), val(it.B2, listas.B, 'B2'),
+            val(it.B3, listas.B, 'B3'), val(it.C, listas.C, 'C'), val(it.D, listas.D, 'D')];
+          const textos = [it.fuente, it.antec, it.medidas, it.accion, it.area].map(t => String(t || '').slice(0, 2000));
+          const fecha = it.fecha || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy');
+          const evaluador = String(it.evaluador || u.nombre).slice(0, 200);
+
+          let n = fila[it.codigo + '|' + it.id];
+          if (!n) {
+            if (!it.nueva) throw new Error('No existe la amenaza ' + it.id + ' para ' + it.codigo);
+            n = sh.getLastRow() + 1;
+            sh.getRange(n, 1, 1, 7).setValues([[it.codigo, it.id, est[it.codigo], red,
+              it.origen || 's/d', it.grupo || 'Agregada en la reunión', String(it.amenaza || 's/d').slice(0, 300)]]);
+            fila[it.codigo + '|' + it.id] = n;
+          }
+          sh.getRange(n, C.aplica, 1, 7).setValues([carga]);
+          sh.getRange(n, C.fuente, 1, 7).setValues([textos.concat([fecha, evaluador])]);
+          tocadas.push({ uid: it.uid, n: n });
+          registrar_(u, it.nueva ? 'Amenaza agregada' : 'Evaluación', red, it.codigo, it.id,
+            aplica === 'No aplica' ? 'No aplica' : [carga[1], carga[2], carga[3], carga[4], carga[5], carga[6]].join(' | '));
+        } catch (err) {
+          resultados.push({ uid: it.uid, ok: false, error: err.message });
+        }
+      });
+
+      if (tocadas.length) {
+        SpreadsheetApp.flush();
+        tocadas.forEach(t => {
+          const x = sh.getRange(t.n, 1, 1, 25).getDisplayValues()[0];
+          resultados.push({ uid: t.uid, ok: true, fila: filaAObjeto_(x) });
+        });
+      }
+    });
+  } finally {
+    lock.releaseLock();
+  }
+  return { ok: true, resultados: resultados };
+}
+
+/* ---------- Datos del relevamiento de un establecimiento ---------- */
+function estado_(u, req) {
+  const r = redes_().filter(x => x.nombre === req.red)[0];
+  if (!r) throw new Error('Red no activa');
+  if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
+  if (req.estado && CFG.ESTADOS_RELEV.indexOf(req.estado) < 0) throw new Error('Estado no válido');
+  const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
+  const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
+  const i = cod.indexOf(req.codigo);
+  if (i < 0) throw new Error('Establecimiento inexistente');
+  const n = i + 2;
+  const actual = sh.getRange(n, 7, 1, 4).getDisplayValues()[0];
+  const nuevo = [
+    req.referente != null ? String(req.referente).slice(0, 200) || 's/d' : actual[0],
+    req.fechaReunion != null ? String(req.fechaReunion) || 's/d' : actual[1],
+    req.estado || actual[2],
+    req.ish != null ? String(req.ish) || 's/d' : actual[3]
+  ];
+  sh.getRange(n, 7, 1, 4).setValues([nuevo]);
+  registrar_(u, 'Datos del relevamiento', req.red, req.codigo, '', nuevo.join(' | '));
+  return { ok: true };
+}
+
+/* ---------- Tablero ---------- */
+function tablero_(u) {
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), redes: [] };
+  redes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
+    const ss = SpreadsheetApp.openById(r.id);
+    const est = ss.getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && veEstab_(u, x[0]))
+      .map(x => ({ codigo: x[0], tipo: x[2], nombre: x[3], referente: x[6], fechaReunion: x[7], estado: x[8], ish: x[9] }));
+    if (!est.length) return;
+    const cods = est.map(x => x.codigo);
+    // fila compacta: código, id, origen, grupo, amenaza, aplica, A, gravedad, impacto, riesgo, nivel, ¿cargada?
+    const filas = ss.getSheetByName('EVALUACIÓN').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && cods.indexOf(x[0]) >= 0)
+      .map(x => [x[0], x[1], x[4], x[5], x[6], x[7], x[8] ? Number(x[8].charAt(0)) : '', x[14], x[15], x[16] ? Number(x[16]) : '', x[17],
+                 (x[7] === 'No aplica' || x[16]) ? 1 : 0]);
+    salida.redes.push({ nombre: r.nombre, establecimientos: est, filas: filas });
+  });
+  return salida;
+}
+
+/* =========================================================
+ *  AUXILIARES
+ * ========================================================= */
+function redes_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(CFG.HOJA_REDES);
+  return sh.getDataRange().getDisplayValues().slice(1)
+    .filter(x => x[0] && x[1] && /^activa$/i.test(String(x[2]).trim()))
+    .map(x => ({ nombre: x[0].trim(), id: idPlanilla_(x[1]) }));
+}
+function idPlanilla_(s) { const m = String(s).match(/\/d\/([a-zA-Z0-9-_]+)/); return m ? m[1] : String(s).trim(); }
+
+function filaAcceso_(dni) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(CFG.HOJA_ACCESOS);
+  if (!sh) return null;
+  const v = sh.getDataRange().getDisplayValues();
+  for (let i = 1; i < v.length; i++) {
+    if (limpiarDni_(v[i][0]) === dni) {
+      return { sh: sh, fila: i + 1, dni: dni, nombre: v[i][1], rol: v[i][2], redes: v[i][3], estab: v[i][4], estado: v[i][5], hash: v[i][6] };
+    }
+  }
+  return null;
+}
+
+function limpiarDni_(s) { const d = String(s || '').replace(/\D/g, ''); return d.length >= 7 && d.length <= 9 ? d : ''; }
+
+function props_() {
+  const p = PropertiesService.getScriptProperties();
+  if (!p.getProperty('SECRETO')) p.setProperty('SECRETO', Utilities.getUuid() + Utilities.getUuid());
+  if (!p.getProperty('SAL')) p.setProperty('SAL', Utilities.getUuid());
+  return p;
+}
+function hashClave_(dni, clave) {
+  const sal = props_().getProperty('SAL');
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, sal + '|' + dni + '|' + clave));
+}
+function firmar_(dni) {
+  const vence = Date.now() + CFG.DIAS_SESION * 864e5;
+  const datos = dni + '|' + vence;
+  const firma = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(datos, props_().getProperty('SECRETO')));
+  return Utilities.base64EncodeWebSafe(datos) + '.' + firma;
+}
+function verificar_(token) {
+  try {
+    const partes = String(token || '').split('.');
+    const datos = Utilities.newBlob(Utilities.base64DecodeWebSafe(partes[0])).getDataAsString();
+    const firma = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(datos, props_().getProperty('SECRETO')));
+    if (firma !== partes[1]) return '';
+    const p = datos.split('|');
+    return Number(p[1]) > Date.now() ? p[0] : '';
+  } catch (e) { return ''; }
+}
+
+// El registro se acumula y se escribe de una sola vez al final de cada pedido.
+const LOG_ = [];
+function registrar_(u, accion, red, codigo, id, detalle) {
+  LOG_.push([new Date(), u.dni, u.nombre, accion, red, codigo, id, String(detalle || '').slice(0, 500)]);
+}
+function volcarRegistro_() {
+  if (!LOG_.length) return;
+  try {
+    const sh = SpreadsheetApp.getActive().getSheetByName(CFG.HOJA_REGISTRO);
+    if (sh) sh.getRange(sh.getLastRow() + 1, 1, LOG_.length, 8).setValues(LOG_);
+  } catch (e) { /* el registro nunca frena la carga */ }
+  LOG_.length = 0;
+}
+
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }

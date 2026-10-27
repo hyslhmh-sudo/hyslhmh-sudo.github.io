@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>STAR-H · Relevamiento</title>
+<meta name="description" content="Relevamiento de riesgos de emergencias y desastres con la metodología STAR-H (OPS) en los establecimientos de las redes.">
+<meta name="theme-color" content="#B8441A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{
+  --fuerte:#B8441A; --medio:#E8602A; --claro:#FDEDE4; --borde:#F3D3C2;
+  --texto:#3A4A52; --suave:#6B7A82; --tenue:#8A979E; --linea:#E3E8EB; --fondo:#F6F7F8; --papel:#FFFFFF;
+  --ok:#2E7D4F; --alerta:#B26A00; --error:#B3261E;
+  --radio:12px; --sombra:0 1px 2px rgba(13,49,63,.06),0 4px 14px rgba(13,49,63,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+a{color:var(--fuerte)}
+.oculto{display:none!important}
+
+/* barra superior */
+.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:16px;margin:0;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{background:transparent;border:0;color:inherit;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer}
+.icono:hover{background:rgba(255,255,255,.14)}
+.sync{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.sync .ms{font-size:18px}
+.demo{background:#FFF4CC;color:#5E4B00;font-size:12.5px;padding:7px 16px;text-align:center;border-bottom:1px solid #F0DE9C}
+
+main{max-width:880px;margin:0 auto;padding:16px 16px 120px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+h2{font-size:18px;margin:4px 0 12px;color:var(--fuerte)}
+h3{font-size:14.5px;margin:0 0 8px;color:var(--fuerte)}
+.sub{color:var(--suave);font-size:13px}
+
+/* ingreso */
+.ingreso{max-width:420px;margin:7vh auto 0;padding:26px 22px}
+.ingreso h2{font-size:21px;margin:0 0 4px}
+.campo{display:block;margin:14px 0}
+.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:5px}
+.campo input,.campo select,.campo textarea{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:11px 12px;background:#fff;outline:none}
+.campo textarea{min-height:68px;resize:vertical}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--medio);box-shadow:0 0 0 3px var(--claro)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px}
+.btn:hover{filter:brightness(1.06)}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--borde)}
+.btn.sec:hover{background:var(--claro)}
+.btn.ancho{width:100%}
+.btn:disabled{opacity:.55;cursor:default}
+.msg{margin-top:12px;font-size:13.5px;padding:10px 12px;border-radius:10px;background:#FCE8E6;color:var(--error)}
+
+/* selector de red */
+.redes{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+.red-tab{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.red-tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+
+/* lista de establecimientos */
+.resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.resumen .tarjeta{padding:12px}
+.resumen b{display:block;font-size:22px;color:var(--fuerte);font-variant-numeric:tabular-nums}
+.resumen span{font-size:12px;color:var(--suave)}
+.lista{display:grid;gap:10px}
+.est{padding:14px;display:grid;gap:8px;cursor:pointer;text-align:left;width:100%}
+.est:hover{border-color:var(--borde)}
+.est-cab{display:flex;gap:10px;align-items:flex-start}
+.est-cab b{flex:1;font-size:15px;color:#24343B}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
+.chip.pend{background:#EEF1F3;color:var(--suave)}
+.chip.cola{background:#FFF4CC;color:#5E4B00}
+.barra-prog{height:6px;border-radius:99px;background:#EEF1F3;overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--medio);border-radius:99px}
+.est-pie{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--suave);align-items:center}
+.niv{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
+
+/* establecimiento */
+.volver{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--fuerte);font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:6px}
+.cab-est{padding:14px 16px;margin-bottom:12px}
+.cab-est h2{margin:0 0 2px}
+details.datos{margin-top:10px;border-top:1px solid var(--linea);padding-top:8px}
+details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-size:13.5px;padding:4px 0}
+.rejilla{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.filtros{display:flex;gap:6px;overflow-x:auto;margin:6px 0 10px;padding-bottom:2px}
+.filtro{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.filtro[aria-pressed="true"]{background:var(--claro);border-color:var(--borde);color:var(--fuerte)}
+.buscar{position:relative;margin-bottom:10px}
+.buscar input{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:10px 12px 10px 38px;background:#fff}
+.buscar .ms{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tenue)}
+.grupo-tit{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--suave);margin:16px 2px 6px}
+.amen{display:flex;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--linea);cursor:pointer;background:#fff;width:100%;text-align:left;border-left:0;border-right:0;border-top:0}
+.amen:last-child{border-bottom:0}
+.amen:hover{background:#FAFBFB}
+.amen .id{font-size:12px;font-weight:700;color:var(--tenue);width:34px;flex:none}
+.amen .nom{flex:1;min-width:0;font-size:14px}
+.bloque{overflow:hidden}
+
+/* hoja de evaluación */
+.hoja{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
+.hoja-in{background:var(--fondo);width:100%;max-width:760px;max-height:100%;height:100%;display:flex;flex-direction:column;border-radius:0}
+@media (min-width:800px){.hoja{align-items:center;padding:24px}.hoja-in{height:auto;max-height:94vh;border-radius:16px;overflow:hidden}}
+.hoja-cab{background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;display:flex;align-items:center;gap:8px}
+.hoja-cab b{flex:1;font-size:15px;line-height:1.3}
+.hoja-cab small{display:block;font-weight:500;opacity:.85;font-size:12px}
+.hoja-cuerpo{overflow-y:auto;padding:14px 16px 20px;flex:1}
+.contexto{padding:12px 14px;font-size:13.5px;margin-bottom:12px}
+.contexto p{margin:0 0 6px}
+.dim{padding:12px 14px;margin-bottom:10px}
+.dim h3{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.dim h3 small{font-weight:600;color:var(--tenue);font-size:12px}
+.opciones{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.opciones.tres{grid-template-columns:repeat(3,1fr)}
+.opciones.dos{grid-template-columns:repeat(2,1fr)}
+.op{border:1.5px solid #CBD3D8;background:#fff;border-radius:10px;padding:9px 4px;cursor:pointer;font-weight:700;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.op small{font-weight:500;font-size:10.5px;color:var(--suave);line-height:1.15;text-align:center}
+.op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
+.op[aria-pressed="true"] small{color:var(--fuerte)}
+.desc{font-size:13px;color:var(--suave);margin-top:8px;min-height:18px}
+.resultado{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:grid;gap:10px}
+.calc{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
+.calc b{font-size:16px;color:#24343B;font-variant-numeric:tabular-nums}
+.calc .niv{font-size:13px;padding:5px 10px}
+.acciones{display:flex;gap:8px}
+.acciones .btn{flex:1}
+.aviso{font-size:12.5px;color:var(--alerta)}
+
+/* menú y ayuda */
+.menu{position:fixed;top:calc(env(safe-area-inset-top) + 56px);right:12px;z-index:30;padding:6px;min-width:220px}
+.menu button,.menu a{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;padding:10px 12px;border-radius:8px;cursor:pointer;text-align:left;text-decoration:none;color:var(--texto);font-weight:600}
+.menu button:hover,.menu a:hover{background:var(--claro)}
+.ayuda{padding:16px 18px}
+.ayuda h3{margin-top:16px}
+.ayuda p,.ayuda li{font-size:14px}
+.tabla-esc{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 10px}
+.tabla-esc td,.tabla-esc th{border:1px solid var(--linea);padding:5px 7px;text-align:left;vertical-align:top}
+.tabla-esc th{background:var(--claro);color:var(--fuerte)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#24343B;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;box-shadow:var(--sombra);max-width:calc(100% - 32px)}
+footer{text-align:center;padding:24px 16px 12px}
+footer img{width:min(340px,80%);height:auto;opacity:.95}
+footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+.vacio{padding:28px;text-align:center;color:var(--suave)}
+@media (max-width:520px){.resumen b{font-size:19px}.rejilla{grid-template-columns:1fr}.op small{display:none}}
+</style>
+</head>
+<body>
+<div id="demo" class="demo oculto">Modo demostración: los datos son de prueba y quedan solo en este dispositivo. Clave: 123456.</div>
+<header class="barra" id="barra">
+  <h1 id="titulo">STAR-H · Relevamiento<small id="subtitulo">Comité de crisis El Niño 2026-2027</small></h1>
+  <button class="sync oculto" id="btnSync" aria-live="polite"></button>
+  <button class="icono oculto" id="btnMenu" aria-label="Menú"><span class="ms">menu</span></button>
+</header>
+<div id="menu" class="menu tarjeta oculto" role="menu">
+  <a href="tablero.html" id="lnkTablero"><span class="ms">monitoring</span>Tablero</a>
+  <button data-act="actualizar"><span class="ms">refresh</span>Actualizar datos</button>
+  <button data-act="ayuda"><span class="ms">help</span>Ayuda</button>
+  <button data-act="salir"><span class="ms">logout</span>Salir</button>
+</div>
+<main id="app" aria-live="polite"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Metodología STAR-H (OPS, 2023) · Versión 0</p></footer>
+<div id="hoja" class="hoja oculto" role="dialog" aria-modal="true"></div>
+
+<script src="config.js"></script>
+<script src="demo-amenazas.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), app = $('#app');
+const ELNINO = ['E01', 'E02', 'E03', 'E04', 'E17', 'E19', 'E14', 'E15'];
+let cat = S.store.get(S.DEMO ? 'demo.cat' : 'cat', null);
+let cola = S.store.get(S.DEMO ? 'demo.cola' : 'cola', []);
+let redActual = S.store.get('red', '');
+let filtro = 'pend', busqueda = '', sincronizando = false, ultimoError = '';
+let borrador = null, listaHoja = [];
+
+if (S.DEMO) $('#demo').classList.remove('oculto');
+
+/* ---------- utilidades de interfaz ---------- */
+function toast(t) {
+  const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d);
+  setTimeout(() => d.remove(), 3200);
+}
+function guardarCat() { S.store.set(S.DEMO ? 'demo.cat' : 'cat', cat); }
+function guardarCola() { S.store.set(S.DEMO ? 'demo.cola' : 'cola', cola); pintarSync(); }
+function tema(nombre) {
+  const t = S.temaRed(nombre), r = document.documentElement.style;
+  r.setProperty('--fuerte', t.fuerte); r.setProperty('--medio', t.medio); r.setProperty('--claro', t.claro); r.setProperty('--borde', t.borde);
+  document.querySelector('meta[name=theme-color]').setAttribute('content', t.fuerte);
+}
+function chipNivel(n) {
+  return n ? `<span class="niv" style="background:${S.COLOR_NIVEL[n]};color:${S.TINTA_NIVEL[n]}">${S.esc(n)}</span>` : '';
+}
+function red(nombre) { return cat && cat.redes.find(r => r.nombre === nombre); }
+function evs(r, codigo) { return r.evaluaciones.filter(e => e.codigo === codigo); }
+function cargada(e) { return e.aplica === 'No aplica' || e.riesgo !== '' && e.riesgo != null; }
+function pendientesDe(redN, codigo) { return cola.filter(c => c.red === redN && c.codigo === codigo).length; }
+
+/* ---------- sincronización ---------- */
+function pintarSync() {
+  const b = $('#btnSync'); if (!S.sesion.token()) { b.classList.add('oculto'); return; }
+  b.classList.remove('oculto');
+  const n = cola.length, off = !navigator.onLine;
+  let ic = 'cloud_done', t = 'Sincronizado';
+  if (sincronizando) { ic = 'sync'; t = 'Enviando…'; }
+  else if (n && off) { ic = 'cloud_off'; t = n + ' sin enviar'; }
+  else if (n && ultimoError) { ic = 'error'; t = n + ' con error'; }
+  else if (n) { ic = 'cloud_upload'; t = n + ' por enviar'; }
+  else if (off) { ic = 'cloud_off'; t = 'Sin señal'; }
+  b.innerHTML = `<span class="ms">${ic}</span>${t}`;
+  b.title = ultimoError || (off ? 'Sin conexión: lo que cargues queda guardado en este dispositivo y se envía solo al volver la señal.' : '');
+}
+let temporizador = null;
+function programarSync(ms) { clearTimeout(temporizador); temporizador = setTimeout(sincronizar, ms == null ? 1500 : ms); }
+
+async function sincronizar(manual) {
+  if (sincronizando || !S.sesion.token()) return;
+  if (!navigator.onLine) { pintarSync(); if (manual) toast('Sin conexión. Los cambios quedan guardados en este dispositivo.'); return; }
+  if (!cola.length) { if (manual) await actualizarCatalogo(true); return; }
+  sincronizando = true; ultimoError = ''; pintarSync();
+  cola.forEach(c => delete c.error);
+  try {
+   for (let vuelta = 0; vuelta < 20; vuelta++) {
+    const evals = cola.filter(c => c.tipo === 'eval' && !c.error).slice(0, 40);
+    if (evals.length) {
+      const r = await S.api('guardar', { items: evals });
+      if (!r.ok) throw r;
+      const errores = [];
+      r.resultados.forEach(x => {
+        const it = cola.find(c => c.uid === x.uid);
+        if (x.ok) {
+          cola = cola.filter(c => c.uid !== x.uid);
+          if (x.fila) reemplazarFila(it ? it.red : x.fila.red, x.fila);
+        } else { errores.push(x.error); if (it) it.error = x.error; }
+      });
+      if (errores.length) ultimoError = errores[0];
+    }
+    const estados = cola.filter(c => c.tipo === 'estado' && !c.error);
+    for (const it of estados) {
+      const r = await S.api('estado', it);
+      if (r.ok) cola = cola.filter(c => c.uid !== it.uid);
+      else if (r.sesion) throw r; else { it.error = r.error; ultimoError = r.error; }
+    }
+    guardarCat(); guardarCola();
+    if (!cola.some(c => !c.error)) break;
+   }
+    if (manual && !ultimoError) toast('Todo enviado a la planilla.');
+  } catch (e) {
+    if (e && e.sesion) { ultimoError = e.error; toast(e.error); sincronizando = false; pintarSync(); S.sesion.cerrar(); return ir('#/ingreso'); }
+    ultimoError = (e && (e.error || e.message)) || 'No se pudo conectar.';
+  } finally { sincronizando = false; pintarSync(); render(); }
+}
+function reemplazarFila(redN, fila) {
+  const r = red(redN); if (!r) return;
+  const i = r.evaluaciones.findIndex(e => e.codigo === fila.codigo && e.id === fila.id);
+  // si mientras tanto hubo otra edición local en cola, se respeta la local
+  if (cola.some(c => c.tipo === 'eval' && c.red === redN && c.codigo === fila.codigo && c.id === fila.id)) return;
+  if (i >= 0) r.evaluaciones[i] = fila; else r.evaluaciones.push(fila);
+}
+async function actualizarCatalogo(avisar) {
+  if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return; }
+  try {
+    const r = await S.api('catalogo');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); toast(r.error); return ir('#/ingreso'); } throw r; }
+    cat = r;
+    // los cambios todavía no enviados se vuelven a aplicar sobre los datos nuevos
+    cola.filter(c => c.tipo === 'eval').forEach(aplicarLocal);
+    cola.filter(c => c.tipo === 'estado').forEach(aplicarEstadoLocal);
+    guardarCat();
+    if (avisar) toast('Datos actualizados.');
+    render();
+  } catch (e) { if (avisar) toast((e && (e.error || e.message)) || 'No se pudo actualizar.'); }
+}
+
+/* ---------- cambios locales ---------- */
+function aplicarLocal(it) {
+  const r = red(it.red); if (!r) return;
+  let e = r.evaluaciones.find(x => x.codigo === it.codigo && x.id === it.id);
+  if (!e) {
+    const est = r.establecimientos.find(x => x.codigo === it.codigo);
+    e = { codigo: it.codigo, id: it.id, estab: est ? est.nombre : '', red: it.red, origen: it.origen || 's/d', grupo: it.grupo || 'Agregada en la reunión', amenaza: it.amenaza || 's/d' };
+    r.evaluaciones.push(e);
+  }
+  e.aplica = it.aplica;
+  ['A', 'B1', 'B2', 'B3', 'C', 'D'].forEach(k => e[k] = it.aplica === 'No aplica' ? '' : (it[k] || ''));
+  ['fuente', 'antec', 'medidas', 'accion', 'area', 'fecha', 'evaluador'].forEach(k => e[k] = it[k] || '');
+  Object.assign(e, S.calcular(r.escalas, e));
+}
+function aplicarEstadoLocal(it) {
+  const r = red(it.red); const e = r && r.establecimientos.find(x => x.codigo === it.codigo);
+  if (e) ['referente', 'fechaReunion', 'estado', 'ish'].forEach(k => { if (it[k] != null) e[k] = it[k]; });
+}
+function encolar(it) {
+  const clave = c => c.tipo + '|' + c.red + '|' + c.codigo + '|' + (c.id || '');
+  cola = cola.filter(c => clave(c) !== clave(it));
+  cola.push(it); guardarCola(); programarSync();
+}
+
+/* ---------- navegación ---------- */
+function ir(h) { if (location.hash !== h) location.hash = h; else render(); }
+window.addEventListener('hashchange', render);
+window.addEventListener('online', () => { pintarSync(); programarSync(300); });
+window.addEventListener('offline', pintarSync);
+setInterval(() => { if (cola.length && !sincronizando) sincronizar(); }, 60000);
+
+function render() {
+  const h = location.hash || '#/';
+  $('#menu').classList.add('oculto');
+  if (!S.sesion.token()) { $('#btnMenu').classList.add('oculto'); pintarSync(); return vistaIngreso(); }
+  $('#btnMenu').classList.remove('oculto'); pintarSync();
+  if (!cat) { app.innerHTML = '<div class="vacio">Cargando datos…</div>'; return; }
+  const p = h.slice(2).split('/').map(decodeURIComponent);
+  if (p[0] === 'ayuda') return vistaAyuda();
+  if (p[0] === 'est' && red(p[1])) return vistaEstablecimiento(p[1], p[2]);
+  return vistaInicio();
+}
+
+/* ---------- vistas ---------- */
+function vistaIngreso() {
+  tema('');
+  $('#titulo').innerHTML = 'STAR-H · Relevamiento<small>Comité de crisis El Niño 2026-2027</small>';
+  app.innerHTML = `
+  <form class="tarjeta ingreso" id="fIngreso" autocomplete="on">
+    <h2>Ingresar</h2>
+    <p class="sub">Relevamiento de riesgos de emergencias y desastres con la metodología STAR-H de la OPS.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Clave (6 números)</span><input name="clave" type="password" inputmode="numeric" autocomplete="current-password" required maxlength="6" pattern="\\d{6}"></label>
+    <button class="btn ancho" type="submit"><span class="ms">login</span>Ingresar</button>
+    <div id="msgIngreso" class="msg oculto"></div>
+    <p class="sub" style="margin-top:14px">La clave la entrega Higiene y Seguridad Laboral. Si la olvidaste, pedí una nueva.</p>
+  </form>`;
+  $('#fIngreso').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const f = ev.target, b = f.querySelector('button'), m = $('#msgIngreso');
+    b.disabled = true; m.classList.add('oculto');
+    try {
+      if (!navigator.onLine) throw { error: 'Para ingresar por primera vez se necesita conexión.' };
+      const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value });
+      if (!r.ok) throw r;
+      S.sesion.guardar(r.token, r.usuario);
+      app.innerHTML = '<div class="vacio">Descargando el catálogo para trabajar también sin señal…</div>';
+      await actualizarCatalogo(false);
+      ir('#/');
+    } catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+    finally { b.disabled = false; }
+  });
+}
+
+function vistaInicio() {
+  const u = S.sesion.usuario() || {};
+  if (!cat.redes.length) { app.innerHTML = '<div class="tarjeta vacio">Tu acceso no tiene redes ni establecimientos asignados. Consultá con Higiene y Seguridad Laboral.</div>'; return; }
+  if (!red(redActual)) redActual = cat.redes[0].nombre;
+  S.store.set('red', redActual);
+  const r = red(redActual); tema(r.nombre);
+  $('#titulo').innerHTML = `STAR-H · ${S.esc(r.nombre)}<small>${S.esc(u.nombre || '')} · ${S.esc(u.rol || '')}</small>`;
+  let tot = 0, hechas = 0, altos = 0, completos = 0;
+  const filas = r.establecimientos.map(e => {
+    const lista = evs(r, e.codigo), n = lista.length, c = lista.filter(cargada).length;
+    const ma = lista.filter(x => x.nivel === 'Muy alto').length, a = lista.filter(x => x.nivel === 'Alto').length;
+    tot += n; hechas += c; altos += ma + a; if (n && c === n) completos++;
+    const pend = pendientesDe(r.nombre, e.codigo), pct = n ? Math.round(c * 100 / n) : 0;
+    const est = e.estado || 'Pendiente';
+    return `<button class="tarjeta est" data-ir="#/est/${encodeURIComponent(r.nombre)}/${encodeURIComponent(e.codigo)}">
+      <div class="est-cab"><b>${S.esc(e.nombre)}</b><span class="chip ${/Pendiente/.test(est) ? 'pend' : ''}">${S.esc(est)}</span></div>
+      <div class="barra-prog" aria-label="${pct} % evaluado"><i style="width:${pct}%"></i></div>
+      <div class="est-pie"><span>${S.esc(e.codigo)} · ${S.esc(e.tipo)}</span><span>${c} de ${n} amenazas (${pct} %)</span>
+        ${ma ? `<span class="niv" style="background:${S.COLOR_NIVEL['Muy alto']};color:${S.TINTA_NIVEL['Muy alto']}">${ma} muy alto</span>` : ''}
+        ${a ? `<span class="niv" style="background:${S.COLOR_NIVEL['Alto']};color:${S.TINTA_NIVEL['Alto']}">${a} alto</span>` : ''}
+        ${pend ? `<span class="chip cola"><span class="ms" style="font-size:15px">cloud_upload</span>${pend} sin enviar</span>` : ''}
+        ${e.puedeCargar === false ? '<span class="chip pend">Solo lectura</span>' : ''}</div>
+    </button>`;
+  }).join('');
+  app.innerHTML = `
+    ${cat.redes.length > 1 ? `<div class="redes" role="tablist">${cat.redes.map(x => `<button class="red-tab" data-red="${S.esc(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${S.esc(x.nombre)}</button>`).join('')}</div>` : ''}
+    <div class="resumen">
+      <div class="tarjeta"><b>${completos}/${r.establecimientos.length}</b><span>establecimientos completos</span></div>
+      <div class="tarjeta"><b>${tot ? Math.round(hechas * 100 / tot) : 0} %</b><span>amenazas evaluadas</span></div>
+      <div class="tarjeta"><b>${altos}</b><span>riesgos altos o muy altos</span></div>
+    </div>
+    <h2>Establecimientos</h2>
+    <div class="lista">${filas}</div>
+    <p class="sub" style="margin-top:14px">Datos guardados en este dispositivo: ${cat.generado ? new Date(cat.generado).toLocaleString('es-AR') : 's/d'}.</p>`;
+}
+
+function vistaEstablecimiento(redN, codigo) {
+  const r = red(redN), e = r.establecimientos.find(x => x.codigo === codigo);
+  if (!e) return ir('#/');
+  tema(r.nombre); redActual = redN;
+  $('#titulo').innerHTML = `${S.esc(e.codigo)} · ${S.esc(e.nombre)}<small>${S.esc(r.nombre)}</small>`;
+  const lista = evs(r, codigo), puede = e.puedeCargar !== false;
+  const cuenta = { pend: 0, eval: 0, na: 0, todas: lista.length, nino: 0, altos: 0 };
+  lista.forEach(x => {
+    if (x.aplica === 'No aplica') cuenta.na++; else if (cargada(x)) cuenta.eval++; else cuenta.pend++;
+    if (ELNINO.indexOf(x.id) >= 0) cuenta.nino++;
+    if (x.nivel === 'Alto' || x.nivel === 'Muy alto') cuenta.altos++;
+  });
+  const q = busqueda.toLowerCase();
+  const vis = lista.filter(x => {
+    if (filtro === 'pend' && (x.aplica === 'No aplica' || cargada(x))) return false;
+    if (filtro === 'eval' && !(x.aplica !== 'No aplica' && cargada(x))) return false;
+    if (filtro === 'na' && x.aplica !== 'No aplica') return false;
+    if (filtro === 'nino' && ELNINO.indexOf(x.id) < 0) return false;
+    if (filtro === 'altos' && !(x.nivel === 'Alto' || x.nivel === 'Muy alto')) return false;
+    return !q || (x.amenaza + ' ' + x.id + ' ' + x.grupo).toLowerCase().indexOf(q) >= 0;
+  });
+  listaHoja = vis.map(x => x.id);
+  const grupos = {};
+  vis.forEach(x => { const g = (x.origen || '') + ' · ' + (x.grupo || ''); (grupos[g] = grupos[g] || []).push(x); });
+  const enCola = new Set(cola.filter(c => c.red === redN && c.codigo === codigo).map(c => c.id));
+  const html = Object.keys(grupos).map(g => `<div class="grupo-tit">${S.esc(g)}</div><div class="tarjeta bloque">${grupos[g].map(x => `
+      <button class="amen" data-ev="${S.esc(x.id)}"><span class="id">${S.esc(x.id)}</span><span class="nom">${S.esc(x.amenaza)}</span>
+      ${enCola.has(x.id) ? '<span class="ms" title="Sin enviar" style="color:#B26A00;font-size:18px">cloud_upload</span>' : ''}
+      ${x.aplica === 'No aplica' ? '<span class="chip pend">No aplica</span>' : cargada(x) ? chipNivel(x.nivel) + `<b style="font-size:13px;width:22px;text-align:right">${S.esc(x.riesgo)}</b>` : '<span class="chip pend">Pendiente</span>'}
+      </button>`).join('')}</div>`).join('');
+  const F = (k, t) => `<button class="filtro" data-filtro="${k}" aria-pressed="${filtro === k}">${t} (${cuenta[k]})</button>`;
+  app.innerHTML = `
+    <button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Establecimientos</button>
+    <div class="tarjeta cab-est">
+      <h2>${S.esc(e.nombre)}</h2>
+      <div class="sub">${S.esc(e.codigo)} · ${S.esc(e.tipo)} · ${cuenta.eval + cuenta.na} de ${cuenta.todas} amenazas resueltas</div>
+      <details class="datos">
+        <summary>Datos del relevamiento <span class="sub" style="font-weight:500">· Referente: ${S.esc(e.referente || 's/d')} · Reunión: ${S.esc(e.fechaReunion || 's/d')} · ISH: ${S.esc(e.ish || 's/d')}</span></summary>
+        <form id="fDatos">
+        <div class="rejilla">
+          <label class="campo"><span>Referente del relevamiento</span><input name="referente" value="${S.esc(e.referente === 's/d' ? '' : e.referente)}" ${puede ? '' : 'disabled'} placeholder="s/d"></label>
+          <label class="campo"><span>Fecha de la reunión</span><input name="fechaReunion" value="${S.esc(e.fechaReunion === 's/d' ? '' : e.fechaReunion)}" placeholder="dd/mm/aaaa" ${puede ? '' : 'disabled'}></label>
+          <label class="campo"><span>Estado del relevamiento</span><select name="estado" ${puede ? '' : 'disabled'}>${['Pendiente', 'Convocado', 'En curso', 'Evaluado', 'Validado por la Dirección'].map(s => `<option ${s === e.estado ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+          <label class="campo"><span>Índice de Seguridad Hospitalaria</span><input name="ish" value="${S.esc(e.ish === 's/d' ? '' : e.ish)}" placeholder="s/d (ej.: 0,52)" ${puede ? '' : 'disabled'}></label>
+        </div>
+        ${puede ? '<button class="btn sec" type="submit"><span class="ms">save</span>Guardar datos</button>' : ''}
+        </form>
+      </details>
+    </div>
+    <div class="buscar"><span class="ms">search</span><input id="busq" type="search" placeholder="Buscar amenaza" value="${S.esc(busqueda)}"></div>
+    <div class="filtros">${F('pend', 'Pendientes')}${F('eval', 'Evaluadas')}${F('na', 'No aplica')}${F('altos', 'Altas y muy altas')}${F('nino', 'El Niño')}${F('todas', 'Todas')}</div>
+    ${html || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan amenazas pendientes en este establecimiento!' : 'No hay amenazas con este filtro.'}</div>`}
+    ${puede ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <button class="btn sec" data-act="nueva"><span class="ms">add</span>Agregar amenaza no listada</button>
+      ${cuenta.pend === 0 && e.estado !== 'Evaluado' && e.estado !== 'Validado por la Dirección' ? '<button class="btn" data-act="marcarEvaluado"><span class="ms">task_alt</span>Marcar como evaluado</button>' : ''}
+    </div>` : ''}`;
+  const b = $('#busq');
+  b.addEventListener('input', () => { busqueda = b.value; const pos = b.selectionStart; vistaEstablecimiento(redN, codigo); const nb = $('#busq'); nb.focus(); nb.setSelectionRange(pos, pos); });
+  const fd = $('#fDatos');
+  if (fd) fd.addEventListener('submit', ev => {
+    ev.preventDefault();
+    const it = { tipo: 'estado', uid: S.uid(), red: redN, codigo: codigo, referente: fd.referente.value.trim() || 's/d', fechaReunion: fd.fechaReunion.value.trim() || 's/d', estado: fd.estado.value, ish: fd.ish.value.trim() || 's/d' };
+    aplicarEstadoLocal(it); guardarCat(); encolar(it); toast('Datos guardados.'); render();
+  });
+}
+
+/* ---------- hoja de evaluación ---------- */
+function abrirHoja(redN, codigo, id, nueva) {
+  const r = red(redN), est = r.establecimientos.find(x => x.codigo === codigo);
+  const e = nueva ? null : r.evaluaciones.find(x => x.codigo === codigo && x.id === id);
+  const a = r.amenazas.find(x => x.id === id) || {};
+  borrador = Object.assign({ aplica: 'Sí', A: '', B1: '', B2: '', B3: '', C: '', D: '', fuente: '', antec: '', medidas: '', accion: '', area: '', fecha: '', evaluador: '' }, e || {},
+    { red: redN, codigo: codigo, id: nueva ? 'N' + Date.now().toString(36).slice(-4).toUpperCase() : id, nueva: !!nueva, puede: est.puedeCargar !== false });
+  if (nueva) Object.assign(borrador, { origen: 'Externa', grupo: 'Agregada en la reunión', amenaza: '' });
+  if (!borrador.fecha) borrador.fecha = S.hoy();
+  if (!borrador.evaluador) borrador.evaluador = (S.sesion.usuario() || {}).nombre || '';
+  pintarHoja(r, est, a);
+  $('#hoja').classList.remove('oculto'); document.body.style.overflow = 'hidden';
+}
+function cerrarHoja() { $('#hoja').classList.add('oculto'); $('#hoja').innerHTML = ''; document.body.style.overflow = ''; borrador = null; }
+
+function pintarHoja(r, est, a) {
+  const b = borrador, esc = r.escalas, dis = b.puede ? '' : 'disabled';
+  const op = (campo, lista, clase, sub) => `<div class="opciones ${clase || ''}" role="group">${lista.map(o => {
+    const v = o.etiqueta, corto = /·/.test(v) ? v.split('·')[0].trim() : v, txt = /·/.test(v) ? v.split('·')[1].trim() : '';
+    return `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" aria-pressed="${b[campo] === v}" ${dis}>${S.esc(corto)}${txt && sub !== false ? `<small>${S.esc(txt)}</small>` : ''}</button>`;
+  }).join('')}</div>`;
+  const desc = (campo, lista, k) => { const o = lista.find(x => x.etiqueta === b[campo]); return `<div class="desc">${o ? S.esc(o[k || 'desc']) : 'Elegí una opción.'}</div>`; };
+  const idx = listaHoja.indexOf(b.id);
+  const c = S.calcular(esc, b);
+  const incompleto = b.aplica !== 'No aplica' && ['A', 'B1', 'B2', 'B3', 'C', 'D'].some(k => !b[k]);
+  const valores = b.aplica === 'No aplica' ? '' : `
+    <div class="tarjeta dim"><h3>A · Probabilidad <small>próximos 12 meses</small></h3>${op('A', esc.A)}${desc('A', esc.A)}</div>
+    <div class="tarjeta dim"><h3>B1 · Vida de los ocupantes <small>peso ${esc.pesos[0]}</small></h3>${op('B1', esc.B)}${desc('B1', esc.B, 'b1')}</div>
+    <div class="tarjeta dim"><h3>B2 · Establecimiento <small>peso ${esc.pesos[1]}</small></h3>${op('B2', esc.B)}${desc('B2', esc.B, 'b2')}</div>
+    <div class="tarjeta dim"><h3>B3 · Funcionamiento de los servicios <small>peso ${esc.pesos[2]}</small></h3>${op('B3', esc.B)}${desc('B3', esc.B, 'b3')}</div>
+    <div class="tarjeta dim"><h3>C · Vulnerabilidad frente a esta amenaza</h3>${op('C', esc.C, 'tres')}${desc('C', esc.C)}</div>
+    <div class="tarjeta dim"><h3>D · Capacidad de afrontamiento</h3>${op('D', esc.D, 'tres')}${desc('D', esc.D)}</div>`;
+  $('#hoja').innerHTML = `<div class="hoja-in">
+    <div class="hoja-cab"><b>${b.nueva ? 'Amenaza no listada' : S.esc(b.id + ' · ' + (b.amenaza || a.amenaza || ''))}<small>${S.esc(est.nombre)}</small></b>
+      <button class="icono" data-act="cerrarHoja" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="hoja-cuerpo">
+      ${b.nueva ? `<div class="tarjeta dim"><h3>Amenaza identificada por el equipo</h3>
+        <label class="campo"><span>Nombre de la amenaza</span><input data-texto="amenaza" value="${S.esc(b.amenaza)}" placeholder="Ej.: anegamiento del estacionamiento"></label>
+        <div class="rejilla"><label class="campo"><span>Origen</span><select data-texto="origen"><option ${b.origen === 'Externa' ? 'selected' : ''}>Externa</option><option ${b.origen === 'Interna' ? 'selected' : ''}>Interna</option></select></label>
+        <label class="campo"><span>Grupo</span><input data-texto="grupo" value="${S.esc(b.grupo)}"></label></div></div>`
+      : `<div class="tarjeta contexto">${a.escenario ? `<p><b>Escenario en el VIRCH:</b> ${S.esc(a.escenario)}</p>` : ''}${a.fuentes ? `<p><b>Dónde buscar antecedentes:</b> ${S.esc(a.fuentes)}</p>` : ''}${a.aplicaA ? `<p class="sub">Aplica a: ${S.esc(a.aplicaA)}</p>` : ''}</div>`}
+      <div class="tarjeta dim"><h3>¿La amenaza aplica a este establecimiento?</h3>
+        <div class="opciones dos"><button type="button" class="op" data-campo="aplica" data-valor="Sí" aria-pressed="${b.aplica !== 'No aplica'}" ${dis}>Sí, aplica</button>
+        <button type="button" class="op" data-campo="aplica" data-valor="No aplica" aria-pressed="${b.aplica === 'No aplica'}" ${dis}>No aplica</button></div></div>
+      ${valores}
+      <div class="tarjeta dim"><h3>Registro</h3>
+        ${b.aplica === 'No aplica' ? '' : `<label class="campo"><span>Fundamento y fuente de la probabilidad</span><textarea data-texto="fuente" ${dis} placeholder="Ej.: SMN, alertas 2024-2026; dos anegamientos de accesos en 2025">${S.esc(b.fuente)}</textarea></label>
+        <label class="campo"><span>Antecedentes en el establecimiento</span><textarea data-texto="antec" ${dis}>${S.esc(b.antec)}</textarea></label>
+        <label class="campo"><span>Medidas y recursos existentes</span><textarea data-texto="medidas" ${dis}>${S.esc(b.medidas)}</textarea></label>
+        <label class="campo"><span>Acción sugerida para el plan de respuesta</span><textarea data-texto="accion" ${dis}>${S.esc(b.accion)}</textarea></label>
+        <label class="campo"><span>Área responsable propuesta</span><input data-texto="area" value="${S.esc(b.area)}" ${dis}></label>`}
+        <div class="rejilla"><label class="campo"><span>Fecha de evaluación</span><input data-texto="fecha" value="${S.esc(b.fecha)}" placeholder="dd/mm/aaaa" ${dis}></label>
+        <label class="campo"><span>Evaluado por</span><input data-texto="evaluador" value="${S.esc(b.evaluador)}" ${dis}></label></div>
+      </div>
+    </div>
+    <div class="resultado">
+      <div class="calc">${b.aplica === 'No aplica' ? '<span>No se calcula el riesgo: la amenaza no aplica.</span>' :
+        `<span>Gravedad <b>${c.grav === '' ? '–' : String(c.grav).replace('.', ',')}</b></span><span>Impacto <b>${c.imp === '' ? '–' : c.imp}</b></span><span>Riesgo <b>${c.riesgo === '' ? '–' : c.riesgo}</b></span>${chipNivel(c.nivel)}`}
+        ${incompleto ? '<span class="aviso">Faltan valores: se puede guardar y completar después.</span>' : ''}</div>
+      ${b.puede ? `<div class="acciones">
+        ${!b.nueva && idx > 0 ? '<button class="btn sec" data-act="anterior" aria-label="Anterior"><span class="ms">chevron_left</span></button>' : ''}
+        <button class="btn sec" data-act="guardar"><span class="ms">save</span>Guardar</button>
+        ${!b.nueva && idx >= 0 && idx < listaHoja.length - 1 ? '<button class="btn" data-act="siguiente"><span class="ms">save</span>Guardar y siguiente</button>' : ''}
+      </div>` : '<p class="sub">Tu acceso es de consulta para este establecimiento.</p>'}
+    </div></div>`;
+}
+
+function guardarBorrador() {
+  const b = borrador;
+  if (b.nueva && !String(b.amenaza || '').trim()) { toast('Escribí el nombre de la amenaza.'); return false; }
+  const it = { tipo: 'eval', uid: S.uid() };
+  ['red', 'codigo', 'id', 'aplica', 'A', 'B1', 'B2', 'B3', 'C', 'D', 'fuente', 'antec', 'medidas', 'accion', 'area', 'fecha', 'evaluador'].forEach(k => it[k] = b[k] || '');
+  if (b.nueva) Object.assign(it, { nueva: true, origen: b.origen, grupo: b.grupo, amenaza: b.amenaza.trim() });
+  aplicarLocal(it); guardarCat(); encolar(it);
+  if (b.nueva) b.nueva = false;
+  const r = red(b.red), est = r.establecimientos.find(x => x.codigo === b.codigo);
+  if (est && /Pendiente|Convocado/.test(est.estado)) {
+    const st = { tipo: 'estado', uid: S.uid(), red: b.red, codigo: b.codigo, estado: 'En curso' };
+    aplicarEstadoLocal(st); guardarCat(); encolar(st);
+  }
+  return true;
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-filtro],[data-ev],[data-campo],#btnMenu,#btnSync');
+  if (!t) { if (!ev.target.closest('#menu')) $('#menu').classList.add('oculto'); return; }
+  if (t.id === 'btnMenu') { $('#menu').classList.toggle('oculto'); return; }
+  if (t.id === 'btnSync') { sincronizar(true); return; }
+  if (t.dataset.ir) { ir(t.dataset.ir); window.scrollTo(0, 0); return; }
+  if (t.dataset.red) { redActual = t.dataset.red; render(); return; }
+  if (t.dataset.filtro) { filtro = t.dataset.filtro; render(); return; }
+  if (t.dataset.ev) { const p = location.hash.slice(2).split('/').map(decodeURIComponent); abrirHoja(p[1], p[2], t.dataset.ev); return; }
+  if (t.dataset.campo && borrador) {
+    borrador[t.dataset.campo] = t.dataset.valor;
+    const sc = $('.hoja-cuerpo').scrollTop;
+    const r = red(borrador.red);
+    pintarHoja(r, r.establecimientos.find(x => x.codigo === borrador.codigo), r.amenazas.find(x => x.id === borrador.id) || {});
+    $('.hoja-cuerpo').scrollTop = sc; return;
+  }
+  const a = t.dataset.act;
+  if (a === 'cerrarHoja') { cerrarHoja(); return; }
+  if (a === 'guardar') { if (guardarBorrador()) { cerrarHoja(); toast(navigator.onLine ? 'Guardado.' : 'Guardado en el dispositivo: se envía al volver la señal.'); render(); } return; }
+  if (a === 'siguiente' || a === 'anterior') {
+    if (a === 'siguiente' && !guardarBorrador()) return;
+    const i = listaHoja.indexOf(borrador.id) + (a === 'siguiente' ? 1 : -1);
+    const p = [borrador.red, borrador.codigo, listaHoja[i]];
+    if (a === 'siguiente') render();
+    if (p[2]) abrirHoja(p[0], p[1], p[2]); else cerrarHoja();
+    return;
+  }
+  if (a === 'nueva') { const p = location.hash.slice(2).split('/').map(decodeURIComponent); abrirHoja(p[1], p[2], null, true); return; }
+  if (a === 'marcarEvaluado') {
+    const p = location.hash.slice(2).split('/').map(decodeURIComponent);
+    const st = { tipo: 'estado', uid: S.uid(), red: p[1], codigo: p[2], estado: 'Evaluado' };
+    aplicarEstadoLocal(st); guardarCat(); encolar(st); toast('Establecimiento marcado como evaluado.'); render(); return;
+  }
+  if (a === 'actualizar') { $('#menu').classList.add('oculto'); if (cola.length) sincronizar(true).then(() => actualizarCatalogo(true)); else actualizarCatalogo(true); return; }
+  if (a === 'ayuda') { ir('#/ayuda'); return; }
+  if (a === 'salir') {
+    $('#menu').classList.add('oculto');
+    if (cola.length && !confirm('Hay ' + cola.length + ' cambios sin enviar. Si salís ahora, se pierden. ¿Salir igual?')) return;
+    S.sesion.cerrar(); cola = []; guardarCola(); cat = null; S.store.del(S.DEMO ? 'demo.cat' : 'cat'); ir('#/ingreso'); return;
+  }
+});
+document.addEventListener('input', ev => {
+  const t = ev.target;
+  if (t.dataset && t.dataset.texto && borrador) borrador[t.dataset.texto] = t.value;
+});
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.dataset && t.dataset.texto && borrador) borrador[t.dataset.texto] = t.value;
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && borrador) cerrarHoja(); });
+
+/* ---------- ayuda ---------- */
+function vistaAyuda() {
+  const r = cat && cat.redes[0], e = r && r.escalas;
+  const tabla = (tit, lista, cols) => `<table class="tabla-esc"><tr><th>${tit}</th>${cols.map(c => `<th>${c[0]}</th>`).join('')}</tr>${lista.map(o => `<tr><td><b>${S.esc(o.etiqueta)}</b></td>${cols.map(c => `<td>${S.esc(o[c[1]])}</td>`).join('')}</tr>`).join('')}</table>`;
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Volver</button>
+  <div class="tarjeta ayuda">
+    <h2>Ayuda</h2>
+    <h3>Cómo se trabaja</h3>
+    <ol>
+      <li>Elegí la red y el establecimiento.</li>
+      <li>Completá los <b>datos del relevamiento</b>: referente, fecha de la reunión e Índice de Seguridad Hospitalaria si existe (si no, queda «s/d»).</li>
+      <li>Recorré las amenazas <b>pendientes</b>. Para cada una indicá si aplica y valorá A, B1, B2, B3, C y D. El riesgo se calcula solo, con las mismas fórmulas que la planilla.</li>
+      <li>Usá <b>Guardar y siguiente</b> para avanzar sin volver a la lista.</li>
+      <li>Si el equipo identifica una amenaza que no está en el catálogo, usá <b>Agregar amenaza no listada</b>.</li>
+      <li>Cuando no quedan pendientes, <b>marcá el establecimiento como evaluado</b>.</li>
+    </ol>
+    <h3>Sin señal</h3>
+    <p>Lo que cargás queda guardado en este dispositivo y se envía solo cuando vuelve la conexión. El indicador de arriba muestra cuántos cambios faltan enviar. No cierres la sesión con cambios sin enviar.</p>
+    <p>Para trabajar sin señal, ingresá antes con conexión: así el dispositivo descarga el catálogo.</p>
+    <h3>Criterios para valorar</h3>
+    <ul><li>Valorar el escenario más probable para el establecimiento, no el peor imaginable.</li>
+    <li>Los eventos poco frecuentes pero de inicio rápido tienden a subestimarse: revisar su gravedad con especial cuidado.</li>
+    <li>Una capacidad que nunca se probó en un simulacro ni en un evento real se valora, como máximo, «Media».</li>
+    <li>Para El Niño, considerar los pronósticos estacionales vigentes del Servicio Meteorológico Nacional.</li></ul>
+    ${e ? `<h3>Escalas</h3>${tabla('A · Probabilidad', e.A, [['Descripción', 'desc']])}${tabla('B · Gravedad', e.B, [['B1 · Vida', 'b1'], ['B2 · Establecimiento', 'b2'], ['B3 · Funcionamiento', 'b3']])}${tabla('C · Vulnerabilidad', e.C, [['Descripción', 'desc']])}${tabla('D · Capacidad', e.D, [['Descripción', 'desc']])}
+    <p class="sub">Gravedad = (${e.pesos[0]}×B1 + ${e.pesos[1]}×B2 + ${e.pesos[2]}×B3) / ${e.pesos[0] + e.pesos[1] + e.pesos[2]}. Impacto = promedio redondeado de gravedad, vulnerabilidad y capacidad (convertidas a 1-5). Riesgo = probabilidad × impacto: muy bajo 1 a 3, bajo 4 a 6, moderado 7 a 11, alto 12 a 16 y muy alto 17 a 25.</p>` : ''}
+    <h3>Dónde quedan los datos</h3>
+    <p>Todo se guarda en la planilla STAR-H de cada red, que sigue siendo el respaldo: si la app no está disponible, se puede cargar directo ahí. También existe el formulario de campo en papel.</p>
+    <p class="sub">Este relevamiento complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento: las medidas correctivas las propone el servicio de cada lugar.</p>
+    <h3>Consultas</h3>
+    <p>Higiene y Seguridad Laboral · belenpellegrini.hys@gmail.com</p>
+  </div>`;
+}
+
+/* ---------- arranque ---------- */
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+if (S.sesion.token()) { if (!cat) actualizarCatalogo(false); else { programarSync(500); } }
+})();
+</script>
+</body>
+</html>
