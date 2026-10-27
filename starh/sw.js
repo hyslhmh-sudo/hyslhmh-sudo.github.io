@@ -1,6 +1,6 @@
 /* STAR-H · trabajo sin señal: guarda la app en el dispositivo.
  * Al publicar una versión nueva, cambiar el número de VERSION para que todos la reciban. */
-const VERSION = 'starh-v0.2';
+const VERSION = 'starh-v0.3';
 const ARCHIVOS = ['./', 'index.html', 'tablero.html', 'starh.js', 'config.js', 'demo-amenazas.js',
   'logo-hysl.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
@@ -21,7 +21,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin === location.origin) {                   // la app: primero la red (para tener lo último), si no hay señal, lo guardado
-    e.respondWith(fetch(req).then(res => { const copia = res.clone(); caches.open(VERSION).then(c => c.put(req, copia)); return res; })
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => { const copia = res.clone(); caches.open(VERSION).then(c => c.put(req, copia)); return res; })
       .catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('index.html'))));
   }
 });
