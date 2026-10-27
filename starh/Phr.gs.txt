@@ -147,7 +147,10 @@ function phrInstalar() {
     const red = x[0].trim(), id = idPlanilla_(x[1]);
     const ss = SpreadsheetApp.openById(id);
     const rel = ss.getSheetByName('RELEVAMIENTO');
-    if (rel && rel.getLastRow() > 1) { informe.push(red + ': ya estaba armada, no se tocó.'); return; }
+    // Solo se rearma si todavía no hay nada cargado (ningún estado en la columna J)
+    if (rel && rel.getLastRow() > 1 && rel.getRange(2, PHR.C.estado, rel.getLastRow() - 1, 1).getValues().some(v => v[0] !== '')) {
+      informe.push(red + ': ya tiene datos cargados, no se tocó.'); return;
+    }
     if (!starh[red]) throw new Error('No encuentro la planilla STAR-H de ' + red + ' en REDES (de ahí salen los establecimientos).');
     const est = SpreadsheetApp.openById(starh[red]).getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1).filter(e => e[0]);
     phrArmar_(ss, red, est);
@@ -161,6 +164,7 @@ function phrArmar_(ss, red, est) {
   const hoja = (nombre, i) => ss.getSheetByName(nombre) || ss.insertSheet(nombre, i);
   const cab = (sh, n) => sh.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
   ss.rename('PHR · ' + red + ' · Relevamiento inicial del plan hospitalario de respuesta (v0)');
+  ss.getProtections(SpreadsheetApp.ProtectionType.RANGE).concat(ss.getProtections(SpreadsheetApp.ProtectionType.SHEET)).forEach(p => { try { p.remove(); } catch (e) {} });
 
   // AYUDA
   const ay = hoja('AYUDA', 0);
@@ -220,7 +224,7 @@ function phrArmar_(ss, red, est) {
   rl.getRange(1, 1, 1, 17).setValues([['Código', 'Establecimiento', 'Red', 'Tipo', 'ID', 'Sección', 'Ítem', 'Ref. OPS', '¿Aplica?', 'Estado', 'Puntaje',
     'Evidencia encontrada', 'Brecha u observación', 'Responsable propuesto', 'Prioridad', 'Fecha', 'Relevado por']]);
   rl.getRange(2, 1, filas.length, 17).setValues(filas);
-  rl.getRange('K1').setFormula('={"Puntaje";ARRAYFORMULA(IF((A2:A="")+(I2:I="No aplica")+(J2:J=""),"",IF(J2:J="Cumple",1,IF(J2:J="Parcial",0.5,0))))}');
+  rl.getRange('K1').setFormula('={"Puntaje";ARRAYFORMULA(IF((A2:A="")+(I2:I="No aplica")+(J2:J="");"";IF(J2:J="Cumple";1;IF(J2:J="Parcial";0,5;0))))}');
   cab(rl, 17); rl.setFrozenRows(1); rl.setFrozenColumns(5);
   rl.setColumnWidth(2, 220); rl.setColumnWidth(6, 200); rl.setColumnWidth(7, 380); rl.setColumnWidths(12, 3, 220);
   const n = filas.length;
@@ -248,14 +252,14 @@ function phrArmar_(ss, red, est) {
   est.forEach((e, i) => {
     const r = 5 + i;
     const fila = ['=ESTABLECIMIENTOS!A' + (i + 2), '=ESTABLECIMIENTOS!D' + (i + 2), '=ESTABLECIMIENTOS!C' + (i + 2), '=ESTABLECIMIENTOS!G' + (i + 2),
-      '=COUNTIFS(RELEVAMIENTO!$A:$A,$A' + r + ',RELEVAMIENTO!$J:$J,"<>")&" de "&COUNTIFS(RELEVAMIENTO!$A:$A,$A' + r + ',RELEVAMIENTO!$I:$I,"Sí")',
-      '=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K,RELEVAMIENTO!$A:$A,$A' + r + '),"s/d")'];
-    PHR.SECCIONES.forEach(s => fila.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K,RELEVAMIENTO!$A:$A,$A' + r + ',RELEVAMIENTO!$F:$F,"' + s[0] + ' · *"),"s/d")'));
+      '=COUNTIFS(RELEVAMIENTO!$A:$A;$A' + r + ';RELEVAMIENTO!$J:$J;"<>")&" de "&COUNTIFS(RELEVAMIENTO!$A:$A;$A' + r + ';RELEVAMIENTO!$I:$I;"Sí")',
+      '=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K;RELEVAMIENTO!$A:$A;$A' + r + ');"s/d")'];
+    PHR.SECCIONES.forEach(s => fila.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K;RELEVAMIENTO!$A:$A;$A' + r + ';RELEVAMIENTO!$F:$F;"' + s[0] + ' · *");"s/d")'));
     f.push(fila);
   });
   tb.getRange(5, 1, f.length, encab.length).setFormulas(f);
-  const tot = ['', 'Total de la red', '', '', '', '=IFERROR(AVERAGE(RELEVAMIENTO!K2:K),"s/d")'];
-  PHR.SECCIONES.forEach(s => tot.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K,RELEVAMIENTO!$F:$F,"' + s[0] + ' · *"),"s/d")'));
+  const tot = ['', 'Total de la red', '', '', '', '=IFERROR(AVERAGE(RELEVAMIENTO!K2:K);"s/d")'];
+  PHR.SECCIONES.forEach(s => tot.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K;RELEVAMIENTO!$F:$F;"' + s[0] + ' · *");"s/d")'));
   tb.getRange(5 + f.length, 1, 1, encab.length).setFormulas([tot]).setFontWeight('bold');
   tb.getRange(4, 1, 1, encab.length).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
   tb.setFrozenRows(4); tb.setFrozenColumns(2);
@@ -267,6 +271,7 @@ function phrArmar_(ss, red, est) {
     .setRanges([rango]).build()]);
   tb.protect().setDescription('Tablero con fórmulas').setWarningOnly(true);
 
+  // Nota: las fórmulas van con «;» porque las planillas están en configuración regional es_AR.
   // limpiar la hoja vacía inicial
   ['Hoja 1', 'Hoja1', 'Sheet1'].forEach(nm => { const s = ss.getSheetByName(nm); if (s && ss.getSheets().length > 1) ss.deleteSheet(s); });
 }
