@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PHR · Tablero</title>
+<meta name="description" content="Tablero del relevamiento inicial del plan hospitalario de respuesta por red y comparativo.">
+<meta name="theme-color" content="#B8441A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#B8441A;--medio:#E8602A;--claro:#FDEDE4;--borde:#F3D3C2;--texto:#3A4A52;--suave:#6B7A82;--tenue:#8A979E;--linea:#E3E8EB;--fondo:#F6F7F8;--papel:#fff;--radio:12px;--sombra:0 1px 2px rgba(13,49,63,.06),0 4px 14px rgba(13,49,63,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{background:transparent;border:0;color:inherit;height:40px;padding:0 10px;border-radius:10px;display:inline-flex;gap:6px;align-items:center;cursor:pointer;font-weight:600;font-size:13px;text-decoration:none}
+.icono:hover{background:rgba(255,255,255,.14)}
+.demo{background:#FFF4CC;color:#5E4B00;font-size:12.5px;padding:7px 16px;text-align:center;border-bottom:1px solid #F0DE9C}
+main{max-width:1180px;margin:0 auto;padding:16px 16px 60px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+.panel{padding:16px;margin-bottom:14px}
+.panel h2{font-size:15.5px;margin:0 0 4px;color:var(--fuerte)}
+.panel .nota{font-size:12.5px;color:var(--suave);margin:0 0 12px}
+.controles{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tab{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.controles select{border:1px solid #CBD3D8;border-radius:10px;padding:8px 10px;background:#fff;max-width:100%}
+.esp{flex:1}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{padding:14px}
+.kpi b{display:block;font-size:26px;color:#24343B;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{font-size:12.5px;color:var(--suave)}
+.kpi .marca{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.niv{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.leyenda{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--suave);margin:0 0 10px}
+.leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* barras apiladas */
+.fila-b{display:grid;grid-template-columns:minmax(120px,260px) 1fr 44px;gap:10px;align-items:center;padding:5px 0}
+.fila-b .nom{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pila{display:flex;gap:2px;height:16px;background:#F0F3F4;border-radius:4px;overflow:hidden}
+.pila i{display:block;height:100%;min-width:2px;cursor:default}
+.pila i:first-child{border-radius:4px 0 0 4px}.pila i:last-child{border-radius:0 4px 4px 0}
+.fila-b .n{font-size:12.5px;color:var(--suave);text-align:right;font-variant-numeric:tabular-nums}
+/* matriz */
+.matriz{display:grid;grid-template-columns:auto repeat(5,1fr);gap:2px;font-size:12px}
+.matriz .celda{aspect-ratio:1.6;display:grid;place-items:center;border-radius:6px;font-weight:800;font-size:15px;cursor:pointer;border:0;padding:0}
+.matriz .celda.cero{opacity:.45;font-weight:500;font-size:12px;cursor:default}
+.matriz .eje{display:grid;place-items:center;color:var(--suave);font-weight:600;padding:0 6px}
+.matriz-tit{display:flex;justify-content:space-between;font-size:12px;color:var(--suave);margin-top:6px}
+/* tablas */
+.tabla-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:middle}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--suave);font-weight:700;background:#FAFBFB;position:sticky;top:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.c,th.c{text-align:center}
+.calor td.cel{text-align:center;font-weight:700;min-width:44px;border:2px solid #fff}
+.calor td.cel.vacia{color:var(--tenue);font-weight:500}
+.mas{margin-top:10px;background:none;border:0;color:var(--fuerte);font-weight:700;cursor:pointer;padding:4px 0}
+.vacio{padding:28px;text-align:center;color:var(--suave)}
+.tooltip{position:fixed;z-index:50;pointer-events:none;background:#24343B;color:#fff;font-size:12.5px;padding:7px 10px;border-radius:8px;max-width:280px;box-shadow:var(--sombra)}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:26px 22px}
+.campo{display:block;margin:14px 0}.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:5px}
+.campo input{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:11px 12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px;width:100%}
+.msg{margin-top:12px;font-size:13.5px;padding:10px 12px;border-radius:10px;background:#FCE8E6;color:#B3261E}
+.pie{font-size:12px;color:var(--tenue);margin-top:8px}
+footer{text-align:center;padding:10px 16px 20px}footer img{width:min(340px,80%)}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+body.embebido .barra,body.embebido footer,body.embebido .demo{display:none}
+@media (max-width:860px){.dos{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.fila-b{grid-template-columns:110px 1fr 34px}.kpi b{font-size:22px}}
+@media print{.barra,.controles button.imp,footer .no,.mas{display:none}body{background:#fff}.tarjeta{box-shadow:none;break-inside:avoid}main{padding:0}}
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <h1 id="titulo">PHR · Tablero<small>Plan hospitalario de respuesta</small></h1>
+  <a class="icono" href="phr.html" id="lnkApp"><span class="ms">edit_note</span><span>Cargar</span></a>
+  <button class="icono" id="btnAct" title="Actualizar"><span class="ms">refresh</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Instructivo OPS para el plan hospitalario de respuesta (2023) · Versión 0</p></footer>
+<div id="tip" class="tooltip oculto" role="tooltip"></div>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), app = $('#app'), E = S.esc;
+const qs = new URLSearchParams(location.search);
+if (qs.get('embebido') === '1') document.body.classList.add('embebido');
+const VAL = { 'Cumple': 1, 'Parcial': 0.5, 'No cumple': 0 };
+const BANDAS = [[75, 'Avanzado', '#C8E6C9', '#1E5223'], [40, 'Intermedio', '#FFF2B3', '#5E4B00'], [0, 'Inicial', '#F4B4B4', '#7A1F1F']];
+let datos = S.store.get('phr.tab', null), vista = S.store.get('phr.tab.vista', ''), estSel = '', verTodas = false;
+
+const banda = p => p == null ? null : BANDAS.find(b => p >= b[0]);
+const celda = (p, tip, extra) => { const b = banda(p); return `<td class="cel ${b ? '' : 'vacia'}" ${b ? `style="background:${b[2]};color:${b[3]}"` : ''} data-tip="${E(tip || '')}">${p == null ? 's/d' : p + ' %'}${extra || ''}</td>`; };
+const pct = l => { const v = l.filter(f => f.aplica !== 'No aplica' && f.estado in VAL).map(f => VAL[f.estado]); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length * 100) : null; };
+const obj = f => ({ codigo: f[0], id: f[1], sec: f[2], item: f[3], aplica: f[4], estado: f[5], prioridad: f[6] });
+function tema(n) { const t = S.temaRed(n), r = document.documentElement.style; r.setProperty('--fuerte', t.fuerte); r.setProperty('--medio', t.medio); r.setProperty('--claro', t.claro); r.setProperty('--borde', t.borde); }
+function leyenda() { return `<div class="leyenda">${BANDAS.map(b => `<span><i style="background:${b[2]};outline:1px solid ${b[3]}55"></i>${b[1]} (${b[0] === 75 ? '75 % o más' : b[0] === 40 ? '40 a 74 %' : 'menos de 40 %'})</span>`).join('')}</div>`; }
+
+async function cargar(avisar) {
+  if (!navigator.onLine) { if (!datos) app.innerHTML = '<div class="tarjeta vacio">Sin conexión y sin datos guardados en este dispositivo.</div>'; return; }
+  $('#btnAct').disabled = true;
+  try {
+    const r = await S.api('phr_tablero');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); return render(); } throw r; }
+    datos = r; S.store.set('phr.tab', r); render();
+  } catch (e) { if (avisar || !datos) app.innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || 'No se pudieron traer los datos.')}</div>`; }
+  finally { $('#btnAct').disabled = false; }
+}
+
+function render() {
+  if (!S.sesion.token()) return vistaIngreso();
+  if (!datos) { app.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
+  const u = datos.usuario || {}, R = datos.redes.map(r => Object.assign({}, r, { filas: r.filas.map(obj) }));
+  if (!R.length) { app.innerHTML = '<div class="tarjeta vacio">Tu acceso no tiene redes asignadas para PHR.</div>'; return; }
+  const ops = R.map(r => r.nombre).concat(u.comparativo && R.length > 1 ? ['Comparativo'] : []);
+  if (ops.indexOf(vista) < 0) vista = u.comparativo && R.length > 1 ? 'Comparativo' : R[0].nombre;
+  S.store.set('phr.tab.vista', vista);
+  const tabs = ops.length > 1 ? ops.map(o => `<button class="tab" data-vista="${E(o)}" aria-pressed="${o === vista}">${E(o)}</button>`).join('') : '';
+  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}. Fuente: planillas PHR de cada red. Base: instructivo OPS para el plan hospitalario de respuesta (2023).${navigator.onLine ? '' : ' Sin conexión: últimos datos guardados.'}</p>`;
+  const imp = '<span class="esp"></span><button class="tab imp" data-act="imprimir"><span class="ms" style="font-size:18px">print</span> Imprimir</button>';
+  if (vista === 'Comparativo') { tema('Secretaría'); $('#titulo').innerHTML = 'PHR · Comparativo entre redes<small>Relevamiento inicial del plan hospitalario de respuesta</small>'; app.innerHTML = `<div class="controles">${tabs}${imp}</div>` + vistaComparativo(R) + pie; }
+  else {
+    const r = R.find(x => x.nombre === vista); tema(r.nombre);
+    $('#titulo').innerHTML = `PHR · ${E(r.nombre)}<small>Relevamiento inicial del plan hospitalario de respuesta</small>`;
+    app.innerHTML = `<div class="controles">${tabs}<select id="selEst" aria-label="Establecimiento"><option value="">Toda la red</option>${r.establecimientos.map(e => `<option value="${E(e.codigo)}" ${e.codigo === estSel ? 'selected' : ''}>${E(e.codigo + ' · ' + e.nombre)}</option>`).join('')}</select>${imp}</div>` + vistaRed(r) + pie;
+    const s = $('#selEst'); s.addEventListener('change', () => { estSel = s.value; verTodas = false; render(); });
+  }
+}
+
+function kpis(items) { return `<div class="kpis">${items.map(k => `<div class="tarjeta kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join('')}</div>`; }
+
+function vistaRed(r) {
+  const secs = datos.secciones;
+  const est = estSel ? r.establecimientos.filter(e => e.codigo === estSel) : r.establecimientos;
+  const f = r.filas.filter(x => !estSel || x.codigo === estSel);
+  const aplican = f.filter(x => x.aplica !== 'No aplica'), hechos = aplican.filter(x => x.estado);
+  const p = pct(f);
+  let h = kpis([
+    [estSel ? (est[0].estado || 's/d') : `${r.establecimientos.filter(e => /Relevado|Validado/.test(e.estado)).length}/${r.establecimientos.length}`, estSel ? 'estado del relevamiento' : 'establecimientos relevados'],
+    [`${aplican.length ? Math.round(hechos.length * 100 / aplican.length) : 0} %`, 'ítems relevados'],
+    [p == null ? 's/d' : p + ' %', 'cumplimiento' + (estSel ? '' : ' de la red')],
+    [f.filter(x => x.estado === 'No cumple').length, 'ítems que no cumplen']]);
+
+  // barras por sección
+  h += `<div class="tarjeta panel"><h2>Cumplimiento por sección</h2><p class="nota">Promedio de los ítems que aplican y tienen estado: Cumple 100 %, Parcial 50 %, No cumple 0 %.</p>${leyenda()}
+    ${secs.map(s => { const l = f.filter(x => x.sec === s[0]), q = pct(l), b = banda(q); return `<div class="fila-b"><span class="nom" title="${E(s[1])}"><b>${s[0]}</b> · ${E(s[1])}</span>
+      <div class="pila">${q == null ? '' : `<i style="flex:0 0 ${Math.max(q, 1)}%;background:${b[2]}" data-tip="${E(s[1])}: ${q} % (${l.filter(x => x.estado).length} ítems relevados)"></i>`}</div><span class="n">${q == null ? 's/d' : q + ' %'}</span></div>`; }).join('')}</div>`;
+
+  // mapa de calor establecimiento × sección
+  if (!estSel) h += `<div class="tarjeta panel"><h2>Establecimientos por sección</h2><p class="nota">Porcentaje de cumplimiento de cada establecimiento en cada sección. «s/d»: todavía sin datos.</p>
+    <div class="tabla-wrap"><table class="calor"><tr><th>Establecimiento</th><th class="c">Total</th>${secs.map(s => `<th class="c" title="${E(s[1])}">${s[0]}</th>`).join('')}</tr>
+    ${r.establecimientos.map(e => { const l = r.filas.filter(x => x.codigo === e.codigo); return `<tr><td>${E(e.nombre)}</td>${celda(pct(l), e.nombre + ': total')}${secs.map(s => celda(pct(l.filter(x => x.sec === s[0])), e.nombre + ' · ' + s[1])).join('')}</tr>`; }).join('')}</table></div>
+    <p class="pie">${secs.map(s => `<b>${s[0]}</b> ${E(s[1])}`).join(' · ')}</p></div>`;
+
+  // brechas
+  const por = {};
+  f.filter(x => x.estado === 'No cumple' || x.estado === 'Parcial').forEach(x => {
+    const a = por[x.id] = por[x.id] || { id: x.id, item: x.item, no: 0, parcial: 0, alta: 0, est: [] };
+    if (x.estado === 'No cumple') a.no++; else a.parcial++; if (x.prioridad === 'Alta') a.alta++;
+    const e = r.establecimientos.find(y => y.codigo === x.codigo); a.est.push(e ? e.nombre : x.codigo);
+  });
+  const lista = Object.values(por).sort((a, b) => b.alta - a.alta || b.no - a.no || b.parcial - a.parcial);
+  const vis = verTodas ? lista : lista.slice(0, 15);
+  h += `<div class="tarjeta panel"><h2>${estSel ? 'Brechas del establecimiento' : 'Brechas más frecuentes'}</h2><p class="nota">Ítems en «No cumple» o «Parcial», primero los marcados con prioridad alta. Sirven de base para el plan de trabajo; las medidas las define cada establecimiento.</p>
+    ${lista.length ? `<div class="tabla-wrap"><table><tr><th>ID</th><th>Ítem</th><th class="num">No cumple</th><th class="num">Parcial</th><th class="num">Prioridad alta</th>${estSel ? '' : '<th>Establecimientos</th>'}</tr>
+    ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.item)}</td><td class="num"><b>${a.no || ''}</b></td><td class="num">${a.parcial || ''}</td><td class="num">${a.alta || ''}</td>${estSel ? '' : `<td>${E(a.est.join('; '))}</td>`}</tr>`).join('')}</table></div>
+    ${lista.length > 15 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 15 primeras' : 'Ver las ' + lista.length + ' brechas'}</button>` : ''}` : '<div class="vacio">Todavía no hay brechas registradas.</div>'}</div>`;
+
+  // avance
+  if (!estSel) h += `<div class="tarjeta panel"><h2>Avance del relevamiento</h2><div class="tabla-wrap"><table><tr><th>Código</th><th>Establecimiento</th><th>Estado</th><th>Referente</th><th>Fecha</th><th class="num">Relevados</th><th class="num">Cumplimiento</th></tr>
+    ${r.establecimientos.map(e => { const l = r.filas.filter(x => x.codigo === e.codigo), ap = l.filter(x => x.aplica !== 'No aplica'), q = pct(l); return `<tr><td>${E(e.codigo)}</td><td>${E(e.nombre)}</td><td>${E(e.estado || 's/d')}</td><td>${E(e.referente || 's/d')}</td><td>${E(e.fecha || 's/d')}</td><td class="num">${ap.filter(x => x.estado).length}/${ap.length}</td><td class="num">${q == null ? 's/d' : q + ' %'}</td></tr>`; }).join('')}</table></div></div>`;
+  return h;
+}
+
+function vistaComparativo(R) {
+  const secs = datos.secciones;
+  let h = `<div class="kpis" style="grid-template-columns:repeat(${Math.min(R.length, 4)},1fr)">${R.map(r => { const ap = r.filas.filter(x => x.aplica !== 'No aplica'), q = pct(r.filas); return `<div class="tarjeta kpi" style="border-top:4px solid ${S.temaRed(r.nombre).fuerte}">
+    <span style="font-weight:700;color:${S.temaRed(r.nombre).fuerte}">${E(r.nombre)}</span><b>${q == null ? 's/d' : q + ' %'}</b><span>cumplimiento · ${ap.length ? Math.round(ap.filter(x => x.estado).length * 100 / ap.length) : 0} % relevado</span>
+    <span style="display:block;margin-top:6px">${r.establecimientos.filter(e => /Relevado|Validado/.test(e.estado)).length} de ${r.establecimientos.length} establecimientos relevados</span></div>`; }).join('')}</div>`;
+  h += `<div class="tarjeta panel"><h2>Cumplimiento por sección en cada red</h2><p class="nota">Las redes trabajan en forma independiente; la comparación ayuda a identificar necesidades comunes.</p>${leyenda()}
+    <div class="tabla-wrap"><table class="calor"><tr><th>Sección</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
+    ${secs.map(s => `<tr><td><b>${s[0]}</b> · ${E(s[1])}</td>${R.map(r => celda(pct(r.filas.filter(x => x.sec === s[0])), r.nombre + ' · ' + s[1])).join('')}</tr>`).join('')}
+    <tr><td><b>Total</b></td>${R.map(r => celda(pct(r.filas), r.nombre + ': total')).join('')}</tr></table></div></div>`;
+  const por = {};
+  R.forEach(r => r.filas.filter(x => x.estado === 'No cumple' || x.estado === 'Parcial').forEach(x => {
+    const a = por[x.id] = por[x.id] || { id: x.id, item: x.item, red: {}, total: 0 };
+    const k = a.red[r.nombre] = a.red[r.nombre] || { no: 0, parcial: 0 }; if (x.estado === 'No cumple') k.no++; else k.parcial++; a.total++;
+  }));
+  const lista = Object.values(por).map(a => Object.assign(a, { redes: Object.keys(a.red).length })).sort((a, b) => b.redes - a.redes || b.total - a.total);
+  const vis = verTodas ? lista : lista.slice(0, 15);
+  h += `<div class="tarjeta panel"><h2>Brechas comunes entre redes</h2><p class="nota">Cantidad de establecimientos de cada red con el ítem en «No cumple» (y en «Parcial»). Primero, las brechas presentes en más de una red.</p>
+    ${lista.length ? `<div class="tabla-wrap"><table><tr><th>ID</th><th>Ítem</th>${R.map(r => `<th class="num">${E(r.nombre)}</th>`).join('')}</tr>
+    ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.item)}</td>${R.map(r => { const k = a.red[r.nombre]; return `<td class="num">${k ? `<b>${k.no}</b> · ${k.parcial}` : '–'}</td>`; }).join('')}</tr>`).join('')}</table></div>
+    <p class="pie">En cada celda: establecimientos en «No cumple» · en «Parcial».</p>
+    ${lista.length > 15 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 15 primeras' : 'Ver las ' + lista.length + ' brechas'}</button>` : ''}` : '<div class="vacio">Todavía no hay brechas registradas.</div>'}</div>`;
+  return h;
+}
+
+function vistaIngreso() {
+  tema('');
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2 style="color:var(--fuerte);margin:0 0 4px">Tablero PHR</h2><p style="color:var(--suave);font-size:13px">Ingresá con el mismo DNI y clave de las apps.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required></label>
+    <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
+    <button class="btn" type="submit">Ingresar</button><div id="m" class="msg oculto"></div></form>`;
+  $('#fIng').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target, m = $('#m');
+    try { const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r; S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Cargando…</div>'; cargar(true); }
+    catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+  });
+}
+
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-vista],[data-act]'); if (!t) return;
+  if (t.dataset.vista) { vista = t.dataset.vista; estSel = ''; verTodas = false; render(); }
+  else if (t.dataset.act === 'todas') { verTodas = !verTodas; render(); }
+  else if (t.dataset.act === 'imprimir') window.print();
+});
+$('#btnAct').addEventListener('click', () => cargar(true));
+const tip = $('#tip');
+function mostrarTip(ev) {
+  const t = ev.target.closest && ev.target.closest('[data-tip]');
+  if (!t || !t.dataset.tip) { tip.classList.add('oculto'); return; }
+  tip.textContent = t.dataset.tip; tip.classList.remove('oculto');
+  tip.style.left = Math.max(8, Math.min(ev.clientX + 12, innerWidth - tip.offsetWidth - 8)) + 'px';
+  tip.style.top = (ev.clientY + 14 + tip.offsetHeight > innerHeight ? ev.clientY - tip.offsetHeight - 10 : ev.clientY + 14) + 'px';
+}
+document.addEventListener('mousemove', mostrarTip);
+document.addEventListener('scroll', () => tip.classList.add('oculto'), { passive: true });
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+if (S.sesion.token()) cargar(false);
+})();
+</script>
+</body>
+</html>

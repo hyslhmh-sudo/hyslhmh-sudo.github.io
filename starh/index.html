@@ -159,6 +159,7 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 </header>
 <div id="menu" class="menu tarjeta oculto" role="menu">
   <a href="tablero.html" id="lnkTablero"><span class="ms">monitoring</span>Tablero</a>
+  <a href="phr.html"><span class="ms">fact_check</span>Ir a PHR (plan de respuesta)</a>
   <button data-act="actualizar"><span class="ms">refresh</span>Actualizar datos</button>
   <button data-act="ayuda"><span class="ms">help</span>Ayuda</button>
   <button data-act="salir"><span class="ms">logout</span>Salir</button>
@@ -276,7 +277,10 @@ async function actualizarCatalogo(avisar) {
     guardarCat();
     if (avisar) toast('Datos actualizados.');
     render();
-  } catch (e) { if (avisar) toast((e && (e.error || e.message)) || 'No se pudo actualizar.'); }
+  } catch (e) {
+    const m = (e && (e.error || e.message)) || 'No se pudo actualizar.';
+    if (!cat) app.innerHTML = `<div class="tarjeta vacio">${S.esc(m)}<br><br><a class="btn" href="phr.html">Ir al relevamiento PHR</a></div>`; else if (avisar) toast(m);
+  }
 }
 
 /* ---------- cambios locales ---------- */
@@ -345,6 +349,7 @@ function vistaIngreso() {
       const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value });
       if (!r.ok) throw r;
       S.sesion.guardar(r.token, r.usuario);
+      if (r.usuario.starh === false) { location.href = 'phr.html'; return; }
       app.innerHTML = '<div class="vacio">Descargando el catálogo para trabajar también sin señal…</div>';
       await actualizarCatalogo(false);
       ir('#/');

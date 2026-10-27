@@ -1,0 +1,385 @@
+/**
+ * PHR · Relevamiento inicial del plan hospitalario de respuesta (versión 0)
+ * ------------------------------------------------------------------
+ * Base: OPS. Instructivo para elaborar un plan hospitalario de respuesta a
+ * emergencias de salud y desastres (OPS/PHE/CPI/23-0015). Washington, D.C.: OPS; 2023.
+ *
+ * Va en el mismo proyecto de Apps Script que STAR-H (comparte accesos y sesión).
+ * Cada red tiene su propia planilla PHR, listada en la hoja «REDES PHR» de este libro.
+ * La planilla de cada red se arma sola con phrInstalar() (o menú STAR-H app › PHR · Armar planillas).
+ *
+ * Escala de cada ítem: Cumple (1) · Parcial (0,5) · No cumple (0) · No aplica (no cuenta).
+ */
+
+const PHR = {
+  HOJA_REDES: 'REDES PHR',
+  ESTADOS: ['Cumple', 'Parcial', 'No cumple'],
+  PRIORIDADES: ['Alta', 'Media', 'Baja'],
+  ESTADOS_REL: ['Pendiente', 'Convocado', 'En curso', 'Relevado', 'Validado por la Dirección'],
+  // Columnas de RELEVAMIENTO (1 = A)
+  C: { codigo: 1, estab: 2, red: 3, tipo: 4, id: 5, seccion: 6, item: 7, ref: 8, aplica: 9, estado: 10, puntaje: 11,
+       evidencia: 12, brecha: 13, responsable: 14, prioridad: 15, fecha: 16, relevador: 17 },
+  SECCIONES: [
+    ['A', 'Organización para la gestión de emergencias'],
+    ['B', 'Plan hospitalario de respuesta'],
+    ['C', 'Centro de operaciones de emergencia'],
+    ['D', 'Componentes generales del plan'],
+    ['E', 'Concepto de operaciones'],
+    ['F', 'Coordinaciones'],
+    ['G', 'Procedimientos operativos'],
+    ['H', 'Otros documentos'],
+    ['I', 'Disposición para la respuesta']
+  ]
+};
+
+// id, sección, ítem, referencia del instructivo, aplica a, qué buscar (evidencia)
+const PHR_ITEMS = [
+  ['A01', 'A', 'Existe un programa de gestión de emergencias de salud y desastres formalizado por la institución', '1.1', 'Todos', 'Resolución, disposición o documento del programa con sus objetivos (evaluación y reducción del riesgo, preparación, respuesta y recuperación).'],
+  ['A02', 'A', 'El programa se vincula con calidad y seguridad del paciente, control de infecciones, seguridad y salud en el trabajo y salud ambiental', '1.1', 'Hospitales', 'Referencias cruzadas en el programa, actas conjuntas o integrantes comunes.'],
+  ['A03', 'A', 'El comité de emergencias y desastres está conformado por un acto formal de la Dirección', '1.2', 'Todos', 'Disposición de conformación con integrantes (Dirección médica, administrativa, Enfermería, servicios críticos, mantenimiento, seguridad).'],
+  ['A04', 'A', 'El comité tiene términos de referencia: responsabilidades, frecuencia de reuniones y seguimiento de acuerdos', '1.2', 'Todos', 'Documento de términos de referencia o reglamento interno del comité.'],
+  ['A05', 'A', 'El comité se reúne al menos una vez por mes y registra los acuerdos', '1.2', 'Todos', 'Actas de reunión de los últimos meses.'],
+  ['A06', 'A', 'Los integrantes del comité tienen capacitación en gestión de emergencias de salud y desastres', '1.2', 'Todos', 'Certificados o registros de capacitación de los integrantes.'],
+  ['A07', 'A', 'La evaluación de riesgo del establecimiento está hecha o actualizada en los últimos 2 años (STAR-H)', '1.2 y 1.4', 'Todos', 'Resultado del relevamiento STAR-H del establecimiento.'],
+  ['A08', 'A', 'Se aplicó el Índice de Seguridad Hospitalaria y se siguen las acciones de mejora', '1.2 y 1.4', 'Hospitales', 'Informe del ISH, puntaje y plan de mejoras con seguimiento.'],
+  ['A09', 'A', 'El sistema hospitalario de gestión de incidentes está establecido formalmente, con funciones asignadas', '1.3', 'Hospitales y Sede ex ADOS', 'Documento que establece el sistema (SCI-H) y designaciones.'],
+  ['A10', 'A', 'El sistema de gestión de incidentes se prueba al menos una vez al año con ejercicios de simulación', '1.3', 'Todos', 'Informe del último simulacro o ejercicio de mesa, con fecha.'],
+  ['A11', 'A', 'Hay brigadas o equipos operativos capacitados, equipados y reconocidos (evaluación de daños, incendio, evacuación, primeros auxilios)', '1.3', 'Todos', 'Nómina de brigadas, registros de capacitación y equipamiento.'],
+  ['A12', 'A', 'Los procedimientos de las brigadas se revisaron o actualizaron en los últimos 3 años', '1.3', 'Todos', 'Procedimientos con fecha de revisión.'],
+
+  ['B01', 'B', 'Existe un plan hospitalario de respuesta a emergencias de salud y desastres, con enfoque multiamenaza, por escrito', '1.4', 'Todos', 'Documento del plan vigente.'],
+  ['B02', 'B', 'El plan está aprobado por la Dirección', '1.4', 'Todos', 'Firma, disposición o nota de aprobación.'],
+  ['B03', 'B', 'El plan se difundió entre el personal', '1.4', 'Todos', 'Registros de difusión o capacitación sobre el plan.'],
+  ['B04', 'B', 'El plan se probó con un ejercicio de simulación en el último año', '1.4', 'Todos', 'Informe del ejercicio y lecciones aprendidas.'],
+  ['B05', 'B', 'El plan se revisó o actualizó en el último año, después de un simulacro, de un incidente mayor o de un cambio en la evaluación de riesgo', '1.4', 'Todos', 'Control de cambios del plan.'],
+  ['B06', 'B', 'Hay planes específicos (de contingencia) para las amenazas de riesgo alto o muy alto, revisados al menos una vez por año', '1.4 y Anexo 1', 'Todos', 'Planes específicos (múltiples víctimas, epidemias, químicos, expansión, evacuación, etc.).'],
+  ['B07', 'B', 'Existe un plan de continuidad operativa de los servicios críticos', '1.4 y Anexo 1', 'Hospitales y Sede ex ADOS', 'Plan de continuidad con servicios críticos y tiempos máximos tolerables de interrupción.'],
+  ['B08', 'B', 'Existe un plan de recuperación (personal, reabastecimiento, reemplazo de equipamiento, rehabilitación de la edificación)', '1.4', 'Hospitales y Sede ex ADOS', 'Plan o procedimientos de recuperación.'],
+
+  ['C01', 'C', 'Hay un procedimiento para establecer y gestionar el centro de operaciones de emergencia, con titular y alterno para convocarlo', '1.5', 'Hospitales', 'Procedimiento del COE con designaciones.'],
+  ['C02', 'C', 'El centro de operaciones está en un lugar seguro y protegido', '1.5', 'Hospitales', 'Ubicación definida y verificada.'],
+  ['C03', 'C', 'Hay una sala de reuniones equipada o se puede habilitar rápidamente', '1.5', 'Hospitales', 'Sala identificada y equipamiento disponible.'],
+  ['C04', 'C', 'Hay un centro de operaciones alternativo con las mismas características', '1.5', 'Hospitales', 'Lugar alternativo definido.'],
+  ['C05', 'C', 'El centro tiene equipos y suministros de comunicaciones, gestión de la información, identificación, seguridad y bienestar del personal', '1.5', 'Hospitales', 'Inventario del equipamiento del COE.'],
+
+  ['D01', 'D', 'El plan incluye la información general: ubicación, complejidad, características constructivas, recursos, cartera de servicios y medios de comunicación', '2.1', 'Todos', 'Capítulo de información general del plan.'],
+  ['D02', 'D', 'El plan cita las referencias normativas que sustentan la respuesta', '2.2', 'Todos', 'Capítulo de normativa.'],
+  ['D03', 'D', 'El plan define su propósito', '2.3', 'Todos', 'Capítulo de propósito.'],
+  ['D04', 'D', 'El plan define el alcance: amenazas incluidas, ámbito y expansión de recursos (camas, quirófanos, ventilación mecánica)', '2.4', 'Todos', 'Capítulo de alcance.'],
+  ['D05', 'D', 'El plan describe la situación: amenazas, vulnerabilidades, capacidades y resultados del ISH y de STAR-H', '2.5', 'Todos', 'Capítulo de situación.'],
+  ['D06', 'D', 'El plan define escenarios de emergencia (efectos en la edificación y en la salud de las personas)', '2.5', 'Todos', 'Escenarios descriptos.'],
+  ['D07', 'D', 'El plan tiene objetivos vinculados con las funciones de respuesta', '2.6', 'Todos', 'Capítulo de objetivos.'],
+
+  ['E01', 'E', 'El plan describe la estructura de comando (SCI-H) con titular y alterno para cada cargo', '2.7.1 y Anexo 4', 'Hospitales y Sede ex ADOS', 'Organigrama de comando con titulares y alternos.'],
+  ['E02', 'E', 'Están definidos los responsables en días y horas hábiles y no hábiles (fines de semana y feriados)', '2.7.1', 'Todos', 'Cuadro de responsables por horario.'],
+  ['E03', 'E', 'Hay tarjetas de acción para los puestos de la estructura de comando', '2.7.1', 'Hospitales y Sede ex ADOS', 'Tarjetas de acción por puesto.'],
+  ['E04', 'E', 'Hay un procedimiento de notificación y verificación del evento con fuentes oficiales', '2.7.2 y Anexo 2', 'Todos', 'Procedimiento y formulario de notificación.'],
+  ['E05', 'E', 'Están designados los responsables de verificar el evento, en horario hábil y no hábil', '2.7.2', 'Todos', 'Nómina de responsables de verificación.'],
+  ['E06', 'E', 'El evento se clasifica en niveles 1, 2 y 3 con criterios definidos', '2.7.3', 'Todos', 'Criterios de gradación.'],
+  ['E07', 'E', 'Están definidos los criterios de escalamiento de la respuesta', '2.7.4', 'Todos', 'Criterios de escalamiento.'],
+  ['E08', 'E', 'Están definidos los criterios de activación y desactivación del plan', '2.7.5', 'Todos', 'Criterios de activación y desactivación.'],
+  ['E09', 'E', 'Hay códigos de emergencia y medios definidos para comunicar la activación (perifoneo, cadena de llamadas u otros)', '2.7.5', 'Todos', 'Códigos y medios de comunicación.'],
+  ['E10', 'E', 'Están previstas las tareas para el regreso a las operaciones normales', '2.7.5', 'Todos', 'Lista de tareas de regreso a la normalidad.'],
+  ['E11', 'E', 'Las funciones y actividades de respuesta están ordenadas en una línea de tiempo (inmediato, intermedio, extendido)', '2.7.6 y Anexo 3', 'Todos', 'Cuadro de funciones por línea de tiempo.'],
+
+  ['F01', 'F', 'Hay acuerdos formalizados con los establecimientos de la red para la referencia y contrarreferencia de pacientes', '2.8.1 y Anexo 5', 'Todos', 'Acuerdos, convenios o protocolos con la red.'],
+  ['F02', 'F', 'La cartera de servicios de emergencia está difundida entre los establecimientos de la red', '2.8.1', 'Hospitales', 'Cartera de servicios publicada o comunicada.'],
+  ['F03', 'F', 'Los protocolos con la red se probaron en el último año', '2.8.1', 'Todos', 'Registro del ejercicio con la red.'],
+  ['F04', 'F', 'Hay acuerdos formalizados con organismos externos (Protección Civil, bomberos, policía, emergencias médicas, proveedores de agua y combustible)', '2.8.2 y Anexo 6', 'Todos', 'Acuerdos o protocolos interinstitucionales.'],
+  ['F05', 'F', 'Los protocolos interinstitucionales se probaron en el último año', '2.8.2', 'Todos', 'Registro del ejercicio interinstitucional.'],
+
+  ['G01', 'G', 'Procedimiento del centro de operaciones de emergencia', '2.9', 'Hospitales', 'Procedimiento escrito y vigente.'],
+  ['G02', 'G', 'Procedimiento de comunicación interna y externa', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G03', 'G', 'Procedimiento de comunicación con la población y los medios', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G04', 'G', 'Procedimiento de vigilancia y protección de los ocupantes y de la edificación', '2.9', 'Todos', 'Procedimiento escrito y vigente; puede vincularse con la preparación frente a la violencia.'],
+  ['G05', 'G', 'Procedimiento de gestión de la información de los pacientes', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G06', 'G', 'Procedimiento de triaje para incidentes con múltiples víctimas', '2.9', 'Hospitales', 'Procedimiento escrito y vigente.'],
+  ['G07', 'G', 'Procedimiento de referencia, traslado y recepción de pacientes', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G08', 'G', 'Procedimiento de vigilancia, prevención y control de infecciones en emergencias', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G09', 'G', 'Procedimiento de servicios psicosociales', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G10', 'G', 'Procedimiento post mórtem para un gran número de víctimas mortales', '2.9', 'Hospitales', 'Procedimiento escrito y vigente.'],
+  ['G11', 'G', 'Procedimiento de evacuación', '2.9', 'Todos', 'Plan o procedimiento de evacuación con planos.'],
+  ['G12', 'G', 'Procedimiento de ampliación del espacio de atención', '2.9', 'Hospitales', 'Procedimiento escrito y vigente.'],
+  ['G13', 'G', 'Procedimiento de transporte durante la emergencia', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G14', 'G', 'Procedimiento de alimentos y agua durante la emergencia', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+  ['G15', 'G', 'Procedimiento de movilización y contratación de personal', '2.9', 'Todos', 'Procedimiento escrito y vigente.'],
+
+  ['H01', 'H', 'Hay tarjetas de instrucciones distribuidas al personal que participa en la respuesta', '2.10 y Anexo 8', 'Todos', 'Tarjetas y registro de entrega.'],
+  ['H02', 'H', 'Hay un directorio actualizado del personal para emergencias', '2.10 y Anexo 10', 'Todos', 'Directorio con fecha de actualización.'],
+  ['H03', 'H', 'Hay un directorio actualizado de las partes interesadas externas', '2.10 y Anexo 9', 'Todos', 'Directorio con fecha de actualización.'],
+  ['H04', 'H', 'Hay una cadena de llamadas definida', '2.10', 'Todos', 'Cadena de llamadas vigente.'],
+
+  ['I01', 'I', 'Revisión, adaptación o actualización rápida del plan de respuesta', '3 · Cuadro 1', 'Todos', 'Evidencia de la revisión ante la emergencia inminente.'],
+  ['I02', 'I', 'Socialización rápida del plan entre todo el personal', '3 · Cuadro 1', 'Todos', 'Registros de difusión.'],
+  ['I03', 'I', 'Revisión de la disponibilidad de titulares y alternos de la estructura de comando y entrenamiento rápido', '3 · Cuadro 1', 'Todos', 'Nómina confirmada y registro del entrenamiento.'],
+  ['I04', 'I', 'Prueba de la cadena de llamadas y otros medios de activación', '3 · Cuadro 1', 'Todos', 'Registro de la prueba.'],
+  ['I05', 'I', 'Verificación del espacio físico y los recursos del centro de operaciones', '3 · Cuadro 1', 'Hospitales', 'Lista de verificación del COE.'],
+  ['I06', 'I', 'Entrenamiento rápido del personal en los procedimientos operativos de respuesta', '3 · Cuadro 1', 'Todos', 'Registros de entrenamiento.'],
+  ['I07', 'I', 'Verificación de los recursos para los procedimientos operativos de respuesta', '3 · Cuadro 1', 'Todos', 'Inventario verificado.'],
+  ['I08', 'I', 'Revisión de la vigencia de los acuerdos con los establecimientos de la red', '3 · Cuadro 1', 'Todos', 'Acuerdos revisados.'],
+  ['I09', 'I', 'Notificación y alerta a los establecimientos de la red con información sobre la emergencia', '3 · Cuadro 1', 'Todos', 'Comunicaciones enviadas.'],
+  ['I10', 'I', 'Revisión de la vigencia de los acuerdos con organizaciones de otros sectores', '3 · Cuadro 1', 'Todos', 'Acuerdos revisados.'],
+  ['I11', 'I', 'Distribución de las tarjetas de instrucciones a los equipos y al personal', '3 · Cuadro 1', 'Todos', 'Registro de entrega.'],
+  ['I12', 'I', 'Llamadas de prueba al personal del directorio de emergencias', '3 · Cuadro 1', 'Todos', 'Registro de llamadas.'],
+  ['I13', 'I', 'Llamadas de prueba a los puntos focales de la red y de otros sectores', '3 · Cuadro 1', 'Todos', 'Registro de llamadas.']
+];
+
+function phrAplica_(aplicaA, tipo) {
+  if (aplicaA === 'Todos') return true;
+  if (aplicaA === 'Hospitales') return tipo === 'Hospital';
+  if (aplicaA === 'Hospitales y Sede ex ADOS') return tipo === 'Hospital' || tipo === 'Sede ex ADOS';
+  return true;
+}
+
+/* =========================================================
+ *  INSTALACIÓN: arma la planilla PHR de cada red listada en REDES PHR
+ *  (si la hoja RELEVAMIENTO ya tiene datos, no la toca)
+ * ========================================================= */
+function phrInstalar() {
+  const libro = SpreadsheetApp.getActive();
+  const rp = libro.getSheetByName(PHR.HOJA_REDES);
+  if (!rp) throw new Error('Falta la hoja ' + PHR.HOJA_REDES);
+  const starh = {};
+  redes_().forEach(r => starh[r.nombre] = r.id);
+  const filas = rp.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && x[1]);
+  const informe = [];
+  filas.forEach(x => {
+    const red = x[0].trim(), id = idPlanilla_(x[1]);
+    const ss = SpreadsheetApp.openById(id);
+    const rel = ss.getSheetByName('RELEVAMIENTO');
+    if (rel && rel.getLastRow() > 1) { informe.push(red + ': ya estaba armada, no se tocó.'); return; }
+    if (!starh[red]) throw new Error('No encuentro la planilla STAR-H de ' + red + ' en REDES (de ahí salen los establecimientos).');
+    const est = SpreadsheetApp.openById(starh[red]).getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1).filter(e => e[0]);
+    phrArmar_(ss, red, est);
+    informe.push(red + ': ' + est.length + ' establecimientos · ' + (est.length * PHR_ITEMS.length) + ' ítems.');
+  });
+  avisar_(informe.join('\n') || 'No hay redes en ' + PHR.HOJA_REDES + '.');
+}
+
+function phrArmar_(ss, red, est) {
+  const t = /trelew/i.test(red) ? { fuerte: '#0D313F', medio: '#5894A7', claro: '#E6EFF2' } : { fuerte: '#B8441A', medio: '#E8602A', claro: '#FDEDE4' };
+  const hoja = (nombre, i) => ss.getSheetByName(nombre) || ss.insertSheet(nombre, i);
+  const cab = (sh, n) => sh.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
+  ss.rename('PHR · ' + red + ' · Relevamiento inicial del plan hospitalario de respuesta (v0)');
+
+  // AYUDA
+  const ay = hoja('AYUDA', 0);
+  ay.clear();
+  const textoAyuda = [
+    ['PHR · Relevamiento inicial del plan hospitalario de respuesta · ' + red],
+    ['Base: OPS. Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015), 2023. Versión 0.'],
+    [''],
+    ['Para qué sirve'],
+    ['Conocer qué tiene hoy cada establecimiento de lo que la OPS recomienda para responder a emergencias y desastres: organización, plan, centro de operaciones, procedimientos, coordinaciones y disposición para la respuesta. Es el punto de partida para elaborar o actualizar el plan de cada establecimiento.'],
+    [''],
+    ['Cómo se carga'],
+    ['Desde la app (hyslhmh-sudo.github.io/starh/phr.html) o directamente en la hoja RELEVAMIENTO. Para cada ítem: ¿Aplica? (Sí / No aplica), Estado (Cumple / Parcial / No cumple), evidencia encontrada, brecha u observación, responsable propuesto y prioridad.'],
+    ['Los ítems que por el tipo de establecimiento no corresponden ya figuran como «No aplica»: si en un establecimiento sí corresponden, cambiarlo a «Sí».'],
+    [''],
+    ['Cómo se calcula'],
+    ['Cumple = 1 · Parcial = 0,5 · No cumple = 0. «No aplica» no cuenta. El porcentaje de cumplimiento es el promedio de los ítems que aplican y ya tienen estado, por sección y en total (hoja TABLERO).'],
+    [''],
+    ['Alcance'],
+    ['Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento: las medidas, planes y procedimientos de cada lugar los propone su servicio y los aprueba su Dirección.'],
+    [''],
+    ['Respaldo normativo'],
+    ['Ley N.º 19.587 y Decreto N.º 351/79 (prevención y protección contra incendios y evacuación); Resolución SRT N.º 905/2015, Anexo II, punto 2.2 (planes de contingencia, preparación ante emergencias, coordinación con entidades externas y recuperación).']
+  ];
+  ay.getRange(1, 1, textoAyuda.length, 1).setValues(textoAyuda).setWrap(true).setVerticalAlignment('top').setFontColor('#3A4A52');
+  ay.setColumnWidth(1, 820);
+  ay.getRange('A1').setFontSize(15).setFontWeight('bold').setFontColor(t.fuerte);
+  ['A4', 'A7', 'A11', 'A14', 'A17'].forEach(a => ay.getRange(a).setFontWeight('bold').setFontColor(t.fuerte));
+
+  // ESTABLECIMIENTOS
+  const es = hoja('ESTABLECIMIENTOS', 1);
+  es.clear();
+  const filasEst = est.map(e => [e[0], red, e[2], e[3], 's/d', 's/d', 'Pendiente', '']);
+  es.getRange(1, 1, 1, 8).setValues([['Código', 'Red', 'Tipo', 'Establecimiento', 'Referente del relevamiento', 'Fecha del relevamiento', 'Estado del relevamiento', 'Observaciones']]);
+  es.getRange(2, 1, filasEst.length, 8).setValues(filasEst);
+  cab(es, 8); es.setFrozenRows(1); es.setColumnWidth(4, 340); es.setColumnWidths(5, 3, 160);
+  es.getRange(2, 7, filasEst.length, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(PHR.ESTADOS_REL, true).build());
+
+  // ITEMS (catálogo)
+  const it = hoja('ITEMS', 2);
+  it.clear();
+  const secc = {}; PHR.SECCIONES.forEach(s => secc[s[0]] = s[1]);
+  it.getRange(1, 1, 1, 6).setValues([['ID', 'Sección', 'Ítem', 'Referencia del instructivo OPS', 'Aplica a', 'Qué buscar como evidencia']]);
+  it.getRange(2, 1, PHR_ITEMS.length, 6).setValues(PHR_ITEMS.map(x => [x[0], x[1] + ' · ' + secc[x[1]], x[2], x[3], x[4], x[5]]));
+  cab(it, 6); it.setFrozenRows(1); it.setColumnWidth(2, 230); it.setColumnWidth(3, 480); it.setColumnWidth(6, 360);
+  it.getRange(2, 1, PHR_ITEMS.length, 6).setWrap(true).setVerticalAlignment('top');
+
+  // RELEVAMIENTO
+  const rl = hoja('RELEVAMIENTO', 3);
+  rl.clear();
+  const filas = [];
+  est.forEach(e => PHR_ITEMS.forEach(x => {
+    const ap = phrAplica_(x[4], e[2]);
+    filas.push([e[0], e[3], red, e[2], x[0], x[1] + ' · ' + secc[x[1]], x[2], x[3], ap ? 'Sí' : 'No aplica', '', '', '',
+      ap ? '' : 'Prefijado por tipo de establecimiento; cambiar a «Sí» si corresponde.', '', '', '', '']);
+  }));
+  rl.getRange(1, 1, 1, 17).setValues([['Código', 'Establecimiento', 'Red', 'Tipo', 'ID', 'Sección', 'Ítem', 'Ref. OPS', '¿Aplica?', 'Estado', 'Puntaje',
+    'Evidencia encontrada', 'Brecha u observación', 'Responsable propuesto', 'Prioridad', 'Fecha', 'Relevado por']]);
+  rl.getRange(2, 1, filas.length, 17).setValues(filas);
+  rl.getRange('K1').setFormula('={"Puntaje";ARRAYFORMULA(IF((A2:A="")+(I2:I="No aplica")+(J2:J=""),"",IF(J2:J="Cumple",1,IF(J2:J="Parcial",0.5,0))))}');
+  cab(rl, 17); rl.setFrozenRows(1); rl.setFrozenColumns(5);
+  rl.setColumnWidth(2, 220); rl.setColumnWidth(6, 200); rl.setColumnWidth(7, 380); rl.setColumnWidths(12, 3, 220);
+  const n = filas.length;
+  rl.getRange(2, 9, n, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No aplica'], true).build());
+  rl.getRange(2, 10, n, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(PHR.ESTADOS, true).build());
+  rl.getRange(2, 15, n, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(PHR.PRIORIDADES, true).build());
+  rl.getRange(2, 11, n, 1).setNumberFormat('0.0');
+  rl.getRange(2, 1, n, 17).setVerticalAlignment('top');
+  rl.getRange(2, 7, n, 1).setWrap(true);
+  const reglas = [
+    ['Cumple', '#C8E6C9', '#1E5223'], ['Parcial', '#FFF2B3', '#5E4B00'], ['No cumple', '#F4B4B4', '#7A1F1F']
+  ].map(c => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(c[0]).setBackground(c[1]).setFontColor(c[2]).setRanges([rl.getRange(2, 10, n, 1)]).build());
+  reglas.push(SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo('No aplica').setFontColor('#8A979E').setRanges([rl.getRange(2, 9, n, 1)]).build());
+  rl.setConditionalFormatRules(reglas);
+  rl.getRange('K1:K').protect().setDescription('Cálculo automático').setWarningOnly(true);
+
+  // TABLERO (por establecimiento y sección)
+  const tb = hoja('TABLERO', 4);
+  tb.clear();
+  tb.getRange('A1').setValue('PHR · ' + red + ' · Cumplimiento por establecimiento y sección').setFontSize(14).setFontWeight('bold').setFontColor(t.fuerte);
+  tb.getRange('A2').setValue('Promedio de los ítems que aplican y tienen estado (Cumple = 100 %, Parcial = 50 %, No cumple = 0 %). «s/d»: sin datos todavía.').setFontColor('#6B7A82');
+  const encab = ['Código', 'Establecimiento', 'Tipo', 'Estado', 'Ítems relevados', 'Total'].concat(PHR.SECCIONES.map(s => s[0] + ' · ' + s[1]));
+  tb.getRange(4, 1, 1, encab.length).setValues([encab]);
+  const f = [];
+  est.forEach((e, i) => {
+    const r = 5 + i;
+    const fila = ['=ESTABLECIMIENTOS!A' + (i + 2), '=ESTABLECIMIENTOS!D' + (i + 2), '=ESTABLECIMIENTOS!C' + (i + 2), '=ESTABLECIMIENTOS!G' + (i + 2),
+      '=COUNTIFS(RELEVAMIENTO!$A:$A,$A' + r + ',RELEVAMIENTO!$J:$J,"<>")&" de "&COUNTIFS(RELEVAMIENTO!$A:$A,$A' + r + ',RELEVAMIENTO!$I:$I,"Sí")',
+      '=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K,RELEVAMIENTO!$A:$A,$A' + r + '),"s/d")'];
+    PHR.SECCIONES.forEach(s => fila.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K,RELEVAMIENTO!$A:$A,$A' + r + ',RELEVAMIENTO!$F:$F,"' + s[0] + ' · *"),"s/d")'));
+    f.push(fila);
+  });
+  tb.getRange(5, 1, f.length, encab.length).setFormulas(f);
+  const tot = ['', 'Total de la red', '', '', '', '=IFERROR(AVERAGE(RELEVAMIENTO!K2:K),"s/d")'];
+  PHR.SECCIONES.forEach(s => tot.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K,RELEVAMIENTO!$F:$F,"' + s[0] + ' · *"),"s/d")'));
+  tb.getRange(5 + f.length, 1, 1, encab.length).setFormulas([tot]).setFontWeight('bold');
+  tb.getRange(4, 1, 1, encab.length).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
+  tb.setFrozenRows(4); tb.setFrozenColumns(2);
+  tb.setColumnWidth(2, 300); tb.setColumnWidths(7, PHR.SECCIONES.length, 110);
+  const rango = tb.getRange(5, 6, f.length + 1, PHR.SECCIONES.length + 1);
+  rango.setNumberFormat('0%').setHorizontalAlignment('center');
+  tb.setConditionalFormatRules([SpreadsheetApp.newConditionalFormatRule().setGradientMinpointWithValue('#F4B4B4', SpreadsheetApp.InterpolationType.NUMBER, '0')
+    .setGradientMidpointWithValue('#FFF2B3', SpreadsheetApp.InterpolationType.NUMBER, '0.5').setGradientMaxpointWithValue('#C8E6C9', SpreadsheetApp.InterpolationType.NUMBER, '1')
+    .setRanges([rango]).build()]);
+  tb.protect().setDescription('Tablero con fórmulas').setWarningOnly(true);
+
+  // limpiar la hoja vacía inicial
+  ['Hoja 1', 'Hoja1', 'Sheet1'].forEach(nm => { const s = ss.getSheetByName(nm); if (s && ss.getSheets().length > 1) ss.deleteSheet(s); });
+}
+
+/* =========================================================
+ *  API PHR (la llaman phr.html y phr-tablero.html)
+ * ========================================================= */
+function phrRedes_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(PHR.HOJA_REDES);
+  if (!sh) return [];
+  return sh.getDataRange().getDisplayValues().slice(1)
+    .filter(x => x[0] && x[1] && /^activa$/i.test(String(x[2]).trim()))
+    .map(x => ({ nombre: x[0].trim(), id: idPlanilla_(x[1]) }));
+}
+
+function phrRelObj_(x) {
+  return { codigo: x[0], estab: x[1], red: x[2], tipo: x[3], id: x[4], seccion: x[5], item: x[6], ref: x[7], aplica: x[8], estado: x[9], puntaje: x[10],
+           evidencia: x[11], brecha: x[12], responsable: x[13], prioridad: x[14], fecha: x[15], relevador: x[16] };
+}
+
+function phrCatalogo_(u) {
+  exigirModulo_(u, 'PHR');
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), secciones: PHR.SECCIONES, redes: [] };
+  phrRedes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
+    const ss = SpreadsheetApp.openById(r.id);
+    const est = ss.getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && veEstab_(u, x[0]))
+      .map(x => ({ codigo: x[0], tipo: x[2], nombre: x[3], referente: x[4], fecha: x[5], estado: x[6], puedeCargar: cargaEstab_(u, r.nombre, x[0]) }));
+    if (!est.length) return;
+    const cods = est.map(x => x.codigo);
+    const items = ss.getSheetByName('ITEMS').getDataRange().getDisplayValues().slice(1).filter(x => x[0])
+      .map(x => ({ id: x[0], seccion: x[1], item: x[2], ref: x[3], aplicaA: x[4], evidencia: x[5] }));
+    const rel = ss.getSheetByName('RELEVAMIENTO').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && cods.indexOf(x[0]) >= 0).map(phrRelObj_);
+    salida.redes.push({ nombre: r.nombre, establecimientos: est, items: items, relevamiento: rel });
+  });
+  return salida;
+}
+
+function phrGuardar_(u, items) {
+  exigirModulo_(u, 'PHR');
+  if (!items.length) return { ok: true, resultados: [] };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  const resultados = [];
+  try {
+    const mapa = {}; phrRedes_().forEach(r => mapa[r.nombre] = r);
+    const porRed = {}; items.forEach(it => (porRed[it.red] = porRed[it.red] || []).push(it));
+    Object.keys(porRed).forEach(red => {
+      const r = mapa[red];
+      if (!r) { porRed[red].forEach(it => resultados.push({ uid: it.uid, ok: false, error: 'Red no activa: ' + red })); return; }
+      const sh = SpreadsheetApp.openById(r.id).getSheetByName('RELEVAMIENTO');
+      const claves = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 5).getDisplayValues();
+      const fila = {}; claves.forEach((k, i) => { if (k[0]) fila[k[0] + '|' + k[4]] = i + 2; });
+      const tocadas = [];
+      porRed[red].forEach(it => {
+        try {
+          if (!cargaEstab_(u, red, it.codigo)) throw new Error('Sin permiso de carga en ' + it.codigo);
+          const n = fila[it.codigo + '|' + it.id];
+          if (!n) throw new Error('No existe el ítem ' + it.id + ' para ' + it.codigo);
+          const aplica = it.aplica === 'No aplica' ? 'No aplica' : 'Sí';
+          const estado = aplica === 'No aplica' ? '' : String(it.estado || '');
+          if (estado && PHR.ESTADOS.indexOf(estado) < 0) throw new Error('Estado no válido: ' + estado);
+          const prioridad = String(it.prioridad || '');
+          if (prioridad && PHR.PRIORIDADES.indexOf(prioridad) < 0) throw new Error('Prioridad no válida: ' + prioridad);
+          const fecha = it.fecha || Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy');
+          sh.getRange(n, PHR.C.aplica, 1, 2).setValues([[aplica, estado]]);
+          sh.getRange(n, PHR.C.evidencia, 1, 6).setValues([[String(it.evidencia || '').slice(0, 2000), String(it.brecha || '').slice(0, 2000),
+            String(it.responsable || '').slice(0, 300), prioridad, fecha, String(it.relevador || u.nombre).slice(0, 200)]]);
+          tocadas.push({ uid: it.uid, n: n });
+          registrar_(u, 'PHR · Relevamiento', red, it.codigo, it.id, aplica === 'No aplica' ? 'No aplica' : (estado || 'sin estado') + (prioridad ? ' · prioridad ' + prioridad : ''));
+        } catch (err) { resultados.push({ uid: it.uid, ok: false, error: err.message }); }
+      });
+      if (tocadas.length) {
+        SpreadsheetApp.flush();
+        tocadas.forEach(t => resultados.push({ uid: t.uid, ok: true, fila: phrRelObj_(sh.getRange(t.n, 1, 1, 17).getDisplayValues()[0]) }));
+      }
+    });
+  } finally { lock.releaseLock(); }
+  return { ok: true, resultados: resultados };
+}
+
+function phrEstado_(u, req) {
+  exigirModulo_(u, 'PHR');
+  const r = phrRedes_().filter(x => x.nombre === req.red)[0];
+  if (!r) throw new Error('Red no activa');
+  if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
+  if (req.estado && PHR.ESTADOS_REL.indexOf(req.estado) < 0) throw new Error('Estado no válido');
+  const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
+  const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
+  const i = cod.indexOf(req.codigo);
+  if (i < 0) throw new Error('Establecimiento inexistente');
+  const act = sh.getRange(i + 2, 5, 1, 3).getDisplayValues()[0];
+  const nuevo = [req.referente != null ? String(req.referente).slice(0, 200) || 's/d' : act[0],
+                 req.fecha != null ? String(req.fecha) || 's/d' : act[1], req.estado || act[2]];
+  sh.getRange(i + 2, 5, 1, 3).setValues([nuevo]);
+  registrar_(u, 'PHR · Datos del relevamiento', req.red, req.codigo, '', nuevo.join(' | '));
+  return { ok: true };
+}
+
+function phrTablero_(u) {
+  exigirModulo_(u, 'PHR');
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), secciones: PHR.SECCIONES, redes: [] };
+  phrRedes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
+    const ss = SpreadsheetApp.openById(r.id);
+    const est = ss.getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && veEstab_(u, x[0])).map(x => ({ codigo: x[0], tipo: x[2], nombre: x[3], referente: x[4], fecha: x[5], estado: x[6] }));
+    if (!est.length) return;
+    const cods = est.map(x => x.codigo);
+    // fila compacta: código, id, sección (letra), ítem, aplica, estado, prioridad
+    const filas = ss.getSheetByName('RELEVAMIENTO').getDataRange().getDisplayValues().slice(1)
+      .filter(x => x[0] && cods.indexOf(x[0]) >= 0).map(x => [x[0], x[4], String(x[5]).charAt(0), x[6], x[8], x[9], x[14]]);
+    salida.redes.push({ nombre: r.nombre, establecimientos: est, filas: filas });
+  });
+  return salida;
+}
