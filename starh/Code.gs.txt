@@ -98,7 +98,7 @@ function prepararHojas() {
     rg.protect().setDescription('Registro automático de la app').setWarningOnly(true);
   }
   props_();
-  SpreadsheetApp.getUi().alert('Listo. Completá tu DNI en ACCESOS STAR-H (fila 2) y generá tu clave desde el menú.');
+  avisar_('Listo. Completá tu DNI en ACCESOS STAR-H (fila 2) y generá tu clave desde el menú.');
 }
 
 function menuGenerarClave() {
@@ -128,7 +128,7 @@ function menuProbarConexion() {
       return '✔ ' + r.nombre + ': ' + n + ' filas de evaluación';
     } catch (e) { return '✖ ' + r.nombre + ': ' + e.message; }
   });
-  SpreadsheetApp.getUi().alert(out.join('\n') || 'No hay redes activas en REDES.');
+  avisar_(out.join('\n') || 'No hay redes activas en REDES.');
 }
 
 /* =========================================================
@@ -436,6 +436,11 @@ function volcarRegistro_() {
     if (sh) sh.getRange(sh.getLastRow() + 1, 1, LOG_.length, 8).setValues(LOG_);
   } catch (e) { /* el registro nunca frena la carga */ }
   LOG_.length = 0;
+}
+
+// Muestra un aviso en la planilla; si se ejecuta desde el editor, lo deja en el registro.
+function avisar_(msg) {
+  try { SpreadsheetApp.getUi().alert(msg); } catch (e) { Logger.log(msg); }
 }
 
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
