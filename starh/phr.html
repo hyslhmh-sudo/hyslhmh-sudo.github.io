@@ -311,12 +311,12 @@ function vistaInicio() {
   $('#titulo').innerHTML = `PHR · ${S.esc(r.nombre)}<small>${S.esc(u.nombre || '')} · ${S.esc(u.rol || '')}</small>`;
   let tot = 0, hechas = 0; const todos = [];
   const filas = r.establecimientos.map(e => {
-    const l = rels(r, e.codigo), n = l.length, c = l.filter(resuelto).length, p = pct(l); tot += n; hechas += c; todos.push(...l);
+    const l = rels(r, e.codigo), ap = l.filter(x => x.aplica !== 'No aplica'), n = ap.length, c = ap.filter(x => x.estado).length, p = pct(l); tot += n; hechas += c; todos.push(...l);
     const pend = cola.filter(x => x.red === r.nombre && x.codigo === e.codigo).length, av = n ? Math.round(c * 100 / n) : 0;
     return `<button class="tarjeta est" data-ir="#/est/${encodeURIComponent(r.nombre)}/${encodeURIComponent(e.codigo)}">
       <div class="est-cab"><b>${S.esc(e.nombre)}</b><span class="chip ${/Pendiente/.test(e.estado) ? 'pend' : ''}">${S.esc(e.estado || 'Pendiente')}</span></div>
       <div class="barra-prog" aria-label="${av} % relevado"><i style="width:${av}%"></i></div>
-      <div class="est-pie"><span>${S.esc(e.codigo)} · ${S.esc(e.tipo)}</span><span>${c} de ${n} ítems</span>
+      <div class="est-pie"><span>${S.esc(e.codigo)} · ${S.esc(e.tipo)}</span><span>${c} de ${n} ítems que aplican</span>
       ${p != null ? `<span class="niv" style="background:${p >= 75 ? COLOR['Cumple'][0] : p >= 40 ? COLOR['Parcial'][0] : COLOR['No cumple'][0]};color:#24343B">${p} % de cumplimiento</span>` : ''}
       ${pend ? `<span class="chip cola">${pend} sin enviar</span>` : ''}${e.puedeCargar === false ? '<span class="chip pend">Solo lectura</span>' : ''}</div></button>`;
   }).join('');
@@ -351,7 +351,7 @@ function vistaEstablecimiento(redN, codigo) {
   const F = (k, t) => `<button class="filtro" data-filtro="${k}" aria-pressed="${filtro === k}">${t} (${cuenta[k]})</button>`;
   app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Establecimientos</button>
     <div class="tarjeta cab-est"><h2>${S.esc(e.nombre)}</h2>
-      <div class="sub">${S.esc(e.codigo)} · ${S.esc(e.tipo)} · ${cuenta.hechas + cuenta.na} de ${cuenta.todas} ítems resueltos${pct(l) != null ? ' · ' + pct(l) + ' % de cumplimiento' : ''}</div>
+      <div class="sub">${S.esc(e.codigo)} · ${S.esc(e.tipo)} · ${cuenta.hechas} de ${cuenta.todas - cuenta.na} ítems que aplican relevados${pct(l) != null ? ' · ' + pct(l) + ' % de cumplimiento' : ''}</div>
       <div class="secciones">${Object.keys(porSec).map(s => { const p = pct(porSec[s]); return `<span class="sec-chip" title="${S.esc(s)}" style="background:${p == null ? '#EEF1F3' : p >= 75 ? COLOR['Cumple'][0] : p >= 40 ? COLOR['Parcial'][0] : COLOR['No cumple'][0]}"><b>${S.esc(s.charAt(0))}</b> ${p == null ? '–' : p + ' %'}</span>`; }).join('')}</div>
       <details class="datos"><summary>Datos del relevamiento <span class="sub" style="font-weight:500">· Referente: ${S.esc(e.referente || 's/d')} · Fecha: ${S.esc(e.fecha || 's/d')}</span></summary>
         <form id="fDatos"><div class="rejilla">
