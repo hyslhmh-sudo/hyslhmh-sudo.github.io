@@ -189,7 +189,7 @@
     function resolver(req) {
       const d = db();
       if (req.accion === 'login') {
-        if (!/^\d{7,9}$/.test(String(req.dni || '').replace(/\D/g, '')) || !/^\d{6}$/.test(String(req.clave || ''))) return { ok: false, error: 'Revisá el DNI y la clave (6 números).' };
+        if (!/^\d{7,9}$/.test(String(req.dni || '').replace(/\D/g, '')) || String(req.clave || '').length < 6) return { ok: false, error: 'Revisá el DNI y la clave.' };
         if (req.clave !== '123456') return { ok: false, error: 'DNI o clave incorrectos, o acceso inactivo. (En la demostración la clave es 123456.)' };
         const u = usuarioDemo(String(req.dni).replace(/\D/g, ''));
         store.set('demo.quien', u);

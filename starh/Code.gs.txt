@@ -42,6 +42,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Preparar hojas de la app', 'prepararHojas')
     .addItem('Generar o reiniciar clave (fila seleccionada en ACCESOS)', 'menuGenerarClave')
+    .addItem('Definir una clave propia (fila seleccionada en ACCESOS)', 'menuDefinirClave')
     .addItem('Probar conexión con las planillas de las redes', 'menuProbarConexion')
     .addToUi();
 }
@@ -120,6 +121,29 @@ function menuGenerarClave() {
     '\n\nAnotala y pasala a la persona: no se vuelve a mostrar. Si se pierde, generá una nueva.');
 }
 
+// La persona escribe su propia clave (mínimo 8 caracteres, con letras y números).
+function menuDefinirClave() {
+  const ui = SpreadsheetApp.getUi();
+  const sh = SpreadsheetApp.getActiveSheet();
+  if (sh.getName() !== CFG.HOJA_ACCESOS) { ui.alert('Primero seleccioná una fila de la hoja ' + CFG.HOJA_ACCESOS + '.'); return; }
+  const fila = sh.getActiveRange().getRow();
+  const dni = limpiarDni_(sh.getRange(fila, 1).getDisplayValue());
+  if (fila < 2 || !dni) { ui.alert('La fila seleccionada no tiene un DNI válido (sin puntos).'); return; }
+  const r1 = ui.prompt('Clave propia', 'DNI ' + dni + '. Escribí la clave (mínimo 8 caracteres, con letras y números):', ui.ButtonSet.OK_CANCEL);
+  if (r1.getSelectedButton() !== ui.Button.OK) return;
+  const clave = r1.getResponseText();
+  if (clave.length < 8 || clave.length > 40 || !/[A-Za-z]/.test(clave) || !/\d/.test(clave)) { ui.alert('La clave tiene que tener entre 8 y 40 caracteres, con letras y números. No se guardó.'); return; }
+  const r2 = ui.prompt('Clave propia', 'Repetí la clave para confirmarla:', ui.ButtonSet.OK_CANCEL);
+  if (r2.getSelectedButton() !== ui.Button.OK) return;
+  if (r2.getResponseText() !== clave) { ui.alert('Las claves no coinciden. No se guardó.'); return; }
+  sh.getRange(fila, 7, 1, 2).setValues([[hashClave_(dni, clave), new Date()]]);
+  if (!sh.getRange(fila, 6).getValue()) sh.getRange(fila, 6).setValue('Activo');
+  CacheService.getScriptCache().remove('fallos_' + dni);
+  registrar_({ dni: 'admin', nombre: 'Administración' }, 'Clave propia definida', '', '', '', 'Para DNI ' + dni);
+  volcarRegistro_();
+  ui.alert('Listo: la clave quedó guardada cifrada. Ya podés ingresar a la app y al tablero.');
+}
+
 function menuProbarConexion() {
   const out = redes_().map(r => {
     try {
@@ -163,7 +187,8 @@ function atender_(e) {
 /* ---------- Ingreso ---------- */
 function login_(dniIn, clave) {
   const dni = limpiarDni_(dniIn);
-  if (!dni || !/^\d{6}$/.test(String(clave || ''))) return { ok: false, error: 'Revisá el DNI y la clave (6 números).' };
+  clave = String(clave || '');
+  if (!dni || clave.length < 6 || clave.length > 40) return { ok: false, error: 'Revisá el DNI y la clave.' };
   const cache = CacheService.getScriptCache();
   const fallos = Number(cache.get('fallos_' + dni) || 0);
   if (fallos >= CFG.INTENTOS_MAX) return { ok: false, error: 'Demasiados intentos. Probá de nuevo en ' + CFG.MINUTOS_BLOQUEO + ' minutos.' };
