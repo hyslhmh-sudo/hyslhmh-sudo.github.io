@@ -1,0 +1,588 @@
+/**
+ * ISH · Índice de Seguridad Hospitalaria (versión 0)
+ * ------------------------------------------------------------------
+ * Base: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed. Washington, D.C.: OPS; 2018
+ * (Formulario 2, lista de verificación de 151 ítems en 4 módulos).
+ *
+ * Va en el mismo proyecto de Apps Script que STAR-H y PHR (comparte accesos y sesión).
+ * Por ahora es solo para Administración (se abre a otros con el menú STAR-H app › ISH · Abrir o cerrar).
+ * Cada red tiene su planilla ISH, listada en la hoja «REDES ISH» de este libro; se arma con ishInstalar().
+ * Solo se evalúan los hospitales (Tipo = Hospital en ESTABLECIMIENTOS de STAR-H).
+ *
+ * Cálculo (hoja PESOS, editable):
+ *  · Cada ítem: Bajo / Medio / Alto con valores estandarizados 0 / 0,5 / 1 («No evaluado» no cuenta y ajusta el denominador).
+ *  · Submódulo = promedio ponderado de sus ítems (peso de cada ítem en ITEMS, 1 por defecto).
+ *  · Módulo = promedio ponderado de sus submódulos (peso en PESOS, 1 por defecto).
+ *  · Índice = suma ponderada de los módulos 2, 3 y 4 según el modelo (Modelo 1: 50 / 30 / 20 · Modelo 2: un tercio cada uno).
+ *  · Categoría: A (0,66 a 1) · B (0,36 a 0,65) · C (0 a 0,35).
+ *  El módulo 1 (amenazas y suelo) no suma: se registra para orientar la evaluación.
+ *  Los coeficientes de la calculadora oficial de la OPS se pueden cargar en PESOS e ITEMS si se dispone de ella.
+ */
+
+const ISH = {
+  HOJA_REDES: 'REDES ISH',
+  NIVELES: ['Bajo', 'Medio', 'Alto', 'No evaluado'],
+  AMEN_NIVELES: ['No existe', 'Bajo', 'Medio', 'Alto'],
+  PREPARARSE: ['Sí', 'No'],
+  ESTADOS_REL: ['Pendiente', 'Convocado', 'En curso', 'Evaluado', 'Validado por la Dirección'],
+  MODELOS: ['Modelo 1', 'Modelo 2'],
+  MODULOS: [['2', 'Seguridad estructural'], ['3', 'Seguridad no estructural'], ['4', 'Gestión de emergencias y desastres']],
+  // RELEVAMIENTO: A código · B establecimiento · C red · D tipo · E N.º · F módulo · G submódulo · H ítem · I nivel · J valor · K peso · L ponderado · M observaciones · N fecha · O evaluado por
+  NCOL: 15
+};
+
+// código, módulo, nombre del submódulo
+const ISH_SUB = [
+  ["2.1", "2", "Eventos anteriores y amenazas que afectan a la seguridad del edificio"],
+  ["2.2", "2", "Integridad del edificio"],
+  ["3.1", "3", "Seguridad arquitectónica"],
+  ["3.2", "3", "Protección, acceso y seguridad física de la infraestructura"],
+  ["3.3.1", "3", "Sistema eléctrico"],
+  ["3.3.2", "3", "Sistema de telecomunicaciones"],
+  ["3.3.3", "3", "Sistema de abastecimiento de agua"],
+  ["3.3.4", "3", "Sistema de protección contra incendios"],
+  ["3.3.5", "3", "Sistema de gestión de residuos"],
+  ["3.3.6", "3", "Sistema de almacenamiento de combustible"],
+  ["3.3.7", "3", "Gases medicinales"],
+  ["3.3.8", "3", "Calefacción, ventilación y aire acondicionado"],
+  ["3.4.1", "3", "Mobiliario y equipo de oficina y almacén"],
+  ["3.4.2", "3", "Equipo y suministros médicos y de laboratorio"],
+  ["4.1", "4", "Coordinación de las actividades de gestión de emergencias y desastres"],
+  ["4.2", "4", "Planificación de la respuesta y la recuperación"],
+  ["4.3", "4", "Gestión de las comunicaciones y la información"],
+  ["4.4", "4", "Recursos humanos"],
+  ["4.5", "4", "Logística y finanzas"],
+  ["4.6", "4", "Atención de pacientes y servicios de apoyo"],
+  ["4.7", "4", "Evacuación, descontaminación y seguridad"]
+];
+// N.º, submódulo, ítem (título abreviado del Formulario 2)
+const ISH_ITEMS = [
+  [1, "2.1", "Daños o fallas estructurales anteriores importantes del edificio o edificios del hospital"],
+  [2, "2.1", "Hospital construido o reparado según las normas vigentes de seguridad"],
+  [3, "2.1", "Efecto de la remodelación o modificación del comportamiento estructural del hospital"],
+  [4, "2.2", "Diseño del sistema estructural"],
+  [5, "2.2", "Condiciones en que se encuentra el edificio"],
+  [6, "2.2", "Condiciones en que se encuentran los materiales de construcción"],
+  [7, "2.2", "Interacción de los elementos no estructurales con la estructura"],
+  [8, "2.2", "Proximidad de los edificios (choques por oscilaciones sísmicas)"],
+  [9, "2.2", "Proximidad de los edificios (efecto de túnel de viento e incendios)"],
+  [10, "2.2", "Redundancia estructural"],
+  [11, "2.2", "Detalles estructurales, incluidas las conexiones"],
+  [12, "2.2", "Relación entre la resistencia de las columnas y la de las vigas"],
+  [13, "2.2", "Seguridad de los cimientos"],
+  [14, "2.2", "Irregularidades en el plano de la estructura del edificio (rigidez, masa, resistencia)"],
+  [15, "2.2", "Irregularidades en la elevación de los edificios"],
+  [16, "2.2", "Irregularidades en la altura de los pisos"],
+  [17, "2.2", "Integridad estructural de los techos"],
+  [18, "2.2", "Resiliencia estructural a amenazas distintas de los sismos y los vientos fuertes"],
+  [19, "3.1", "Daños mayores y reparación de elementos no estructurales"],
+  [20, "3.1", "Estado y seguridad de puertas, entradas y salidas"],
+  [21, "3.1", "Estado y seguridad de ventanas y persianas"],
+  [22, "3.1", "Estado y seguridad de otros elementos de cerramiento exterior"],
+  [23, "3.1", "Estado y seguridad de los techos (elementos no estructurales)"],
+  [24, "3.1", "Estado y seguridad de barandillas y pretiles"],
+  [25, "3.1", "Estado y seguridad de muros perimetrales y vallas"],
+  [26, "3.1", "Estado y seguridad de otros elementos arquitectónicos"],
+  [27, "3.1", "Circulación segura fuera de los edificios"],
+  [28, "3.1", "Circulación segura dentro del edificio (pasillos)"],
+  [29, "3.1", "Estado y seguridad de paredes internas y tabiques"],
+  [30, "3.1", "Estado y seguridad de cielos rasos falsos o suspendidos"],
+  [31, "3.1", "Estado y seguridad de los elevadores"],
+  [32, "3.1", "Estado y seguridad de escaleras y rampas"],
+  [33, "3.1", "Estado y seguridad de los recubrimientos del suelo"],
+  [34, "3.2", "Ubicación de los servicios esenciales del hospital con respecto a las amenazas locales"],
+  [35, "3.2", "Vías de acceso al hospital"],
+  [36, "3.2", "Salidas de emergencia y rutas de evacuación"],
+  [37, "3.2", "Vigilancia y protección física del edificio, el equipo, el personal y los pacientes"],
+  [38, "3.3.1", "Capacidad de las fuentes alternativas de electricidad (generadores)"],
+  [39, "3.3.1", "Pruebas periódicas de las fuentes alternativas en las áreas críticas"],
+  [40, "3.3.1", "Estado y seguridad de las fuentes alternativas de electricidad"],
+  [41, "3.3.1", "Estado y seguridad del equipo eléctrico, cables y conductos"],
+  [42, "3.3.1", "Sistema redundante de suministro eléctrico local"],
+  [43, "3.3.1", "Estado y seguridad de tableros de control, interruptores y cables"],
+  [44, "3.3.1", "Sistema de iluminación de las áreas críticas"],
+  [45, "3.3.1", "Estado y seguridad del alumbrado interno y externo"],
+  [46, "3.3.1", "Sistemas eléctricos externos instalados para el uso del hospital"],
+  [47, "3.3.1", "Mantenimiento y restablecimiento del sistema eléctrico"],
+  [48, "3.3.2", "Estado y seguridad de las antenas"],
+  [49, "3.3.2", "Estado y seguridad de los sistemas de voltaje bajo y muy bajo (internet y teléfono)"],
+  [50, "3.3.2", "Sistemas de comunicación alternativos"],
+  [51, "3.3.2", "Estado y seguridad del equipo y los cables de telecomunicaciones"],
+  [52, "3.3.2", "Efecto de los sistemas de telecomunicaciones externos en las comunicaciones del hospital"],
+  [53, "3.3.2", "Estado y seguridad de los lugares donde se encuentran los sistemas de telecomunicaciones"],
+  [54, "3.3.2", "Estado y seguridad de los sistemas de comunicación interna"],
+  [55, "3.3.2", "Mantenimiento y restablecimiento del sistema de telecomunicaciones"],
+  [56, "3.3.3", "Reserva de agua para los servicios"],
+  [57, "3.3.3", "Ubicación segura de los depósitos de agua"],
+  [58, "3.3.3", "Seguridad del sistema de distribución de agua"],
+  [59, "3.3.3", "Suministro alternativo de agua"],
+  [60, "3.3.3", "Sistema de bombeo suplementario"],
+  [61, "3.3.3", "Mantenimiento y restablecimiento del sistema de agua"],
+  [62, "3.3.4", "Sistema de protección pasiva contra incendios"],
+  [63, "3.3.4", "Sistema de detección de fuego o humo"],
+  [64, "3.3.4", "Sistema de supresión de incendios (automático y manual)"],
+  [65, "3.3.4", "Suministro de agua para combatir incendios"],
+  [66, "3.3.4", "Mantenimiento y restablecimiento del sistema contra incendios"],
+  [67, "3.3.5", "Sistemas de aguas residuales no peligrosas"],
+  [68, "3.3.5", "Sistemas de aguas residuales peligrosas y residuos líquidos"],
+  [69, "3.3.5", "Sistemas de residuos sólidos no peligrosos"],
+  [70, "3.3.5", "Sistemas de residuos sólidos peligrosos"],
+  [71, "3.3.5", "Mantenimiento y restablecimiento del sistema de residuos"],
+  [72, "3.3.6", "Reservas de combustible (gas, gasoil o fueloil)"],
+  [73, "3.3.6", "Ubicación y seguridad de los depósitos y cilindros de combustible"],
+  [74, "3.3.6", "Ubicación segura de los depósitos de combustible lejos de los edificios"],
+  [75, "3.3.6", "Seguridad del sistema de distribución de combustible"],
+  [76, "3.3.6", "Mantenimiento y restablecimiento del sistema de combustible"],
+  [77, "3.3.7", "Ubicación del almacenamiento de gases medicinales"],
+  [78, "3.3.7", "Seguridad de los tanques o cilindros y del equipo conexo"],
+  [79, "3.3.7", "Seguridad del sistema de distribución de gases medicinales"],
+  [80, "3.3.7", "Seguridad de los cilindros y del equipo conexo en el hospital"],
+  [81, "3.3.7", "Fuentes alternativas de gases medicinales"],
+  [82, "3.3.7", "Mantenimiento y restablecimiento del sistema de gases medicinales"],
+  [83, "3.3.8", "Ubicación de los recintos de los equipos de climatización"],
+  [84, "3.3.8", "Seguridad de los recintos de los equipos de climatización"],
+  [85, "3.3.8", "Estado y funcionamiento del equipo de climatización"],
+  [86, "3.3.8", "Apoyos de los conductos y flexibilidad en las juntas de dilatación"],
+  [87, "3.3.8", "Seguridad de tuberías, conexiones y válvulas"],
+  [88, "3.3.8", "Seguridad del sistema de aire acondicionado"],
+  [89, "3.3.8", "Funcionamiento de la climatización, incluidas las zonas de presión negativa"],
+  [90, "3.3.8", "Mantenimiento y restablecimiento del sistema de climatización"],
+  [91, "3.4.1", "Seguridad de las estanterías y de su contenido"],
+  [92, "3.4.1", "Seguridad de computadoras e impresoras"],
+  [93, "3.4.2", "Equipo médico de salas de operaciones y de recuperación"],
+  [94, "3.4.2", "Equipo de radiología e imagenología"],
+  [95, "3.4.2", "Equipo de laboratorio"],
+  [96, "3.4.2", "Equipo médico del servicio de urgencias"],
+  [97, "3.4.2", "Equipo médico de la unidad de cuidados intensivos o intermedios"],
+  [98, "3.4.2", "Equipo y mobiliario de farmacia"],
+  [99, "3.4.2", "Equipo de esterilización"],
+  [100, "3.4.2", "Equipo médico de urgencias obstétricas y atención del recién nacido"],
+  [101, "3.4.2", "Equipo médico para la atención urgente de quemados"],
+  [102, "3.4.2", "Equipo de medicina nuclear y radioterapia"],
+  [103, "3.4.2", "Equipo médico de otros servicios"],
+  [104, "3.4.2", "Medicamentos y suministros"],
+  [105, "3.4.2", "Instrumental y materiales esterilizados"],
+  [106, "3.4.2", "Equipo médico específico para emergencias y desastres"],
+  [107, "3.4.2", "Suministro de gases medicinales en los servicios"],
+  [108, "3.4.2", "Respiradores mecánicos volumétricos"],
+  [109, "3.4.2", "Equipo electromédico"],
+  [110, "3.4.2", "Equipo de sostén de funciones vitales"],
+  [111, "3.4.2", "Suministros, equipo o carritos para paro cardiorrespiratorio"],
+  [112, "4.1", "Comité hospitalario de emergencias y desastres"],
+  [113, "4.1", "Responsabilidades y capacitación de los miembros del comité"],
+  [114, "4.1", "Coordinador designado de emergencias y desastres"],
+  [115, "4.1", "Programa de preparación para fortalecer la respuesta y la recuperación"],
+  [116, "4.1", "Sistema hospitalario de manejo de incidentes"],
+  [117, "4.1", "Centro de operaciones de emergencia (COE)"],
+  [118, "4.1", "Acuerdos con organismos locales de gestión de emergencias"],
+  [119, "4.1", "Acuerdos con la red de servicios de salud"],
+  [120, "4.2", "Plan hospitalario de respuesta a emergencias y desastres"],
+  [121, "4.2", "Planes de contingencia por amenaza"],
+  [122, "4.2", "Procedimientos de activación y desactivación de los planes"],
+  [123, "4.2", "Ejercicios del plan, evaluación y medidas correctivas"],
+  [124, "4.2", "Plan de recuperación"],
+  [125, "4.3", "Comunicación interna y externa en emergencias"],
+  [126, "4.3", "Directorio de partes interesadas externas"],
+  [127, "4.3", "Procedimientos de comunicación con la población y los medios"],
+  [128, "4.3", "Gestión de la información de los pacientes"],
+  [129, "4.4", "Lista de contacto actualizada del personal"],
+  [130, "4.4", "Disponibilidad del personal"],
+  [131, "4.4", "Movilización y contratación de personal durante una emergencia"],
+  [132, "4.4", "Deberes asignados al personal en emergencias"],
+  [133, "4.4", "Bienestar del personal durante una emergencia"],
+  [134, "4.5", "Acuerdos con proveedores locales para emergencias"],
+  [135, "4.5", "Transporte durante una emergencia"],
+  [136, "4.5", "Alimentos y agua potable durante una emergencia"],
+  [137, "4.5", "Recursos económicos para emergencias"],
+  [138, "4.6", "Continuidad de los servicios de urgencias y de asistencia crítica"],
+  [139, "4.6", "Continuidad de los servicios clínicos de apoyo esenciales"],
+  [140, "4.6", "Ampliación del espacio para incidentes con muchas víctimas"],
+  [141, "4.6", "Triage en emergencias de gran envergadura"],
+  [142, "4.6", "Etiquetas de triage y otros suministros para incidentes con muchas víctimas"],
+  [143, "4.6", "Sistema de referencia, traslado y recepción de pacientes"],
+  [144, "4.6", "Vigilancia, prevención y control de infecciones"],
+  [145, "4.6", "Servicios psicosociales"],
+  [146, "4.6", "Procedimientos post mortem para incidentes con gran número de víctimas mortales"],
+  [147, "4.7", "Plan de evacuación"],
+  [148, "4.7", "Descontaminación con respecto a peligros químicos y radiológicos"],
+  [149, "4.7", "Equipo de protección personal y aislamiento para infecciones y epidemias"],
+  [150, "4.7", "Procedimientos de seguridad en emergencias y desastres"],
+  [151, "4.7", "Seguridad de la red de sistemas informáticos (ciberseguridad)"]
+];
+// id, código, grupo, amenaza (módulo 1)
+const ISH_AMEN = [
+  ["M1-01", "1.1.1", "Geológicas", "Terremotos"],
+  ["M1-02", "1.1.1", "Geológicas", "Actividad volcánica y erupciones"],
+  ["M1-03", "1.1.1", "Geológicas", "Deslizamientos secos"],
+  ["M1-04", "1.1.1", "Geológicas", "Tsunamis"],
+  ["M1-05", "1.1.1", "Geológicas", "Otras amenazas geológicas"],
+  ["M1-06", "1.1.2", "Hidrometeorológicas · meteorológicas", "Huracanes y ciclones"],
+  ["M1-07", "1.1.2", "Hidrometeorológicas · meteorológicas", "Tornados"],
+  ["M1-08", "1.1.2", "Hidrometeorológicas · meteorológicas", "Tormentas locales y vientos fuertes"],
+  ["M1-09", "1.1.2", "Hidrometeorológicas · meteorológicas", "Otras amenazas meteorológicas"],
+  ["M1-10", "1.1.2", "Hidrometeorológicas · hidrológicas", "Crecidas de ríos"],
+  ["M1-11", "1.1.2", "Hidrometeorológicas · hidrológicas", "Inundaciones repentinas"],
+  ["M1-12", "1.1.2", "Hidrometeorológicas · hidrológicas", "Marejadas"],
+  ["M1-13", "1.1.2", "Hidrometeorológicas · hidrológicas", "Deslizamientos por suelos saturados"],
+  ["M1-14", "1.1.2", "Hidrometeorológicas · hidrológicas", "Otras amenazas hidrológicas"],
+  ["M1-15", "1.1.2", "Hidrometeorológicas · climatológicas", "Temperaturas extremas"],
+  ["M1-16", "1.1.2", "Hidrometeorológicas · climatológicas", "Incendios forestales"],
+  ["M1-17", "1.1.2", "Hidrometeorológicas · climatológicas", "Sequías"],
+  ["M1-18", "1.1.2", "Hidrometeorológicas · climatológicas", "Otras amenazas climatológicas"],
+  ["M1-19", "1.1.3", "Biológicas", "Epidemias, pandemias y enfermedades emergentes"],
+  ["M1-20", "1.1.3", "Biológicas", "Intoxicación alimentaria"],
+  ["M1-21", "1.1.3", "Biológicas", "Plagas"],
+  ["M1-22", "1.1.3", "Biológicas", "Otras amenazas biológicas"],
+  ["M1-23", "1.1.4", "Tecnológicas", "Peligros industriales"],
+  ["M1-24", "1.1.4", "Tecnológicas", "Incendios de edificios"],
+  ["M1-25", "1.1.4", "Tecnológicas", "Materiales peligrosos (químicos, biológicos, radiológicos)"],
+  ["M1-26", "1.1.4", "Tecnológicas", "Cortes de electricidad"],
+  ["M1-27", "1.1.4", "Tecnológicas", "Interrupción del suministro de agua"],
+  ["M1-28", "1.1.4", "Tecnológicas", "Incidentes de transporte con muchas víctimas"],
+  ["M1-29", "1.1.4", "Tecnológicas", "Otras amenazas tecnológicas"],
+  ["M1-30", "1.1.5", "Sociales", "Seguridad del edificio y del personal"],
+  ["M1-31", "1.1.5", "Sociales", "Conflictos armados"],
+  ["M1-32", "1.1.5", "Sociales", "Disturbios sociales"],
+  ["M1-33", "1.1.5", "Sociales", "Reuniones multitudinarias"],
+  ["M1-34", "1.1.5", "Sociales", "Poblaciones desplazadas"],
+  ["M1-35", "1.1.5", "Sociales", "Otras amenazas sociales"],
+  ["M1-36", "1.2", "Propiedades geotécnicas del suelo", "Licuefacción"],
+  ["M1-37", "1.2", "Propiedades geotécnicas del suelo", "Suelo arcilloso"],
+  ["M1-38", "1.2", "Propiedades geotécnicas del suelo", "Taludes inestables"]
+];
+
+function ishAbierto_() { return PropertiesService.getScriptProperties().getProperty('ISH_MODO') === 'abierto'; }
+function menuModoIsh() {
+  const ui = SpreadsheetApp.getUi(), p = PropertiesService.getScriptProperties();
+  const abierto = ishAbierto_();
+  const r = ui.alert('ISH', abierto
+    ? 'Hoy el ISH está ABIERTO para las personas con el módulo ISH en ACCESOS. ¿Cerrarlo? (Administración sigue entrando.)'
+    : 'Hoy el ISH es SOLO para Administración. ¿Abrirlo a las personas que tengan «ISH» en la columna Módulos de ACCESOS?', ui.ButtonSet.YES_NO);
+  if (r !== ui.Button.YES) return;
+  p.setProperty('ISH_MODO', abierto ? 'cerrado' : 'abierto');
+  ui.alert('Listo: el ISH quedó ' + (abierto ? 'solo para Administración.' : 'abierto para quienes tengan el módulo ISH.'));
+}
+
+function ishSubNombre_(c) { const s = ISH_SUB.filter(x => x[0] === c)[0]; return s ? c + ' · ' + s[2] : c; }
+function ishModNombre_(m) { const s = ISH.MODULOS.filter(x => x[0] === m)[0]; return s ? m + ' · ' + s[1] : m; }
+
+/* =========================================================
+ *  INSTALACIÓN: arma la planilla ISH de cada red listada en REDES ISH
+ * ========================================================= */
+function ishInstalar() {
+  const libro = SpreadsheetApp.getActive();
+  let rp = libro.getSheetByName(ISH.HOJA_REDES);
+  if (!rp) {
+    rp = libro.insertSheet(ISH.HOJA_REDES);
+    rp.getRange(1, 1, 1, 3).setValues([['Red', 'Planilla ISH (enlace o ID)', 'Estado']]).setFontWeight('bold');
+    avisar_('Creé la hoja ' + ISH.HOJA_REDES + '. Completá una fila por red con el enlace de su planilla ISH y Estado «Activa», y volvé a correr el menú.');
+    return;
+  }
+  const starh = {};
+  redes_().forEach(r => starh[r.nombre] = r.id);
+  const filas = rp.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && x[1]);
+  const informe = [];
+  filas.forEach(x => {
+    const red = x[0].trim(), id = idPlanilla_(x[1]);
+    const ss = SpreadsheetApp.openById(id);
+    const rel = ss.getSheetByName('RELEVAMIENTO');
+    if (rel && rel.getLastRow() > 1 && rel.getRange(2, 9, rel.getLastRow() - 1, 1).getValues().some(v => v[0] !== '')) {
+      informe.push(red + ': ya tiene datos cargados, no se tocó.'); return;
+    }
+    if (!starh[red]) throw new Error('No encuentro la planilla STAR-H de ' + red + ' en REDES (de ahí salen los hospitales).');
+    const est = SpreadsheetApp.openById(starh[red]).getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+      .filter(e => e[0] && /^hospital$/i.test(String(e[2]).trim()));
+    if (!est.length) { informe.push(red + ': no tiene establecimientos con Tipo «Hospital».'); return; }
+    ishArmar_(ss, red, est);
+    informe.push(red + ': ' + est.length + ' hospital(es) · ' + (est.length * ISH_ITEMS.length) + ' ítems · ' + (est.length * ISH_AMEN.length) + ' amenazas.');
+  });
+  avisar_(informe.join('\n') || 'No hay redes en ' + ISH.HOJA_REDES + '.');
+}
+
+function ishArmar_(ss, red, est) {
+  const t = /trelew/i.test(red) ? { fuerte: '#0D313F', medio: '#5894A7', claro: '#E6EFF2' } : { fuerte: '#B8441A', medio: '#E8602A', claro: '#FDEDE4' };
+  const hoja = (nombre, i) => ss.getSheetByName(nombre) || ss.insertSheet(nombre, i);
+  const cab = (sh, n, fila) => sh.getRange(fila || 1, 1, 1, n).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
+  const lista = (rng, valores) => rng.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(valores, true).build());
+  ss.rename('ISH · ' + red + ' · Índice de Seguridad Hospitalaria (v0)');
+  ss.getProtections(SpreadsheetApp.ProtectionType.RANGE).concat(ss.getProtections(SpreadsheetApp.ProtectionType.SHEET)).forEach(p => { try { p.remove(); } catch (e) {} });
+
+  // AYUDA
+  const ay = hoja('AYUDA', 0);
+  ay.clear();
+  const txt = [
+    ['ISH · Índice de Seguridad Hospitalaria · ' + red],
+    ['Base: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª edición, 2018 (Formulario 2, 151 ítems). Versión 0.'],
+    [''],
+    ['Para qué sirve'],
+    ['Estimar la probabilidad de que cada hospital siga funcionando durante y después de una emergencia o desastre, y ordenar las intervenciones. Mira la seguridad estructural, la no estructural y la gestión de emergencias.'],
+    [''],
+    ['Cómo se carga'],
+    ['Desde la app (hyslhmh-sudo.github.io/starh/ish.html) o directamente en las hojas. AMENAZAS: nivel de cada amenaza (No existe, Bajo, Medio, Alto) y si el hospital debe prepararse. RELEVAMIENTO: nivel de seguridad de cada ítem (Bajo, Medio, Alto o No evaluado) y observaciones.'],
+    ['Ante la duda entre dos niveles se asigna el más bajo. Lo que no se puede ver o documentar no se califica como Alto. «No evaluado» no cuenta y ajusta el denominador.'],
+    [''],
+    ['Cómo se calcula (hoja PESOS)'],
+    ['Bajo = 0 · Medio = 0,5 · Alto = 1. Submódulo = promedio ponderado de sus ítems; módulo = promedio ponderado de sus submódulos; índice = suma ponderada de los módulos 2, 3 y 4 según el modelo del hospital (Modelo 1: 50 %, 30 % y 20 %, para zonas con sismos o vientos fuertes; Modelo 2: un tercio cada uno). El índice se muestra cuando los tres módulos tienen datos.'],
+    ['Categorías: A (0,66 a 1) probable que siga funcionando; seguir mejorando · B (0,36 a 0,65) intervenciones a corto plazo · C (0 a 0,35) intervenciones urgentes.'],
+    ['Los pesos de ítems y submódulos vienen en 1 (todos iguales). Si se dispone de la calculadora oficial de la OPS, se pueden cargar sus pesos en ITEMS (columna E) y PESOS.'],
+    [''],
+    ['Alcance'],
+    ['Esta evaluación complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento ni la evaluación estructural de profesionales de ingeniería o arquitectura.']
+  ];
+  ay.getRange(1, 1, txt.length, 1).setValues(txt).setWrap(true).setVerticalAlignment('top').setFontColor('#3A4A52');
+  ay.setColumnWidth(1, 820);
+  ay.getRange('A1').setFontSize(15).setFontWeight('bold').setFontColor(t.fuerte);
+  ['A4', 'A7', 'A11', 'A16'].forEach(a => ay.getRange(a).setFontWeight('bold').setFontColor(t.fuerte));
+
+  // ESTABLECIMIENTOS
+  const es = hoja('ESTABLECIMIENTOS', 1);
+  es.clear();
+  const fe = est.map(e => [e[0], red, e[2], e[3], 's/d', 's/d', 'Pendiente', 'Modelo 1', '']);
+  es.getRange(1, 1, 1, 9).setValues([['Código', 'Red', 'Tipo', 'Establecimiento', 'Coordinador de la evaluación', 'Fecha de la evaluación', 'Estado de la evaluación', 'Modelo de ponderación', 'Observaciones']]);
+  es.getRange(2, 1, fe.length, 9).setValues(fe);
+  cab(es, 9); es.setFrozenRows(1); es.setColumnWidth(4, 340); es.setColumnWidths(5, 4, 160);
+  lista(es.getRange(2, 7, fe.length, 1), ISH.ESTADOS_REL);
+  lista(es.getRange(2, 8, fe.length, 1), ISH.MODELOS);
+
+  // PESOS
+  const pe = hoja('PESOS', 2);
+  pe.clear();
+  pe.getRange('A1').setValue('Valores y pesos del cálculo (se pueden editar)').setFontSize(13).setFontWeight('bold').setFontColor(t.fuerte);
+  pe.getRange(2, 1, 1, 2).setValues([['Nivel de seguridad', 'Valor']]);
+  pe.getRange(3, 1, 3, 2).setValues([['Bajo', 0], ['Medio', 0.5], ['Alto', 1]]);
+  pe.getRange(7, 1, 1, 4).setValues([['Modelo', '2 · Estructural', '3 · No estructural', '4 · Gestión']]);
+  pe.getRange(8, 1, 2, 4).setValues([['Modelo 1', 0.5, 0.3, 0.2], ['Modelo 2', 1 / 3, 1 / 3, 1 / 3]]);
+  pe.getRange(11, 1, 1, 4).setValues([['Submódulo', 'Módulo', 'Nombre', 'Peso relativo dentro del módulo']]);
+  pe.getRange(12, 1, ISH_SUB.length, 4).setValues(ISH_SUB.map(s => [s[0], s[1], s[2], 1]));
+  [2, 7, 11].forEach(f => pe.getRange(f, 1, 1, 4).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte));
+  pe.getRange(2, 3, 1, 2).setBackground(null);
+  pe.getRange('B3:B5').setNumberFormat('0.00'); pe.getRange('B8:D9').setNumberFormat('0.0%');
+  pe.setColumnWidth(1, 150); pe.setColumnWidths(2, 2, 150); pe.setColumnWidth(3, 420); pe.setColumnWidth(4, 210);
+  pe.getRange('F2').setValue('Fuente: OPS/OMS, Guía para evaluadores del ISH, 2.ª ed., 2018. Los modelos y las categorías son los de la guía; los pesos de submódulos e ítems vienen iguales (1) y se pueden reemplazar por los de la calculadora oficial.').setWrap(true).setFontColor('#6B7A82');
+  pe.setColumnWidth(6, 360);
+  const fSub = {}; ISH_SUB.forEach((s, i) => fSub[s[0]] = 12 + i);
+
+  // ITEMS
+  const it = hoja('ITEMS', 3);
+  it.clear();
+  it.getRange(1, 1, 1, 5).setValues([['N.º', 'Módulo', 'Submódulo', 'Ítem', 'Peso dentro del submódulo']]);
+  const subMod = {}; ISH_SUB.forEach(s => subMod[s[0]] = s[1]);
+  it.getRange(2, 1, ISH_ITEMS.length, 5).setValues(ISH_ITEMS.map(x => [x[0], ishModNombre_(subMod[x[1]]), ishSubNombre_(x[1]), x[2], 1]));
+  cab(it, 5); it.setFrozenRows(1); it.setColumnWidth(2, 220); it.setColumnWidth(3, 330); it.setColumnWidth(4, 480);
+  it.getRange(2, 1, ISH_ITEMS.length, 5).setWrap(true).setVerticalAlignment('top');
+
+  // AMENAZAS (módulo 1)
+  const am = hoja('AMENAZAS', 4);
+  am.clear();
+  const fa = [];
+  est.forEach(e => ISH_AMEN.forEach(a => fa.push([e[0], e[3], a[0], a[1], a[2], a[3], '', '', '', '', ''])));
+  am.getRange(1, 1, 1, 11).setValues([['Código', 'Establecimiento', 'ID', 'Código ISH', 'Grupo', 'Amenaza o propiedad del suelo', 'Nivel', '¿El hospital debe prepararse?', 'Observaciones', 'Fecha', 'Evaluado por']]);
+  am.getRange(2, 1, fa.length, 11).setValues(fa);
+  cab(am, 11); am.setFrozenRows(1); am.setFrozenColumns(3);
+  am.setColumnWidth(2, 220); am.setColumnWidth(5, 230); am.setColumnWidth(6, 300); am.setColumnWidth(9, 260);
+  lista(am.getRange(2, 7, fa.length, 1), ISH.AMEN_NIVELES);
+  lista(am.getRange(2, 8, fa.length, 1), ISH.PREPARARSE);
+  am.setConditionalFormatRules([['Alto', '#F4B4B4', '#7A1F1F'], ['Medio', '#FFF2B3', '#5E4B00'], ['Bajo', '#C8E6C9', '#1E5223'], ['No existe', '#EEF1F3', '#6B7A82']]
+    .map(c => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(c[0]).setBackground(c[1]).setFontColor(c[2]).setRanges([am.getRange(2, 7, fa.length, 1)]).build()));
+
+  // RELEVAMIENTO (módulos 2, 3 y 4)
+  const rl = hoja('RELEVAMIENTO', 5);
+  rl.clear();
+  const fr = [];
+  est.forEach(e => ISH_ITEMS.forEach(x => fr.push([e[0], e[3], red, e[2], x[0], ishModNombre_(subMod[x[1]]), ishSubNombre_(x[1]), x[2], '', '', '', '', '', '', ''])));
+  rl.getRange(1, 1, 1, ISH.NCOL).setValues([['Código', 'Establecimiento', 'Red', 'Tipo', 'N.º', 'Módulo', 'Submódulo', 'Ítem', 'Nivel de seguridad', 'Valor', 'Peso', 'Ponderado', 'Observaciones', 'Fecha', 'Evaluado por']]);
+  rl.getRange(2, 1, fr.length, ISH.NCOL).setValues(fr);
+  rl.getRange('J1').setFormula('={"Valor";ARRAYFORMULA(IF((A2:A="")+(I2:I="")+(I2:I="No evaluado");"";IF(I2:I="Alto";PESOS!$B$5;IF(I2:I="Medio";PESOS!$B$4;PESOS!$B$3))))}');
+  rl.getRange('K1').setFormula('={"Peso";ARRAYFORMULA(IF(A2:A="";"";IF(J2:J="";0;IFERROR(VLOOKUP(E2:E;ITEMS!$A:$E;5;FALSE);1))))}');
+  rl.getRange('L1').setFormula('={"Ponderado";ARRAYFORMULA(IF(A2:A="";"";IF(J2:J="";0;J2:J*K2:K)))}');
+  cab(rl, ISH.NCOL); rl.setFrozenRows(1); rl.setFrozenColumns(5);
+  rl.setColumnWidth(2, 200); rl.setColumnWidth(6, 180); rl.setColumnWidth(7, 260); rl.setColumnWidth(8, 380); rl.setColumnWidth(13, 280);
+  const n = fr.length;
+  lista(rl.getRange(2, 9, n, 1), ISH.NIVELES);
+  rl.getRange(2, 10, n, 3).setNumberFormat('0.00');
+  rl.getRange(2, 1, n, ISH.NCOL).setVerticalAlignment('top');
+  rl.getRange(2, 8, n, 1).setWrap(true);
+  const reg = [['Alto', '#C8E6C9', '#1E5223'], ['Medio', '#FFF2B3', '#5E4B00'], ['Bajo', '#F4B4B4', '#7A1F1F'], ['No evaluado', '#EEF1F3', '#8A979E']]
+    .map(c => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(c[0]).setBackground(c[1]).setFontColor(c[2]).setRanges([rl.getRange(2, 9, n, 1)]).build());
+  rl.setConditionalFormatRules(reg);
+  rl.getRange('J1:L').protect().setDescription('Cálculo automático').setWarningOnly(true);
+
+  // TABLERO
+  const tb = hoja('TABLERO', 6);
+  tb.clear();
+  tb.getRange('A1').setValue('ISH · ' + red + ' · Índice de Seguridad Hospitalaria por hospital').setFontSize(14).setFontWeight('bold').setFontColor(t.fuerte);
+  tb.getRange('A2').setValue('Valores de 0 a 1. Categoría A (0,66 a 1) · B (0,36 a 0,65) · C (0 a 0,35). El índice aparece cuando los módulos 2, 3 y 4 tienen datos. «s/d»: sin datos.').setFontColor('#6B7A82');
+  const encab = ['Código', 'Hospital', 'Modelo', 'Ítems evaluados', 'Índice', 'Categoría', '2 · Estructural', '3 · No estructural', '4 · Gestión']
+    .concat(ISH_SUB.map(s => s[0] + ' · ' + s[2]));
+  tb.getRange(4, 1, 1, encab.length).setValues([encab]);
+  const col = c => { let s = ''; c++; while (c > 0) { const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; }; // índice 0 → A
+  const f = [];
+  est.forEach((e, i) => {
+    const r = 5 + i, fila = [];
+    fila.push('=ESTABLECIMIENTOS!A' + (i + 2), '=ESTABLECIMIENTOS!D' + (i + 2), '=ESTABLECIMIENTOS!H' + (i + 2),
+      '=COUNTIFS(RELEVAMIENTO!$A:$A;$A' + r + ';RELEVAMIENTO!$I:$I;"<>";RELEVAMIENTO!$I:$I;"<>No evaluado")&" de "&COUNTIFS(RELEVAMIENTO!$A:$A;$A' + r + ')');
+    // índice y categoría
+    const mw = k => 'IFERROR(VLOOKUP($C' + r + ';PESOS!$A$8:$D$9;' + k + ';FALSE);VLOOKUP("Modelo 1";PESOS!$A$8:$D$9;' + k + ';FALSE))';
+    fila.push('=IF(AND(ISNUMBER(G' + r + ');ISNUMBER(H' + r + ');ISNUMBER(I' + r + '));G' + r + '*' + mw(2) + '+H' + r + '*' + mw(3) + '+I' + r + '*' + mw(4) + ';"s/d")');
+    fila.push('=IF(ISNUMBER(E' + r + ');IF(ROUND(E' + r + ';2)>=0,66;"A";IF(ROUND(E' + r + ';2)>=0,36;"B";"C"));"s/d")');
+    // módulos
+    ISH.MODULOS.forEach(m => {
+      const subs = ISH_SUB.map((s, k) => [s, k]).filter(z => z[0][1] === m[0]);
+      const num = subs.map(z => 'IF(ISNUMBER(' + col(9 + z[1]) + r + ');' + col(9 + z[1]) + r + '*PESOS!$D$' + fSub[z[0][0]] + ';0)').join('+');
+      const den = subs.map(z => 'IF(ISNUMBER(' + col(9 + z[1]) + r + ');PESOS!$D$' + fSub[z[0][0]] + ';0)').join('+');
+      fila.push('=IFERROR((' + num + ')/(' + den + ');"s/d")');
+    });
+    ISH_SUB.forEach(s => fila.push('=IFERROR(SUMIFS(RELEVAMIENTO!$L:$L;RELEVAMIENTO!$A:$A;$A' + r + ';RELEVAMIENTO!$G:$G;"' + ishSubNombre_(s[0]) + '")/SUMIFS(RELEVAMIENTO!$K:$K;RELEVAMIENTO!$A:$A;$A' + r + ';RELEVAMIENTO!$G:$G;"' + ishSubNombre_(s[0]) + '");"s/d")'));
+    f.push(fila);
+  });
+  tb.getRange(5, 1, f.length, encab.length).setFormulas(f);
+  cab(tb, encab.length, 4);
+  tb.setFrozenRows(4); tb.setFrozenColumns(2);
+  tb.setColumnWidth(2, 280); tb.setColumnWidths(7, encab.length - 6, 110);
+  const rango = tb.getRange(5, 5, f.length, 1), rango2 = tb.getRange(5, 7, f.length, encab.length - 6);
+  [rango, rango2].forEach(x => x.setNumberFormat('0.00').setHorizontalAlignment('center'));
+  tb.getRange(5, 6, f.length, 1).setHorizontalAlignment('center').setFontWeight('bold');
+  tb.setConditionalFormatRules([
+    SpreadsheetApp.newConditionalFormatRule().setGradientMinpointWithValue('#F4B4B4', SpreadsheetApp.InterpolationType.NUMBER, '0')
+      .setGradientMidpointWithValue('#FFF2B3', SpreadsheetApp.InterpolationType.NUMBER, '0.5').setGradientMaxpointWithValue('#C8E6C9', SpreadsheetApp.InterpolationType.NUMBER, '1')
+      .setRanges([rango, rango2]).build()]
+    .concat([['A', '#C8E6C9', '#1E5223'], ['B', '#FFF2B3', '#5E4B00'], ['C', '#F4B4B4', '#7A1F1F']].map(c => SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(c[0])
+      .setBackground(c[1]).setFontColor(c[2]).setRanges([tb.getRange(5, 6, f.length, 1)]).build())));
+  // Resumen de amenazas por hospital (debajo)
+  const r0 = 7 + f.length;
+  tb.getRange(r0, 1).setValue('Módulo 1 · Amenazas con nivel Medio o Alto y que requieren preparación').setFontWeight('bold').setFontColor(t.fuerte);
+  tb.getRange(r0 + 1, 1, 1, 4).setValues([['Código', 'Hospital', 'Amenazas Medio o Alto', 'Requieren preparación']]);
+  cab(tb, 4, r0 + 1);
+  const fm = est.map((e, i) => ['=A' + (5 + i), '=B' + (5 + i),
+    '=COUNTIFS(AMENAZAS!$A:$A;$A' + (r0 + 2 + i) + ';AMENAZAS!$G:$G;"Medio")+COUNTIFS(AMENAZAS!$A:$A;$A' + (r0 + 2 + i) + ';AMENAZAS!$G:$G;"Alto")',
+    '=COUNTIFS(AMENAZAS!$A:$A;$A' + (r0 + 2 + i) + ';AMENAZAS!$H:$H;"Sí")']);
+  tb.getRange(r0 + 2, 1, fm.length, 4).setFormulas(fm);
+  tb.protect().setDescription('Tablero con fórmulas').setWarningOnly(true);
+
+  // Nota: fórmulas con «;» y «0,66» porque las planillas están en configuración regional es_AR.
+  ['Hoja 1', 'Hoja1', 'Sheet1'].forEach(nm => { const s = ss.getSheetByName(nm); if (s && ss.getSheets().length > 1) ss.deleteSheet(s); });
+}
+
+/* =========================================================
+ *  API ISH (la llaman ish.html, ish-tablero.html e imprimir.html)
+ * ========================================================= */
+function ishRedes_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(ISH.HOJA_REDES);
+  if (!sh) return [];
+  return sh.getDataRange().getDisplayValues().slice(1)
+    .filter(x => x[0] && x[1] && /^activa$/i.test(String(x[2]).trim()))
+    .map(x => ({ nombre: x[0].trim(), id: idPlanilla_(x[1]) }));
+}
+function ishRelObj_(x) {
+  return { codigo: x[0], estab: x[1], red: x[2], tipo: x[3], n: Number(x[4]), modulo: String(x[5]).charAt(0), sub: String(x[6]).split(' · ')[0], item: x[7],
+           nivel: x[8], obs: x[12], fecha: x[13], evaluador: x[14] };
+}
+function ishAmObj_(x) {
+  return { codigo: x[0], id: x[2], cod: x[3], grupo: x[4], amenaza: x[5], nivel: x[6], prepararse: x[7], obs: x[8], fecha: x[9], evaluador: x[10] };
+}
+function ishPesos_(ss) {
+  const pe = ss.getSheetByName('PESOS');
+  const num = v => { const n = Number(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+  const val = pe.getRange(3, 1, 3, 2).getValues();
+  const mod = pe.getRange(8, 1, 2, 4).getValues();
+  const sub = pe.getRange(12, 1, ISH_SUB.length, 4).getValues();
+  const o = { valores: {}, modelos: {}, sub: {} };
+  val.forEach(v => o.valores[v[0]] = num(v[1]));
+  mod.forEach(v => o.modelos[v[0]] = { '2': num(v[1]), '3': num(v[2]), '4': num(v[3]) });
+  sub.forEach(v => o.sub[String(v[0])] = num(v[3]));
+  return o;
+}
+function ishLeer_(u, r, conTodo) {
+  const ss = SpreadsheetApp.openById(r.id);
+  const est = ss.getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+    .filter(x => x[0] && veEstab_(u, x[0]))
+    .map(x => ({ codigo: x[0], tipo: x[2], nombre: x[3], coordinador: x[4], fecha: x[5], estado: x[6], modelo: x[7] || 'Modelo 1', puedeCargar: cargaEstab_(u, r.nombre, x[0]) }));
+  if (!est.length) return null;
+  const cods = est.map(x => x.codigo);
+  const pesoItem = {};
+  ss.getSheetByName('ITEMS').getDataRange().getValues().slice(1).forEach(x => { if (x[0] !== '') pesoItem[x[0]] = Number(x[4]) || 0; });
+  const rel = ss.getSheetByName('RELEVAMIENTO').getDataRange().getDisplayValues().slice(1).filter(x => x[0] && cods.indexOf(x[0]) >= 0).map(ishRelObj_);
+  const am = ss.getSheetByName('AMENAZAS').getDataRange().getDisplayValues().slice(1).filter(x => x[0] && cods.indexOf(x[0]) >= 0).map(ishAmObj_);
+  return { nombre: r.nombre, establecimientos: est, pesos: ishPesos_(ss), pesoItem: pesoItem, relevamiento: rel, amenazas: am };
+}
+function ishCatalogo_(u) {
+  exigirModulo_(u, 'ISH');
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), modulos: ISH.MODULOS, submodulos: ISH_SUB, redes: [] };
+  ishRedes_().filter(r => veRed_(u, r.nombre)).forEach(r => { const x = ishLeer_(u, r); if (x) salida.redes.push(x); });
+  return salida;
+}
+function ishTablero_(u) { return ishCatalogo_(u); }
+
+function ishGuardar_(u, items) {
+  exigirModulo_(u, 'ISH');
+  if (!items.length) return { ok: true, resultados: [] };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  const resultados = [];
+  const hoy = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy');
+  try {
+    const mapa = {}; ishRedes_().forEach(r => mapa[r.nombre] = r);
+    const porRed = {}; items.forEach(it => (porRed[it.red] = porRed[it.red] || []).push(it));
+    Object.keys(porRed).forEach(red => {
+      const r = mapa[red];
+      if (!r) { porRed[red].forEach(it => resultados.push({ uid: it.uid, ok: false, error: 'Red no activa: ' + red })); return; }
+      const ss = SpreadsheetApp.openById(r.id);
+      const rl = ss.getSheetByName('RELEVAMIENTO'), am = ss.getSheetByName('AMENAZAS');
+      const fR = {}; rl.getRange(2, 1, Math.max(rl.getLastRow() - 1, 1), 5).getDisplayValues().forEach((k, i) => { if (k[0]) fR[k[0] + '|' + k[4]] = i + 2; });
+      const fA = {}; am.getRange(2, 1, Math.max(am.getLastRow() - 1, 1), 3).getDisplayValues().forEach((k, i) => { if (k[0]) fA[k[0] + '|' + k[2]] = i + 2; });
+      const tocadas = [];
+      porRed[red].forEach(it => {
+        try {
+          if (!cargaEstab_(u, red, it.codigo)) throw new Error('Sin permiso de carga en ' + it.codigo);
+          const fecha = String(it.fecha || hoy).slice(0, 20), quien = String(it.evaluador || u.nombre).slice(0, 200);
+          if (it.tipo === 'amenaza') {
+            const n = fA[it.codigo + '|' + it.id];
+            if (!n) throw new Error('No existe la amenaza ' + it.id + ' para ' + it.codigo);
+            const niv = String(it.nivel || ''), pr = String(it.prepararse || '');
+            if (niv && ISH.AMEN_NIVELES.indexOf(niv) < 0) throw new Error('Nivel no válido: ' + niv);
+            if (pr && ISH.PREPARARSE.indexOf(pr) < 0) throw new Error('Valor no válido: ' + pr);
+            am.getRange(n, 7, 1, 5).setValues([[niv, pr, String(it.obs || '').slice(0, 2000), fecha, quien]]);
+            tocadas.push({ uid: it.uid, hoja: am, n: n, tipo: 'amenaza' });
+            registrar_(u, 'ISH · Amenaza', red, it.codigo, it.id, niv + (pr ? ' · prepararse: ' + pr : ''));
+          } else {
+            const n = fR[it.codigo + '|' + it.n];
+            if (!n) throw new Error('No existe el ítem ' + it.n + ' para ' + it.codigo);
+            const niv = String(it.nivel || '');
+            if (niv && ISH.NIVELES.indexOf(niv) < 0) throw new Error('Nivel no válido: ' + niv);
+            rl.getRange(n, 9).setValue(niv);
+            rl.getRange(n, 13, 1, 3).setValues([[String(it.obs || '').slice(0, 2000), fecha, quien]]);
+            tocadas.push({ uid: it.uid, hoja: rl, n: n, tipo: 'item' });
+            registrar_(u, 'ISH · Ítem', red, it.codigo, String(it.n), niv || 'sin nivel');
+          }
+        } catch (err) { resultados.push({ uid: it.uid, ok: false, error: err.message }); }
+      });
+      if (tocadas.length) {
+        SpreadsheetApp.flush();
+        tocadas.forEach(t => {
+          const v = t.hoja.getRange(t.n, 1, 1, t.tipo === 'amenaza' ? 11 : ISH.NCOL).getDisplayValues()[0];
+          resultados.push({ uid: t.uid, ok: true, tipo: t.tipo, fila: t.tipo === 'amenaza' ? ishAmObj_(v) : ishRelObj_(v) });
+        });
+      }
+    });
+  } finally { lock.releaseLock(); }
+  return { ok: true, resultados: resultados };
+}
+
+function ishEstado_(u, req) {
+  exigirModulo_(u, 'ISH');
+  const r = ishRedes_().filter(x => x.nombre === req.red)[0];
+  if (!r) throw new Error('Red no activa');
+  if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
+  if (req.estado && ISH.ESTADOS_REL.indexOf(req.estado) < 0) throw new Error('Estado no válido');
+  if (req.modelo && ISH.MODELOS.indexOf(req.modelo) < 0) throw new Error('Modelo no válido');
+  const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
+  const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
+  const i = cod.indexOf(req.codigo);
+  if (i < 0) throw new Error('Establecimiento inexistente');
+  const act = sh.getRange(i + 2, 5, 1, 4).getDisplayValues()[0];
+  const nuevo = [req.coordinador != null ? String(req.coordinador).slice(0, 200) || 's/d' : act[0],
+                 req.fecha != null ? String(req.fecha) || 's/d' : act[1], req.estado || act[2], req.modelo || act[3]];
+  sh.getRange(i + 2, 5, 1, 4).setValues([nuevo]);
+  registrar_(u, 'ISH · Datos de la evaluación', req.red, req.codigo, '', nuevo.join(' | '));
+  return { ok: true };
+}

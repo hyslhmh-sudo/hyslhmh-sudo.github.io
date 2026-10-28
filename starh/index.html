@@ -160,6 +160,7 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 <div id="menu" class="menu tarjeta oculto" role="menu">
   <a href="tablero.html" id="lnkTablero"><span class="ms">monitoring</span>Tablero</a>
   <a href="phr.html"><span class="ms">fact_check</span>Ir a PHR (plan de respuesta)</a>
+  <a href="ish.html" id="lnkIsh" class="oculto"><span class="ms">local_hospital</span>Ir a ISH (seguridad hospitalaria)</a>
   <button data-act="actualizar"><span class="ms">refresh</span>Actualizar datos</button>
   <button data-act="ayuda"><span class="ms">help</span>Ayuda</button>
   <button data-act="salir"><span class="ms">logout</span>Salir</button>
@@ -319,6 +320,7 @@ function render() {
   $('#menu').classList.add('oculto');
   if (!S.sesion.token()) { $('#btnMenu').classList.add('oculto'); pintarSync(); return vistaIngreso(); }
   $('#btnMenu').classList.remove('oculto'); pintarSync();
+  { const lk = $('#lnkIsh'); if (lk) lk.classList.toggle('oculto', (S.sesion.usuario() || {}).ish !== true); }
   if (!cat) { app.innerHTML = '<div class="vacio">Cargando datos…</div>'; return; }
   const p = h.slice(2).split('/').map(decodeURIComponent);
   if (p[0] === 'ayuda') return vistaAyuda();

@@ -60,6 +60,8 @@ td.buscar{color:var(--suave);font-size:7pt;display:block;border:0;padding:1px 0 
 .calc{background:#F7F9FA;color:#9AA6AC}
 ul.inst{font-size:9pt;margin:4px 0 0 0;padding-left:18px}
 ul.inst li{margin-bottom:2px}
+.guia{font-size:7.5pt;color:#3A4A52;background:var(--claro);border-left:3px solid var(--medio);padding:4px 7px;margin:0 0 4px;break-inside:avoid}
+.guia b{color:var(--fuerte)}
 .nota{font-size:8pt;color:var(--medio);font-style:italic;margin-top:6px}
 .firmas td{height:58px;vertical-align:bottom;font-size:8pt;color:var(--suave)}
 .pie{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:14px;padding-top:6px;border-top:.5pt solid var(--linea);font-size:7.5pt;color:var(--medio)}
@@ -99,6 +101,7 @@ ul.inst li{margin-bottom:2px}
 <div class="hojas" id="hojas"></div>
 
 <script src="config.js"></script>
+<script src="guias.js"></script>
 <script src="starh.js"></script>
 <script>
 'use strict';
@@ -106,11 +109,12 @@ const S = window.STARH, $ = s => document.querySelector(s), esc = S.esc;
 const qs = new URLSearchParams(location.search);
 const MOD = {
   starh: { nombre: 'STAR-H · Relevamiento de riesgos', accion: 'catalogo', clave: 'cat', app: 'index.html' },
-  phr: { nombre: 'PHR · Plan hospitalario de respuesta', accion: 'phr_catalogo', clave: 'phr.cat', app: 'phr.html' }
+  phr: { nombre: 'PHR · Plan hospitalario de respuesta', accion: 'phr_catalogo', clave: 'phr.cat', app: 'phr.html' },
+  ish: { nombre: 'ISH · Índice de Seguridad Hospitalaria', accion: 'ish_catalogo', clave: 'ish.cat', app: 'ish.html' }
 };
 const COLOR_NIVEL = { 'Muy alto': '#F4B4B4', 'Alto': '#FFD3A6', 'Moderado': '#FFF2B3', 'Bajo': '#E6F2C2', 'Muy bajo': '#C8E6C9' };
-let datos = { starh: null, phr: null };
-let mod = qs.get('m') === 'starh' ? 'starh' : (qs.get('m') === 'phr' ? 'phr' : null);
+let datos = { starh: null, phr: null, ish: null };
+let mod = ['starh', 'phr', 'ish'].indexOf(qs.get('m')) >= 0 ? qs.get('m') : null;
 
 function clave(m) { return (S.DEMO ? 'demo.' : '') + MOD[m].clave; }
 function usuario() { return S.sesion.usuario() || {}; }
@@ -118,6 +122,7 @@ function modulosUsuario() {
   const u = usuario(), l = [];
   if (u.starh !== false) l.push('starh');
   if (u.phr !== false) l.push('phr');
+  if (u.ish === true || (u.ish !== false && S.store.get('ish.cat', null))) l.push('ish');
   return l.length ? l : ['phr'];
 }
 function estado(t) { $('#estado').textContent = t || ''; }
@@ -156,7 +161,7 @@ async function iniciar(forzar) {
   aviso('');
   const d = datos[mod];
   if (!d.redes.length) { aviso('Tu acceso no tiene redes asignadas en este relevamiento.'); $('#hojas').innerHTML = ''; return; }
-  const redQ = qs.get('red') || S.store.get(mod === 'phr' ? 'phr.red' : 'red', '');
+  const redQ = qs.get('red') || S.store.get(mod === 'starh' ? 'red' : mod + '.red', '');
   opciones($('#selRed'), d.redes.map(r => [r.nombre, r.nombre]), d.redes.some(r => r.nombre === redQ) ? redQ : d.redes[0].nombre);
   llenarEst(qs.get('est'));
   if (qs.get('modo')) $('#selModo').value = qs.get('modo') === 'cargado' ? 'cargado' : 'blanco';
@@ -175,7 +180,7 @@ function encabezado(r) {
   if (tw) return `<div class="enc"><img src="enc-trelew.png" alt="Hospital María Humphreys y Hospital Zonal Trelew"></div>`;
   return `<div class="enc"><img src="enc-secretaria.png" alt="Gobierno del Chubut · Secretaría de Salud" style="height:40px">${rw ? '<img class="hsst" src="enc-hsst.png" alt="Hospital Subzonal Santa Teresita" style="height:48px">' : ''}</div>`;
 }
-function codigo(m, r) { return (m === 'phr' ? 'EVA-PHR-' : 'EVA-STARH-') + (/trelew/i.test(r.nombre) ? '001' : '002') + '-F01'; }
+function codigo(m, r) { return ({ phr: 'EVA-PHR-', ish: 'EVA-ISH-' }[m] || 'EVA-STARH-') + (/trelew/i.test(r.nombre) ? '001' : '002') + '-F01'; }
 function pie(m, r) {
   const quien = /trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral';
   return `<div class="pie"><div><b>${codigo(m, r)} · VERSIÓN 0</b><br>${quien}</div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"><div>Impreso el ${S.hoy()}</div></div>`;
@@ -217,14 +222,16 @@ function hojaPHR(r, e, cargado) {
   h += `<h3>3. Cómo completar</h3><ul class="inst">
     <li>Recorrer los ítems con el referente y pedir la evidencia indicada en «Buscar». Lo que no se puede mostrar se registra como si no existiera.</li>
     <li>En «Aplica» anotar <b>Sí</b> o <b>No</b>. Los ítems en gris ya figuran como «No aplica» para este establecimiento; si corresponden, anotar <b>Sí</b>.</li>
-    <li>En «Estado» anotar <b>C</b> (cumple), <b>P</b> (parcial) o <b>NC</b> (no cumple). En la última columna, el documento visto o la brecha.</li></ul>`;
+    <li>En «Estado» anotar <b>C</b> (cumple), <b>P</b> (parcial) o <b>NC</b> (no cumple). En la última columna, el documento visto o la brecha.</li>
+    <li>Ante la duda entre dos estados, elegir el más bajo y anotar el motivo. Cada sección empieza con un recuadro que recuerda qué se evalúa, qué pedir y cuándo corresponde cada estado.</li></ul>`;
   h += `<h3>4. Lista de verificación</h3>`;
   const letras = secc.length ? secc : [...new Set(items.map(i => [i.seccion.charAt(0), i.seccion.split(' · ').slice(1).join(' · ')]))];
   letras.forEach(s => {
     const L = s[0], nom = s[1];
     const its = items.filter(i => i.seccion.charAt(0) === L);
     if (!its.length) return;
-    h += `<h4>${esc(L)}. ${esc(nom)}</h4><table><thead><tr><th style="width:7%">ID</th><th>Ítem · qué buscar</th><th style="width:8%" class="c">Aplica</th><th style="width:8%" class="c">Estado</th><th style="width:30%">Evidencia encontrada o brecha</th></tr></thead><tbody>`;
+    const g = (window.GUIAS && GUIAS.PHR_GUIA[L]) || null;
+    h += `<h4>${esc(L)}. ${esc(nom)}</h4>${g ? `<div class="guia"><b>Qué se evalúa:</b> ${esc(g.que)} <b>Pedir:</b> ${esc(g.pedir)}<br><b>C</b> ${esc(g.c)} · <b>P</b> ${esc(g.p)} · <b>NC</b> ${esc(g.nc)}</div>` : ''}<table><thead><tr><th style="width:7%">ID</th><th>Ítem · qué buscar</th><th style="width:8%" class="c">Aplica</th><th style="width:8%" class="c">Estado</th><th style="width:30%">Evidencia encontrada o brecha</th></tr></thead><tbody>`;
     its.forEach(i => {
       const x = relId[i.id] || {}, na = x.aplica === 'No aplica';
       const evid = cargado ? [x.evidencia, x.brecha ? 'Brecha: ' + x.brecha : ''].filter(Boolean).map(esc).join('<br>') : '';
@@ -246,6 +253,52 @@ function hojaPHR(r, e, cargado) {
     <tr><td class="lab">No aplica</td><td>No corresponde por el tipo o la complejidad del establecimiento. No entra en el cálculo.</td><td class="c">—</td></tr></tbody></table>
     <p class="nota">Cumplimiento: avanzado 75 % o más · intermedio 40 % a 74 % · inicial menos de 40 % (lo calcula la planilla). Fuente: adaptado de OPS, Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015, 2023).${rw ? ' Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.' : ''}</p>`;
   return h + pie('phr', r);
+}
+
+/* ---------- ISH ---------- */
+function hojaISH(r, e, cargado) {
+  const G = window.GUIAS, g = G.ISH_GUIA, tw = /trelew/i.test(r.nombre), rw = !tw;
+  const rel = e ? r.relevamiento.filter(x => x.codigo === e.codigo) : [];
+  const am = e ? r.amenazas.filter(x => x.codigo === e.codigo) : [];
+  const d = datos.ish, subs = d.submodulos || [];
+  // catálogo de ítems y amenazas: se toma del primer hospital de la red (es el mismo para todos)
+  const c0 = r.establecimientos[0] ? r.establecimientos[0].codigo : '';
+  const items = rel.length ? rel : r.relevamiento.filter(x => x.codigo === c0);
+  const amen = am.length ? am : r.amenazas.filter(x => x.codigo === c0);
+  const NIVC = { 'Bajo': 'B', 'Medio': 'M', 'Alto': 'A', 'No evaluado': 'NE', 'No existe': 'NE' };
+  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('ish', r)} · VERSIÓN 0</p>
+    <h2 class="tit">Índice de Seguridad Hospitalaria (ISH)</h2>
+    <p class="subt">${esc(r.nombre)} · Lista de verificación OPS/OMS (Formulario 2, 2018)</p>`;
+  h += datosEst(e, cargado, [
+    ['Hospital', e ? esc(e.nombre) : ''], ['Código en la planilla', e ? esc(e.codigo) : ''],
+    ['Fecha de la evaluación', v(e && e.fecha, cargado)], ['Coordinador de la evaluación', v(e && e.coordinador, cargado)],
+    ['Modelo de ponderación', cargado && e ? esc(e.modelo || 'Modelo 1') : 'Modelo 1 (50 / 30 / 20) ☐   Modelo 2 (un tercio cada módulo) ☐']]);
+  h += participantes(8);
+  h += `<h3>3. Cómo completar</h3><ul class="inst">${g.general.map(t => `<li>${esc(t)}</li>`).join('')}
+    <li>En «Nivel» anotar <b>B</b> (bajo), <b>M</b> (medio), <b>A</b> (alto) o <b>NE</b> (no evaluado). En amenazas, <b>NE</b> es «no existe».</li></ul>
+    <table style="margin-top:6px"><thead><tr><th style="width:12%">Nivel</th><th>Cuándo se usa</th><th style="width:9%" class="c">Valor</th></tr></thead><tbody>
+    ${['Bajo', 'Medio', 'Alto'].map(n => `<tr><td class="lab">${NIVC[n]} · ${n}</td><td>${esc(g.niveles[n])}</td><td class="c">${{ Bajo: '0', Medio: '0,5', Alto: '1' }[n]}</td></tr>`).join('')}</tbody></table>`;
+  h += `<h3>4. Módulo 1 · Amenazas y propiedades del suelo</h3><div class="guia">${esc(g.modulos['1'])}</div>
+    <table><thead><tr><th style="width:7%">ID</th><th style="width:24%">Grupo</th><th>Amenaza</th><th style="width:9%" class="c">Nivel</th><th style="width:10%" class="c">¿Prepararse?</th><th style="width:26%">Observaciones</th></tr></thead><tbody>
+    ${amen.map(a => { const x = cargado ? (am.find(z => z.id === a.id) || {}) : {}; return `<tr><td class="c"><b>${esc(a.id.replace('M1-', ''))}</b></td><td>${esc(a.cod)} · ${esc(a.grupo)}</td><td class="it">${esc(a.amenaza)}</td><td class="c"><b>${esc(NIVC[x.nivel] || '')}</b></td><td class="c">${esc(x.prepararse || '')}</td><td>${esc(x.obs || '')}</td></tr>`; }).join('')}</tbody></table>`;
+  [['2', 'Seguridad estructural'], ['3', 'Seguridad no estructural'], ['4', 'Gestión de emergencias y desastres']].forEach((m, k) => {
+    h += `<h3>${5 + k}. Módulo ${m[0]} · ${m[1]}</h3><div class="guia">${esc(g.modulos[m[0]])}</div>`;
+    subs.filter(s => s[1] === m[0]).forEach(s => {
+      const its = items.filter(i => i.sub === s[0]); if (!its.length) return;
+      h += `<h4>${esc(s[0])} · ${esc(s[2])}</h4><table><thead><tr><th style="width:6%">N.º</th><th>Ítem</th><th style="width:8%" class="c">Nivel</th><th style="width:36%">Observaciones</th></tr></thead><tbody>
+        ${its.map(i => { const x = cargado ? (rel.find(z => Number(z.n) === Number(i.n)) || {}) : {}; return `<tr><td class="c"><b>${esc(i.n)}</b></td><td class="it">${esc(i.item)}</td><td class="c"><b>${esc(NIVC[x.nivel] || '')}</b></td><td>${esc(x.obs || '')}</td></tr>`; }).join('')}</tbody></table>`;
+    });
+  });
+  const c = cargado && e ? G.ishCalcular(r, e.codigo) : null;
+  h += `<h3>8. Resultado</h3><table><thead><tr><th>Módulo</th><th style="width:16%" class="c">Peso (${esc(cargado && e ? e.modelo || 'Modelo 1' : 'según modelo')})</th><th style="width:16%" class="c">Valor (0 a 1)</th></tr></thead><tbody>
+    ${[['2', 'Seguridad estructural'], ['3', 'Seguridad no estructural'], ['4', 'Gestión de emergencias y desastres']].map(m => `<tr><td>${m[0]} · ${m[1]}</td><td class="c">${c ? Math.round(c.pesosModelo[m[0]] * 100) + ' %' : ''}</td><td class="c"><b>${c ? G.fmt2(c.mod[m[0]]) : ''}</b></td></tr>`).join('')}
+    <tr><td class="lab">Índice de Seguridad Hospitalaria</td><td></td><td class="c"><b>${c ? G.fmt2(c.indice) : ''}</b></td></tr>
+    <tr><td class="lab">Categoría</td><td></td><td class="c"><b>${c && c.categoria ? c.categoria.cat : ''}</b></td></tr></tbody></table>
+    <table style="margin-top:6px"><thead><tr><th style="width:12%">Categoría</th><th style="width:14%">Índice</th><th>Qué significa</th></tr></thead><tbody>
+    ${g.categorias.map(k => `<tr><td class="lab c">${k.cat}</td><td>${String(k.min).replace('.', ',')} a ${String(k.max).replace('.', ',')}</td><td>${esc(k.texto)}</td></tr>`).join('')}</tbody></table>`;
+  h += observaciones('') + firmas(rw).replace('Referente del establecimiento', 'Coordinador de la evaluación');
+  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Valores Bajo 0, Medio 0,5 y Alto 1; pesos de submódulos e ítems iguales salvo que se carguen otros en la hoja PESOS. Esta evaluación complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento ni la evaluación estructural de profesionales de ingeniería o arquitectura.</p>`;
+  return h + pie('ish', r);
 }
 
 /* ---------- STAR-H ---------- */
@@ -303,10 +356,10 @@ function pintar() {
   const cargado = $('#selModo').value === 'cargado';
   const sel = $('#selEst').value;
   const lista = sel === '*' ? r.establecimientos : sel ? r.establecimientos.filter(e => e.codigo === sel) : [null];
-  const f = mod === 'phr' ? hojaPHR : hojaSTARH;
+  const f = mod === 'phr' ? hojaPHR : mod === 'ish' ? hojaISH : hojaSTARH;
   $('#hojas').innerHTML = lista.map(e => `<section class="hoja">${f(r, e, cargado && !!e)}</section>`).join('');
   $('#selModo').disabled = !sel;
-  document.title = (mod === 'phr' ? 'PHR' : 'STAR-H') + ' · ' + (sel === '*' ? r.nombre : sel || 'formulario en blanco');
+  document.title = ({ phr: 'PHR', ish: 'ISH' }[mod] || 'STAR-H') + ' · ' + (sel === '*' ? r.nombre : sel || 'formulario en blanco');
 }
 
 $('#selMod').addEventListener('change', () => { mod = $('#selMod').value; qs.delete('est'); iniciar(false); });

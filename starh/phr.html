@@ -95,6 +95,13 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .buscar{position:relative;margin-bottom:10px}
 .buscar input{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:10px 12px 10px 38px;background:#fff}
 .buscar .ms{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tenue)}
+.guia{margin:0 2px 8px;font-size:13px;color:#3A4A52}
+.guia summary{cursor:pointer;color:var(--fuerte);font-weight:700;font-size:13px;list-style:none;display:flex;align-items:center;gap:4px}
+.guia summary::-webkit-details-marker{display:none}
+.guia .g-in{background:var(--claro);border-radius:10px;padding:10px 12px;margin-top:6px}
+.guia p{margin:0 0 6px}.guia p:last-child{margin:0}
+.guia .crit{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;margin-top:6px}
+.guia .crit b{font-size:12px}
 .grupo-tit{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--suave);margin:16px 2px 6px}
 .amen{display:flex;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--linea);cursor:pointer;background:#fff;width:100%;text-align:left;border-left:0;border-right:0;border-top:0}
 .amen:last-child{border-bottom:0}
@@ -162,6 +169,7 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 <div id="menu" class="menu tarjeta oculto" role="menu">
   <a href="phr-tablero.html"><span class="ms">monitoring</span>Tablero PHR</a>
   <a href="index.html" id="lnkStarh"><span class="ms">crisis_alert</span>Ir a STAR-H</a>
+  <a href="ish.html" id="lnkIsh" class="oculto"><span class="ms">local_hospital</span>Ir a ISH (seguridad hospitalaria)</a>
   <button data-act="actualizar"><span class="ms">refresh</span>Actualizar datos</button>
   <button data-act="ayuda"><span class="ms">help</span>Ayuda</button>
   <button data-act="salir"><span class="ms">logout</span>Salir</button>
@@ -171,6 +179,7 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 <div id="hoja" class="hoja oculto" role="dialog" aria-modal="true"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
+<script src="guias.js"></script>
 <script>
 (function () {
 'use strict';
@@ -195,6 +204,12 @@ function red(n) { return cat && cat.redes.find(r => r.nombre === n); }
 function rels(r, c) { return r.relevamiento.filter(e => e.codigo === c); }
 function resuelto(e) { return e.aplica === 'No aplica' || !!e.estado; }
 function pct(lista) { const v = lista.filter(e => e.aplica !== 'No aplica' && e.estado).map(e => ({ 'Cumple': 1, 'Parcial': 0.5, 'No cumple': 0 }[e.estado])); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length * 100) : null; }
+function guiaHTML(letra, abierta) {
+  const g = (window.GUIAS && GUIAS.PHR_GUIA[letra]); if (!g) return '';
+  return `<details class="guia"${abierta ? ' open' : ''}><summary><span class="ms" style="font-size:18px">lightbulb</span>Cómo completar esta sección</summary><div class="g-in">
+    <p><b>Qué se evalúa:</b> ${S.esc(g.que)}</p><p><b>Qué pedir o mirar:</b> ${S.esc(g.pedir)}</p>
+    <div class="crit"><b style="color:#1E5223">Cumple</b><span>${S.esc(g.c)}</span><b style="color:#5E4B00">Parcial</b><span>${S.esc(g.p)}</span><b style="color:#7A1F1F">No cumple</b><span>${S.esc(g.nc)}</span></div></div></details>`;
+}
 function secNombre(letra) { const s = (cat.secciones || []).find(x => x[0] === letra); return s ? s[1] : letra; }
 
 /* ---------- sincronización ---------- */
@@ -273,7 +288,7 @@ function render() {
   if (!S.sesion.token()) { $('#btnMenu').classList.add('oculto'); pintarSync(); return vistaIngreso(); }
   $('#btnMenu').classList.remove('oculto'); pintarSync();
   const u = S.sesion.usuario() || {};
-  $('#lnkStarh').classList.toggle('oculto', u.starh === false);
+  $('#lnkStarh').classList.toggle('oculto', u.starh === false); $('#lnkIsh').classList.toggle('oculto', u.ish !== true);
   if (!cat) { app.innerHTML = '<div class="vacio">Cargando datos…</div>'; return; }
   const p = (location.hash || '#/').slice(2).split('/').map(decodeURIComponent);
   if (p[0] === 'ayuda') return vistaAyuda();
@@ -361,7 +376,7 @@ function vistaEstablecimiento(redN, codigo) {
         </div>${puede ? '<button class="btn sec" type="submit"><span class="ms">save</span>Guardar datos</button>' : ''}</form></details></div>
     <div class="buscar"><span class="ms">search</span><input id="busq" type="search" placeholder="Buscar ítem" value="${S.esc(busqueda)}"></div>
     <div class="filtros">${F('pend', 'Pendientes')}${F('hechas', 'Relevados')}${F('brechas', 'Con brecha')}${F('na', 'No aplica')}${F('todas', 'Todos')}</div>
-    ${Object.keys(grupos).map(g => `<div class="grupo-tit">${S.esc(g)}</div><div class="tarjeta bloque">${grupos[g].map(x => `
+    ${Object.keys(grupos).map(g => `<div class="grupo-tit">${S.esc(g)}</div>${guiaHTML(g.charAt(0))}<div class="tarjeta bloque">${grupos[g].map(x => `
       <button class="amen" data-it="${S.esc(x.id)}"><span class="id">${S.esc(x.id)}</span><span class="nom">${S.esc(x.item)}</span>
       ${enCola.has(x.id) ? '<span class="ms" title="Sin enviar" style="color:#B26A00;font-size:18px">cloud_upload</span>' : ''}
       ${x.aplica === 'No aplica' ? '<span class="chip pend">No aplica</span>' : x.estado ? chipEstado(x.estado) : '<span class="chip pend">Pendiente</span>'}</button>`).join('')}</div>`).join('')
@@ -393,9 +408,10 @@ function pintarHoja() {
     <div class="hoja-cuerpo">
       <div class="tarjeta contexto"><p style="font-size:15px;color:#24343B"><b>${S.esc(b.item)}</b></p>
         ${it.evidencia ? `<p><b>Qué buscar:</b> ${S.esc(it.evidencia)}</p>` : ''}<p class="sub">Instructivo OPS 2023: ${S.esc(b.ref || it.ref || '')} · Aplica a: ${S.esc(it.aplicaA || 's/d')}</p></div>
+      ${guiaHTML(b.seccion.charAt(0), false)}
       <div class="tarjeta dim"><h3>¿Aplica a este establecimiento?</h3>${op('aplica', ['Sí', 'No aplica'])}</div>
       ${b.aplica === 'No aplica' ? '' : `<div class="tarjeta dim"><h3>Estado</h3>${op('estado', EST)}
-        <div class="desc">${{ 'Cumple': 'Existe, está vigente y hay evidencia.', 'Parcial': 'Existe en parte, está desactualizado o no hay evidencia completa.', 'No cumple': 'No existe o no se pudo verificar.' }[b.estado] || 'Elegí una opción.'}</div></div>
+        <div class="desc">${{ 'Cumple': (GUIAS.PHR_GUIA[b.seccion.charAt(0)] || {}).c || 'Existe, está vigente y hay evidencia.', 'Parcial': (GUIAS.PHR_GUIA[b.seccion.charAt(0)] || {}).p || 'Existe en parte o está desactualizado.', 'No cumple': (GUIAS.PHR_GUIA[b.seccion.charAt(0)] || {}).nc || 'No existe o no se pudo verificar.' }[b.estado] || 'Elegí una opción. Ante la duda, el estado más bajo.'}</div></div>
       <div class="tarjeta dim"><h3>Registro</h3>
         <label class="campo"><span>Evidencia encontrada</span><textarea data-texto="evidencia" ${dis} placeholder="Documento, fecha, acta, registro…">${S.esc(b.evidencia)}</textarea></label>
         <label class="campo"><span>Brecha u observación</span><textarea data-texto="brecha" ${dis}>${S.esc(b.brecha)}</textarea></label>
@@ -456,7 +472,8 @@ function vistaAyuda() {
       <li>Cuando no quedan pendientes, marcá el establecimiento como relevado.</li></ol>
     <h3>Estados</h3>
     <ul><li><b>Cumple</b>: existe, está vigente y hay evidencia (vale 1).</li><li><b>Parcial</b>: existe en parte, está desactualizado o la evidencia es incompleta (vale 0,5).</li><li><b>No cumple</b>: no existe o no se pudo verificar (vale 0).</li><li><b>No aplica</b>: no cuenta para el porcentaje.</li></ul>
-    <h3>Secciones</h3><ul>${(cat.secciones || []).map(s => `<li><b>${s[0]}</b> · ${S.esc(s[1])}</li>`).join('')}</ul>
+    <h3>Recordatorios para completar</h3><ul>${GUIAS.PHR_GENERAL.map(t => `<li>${S.esc(t)}</li>`).join('')}</ul>
+    <h3>Secciones</h3>${(cat.secciones || []).map(s => `<p style="margin:10px 0 2px"><b>${s[0]} · ${S.esc(s[1])}</b></p>${guiaHTML(s[0], false)}`).join('')}
     <h3>Sin señal</h3><p>Lo cargado queda en el dispositivo y se envía solo al volver la conexión. Ingresá antes con conexión para descargar los datos.</p>
     <h3>Dónde quedan los datos</h3><p>En la planilla PHR de cada red (hoja RELEVAMIENTO). Si la app no está disponible, se carga directo ahí.</p>
     <p class="sub">Base: OPS. Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres. Washington, D.C.: OPS; 2023. Este relevamiento complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>
