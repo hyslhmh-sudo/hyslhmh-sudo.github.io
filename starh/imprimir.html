@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Imprimir formularios · STAR-H y PHR</title>
+<meta name="description" content="Formularios de campo STAR-H y PHR listos para imprimir, por establecimiento, en blanco o con lo cargado.">
+<meta name="theme-color" content="#0D313F">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{
+  --fuerte:#0D313F; --medio:#5894A7; --claro:#E6EFF2; --borde:#C9DCE3;
+  --texto:#3A4A52; --suave:#6B7A82; --linea:#D5E1E5; --fondo:#F6F7F8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;line-height:1.4}
+button,select{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+a{color:var(--fuerte)}
+
+/* panel de opciones (no se imprime) */
+.panel{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:12px 16px}
+.panel h1{margin:0 0 8px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel h1 a{color:#fff;text-decoration:none;opacity:.9;font-size:13px;font-weight:500;margin-left:auto}
+.opciones{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.opciones label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:600;opacity:.95}
+.opciones select{min-width:150px;max-width:100%;padding:8px 10px;border-radius:9px;border:0;background:#fff;color:var(--texto)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;border:0;background:#fff;color:var(--fuerte);font-weight:700;cursor:pointer}
+.btn.sec{background:rgba(255,255,255,.16);color:#fff}
+.aviso{max-width:820px;margin:16px auto;padding:14px 16px;background:#fff;border-radius:12px;border:1px solid var(--linea)}
+.estado{font-size:12px;opacity:.85;margin-top:6px}
+
+/* hoja */
+.hojas{padding:16px}
+.hoja{background:#fff;max-width:210mm;margin:0 auto 18px;padding:14mm 14mm 18mm;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.enc{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.enc img{height:34px;width:auto}
+.enc .der{display:flex;gap:10px;align-items:center}
+.enc .der img.hsst{height:44px}
+.kicker{font-size:8.5pt;font-weight:700;color:var(--medio);letter-spacing:.02em;margin:0}
+h2.tit{font-size:15pt;color:var(--fuerte);margin:2px 0 4px;line-height:1.2}
+.subt{color:var(--medio);font-size:10pt;margin:0 0 10px}
+h3{font-size:11pt;color:var(--fuerte);border-bottom:.75pt solid var(--medio);padding-bottom:2px;margin:14px 0 6px;break-after:avoid}
+h4{font-size:9.5pt;color:var(--medio);margin:10px 0 4px;break-after:avoid}
+table{width:100%;border-collapse:collapse;font-size:7.6pt;line-height:1.25}
+th,td{border:.5pt solid var(--borde);padding:3px 4px;vertical-align:middle;text-align:left}
+thead{display:table-header-group}
+th{background:var(--fuerte);color:#fff;font-weight:700}
+tr{break-inside:avoid}
+td.lab{background:var(--claro);color:var(--fuerte);font-weight:700;width:34%}
+td.c{text-align:center}
+tr.na td{background:#F1F3F4;color:#8A979E}
+tr.vacia td{height:20px}
+td.buscar{color:var(--suave);font-size:7pt;display:block;border:0;padding:1px 0 0}
+.it small{display:block;color:var(--suave);font-size:6.8pt;margin-top:1px}
+.calc{background:#F7F9FA;color:#9AA6AC}
+ul.inst{font-size:9pt;margin:4px 0 0 0;padding-left:18px}
+ul.inst li{margin-bottom:2px}
+.nota{font-size:8pt;color:var(--medio);font-style:italic;margin-top:6px}
+.firmas td{height:58px;vertical-align:bottom;font-size:8pt;color:var(--suave)}
+.pie{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:14px;padding-top:6px;border-top:.5pt solid var(--linea);font-size:7.5pt;color:var(--medio)}
+.pie b{color:var(--fuerte)}
+.pie img{height:14px}
+.nivel{display:inline-block;padding:0 4px;border-radius:3px;font-weight:700}
+
+@media print{
+  @page{size:A4;margin:12mm 12mm 14mm}
+  html,body{background:#fff}
+  .panel,.aviso,.no-imp{display:none!important}
+  .hojas{padding:0}
+  .hoja{box-shadow:none;margin:0;padding:0;max-width:none;break-after:page}
+  .hoja:last-child{break-after:auto}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (max-width:600px){ .hoja{padding:8mm 5mm} .opciones select{min-width:0;width:100%} .opciones label{flex:1 1 140px} }
+</style>
+</head>
+<body>
+<div class="panel">
+  <h1><span class="ms">print</span>Imprimir formularios de campo <a href="#" id="volver"><span class="ms" style="font-size:16px">arrow_back</span> Volver a la app</a></h1>
+  <div class="opciones">
+    <label>Relevamiento<select id="selMod"></select></label>
+    <label>Red<select id="selRed"></select></label>
+    <label>Establecimiento<select id="selEst"></select></label>
+    <label>Contenido<select id="selModo">
+      <option value="blanco">En blanco, para completar a mano</option>
+      <option value="cargado">Con lo cargado, para revisar y firmar</option>
+    </select></label>
+    <button class="btn" id="btnImp"><span class="ms">print</span>Imprimir</button>
+    <button class="btn sec" id="btnAct" title="Traer los datos más recientes de la planilla"><span class="ms">sync</span>Actualizar</button>
+  </div>
+  <div class="estado" id="estado"></div>
+</div>
+<div id="aviso"></div>
+<div class="hojas" id="hojas"></div>
+
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), esc = S.esc;
+const qs = new URLSearchParams(location.search);
+const MOD = {
+  starh: { nombre: 'STAR-H · Relevamiento de riesgos', accion: 'catalogo', clave: 'cat', app: 'index.html' },
+  phr: { nombre: 'PHR · Plan hospitalario de respuesta', accion: 'phr_catalogo', clave: 'phr.cat', app: 'phr.html' }
+};
+const COLOR_NIVEL = { 'Muy alto': '#F4B4B4', 'Alto': '#FFD3A6', 'Moderado': '#FFF2B3', 'Bajo': '#E6F2C2', 'Muy bajo': '#C8E6C9' };
+let datos = { starh: null, phr: null };
+let mod = qs.get('m') === 'starh' ? 'starh' : (qs.get('m') === 'phr' ? 'phr' : null);
+
+function clave(m) { return (S.DEMO ? 'demo.' : '') + MOD[m].clave; }
+function usuario() { return S.sesion.usuario() || {}; }
+function modulosUsuario() {
+  const u = usuario(), l = [];
+  if (u.starh !== false) l.push('starh');
+  if (u.phr !== false) l.push('phr');
+  return l.length ? l : ['phr'];
+}
+function estado(t) { $('#estado').textContent = t || ''; }
+function aviso(html) { $('#aviso').innerHTML = html ? `<div class="aviso">${html}</div>` : ''; }
+
+async function cargar(m, forzar) {
+  if (!forzar) { const c = S.store.get(clave(m), null); if (c && c.redes) { datos[m] = c; } }
+  if (!datos[m] || forzar) {
+    if (!S.sesion.token()) { datos[m] = null; return 'sesion'; }
+    estado('Trayendo los datos de la planilla…');
+    try {
+      const r = await S.api(MOD[m].accion);
+      if (!r.ok) { estado(''); return r.sesion ? 'sesion' : (r.error || 'No se pudieron traer los datos.'); }
+      datos[m] = r; S.store.set(clave(m), r);
+    } catch (e) { estado(''); return datos[m] ? null : 'Sin conexión y sin datos guardados en este dispositivo. Abrí la app una vez con señal.'; }
+  }
+  estado(datos[m] && datos[m].generado ? 'Datos al ' + new Date(datos[m].generado).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '');
+  return null;
+}
+
+function opciones(sel, lista, valor) {
+  sel.innerHTML = lista.map(o => `<option value="${esc(o[0])}" ${o[0] === valor ? 'selected' : ''}>${esc(o[1])}</option>`).join('');
+  if (valor != null && lista.some(o => o[0] === valor)) sel.value = valor;
+}
+
+function red() { const d = datos[mod]; return d && d.redes.find(r => r.nombre === $('#selRed').value); }
+
+async function iniciar(forzar) {
+  const mods = modulosUsuario();
+  if (!mod || mods.indexOf(mod) < 0) mod = mods[0];
+  opciones($('#selMod'), mods.map(m => [m, MOD[m].nombre]), mod);
+  $('#volver').href = MOD[mod].app;
+  const err = await cargar(mod, forzar);
+  if (err === 'sesion') { aviso(`Para imprimir con los establecimientos de tu red tenés que ingresar en la app. <a href="${MOD[mod].app}">Ingresar</a>.`); $('#hojas').innerHTML = ''; return; }
+  if (err) { aviso(esc(err)); $('#hojas').innerHTML = ''; return; }
+  aviso('');
+  const d = datos[mod];
+  if (!d.redes.length) { aviso('Tu acceso no tiene redes asignadas en este relevamiento.'); $('#hojas').innerHTML = ''; return; }
+  const redQ = qs.get('red') || S.store.get(mod === 'phr' ? 'phr.red' : 'red', '');
+  opciones($('#selRed'), d.redes.map(r => [r.nombre, r.nombre]), d.redes.some(r => r.nombre === redQ) ? redQ : d.redes[0].nombre);
+  llenarEst(qs.get('est'));
+  if (qs.get('modo')) $('#selModo').value = qs.get('modo') === 'cargado' ? 'cargado' : 'blanco';
+  pintar();
+  if (qs.get('auto') === '1') { qs.delete('auto'); setTimeout(() => window.print(), 600); }
+}
+function llenarEst(valor) {
+  const r = red();
+  const l = [['', 'Uno en blanco, sin establecimiento']].concat(r.establecimientos.map(e => [e.codigo, e.codigo + ' · ' + e.nombre]), [['*', 'Todos los de la red (' + r.establecimientos.length + ')']]);
+  opciones($('#selEst'), l, valor != null ? valor : ($('#selEst').value || ''));
+}
+
+/* ---------- piezas comunes ---------- */
+function encabezado(r) {
+  const tw = /trelew/i.test(r.nombre), rw = /rawson/i.test(r.nombre);
+  if (tw) return `<div class="enc"><img src="enc-trelew.png" alt="Hospital María Humphreys y Hospital Zonal Trelew"></div>`;
+  return `<div class="enc"><img src="enc-secretaria.png" alt="Gobierno del Chubut · Secretaría de Salud" style="height:40px">${rw ? '<img class="hsst" src="enc-hsst.png" alt="Hospital Subzonal Santa Teresita" style="height:48px">' : ''}</div>`;
+}
+function codigo(m, r) { return (m === 'phr' ? 'EVA-PHR-' : 'EVA-STARH-') + (/trelew/i.test(r.nombre) ? '001' : '002') + '-F01'; }
+function pie(m, r) {
+  const quien = /trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral';
+  return `<div class="pie"><div><b>${codigo(m, r)} · VERSIÓN 0</b><br>${quien}</div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"><div>Impreso el ${S.hoy()}</div></div>`;
+}
+function v(x, cargado) { return cargado ? esc(x == null || x === 's/d' ? '' : x) : ''; }
+function datosEst(e, cargado, filas) {
+  return `<h3>1. Datos del establecimiento</h3><table><tbody>${filas.map(f => `<tr><td class="lab">${esc(f[0])}</td><td>${f[1]}</td></tr>`).join('')}</tbody></table>`;
+}
+function participantes(n) {
+  return `<h3>2. Participantes</h3><table><thead><tr><th style="width:38%">Nombre y apellido</th><th style="width:38%">Función o servicio</th><th>Firma</th></tr></thead><tbody>${'<tr class="vacia"><td></td><td></td><td></td></tr>'.repeat(n)}</tbody></table>`;
+}
+function firmas(rw) {
+  return `<h3>Firmas</h3><table class="firmas"><thead><tr><th>Referente del establecimiento</th><th>${rw ? 'Referente de Higiene y Seguridad Laboral' : 'Higiene y Seguridad Laboral'}</th></tr></thead><tbody><tr><td>Firma y aclaración</td><td>Firma y aclaración</td></tr></tbody></table>`;
+}
+function observaciones(txt) { return `<h3>Observaciones</h3><table><tbody><tr><td style="height:${txt ? 'auto' : '90px'}">${txt || ''}</td></tr></tbody></table>`; }
+
+/* ---------- PHR ---------- */
+function alcancePHR(aplicaA, r) {
+  if (!aplicaA || aplicaA === 'Todos') return '';
+  if (!/trelew/i.test(r.nombre)) return ' (solo hospital)';
+  return aplicaA === 'Hospitales' ? ' (solo hospitales)' : ' (hospitales y Sede ex ADOS)';
+}
+const EST_CORTO = { 'Cumple': 'C', 'Parcial': 'P', 'No cumple': 'NC' };
+function hojaPHR(r, e, cargado) {
+  const items = r.items, porId = {}; items.forEach(i => porId[i.id] = i);
+  const rel = e ? r.relevamiento.filter(x => x.codigo === e.codigo) : [];
+  const relId = {}; rel.forEach(x => relId[x.id] = x);
+  const secc = (datos.phr.secciones || []);
+  const tw = /trelew/i.test(r.nombre), rw = !tw;
+  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('phr', r)} · VERSIÓN 0</p>
+    <h2 class="tit">Relevamiento inicial del plan hospitalario de respuesta (PHR)</h2>
+    <p class="subt">${esc(r.nombre)} · Comité de crisis El Niño 2026-2027</p>`;
+  h += datosEst(e, cargado, [
+    ['Establecimiento', e ? esc(e.nombre) : ''], ['Código en la planilla', e ? esc(e.codigo) : ''],
+    ['Tipo', e ? esc(e.tipo) : (tw ? 'Hospital ☐   Sede ex ADOS ☐   CAPS ☐   Salud Mental ☐' : 'Hospital ☐   CAPS ☐')],
+    ['Fecha y hora del relevamiento', v(e && e.fecha, cargado)], ['Referente del establecimiento', v(e && e.referente, cargado)],
+    ['¿Tiene plan de respuesta escrito?', 'Sí ☐   No ☐   Fecha de la última versión:'], ['Relevó', '']]);
+  h += participantes(6);
+  h += `<h3>3. Cómo completar</h3><ul class="inst">
+    <li>Recorrer los ítems con el referente y pedir la evidencia indicada en «Buscar». Lo que no se puede mostrar se registra como si no existiera.</li>
+    <li>En «Aplica» anotar <b>Sí</b> o <b>No</b>. Los ítems en gris ya figuran como «No aplica» para este establecimiento; si corresponden, anotar <b>Sí</b>.</li>
+    <li>En «Estado» anotar <b>C</b> (cumple), <b>P</b> (parcial) o <b>NC</b> (no cumple). En la última columna, el documento visto o la brecha.</li></ul>`;
+  h += `<h3>4. Lista de verificación</h3>`;
+  const letras = secc.length ? secc : [...new Set(items.map(i => [i.seccion.charAt(0), i.seccion.split(' · ').slice(1).join(' · ')]))];
+  letras.forEach(s => {
+    const L = s[0], nom = s[1];
+    const its = items.filter(i => i.seccion.charAt(0) === L);
+    if (!its.length) return;
+    h += `<h4>${esc(L)}. ${esc(nom)}</h4><table><thead><tr><th style="width:7%">ID</th><th>Ítem · qué buscar</th><th style="width:8%" class="c">Aplica</th><th style="width:8%" class="c">Estado</th><th style="width:30%">Evidencia encontrada o brecha</th></tr></thead><tbody>`;
+    its.forEach(i => {
+      const x = relId[i.id] || {}, na = x.aplica === 'No aplica';
+      const evid = cargado ? [x.evidencia, x.brecha ? 'Brecha: ' + x.brecha : ''].filter(Boolean).map(esc).join('<br>') : '';
+      h += `<tr class="${na ? 'na' : ''}"><td class="c"><b>${esc(i.id)}</b></td><td class="it">${esc(i.item)}${esc(alcancePHR(i.aplicaA, r))}. <span style="color:var(--suave)">Ref. ${esc(i.ref)}</span><small>Buscar: ${esc(i.evidencia)}</small></td>
+        <td class="c">${na ? 'No aplica' : (cargado && x.aplica ? 'Sí' : '')}</td><td class="c"><b>${cargado && !na ? esc(EST_CORTO[x.estado] || '') : ''}</b></td><td>${evid}</td></tr>`;
+    });
+    h += '</tbody></table>';
+  });
+  const brechas = cargado ? rel.filter(x => x.aplica !== 'No aplica' && (x.estado === 'No cumple' || x.estado === 'Parcial')) : [];
+  h += `<h3>5. Brechas prioritarias y acciones propuestas</h3><p class="nota" style="margin-top:0">Prioridad: A (alta), M (media) o B (baja). Las acciones las define el establecimiento con su conducción.</p>
+    <table><thead><tr><th style="width:7%">ID</th><th style="width:30%">Brecha</th><th>Acción propuesta</th><th style="width:18%">Responsable propuesto</th><th style="width:9%" class="c">Prioridad</th><th style="width:9%">Plazo</th></tr></thead><tbody>
+    ${brechas.map(x => `<tr><td class="c"><b>${esc(x.id)}</b></td><td>${esc(x.brecha || x.item)}</td><td></td><td>${esc(x.responsable)}</td><td class="c">${esc((x.prioridad || '').charAt(0))}</td><td>${esc(x.fecha)}</td></tr>`).join('')}
+    ${'<tr class="vacia"><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(Math.max(4, 8 - brechas.length))}</tbody></table>`;
+  h += observaciones('') + firmas(rw);
+  h += `<h3>Escala de valoración</h3><table><thead><tr><th style="width:16%">Valor</th><th>Cuándo se usa</th><th style="width:9%" class="c">Puntaje</th></tr></thead><tbody>
+    <tr><td class="lab">C · Cumple</td><td>Existe, está formalizado (por escrito y aprobado), vigente y hay evidencia.</td><td class="c">1</td></tr>
+    <tr><td class="lab">P · Parcial</td><td>Existe pero incompleto, sin aprobar, desactualizado, sin difundir o sin probar.</td><td class="c">0,5</td></tr>
+    <tr><td class="lab">NC · No cumple</td><td>No existe o no hay evidencia.</td><td class="c">0</td></tr>
+    <tr><td class="lab">No aplica</td><td>No corresponde por el tipo o la complejidad del establecimiento. No entra en el cálculo.</td><td class="c">—</td></tr></tbody></table>
+    <p class="nota">Cumplimiento: avanzado 75 % o más · intermedio 40 % a 74 % · inicial menos de 40 % (lo calcula la planilla). Fuente: adaptado de OPS, Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015, 2023).${rw ? ' Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.' : ''}</p>`;
+  return h + pie('phr', r);
+}
+
+/* ---------- STAR-H ---------- */
+function hojaSTARH(r, e, cargado) {
+  const ev = e ? r.evaluaciones.filter(x => x.codigo === e.codigo) : [];
+  const evId = {}; ev.forEach(x => evId[x.id] = x);
+  const tw = /trelew/i.test(r.nombre), rw = !tw;
+  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('starh', r)} · VERSIÓN 0</p>
+    <h2 class="tit">Relevamiento estratégico de riesgos STAR-H</h2>
+    <p class="subt">${esc(r.nombre)} · Comité de crisis El Niño 2026-2027</p>`;
+  h += datosEst(e, cargado, [
+    ['Establecimiento', e ? esc(e.nombre) : ''], ['Código en la planilla', e ? esc(e.codigo) : ''],
+    ['Tipo', e ? esc(e.tipo) : ''], ['Fecha y hora de la reunión', v(e && e.fechaReunion, cargado)],
+    ['Referente del relevamiento', v(e && e.referente, cargado)], ['Índice de Seguridad Hospitalaria (si existe)', v(e && e.ish, cargado)]]);
+  h += participantes(7);
+  h += `<h3>3. Cómo completar</h3><ul class="inst">
+    <li>Si la amenaza no corresponde, escribir <b>No</b> en «Aplica». Las filas en gris ya figuran como «No aplica» para este establecimiento.</li>
+    <li><b>A</b> (probabilidad en 12 meses) y <b>B1</b>, <b>B2</b>, <b>B3</b> (gravedad para la vida, el edificio y los servicios): de 1 a 5.</li>
+    <li><b>C</b> (vulnerabilidad) y <b>D</b> (capacidad de afrontamiento): <b>A</b> alta, <b>M</b> media o <b>B</b> baja. El riesgo lo calcula la planilla.</li></ul>`;
+  h += '<h3>4. Evaluación de amenazas</h3>';
+  ['Externa', 'Interna'].forEach(o => {
+    const am = r.amenazas.filter(a => a.origen === o);
+    if (!am.length) return;
+    h += `<h4>Amenazas ${o === 'Externa' ? 'externas' : 'internas'}</h4><table><thead><tr><th style="width:5%">ID</th><th>Amenaza</th><th style="width:7%" class="c">Aplica</th>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<th style="width:4.5%" class="c">${k}</th>`).join('')}<th style="width:8%" class="c">Riesgo</th><th style="width:20%">Fuente u observación</th></tr></thead><tbody>`;
+    am.forEach(a => {
+      const x = evId[a.id] || {}, na = x.aplica === 'No aplica';
+      if (e && !evId[a.id]) return;
+      const val = k => cargado && !na ? esc(x[k] || '') : '';
+      const ries = cargado && !na && x.riesgo ? `<span class="nivel" style="background:${COLOR_NIVEL[x.nivel] || '#EEE'}">${esc(x.riesgo)}</span>` : '';
+      h += `<tr class="${na ? 'na' : ''}"><td class="c"><b>${esc(a.id)}</b></td><td>${esc(a.amenaza)}</td><td class="c">${na ? 'No' : (cargado && x.aplica ? 'Sí' : '')}</td>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<td class="c">${val(k)}</td>`).join('')}<td class="c ${cargado ? '' : 'calc'}">${ries}</td><td>${cargado && !na ? esc(x.fuente || '') : ''}</td></tr>`;
+    });
+    h += '</tbody></table>';
+  });
+  h += `<h4>Amenazas agregadas por el equipo</h4><table><thead><tr><th>Amenaza</th>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<th style="width:5%" class="c">${k}</th>`).join('')}<th style="width:28%">Fuente u observación</th></tr></thead><tbody>${'<tr class="vacia"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(4)}</tbody></table>`;
+  const altas = cargado ? ev.filter(x => x.aplica !== 'No aplica' && (x.nivel === 'Alto' || x.nivel === 'Muy alto')) : [];
+  h += `<h3>5. Acciones prioritarias propuestas por el equipo</h3><table><thead><tr><th style="width:26%">Amenaza</th><th>Acción propuesta</th><th style="width:18%">Área responsable</th><th style="width:12%">Plazo sugerido</th></tr></thead><tbody>
+    ${altas.map(x => `<tr><td><b>${esc(x.id)}</b> ${esc(x.amenaza)}</td><td>${esc(x.accion || x.medidas || '')}</td><td>${esc(x.area || '')}</td><td>${esc(x.fecha || '')}</td></tr>`).join('')}
+    ${'<tr class="vacia"><td></td><td></td><td></td><td></td></tr>'.repeat(Math.max(3, 6 - altas.length))}</tbody></table>`;
+  h += observaciones('') + firmas(rw);
+  const es = r.escalas;
+  if (es && es.A) {
+    h += `<h3>Escalas de valoración</h3><table><thead><tr><th style="width:10%">Valor</th><th style="width:18%">Probabilidad (A)</th><th>B1 · Vida</th><th>B2 · Edificio</th><th>B3 · Servicios</th></tr></thead><tbody>
+      ${es.A.map((a, i) => { const b = es.B[i] || {}; return `<tr><td class="lab c">${esc(a.valor)}</td><td><b>${esc(a.etiqueta)}</b> ${esc(a.desc)}</td><td>${esc(b.b1)}</td><td>${esc(b.b2)}</td><td>${esc(b.b3)}</td></tr>`; }).join('')}</tbody></table>
+      <table style="margin-top:6px"><thead><tr><th style="width:12%"></th><th>C · Vulnerabilidad</th><th>D · Capacidad de afrontamiento</th></tr></thead><tbody>
+      ${es.C.map((c, i) => `<tr><td class="lab">${esc(c.etiqueta)}</td><td>${esc(c.desc)}</td><td>${esc((es.D[i] || {}).desc)}</td></tr>`).join('')}</tbody></table>`;
+  }
+  h += `<p class="nota">Fuente: adaptado de OPS, STAR-H (2023).${rw ? ' Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.' : ''}</p>`;
+  return h + pie('starh', r);
+}
+
+function pintar() {
+  const r = red(); if (!r) return;
+  const t = S.temaRed(r.nombre), st = document.documentElement.style;
+  st.setProperty('--fuerte', t.fuerte); st.setProperty('--medio', t.medio); st.setProperty('--claro', t.claro); st.setProperty('--borde', t.borde);
+  const cargado = $('#selModo').value === 'cargado';
+  const sel = $('#selEst').value;
+  const lista = sel === '*' ? r.establecimientos : sel ? r.establecimientos.filter(e => e.codigo === sel) : [null];
+  const f = mod === 'phr' ? hojaPHR : hojaSTARH;
+  $('#hojas').innerHTML = lista.map(e => `<section class="hoja">${f(r, e, cargado && !!e)}</section>`).join('');
+  $('#selModo').disabled = !sel;
+  document.title = (mod === 'phr' ? 'PHR' : 'STAR-H') + ' · ' + (sel === '*' ? r.nombre : sel || 'formulario en blanco');
+}
+
+$('#selMod').addEventListener('change', () => { mod = $('#selMod').value; qs.delete('est'); iniciar(false); });
+$('#selRed').addEventListener('change', () => { llenarEst(''); pintar(); });
+$('#selEst').addEventListener('change', pintar);
+$('#selModo').addEventListener('change', pintar);
+$('#btnImp').addEventListener('click', () => window.print());
+$('#btnAct').addEventListener('click', () => iniciar(true));
+iniciar(false);
+</script>
+</body>
+</html>

@@ -366,7 +366,9 @@ function vistaEstablecimiento(redN, codigo) {
       ${enCola.has(x.id) ? '<span class="ms" title="Sin enviar" style="color:#B26A00;font-size:18px">cloud_upload</span>' : ''}
       ${x.aplica === 'No aplica' ? '<span class="chip pend">No aplica</span>' : x.estado ? chipEstado(x.estado) : '<span class="chip pend">Pendiente</span>'}</button>`).join('')}</div>`).join('')
       || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan ítems pendientes en este establecimiento!' : 'No hay ítems con este filtro.'}</div>`}
-    ${puede && cuenta.pend === 0 && !/Relevado|Validado/.test(e.estado) ? '<div style="margin-top:14px"><button class="btn" data-act="marcar"><span class="ms">task_alt</span>Marcar como relevado</button></div>' : ''}`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <a class="btn sec" style="text-decoration:none" href="imprimir.html?m=phr&red=${encodeURIComponent(redN)}&est=${encodeURIComponent(codigo)}"><span class="ms">print</span>Imprimir formulario</a>
+      ${puede && cuenta.pend === 0 && !/Relevado|Validado/.test(e.estado) ? '<button class="btn" data-act="marcar"><span class="ms">task_alt</span>Marcar como relevado</button>' : ''}</div>`;
   const b = $('#busq');
   b.addEventListener('input', () => { busqueda = b.value; const pos = b.selectionStart; vistaEstablecimiento(redN, codigo); const nb = $('#busq'); nb.focus(); nb.setSelectionRange(pos, pos); });
   const fd = $('#fDatos');

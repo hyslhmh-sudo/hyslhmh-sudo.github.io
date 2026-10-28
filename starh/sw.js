@@ -1,8 +1,8 @@
 /* STAR-H · trabajo sin señal: guarda la app en el dispositivo.
  * Al publicar una versión nueva, cambiar el número de VERSION para que todos la reciban. */
-const VERSION = 'starh-v0.4';
-const ARCHIVOS = ['./', 'index.html', 'tablero.html', 'phr.html', 'phr-tablero.html', 'starh.js', 'config.js', 'demo-amenazas.js',
-  'logo-hysl.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
+const VERSION = 'starh-v0.5';
+const ARCHIVOS = ['./', 'index.html', 'tablero.html', 'phr.html', 'phr-tablero.html', 'imprimir.html', 'starh.js', 'config.js', 'demo-amenazas.js',
+  'logo-hysl.png', 'enc-trelew.png', 'enc-secretaria.png', 'enc-hsst.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));

@@ -446,10 +446,12 @@ function vistaEstablecimiento(redN, codigo) {
     <div class="buscar"><span class="ms">search</span><input id="busq" type="search" placeholder="Buscar amenaza" value="${S.esc(busqueda)}"></div>
     <div class="filtros">${F('pend', 'Pendientes')}${F('eval', 'Evaluadas')}${F('na', 'No aplica')}${F('altos', 'Altas y muy altas')}${F('nino', 'El Niño')}${F('todas', 'Todas')}</div>
     ${html || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan amenazas pendientes en este establecimiento!' : 'No hay amenazas con este filtro.'}</div>`}
-    ${puede ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+      <a class="btn sec" style="text-decoration:none" href="imprimir.html?m=starh&red=${encodeURIComponent(redN)}&est=${encodeURIComponent(codigo)}"><span class="ms">print</span>Imprimir formulario</a>
+    ${puede ? `
       <button class="btn sec" data-act="nueva"><span class="ms">add</span>Agregar amenaza no listada</button>
       ${cuenta.pend === 0 && e.estado !== 'Evaluado' && e.estado !== 'Validado por la Dirección' ? '<button class="btn" data-act="marcarEvaluado"><span class="ms">task_alt</span>Marcar como evaluado</button>' : ''}
-    </div>` : ''}`;
+    ` : ''}</div>`;
   const b = $('#busq');
   b.addEventListener('input', () => { busqueda = b.value; const pos = b.selectionStart; vistaEstablecimiento(redN, codigo); const nb = $('#busq'); nb.focus(); nb.setSelectionRange(pos, pos); });
   const fd = $('#fDatos');
