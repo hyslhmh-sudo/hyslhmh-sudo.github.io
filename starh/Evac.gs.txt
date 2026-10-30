@@ -224,13 +224,15 @@ function evacArmar_(ss, red, est) {
     ['Traslados y derivación'],
     ['INSTITUCIONES: instituciones que podrían recibir pacientes, contacto las 24 horas, acuerdo de derivación y cantidad ESTIMADA de camas que podrían recibir por tipo (categorías HAvBED), con el origen y la fecha de la estimación. No son camas disponibles reales: son datos hipotéticos para planificar; en una emergencia la disponibilidad se confirma con cada institución. Los pacientes evacuados no se registran acá: la planilla modelo de registro y la ficha de traslado (adaptadas de los formularios HICS 255 y 260) se imprimen o se descargan en Word desde la app.'],
     [''],
+    ['ALBERGUES: escuelas, gimnasios u otros edificios que el municipio o Protección Civil podría habilitar como albergue, con capacidad estimada, servicios, accesibilidad y centro de salud de referencia (referencia: Proyecto Esfera, 3,5 m² por persona y 1 inodoro cada 20 personas). CRITERIOS: criterios de derivación (qué sale del hospital, qué llega al hospital o al centro de salud, qué va o viene del albergue y cómo se informa al COE) para discutir y validar en la mesa conjunta del COE; vienen cargados como «Propuesto».'],
+    [''],
     ['Alcance'],
     ['Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento: los planes de evacuación de cada lugar los propone su servicio y los aprueba su Dirección.']
   ];
   ay.getRange(1, 1, txt.length, 1).setValues(txt).setWrap(true).setVerticalAlignment('top').setFontColor('#3A4A52');
   ay.setColumnWidth(1, 820);
   ay.getRange('A1').setFontSize(15).setFontWeight('bold').setFontColor(t.fuerte);
-  ['A4', 'A8', 'A12', 'A15', 'A18'].forEach(a => ay.getRange(a).setFontWeight('bold').setFontColor(t.fuerte));
+  ['A4', 'A8', 'A12', 'A15', 'A20'].forEach(a => ay.getRange(a).setFontWeight('bold').setFontColor(t.fuerte));
 
   // CAMPOS (solo la primera vez: después es de ella)
   let ca = ss.getSheetByName('CAMPOS');
@@ -281,7 +283,7 @@ function evacObj_(claves, x, fijas) {
 
 function evacCatalogo_(u) {
   exigirModulo_(u, 'EVAC');
-  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), estados: EVAC.ESTADOS, defInst: evacDefCampos_(EVAC_INST), camas: EVAC_CAMAS, redes: [] };
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), estados: EVAC.ESTADOS, defInst: evacDefCampos_(EVAC_INST), defAlb: evacDefCampos_(EVAC_ALB), defCrit: evacDefCampos_(EVAC_CRIT), camas: EVAC_CAMAS, redes: [] };
   evacRedes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
     const ss = SpreadsheetApp.openById(r.id);
     const E = evacLeerHoja_(ss.getSheetByName('ESTABLECIMIENTOS')), D = evacLeerHoja_(ss.getSheetByName('DEPENDENCIAS'));
@@ -289,7 +291,7 @@ function evacCatalogo_(u) {
     if (!est.length) return;
     const cods = est.map(e => e.codigo);
     const inst = evacLeerFijas_(ss, 'INSTITUCIONES');
-    salida.redes.push({ nombre: r.nombre, instituciones: inst, puedeInst: u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)), planilla: u.rol === 'Administración' ? 'https://docs.google.com/spreadsheets/d/' + r.id + '/edit' : '', campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
+    salida.redes.push({ nombre: r.nombre, instituciones: inst, albergues: evacLeerFijas_(ss, 'ALBERGUES'), criterios: evacLeerFijas_(ss, 'CRITERIOS'), puedeInst: u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)), planilla: u.rol === 'Administración' ? 'https://docs.google.com/spreadsheets/d/' + r.id + '/edit' : '', campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
   });
   return salida;
 }
@@ -376,6 +378,52 @@ const EVAC_INST = [
  .concat([['camas_origen', 'Origen de la estimación', 'lista', 'Convenio o acuerdo;Consulta a la institución;Estimación propia;Dato histórico;s/d'],
           ['camas_fecha', 'Fecha de la estimación', 'texto'], ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Actualizado por', 'texto']]);
 
+/* ---------- Albergues (centros de evacuados): base orientadora ----------
+ * Escuelas, gimnasios, clubes u otros edificios que el municipio o Protección Civil podría habilitar.
+ * Referencias: Proyecto Esfera, Manual 2018 (3,5 m² cubiertos por persona; 15 litros de agua por persona y por día;
+ * 1 inodoro cada 20 personas); OPS/OMS y guías de albergues; FEMA FNSS 2010 (apoyos para personas con necesidades funcionales). */
+const EVAC_ALB = [
+  ['id', 'ID', 'texto'], ['nombre', 'Albergue (nombre del edificio)', 'texto'],
+  ['tipo', 'Tipo de edificio', 'lista', 'Escuela;Gimnasio o polideportivo;Club;Salón comunitario o vecinal;Iglesia o templo;Otro'],
+  ['localidad', 'Localidad', 'texto'], ['direccion', 'Dirección', 'texto'],
+  ['habilita', 'Quién lo habilita o administra', 'texto'], ['contacto', 'Contacto (nombre y cargo)', 'texto'], ['tel', 'Teléfono', 'telefono'],
+  ['zona_riesgo', 'Está en zona inundable o de riesgo', 'lista', 'No;Sí;s/d'],
+  ['superficie', 'Superficie cubierta utilizable (m²)', 'numero'], ['capacidad', 'Capacidad estimada (personas)', 'numero'],
+  ['inodoros', 'Inodoros', 'numero'], ['duchas', 'Duchas', 'numero'],
+  ['agua', 'Agua', 'lista', 'Red;Tanque;Red y tanque;Sin agua;s/d'], ['energia', 'Energía', 'lista', 'Red;Red y grupo electrógeno;Sin energía;s/d'],
+  ['calefaccion', 'Calefacción', 'lista', 'Sí;No;s/d'], ['cocina', 'Cocina', 'lista', 'Sí;No;s/d'],
+  ['accesible', 'Accesible (rampa, baño accesible)', 'lista', 'Sí;Parcial;No;s/d'],
+  ['espacio_salud', 'Espacio para atención de salud o enfermería', 'lista', 'Sí;No;s/d'], ['aislamiento', 'Espacio para aislar casos', 'lista', 'Sí;No;s/d'],
+  ['necesidades', 'Puede recibir personas con necesidades de salud o funcionales', 'lista', 'Sí, con apoyos;Solo autónomos;No;s/d'],
+  ['caps_ref', 'Centro de salud de referencia (código o nombre)', 'texto'], ['distancia_hosp', 'Distancia al hospital (km)', 'numero'],
+  ['origen', 'Origen del dato', 'lista', 'Relevamiento propio;Municipio o Protección Civil;Ministerio de Educación;Estimación;s/d'], ['fecha_dato', 'Fecha del dato', 'texto'],
+  ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Actualizado por', 'texto']
+];
+
+/* ---------- Criterios de derivación para validar con el COE (mesa conjunta) ---------- */
+const EVAC_CRIT = [
+  ['id', 'ID', 'texto'],
+  ['sentido', 'Sentido', 'lista', 'Sale del hospital;Llega al hospital o centro de salud;Desde el albergue a salud;Información al COE'],
+  ['grupo', 'Grupo de personas', 'texto'], ['criterio', 'Criterio para incluirlas', 'largo'], ['destino', 'Destino sugerido', 'texto'],
+  ['condiciones', 'Condiciones del traslado (acompañante, medicación, equipos, seguimiento)', 'largo'],
+  ['decide', 'Quién decide', 'texto'], ['informa', 'Cómo y a quién se informa', 'largo'], ['fuente', 'Fundamento o fuente', 'texto'],
+  ['estado', 'Estado', 'lista', 'Propuesto;En discusión;Validado por el COE;Descartado'], ['fecha_val', 'Fecha de validación', 'texto'], ['acta', 'Acta o reunión', 'texto'],
+  ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Actualizado por', 'texto']
+];
+// Propuesta inicial (estado «Propuesto»): se discute, corrige y valida en la mesa conjunta del COE.
+const EVAC_CRIT_BASE = [
+  ['Sale del hospital', 'Internados estables y autónomos (alta anticipada)', 'Sin signos vitales alterados, sin necesidad de intervenciones que solo se hacen en internación (oxígeno, monitoreo, medicación endovenosa, cirugía urgente) y con tratamiento que puede seguir fuera del hospital. Lo evalúa el equipo tratante con una lista de verificación.', 'Domicilio si la vivienda es segura; si no, albergue general', 'Indicaciones por escrito, medicación para los días acordados, turno de control en el centro de salud de referencia y acompañante si hace falta.', 'Equipo tratante y jefe de servicio, con el comando del incidente del hospital', 'Parte al COE: cantidad de altas anticipadas y destino (domicilio o albergue).', 'Triaje inverso (Kelen, Johns Hopkins); lista EDAC (Feizolahzadeh y col., 2019)'],
+  ['Sale del hospital', 'Personas con necesidades funcionales sin indicación de internación (silla de ruedas, oxígeno domiciliario, cuidados básicos)', 'No necesitan cuidados de internación; necesitan apoyos (equipos, energía eléctrica, ayuda para la vida diaria).', 'Albergue general con apoyos (accesible, con energía y con espacio de salud)', 'Acompañante o cuidador, equipos y consumibles, energía para equipos, seguimiento del centro de salud de referencia.', 'Equipo tratante con el responsable de albergues del COE', 'Ficha de derivación a albergue; el COE confirma el albergue antes del traslado.', 'FEMA, Guía FNSS (2010): no derivar a un establecimiento de salud solo por una discapacidad'],
+  ['Sale del hospital', 'Pacientes que necesitan seguir internados (no críticos)', 'Requieren internación y el hospital debe liberar camas o evacuar el sector.', 'Otra institución receptora, según la capacidad estimada', 'Ficha de traslado del paciente, historia clínica y medicación; confirmación telefónica previa con la institución.', 'Comando del incidente del hospital', 'Registro de pacientes evacuados; el COE sabe a qué institución va cada grupo.', 'HICS 255 y 260; OPS, EVAC-H (2024)'],
+  ['Sale del hospital', 'Pacientes críticos o con soporte vital', 'Ventilación mecánica, drogas vasoactivas, terapia intensiva o neonatología.', 'Institución con terapia intensiva', 'Móvil de alta complejidad con equipo de traslado; confirmación previa de cama; acompaña la ficha de traslado.', 'Jefe de terapia con el comando del incidente', 'Aviso inmediato al COE y a la institución receptora.', 'OPS, EVAC-H (2024): áreas críticas'],
+  ['Llega al hospital o centro de salud', 'Evacuados con enfermedades crónicas en riesgo (diálisis, oxígeno-dependientes, insulina, sin luz o sin agua)', 'Vivienda afectada o sin energía o agua y tratamiento que no puede interrumpirse.', 'Resguardo preventivo en hospital o centro de salud, o albergue con energía y apoyo de salud', 'Traer medicación y equipos; registrar al ingreso; definir quién hace el seguimiento.', 'Salud con el COE (mesa conjunta)', 'Listado de personas en resguardo preventivo, por establecimiento.', 'Caso Tucumán (Ministerio de Salud Pública, marzo de 2026)'],
+  ['Llega al hospital o centro de salud', 'Embarazadas a término evacuadas', 'Fecha probable de parto cercana o embarazo de riesgo.', 'Hospital con maternidad', 'Traslado programado con su documentación.', 'Salud con el COE', 'Aviso a la maternidad y al COE.', 'Guía de albergues, Ministerio de la Protección Social de Colombia'],
+  ['Llega al hospital o centro de salud', 'Lesionados del evento (víctimas múltiples)', 'Clasificación en el lugar (triage) y derivación según gravedad.', 'Guardia del hospital según capacidad; leves al centro de salud', 'Registro de ingresos por el evento desde la llegada.', 'Sistema de emergencias prehospitalarias con el comando del incidente', 'El hospital informa al COE ingresos, gravedad y capacidad.', 'HICS 254 (registro de víctimas y pacientes)'],
+  ['Desde el albergue a salud', 'Personas del albergue con síntomas de alarma o cuadros agudos', 'Signos de alarma, embarazadas, niños pequeños, adultos mayores o enfermos crónicos descompensados.', 'Centro de salud de referencia del albergue o guardia, según gravedad', 'Aviso previo al centro de salud; vuelve al albergue con indicaciones (contrarreferencia).', 'Referente de salud del albergue', 'Novedades al COE en el parte periódico.', 'Guía de albergues (Colombia); OPS'],
+  ['Desde el albergue a salud', 'Casos de enfermedad transmisible en el albergue', 'Fiebre, diarrea, cuadros respiratorios o lesiones de piel en varias personas.', 'Aislamiento en el albergue o derivación, según indicación de salud', 'Espacio de aislamiento; vigilancia epidemiológica; agua segura e higiene.', 'Salud (vigilancia epidemiológica)', 'Notificación inmediata a epidemiología y al COE.', 'Proyecto Esfera (2018); manual de refugios temporales (México)'],
+  ['Información al COE', 'Parte periódico de derivaciones', 'Durante toda la emergencia.', 'Mesa conjunta del COE', 'Se usa la planilla «Informe de derivaciones al COE».', 'Comando del incidente de cada establecimiento', 'Frecuencia a acordar con el COE (por ejemplo, cada 6 o 12 horas) y ante cada novedad importante.', 'Sistema de comando de incidentes hospitalario (HICS)']
+];
+
 function evacHojaFija_(ss, nombre, def, t, i) {
   let sh = ss.getSheetByName(nombre);
   if (!sh) {
@@ -403,6 +451,15 @@ function evacHojaFija_(ss, nombre, def, t, i) {
 function evacTraslados_(ss, red) {
   const t = /trelew/i.test(red) ? { fuerte: '#0D313F' } : { fuerte: '#B8441A' };
   evacHojaFija_(ss, 'INSTITUCIONES', EVAC_INST, t, 4).setColumnWidth(2, 260);
+  evacHojaFija_(ss, 'ALBERGUES', EVAC_ALB, t, 5).setColumnWidth(2, 240);
+  const cr = evacHojaFija_(ss, 'CRITERIOS', EVAC_CRIT, t, 6);
+  cr.setColumnWidth(3, 220); cr.setColumnWidth(4, 320); cr.setColumnWidth(5, 220);
+  if (cr.getLastRow() < 3) {
+    const cl = cr.getRange(2, 1, 1, cr.getLastColumn()).getDisplayValues()[0], k = ['sentido', 'grupo', 'criterio', 'destino', 'condiciones', 'decide', 'informa', 'fuente'];
+    const filas = EVAC_CRIT_BASE.map((b, i) => { const v = cl.map(() => ''); v[cl.indexOf('id')] = 'C-' + String(i + 1).padStart(2, '0'); k.forEach((kk, j) => v[cl.indexOf(kk)] = b[j]); v[cl.indexOf('estado')] = 'Propuesto'; return v; });
+    cr.getRange(3, 1, filas.length, cl.length).setValues(filas).setWrap(true).setVerticalAlignment('top');
+    siguienteNumero_('EVAC|' + ss.getId() + '|C', filas.length);
+  }
 }
 
 function evacDefCampos_(def) { return def.map(d => ({ clave: d[0], campo: d[1], tipo: d[2], opciones: d[3] ? d[3].split(';') : [] })); }
@@ -449,13 +506,21 @@ function evacGuardarFila_(u, req, hoja, def, pref, ancho, puede) {
     if (ia >= 0) v[ia] = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm');
     if (ip >= 0) v[ip] = u.nombre;
     sh.getRange(fila, 1, 1, claves.length).setValues([v]);
-    registrar_(u, 'EVAC · ' + 'Institución receptora', req.red, datos.codigo || '', id, String(datos.nombre || '').slice(0, 80));
+    registrar_(u, 'EVAC · ' + ({ INSTITUCIONES: 'Institución receptora', ALBERGUES: 'Albergue', CRITERIOS: 'Criterio de derivación' }[hoja] || hoja), req.red, datos.codigo || '', id, String(datos.nombre || '').slice(0, 80));
     return { ok: true, id: id };
   } finally { lock.releaseLock(); }
 }
 function evacInstitucion_(u, req) {
   exigirModulo_(u, 'EVAC');
   return evacGuardarFila_(u, req, 'INSTITUCIONES', EVAC_INST, 'I', 3, r => u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)));
+}
+function evacAlbergue_(u, req) {
+  exigirModulo_(u, 'EVAC');
+  return evacGuardarFila_(u, req, 'ALBERGUES', EVAC_ALB, 'A', 3, r => u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)));
+}
+function evacCriterio_(u, req) {
+  exigirModulo_(u, 'EVAC');
+  return evacGuardarFila_(u, req, 'CRITERIOS', EVAC_CRIT, 'C', 2, r => u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)));
 }
 function evacLeerFijas_(ss, hoja) {
   const sh = ss.getSheetByName(hoja); if (!sh) return [];

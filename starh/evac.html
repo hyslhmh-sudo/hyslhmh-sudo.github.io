@@ -270,6 +270,8 @@ function render() {
   if (p[0] === 'ayuda') return vistaAyuda();
   if (p[0] === 'est' && red(p[1])) return vistaEst(p[1], p[2]);
   if (p[0] === 'inst') return vistaInst();
+  if (p[0] === 'albergues') return vistaAlb();
+  if (p[0] === 'criterios') return vistaCrit();
   if (p[0] === 'modelos' || p[0] === 'evacuados') return vistaModelos();
   return vistaInicio();
 }
@@ -328,7 +330,7 @@ async function guardar(req, ok) {
 /* ---------- traslados y derivación (base orientadora para planificar) ---------- */
 function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''; }
 function secTabs(act) {
-  return `<div class="secciones-tabs">${[['fichas', '#/', 'domain', 'Fichas de evacuación'], ['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['modelos', '#/modelos', 'description', 'Planillas modelo de traslado']]
+  return `<div class="secciones-tabs">${[['fichas', '#/', 'domain', 'Fichas de evacuación'], ['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['crit', '#/criterios', 'handshake', 'Criterios con el COE'], ['modelos', '#/modelos', 'description', 'Planillas modelo']]
     .map(t => `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>`;
 }
 function redVista() { if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual); return red(redActual); }
@@ -359,25 +361,108 @@ function vistaInst() {
   const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaInst(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
 }
 let borradorFila = null;
+function cerrarFila() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; borradorFila = null; }
+
+/* ---------- albergues y criterios con el COE ---------- */
+const TIPOS_FILA = {
+  inst: { lista: 'instituciones', def: 'defInst', api: 'evac_institucion', nuevo: 'Nueva institución receptora', titulo: x => x.nombre },
+  alb: { lista: 'albergues', def: 'defAlb', api: 'evac_albergue', nuevo: 'Nuevo albergue', titulo: x => x.nombre },
+  crit: { lista: 'criterios', def: 'defCrit', api: 'evac_criterio', nuevo: 'Nuevo criterio de derivación', titulo: x => (x.id ? x.id + ' · ' : '') + (x.grupo || '') }
+};
+const ESFERA_M2 = 3.5, ESFERA_INODORO = 20;
+const capEsfera = x => { const m = num(x.superficie), i = num(x.inodoros); return { m2: m ? Math.floor(m / ESFERA_M2) : 0, ino: i ? i * ESFERA_INODORO : 0 }; };
+const semSN = (v, si, no) => !v || v === 's/d' ? '' : /^Sí/.test(v) ? `<span class="sem v">${E(si)}</span>` : /^(No|Sin)/.test(v) ? `<span class="sem n">${E(no)}</span>` : `<span class="sem a">${E(v)}</span>`;
+function vistaAlb() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Albergues · ${E(r.nombre)}<small>Escuelas, gimnasios y otros edificios · capacidad estimada</small>`;
+  const todos = r.albergues || [];
+  const l = todos.filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.tipo).toLowerCase().indexOf(q.toLowerCase()) >= 0);
+  const tot = todos.reduce((a, x) => a + num(x.capacidad), 0), conSalud = todos.filter(x => /^Sí/.test(x.necesidades || '')).length;
+  app.innerHTML = `${redesTabs(r)}${secTabs('alb')}
+    <div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: edificios que el municipio o Protección Civil <b>podría</b> habilitar como albergue, con capacidad estimada. La habilitación y la apertura las decide el COE.</div>
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar albergue, tipo o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="alb"><span class="ms">add</span>Agregar albergue</button>' : ''}
+      <button class="btn sec" data-act="impAlb"><span class="ms">print</span>Imprimir directorio</button></div>
+    <div class="kpis"><div class="tarjeta kpi"><b>${todos.length}</b><span>albergues cargados</span></div><div class="tarjeta kpi"><b>${tot}</b><span>personas (capacidad estimada)</span></div>
+      <div class="tarjeta kpi"><b>${conSalud}</b><span>pueden recibir personas con necesidades de salud</span></div><div class="tarjeta kpi"><b>${todos.filter(x => x.zona_riesgo === 'Sí').length}</b><span>en zona inundable o de riesgo</span></div></div>
+    <div class="lista">${l.map(x => { const c = capEsfera(x);
+      return `<button class="tarjeta inst" data-fila="alb" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${x.zona_riesgo === 'Sí' ? '<span class="sem r">Zona de riesgo</span>' : ''}${semSN(x.necesidades, 'Recibe necesidades de salud', 'Sin apoyos de salud')}</div>
+        <div class="sub">${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.caps_ref ? ' · centro de salud: ' + E(x.caps_ref) : ''}</div>
+        <div class="pie"><span><b>${E(x.capacidad || 's/d')}</b> personas (estimado)</span>${c.m2 ? `<span>por superficie (Esfera): ${c.m2}</span>` : ''}${c.ino ? `<span>por inodoros (Esfera): ${c.ino}</span>` : ''}${semSN(x.energia === 'Red y grupo electrógeno' ? 'Sí' : x.energia === 'Sin energía' ? 'No' : '', 'Grupo electrógeno', 'Sin energía')}${semSN(x.accesible, 'Accesible', 'No accesible')}${semSN(x.calefaccion, 'Calefacción', 'Sin calefacción')}</div></button>`; }).join('')
+      || '<div class="tarjeta vacio">Todavía no hay albergues cargados.</div>'}</div>`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaAlb(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+}
+const semEstadoCrit = v => ({ 'Validado por el COE': 'v', 'En discusión': 'a', 'Propuesto': 'g', 'Descartado': 'n' }[v] ? `<span class="sem ${{ 'Validado por el COE': 'v', 'En discusión': 'a', 'Propuesto': 'g', 'Descartado': 'n' }[v]}">${E(v)}</span>` : '');
+const SENTIDOS = ['Sale del hospital', 'Llega al hospital o centro de salud', 'Desde el albergue a salud', 'Información al COE'];
+function vistaCrit() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Criterios con el COE · ${E(r.nombre)}<small>Derivaciones para validar en la mesa conjunta</small>`;
+  const l = r.criterios || [];
+  const n = e => l.filter(x => x.estado === e).length;
+  app.innerHTML = `${redesTabs(r)}${secTabs('crit')}
+    <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Propuesta de criterios para acordar con el COE en la mesa conjunta: qué sale del hospital y a dónde, qué llega al hospital o al centro de salud, qué va o viene del albergue y cómo se informa. Vienen cargados como «Propuesto»; cuando el COE los valida, se cambia el estado y se anota la fecha y el acta.</div>
+    <div class="buscar">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="crit"><span class="ms">add</span>Agregar criterio</button>' : ''}
+      <button class="btn sec" data-act="impCrit"><span class="ms">print</span>Imprimir para la mesa</button><button class="btn sec" data-act="wordCrit"><span class="ms">download</span>Descargar en Word</button></div>
+    <div class="kpis"><div class="tarjeta kpi"><b>${l.length}</b><span>criterios</span></div><div class="tarjeta kpi"><b>${n('Validado por el COE')}</b><span>validados por el COE</span></div><div class="tarjeta kpi"><b>${n('En discusión')}</b><span>en discusión</span></div><div class="tarjeta kpi"><b>${n('Propuesto')}</b><span>propuestos</span></div></div>
+    ${SENTIDOS.concat(['']).map(s => { const g = l.filter(x => s ? x.sentido === s : SENTIDOS.indexOf(x.sentido) < 0); if (!g.length) return '';
+      return `<h3>${E(s || 'Otros')}</h3><div class="lista">${g.map(x => `<button class="tarjeta inst" data-fila="crit" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.grupo || 's/d')}</b>${semEstadoCrit(x.estado)}</div>
+        <div class="sub">${E(x.criterio || '')}</div><div class="pie"><span>Destino: <b>${E(x.destino || 's/d')}</b></span><span>Decide: ${E(x.decide || 's/d')}</span>${x.fecha_val ? `<span>Validado el ${E(x.fecha_val)}</span>` : ''}</div></button>`).join('')}</div>`; }).join('')
+      || '<div class="tarjeta vacio">Todavía no hay criterios cargados.</div>'}`;
+}
 function abrirFila(tipo, id) {
-  const r = redVista(), x = id ? r.instituciones.find(y => y.id === id) || {} : {};
-  const def = cat.defInst.filter(c => ['id', 'actualizado', 'por'].indexOf(c.clave) < 0);
+  const T = TIPOS_FILA[tipo], r = redVista(), x = id ? (r[T.lista] || []).find(y => y.id === id) || {} : {};
+  const def = cat[T.def].filter(c => ['id', 'actualizado', 'por'].indexOf(c.clave) < 0);
   const puede = r.puedeInst, dis = puede ? '' : 'disabled';
-  borradorFila = { tipo: 'inst', id: id || '', datos: {} };
-  const comunes = def.filter(c => !/_est$/.test(c.clave) && !/^camas_/.test(c.clave));
-  const est = def.filter(c => /^camas_/.test(c.clave));
-  const cuerpo = `<div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><div class="campos" style="padding:0">${comunes.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>
+  borradorFila = { tipo, id: id || '', datos: {} };
+  let cuerpo;
+  if (tipo === 'inst') {
+    const comunes = def.filter(c => !/_est$/.test(c.clave) && !/^camas_/.test(c.clave)), est = def.filter(c => /^camas_/.test(c.clave));
+    cuerpo = `<div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><div class="campos" style="padding:0">${comunes.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>
     <div class="tarjeta" style="padding:10px 14px"><b style="color:#8E1B1B">Capacidad estimada de recepción</b><p class="sub" style="margin:2px 0 6px">Cuántos pacientes de cada tipo podría recibir la institución en una evacuación. Es un dato hipotético para planificar (categorías HAvBED), no la disponibilidad real del momento.</p>
     <table class="grilla-camas"><tr><th>Tipo de cama</th><th>Camas estimadas</th></tr>${cat.camas.map(c => `<tr><td>${E(c[1])}</td>
       <td><input data-k="${c[0]}_est" inputmode="numeric" value="${E(x[c[0] + '_est'] || '')}" ${dis}></td></tr>`).join('')}</table>
     <div class="campos" style="padding:6px 0 0">${est.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>`;
-  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${id ? E(x.nombre) : 'Nueva institución receptora'}</b><button class="icono" data-act="cerrarFila" aria-label="Cerrar"><span class="ms">close</span></button></div>
+  } else {
+    const ayuda = tipo === 'alb' ? '<p class="sub" style="margin:4px 2px 8px">Referencia (Proyecto Esfera, 2018): 3,5 m² cubiertos por persona, 1 inodoro cada 20 personas y 15 litros de agua por persona y por día. Con la superficie y los inodoros la app calcula una capacidad orientativa.</p>'
+      : '<p class="sub" style="margin:4px 2px 8px">Cuando el COE valida el criterio, cambiá el estado a «Validado por el COE» y anotá la fecha y el acta o reunión.</p>';
+    cuerpo = `${ayuda}<div class="tarjeta" style="padding:6px 14px 10px"><div class="campos" style="padding:0">${def.map(c => campoHTML(c, x[c.clave] != null ? x[c.clave] : (c.clave === 'estado' ? 'Propuesto' : ''), dis, tipo + '_')).join('')}</div></div>`;
+  }
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${id ? E(T.titulo(x) || 's/d') : T.nuevo}</b><button class="icono" data-act="cerrarFila" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="dlg-cuerpo" id="fichaFila">${cuerpo}</div>
     <div class="dlg-pie">${id && puede ? '<button class="btn peligro" data-act="borrarFila"><span class="ms">delete</span>Quitar</button>' : ''}<button class="btn sec" data-act="cerrarFila">Cerrar</button>${puede ? '<button class="btn" data-act="guardarFila"><span class="ms">save</span>Guardar</button>' : ''}</div></div>`;
   $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden';
   atarCampos($('#fichaFila'), borradorFila);
 }
-function cerrarFila() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; borradorFila = null; }
+function imprimirAlb() {
+  const r = redVista();
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">EVACUACIÓN HOSPITALARIA · ALBERGUES</div><h1>Directorio de albergues · ${E(r.nombre)}</h1>
+    <table><tr><td class="l">Albergue</td><td class="l">Contacto</td><td class="l">Capacidad estimada</td><td class="l">Servicios</td><td class="l">Salud</td></tr>
+    ${(r.albergues || []).map(x => { const c = capEsfera(x); return `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · '))}${x.zona_riesgo === 'Sí' ? '<br><b>En zona de riesgo</b>' : ''}</td><td>${E(x.habilita || '')}<br>${E(x.contacto || '')}<br>${E(x.tel || '')}</td>
+      <td>${E(x.capacidad || 's/d')} personas${c.m2 ? '<br>Superficie: ' + c.m2 : ''}${c.ino ? '<br>Inodoros: ' + c.ino : ''}</td><td>Agua: ${E(x.agua || 's/d')}<br>Energía: ${E(x.energia || 's/d')}<br>Calefacción: ${E(x.calefaccion || 's/d')} · Cocina: ${E(x.cocina || 's/d')}<br>Accesible: ${E(x.accesible || 's/d')}</td>
+      <td>${E(x.necesidades || 's/d')}<br>Espacio de salud: ${E(x.espacio_salud || 's/d')} · Aislamiento: ${E(x.aislamiento || 's/d')}<br>Centro de salud: ${E(x.caps_ref || 's/d')}</td></tr>`; }).join('') || '<tr><td colspan="5">Sin albergues cargados.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Base orientadora para planificar: la habilitación y apertura de cada albergue las decide el COE. Capacidad orientativa según Proyecto Esfera (2018): 3,5 m² cubiertos por persona y 1 inodoro cada 20 personas.</p>${pieImp(r)}</section>`;
+  setTimeout(() => window.print(), 300);
+}
+function critHTML(r, word) {
+  const l = r.criterios || [], enc = word ? `<img src="https://hyslhmh-sudo.github.io/starh/${/trelew/i.test(r.nombre) ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const pie = word ? `<p style="font-size:7.5pt;color:#4B5B73;text-align:center">${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}<br><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" height="34"></p>` : pieImp(r);
+  return `<section class="hoja apaisada">${enc}<div class="kick">MESA CONJUNTA DEL COE · CRITERIOS DE DERIVACIÓN</div><h1>${E(r.nombre)} · Reunión del ___/___/______</h1>
+    <table class="reg"><tr><td class="l">Sentido</td><td class="l">Grupo de personas</td><td class="l">Criterio</td><td class="l">Destino sugerido</td><td class="l">Condiciones</td><td class="l">Decide</td><td class="l">Cómo se informa</td><td class="l">Estado</td><td class="l">Validación (fecha y firma)</td></tr>
+    ${l.map(x => `<tr><td>${E(x.sentido)}</td><td><b>${E(x.grupo)}</b></td><td>${E(x.criterio)}</td><td>${E(x.destino)}</td><td>${E(x.condiciones)}</td><td>${E(x.decide)}</td><td>${E(x.informa)}</td><td>${E(x.estado)}</td><td>${E([x.fecha_val, x.acta].filter(Boolean).join(' · '))}</td></tr>`).join('') || '<tr><td colspan="9">Sin criterios cargados.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Propuesta para discutir y validar en la mesa conjunta del COE. Fuentes: triaje inverso (Kelen, Johns Hopkins); lista EDAC (Feizolahzadeh y col., 2019); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Proyecto Esfera (2018). Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>${pie}</section>`;
+}
+function bajarWord(nombre, cuerpo, apaisada) {
+  const r = redVista();
+  const css = `@page Section1{size:${apaisada ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:36pt 32pt}div.Section1{page:Section1}
+    body{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:9pt;color:#172B4D}h1{font-size:12pt;color:#8E1B1B;margin:2pt 0}h2{font-size:10pt;color:#8E1B1B;border-bottom:1.5pt solid #D32F2F;margin:8pt 0 3pt}
+    .kick{font-size:7.5pt;color:#C62828;font-weight:bold;letter-spacing:1pt}table{width:100%;border-collapse:collapse}td{border:1pt solid #E9C9C6;padding:3pt 5pt;vertical-align:top;font-size:8.5pt}
+    td.l{background:#FDECEA;color:#7F1D1D;font-weight:bold}.f260 td.l{width:42%}.f260 td{height:18pt}.reg td{height:22pt}.reg td.l{height:auto;font-size:7.5pt}`;
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(nombre)}</title>
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${cuerpo}</div></body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre + ' - ' + r.nombre + '.doc';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Descargado. Se abre con Word; para editarlo, tocá «Habilitar edición».');
+}
 
 /* ---------- planillas modelo (no se registran pacientes en la app) ---------- */
 const OPC = {
@@ -389,17 +474,23 @@ const OPC = {
   movil: ['Alta complejidad', 'Avanzado', 'Básico', 'Utilitario o particular', 'Aéreo'],
   sino: ['Sí', 'No']
 };
+const MODELOS = {
+  registro: { ico: 'list_alt', titulo: 'Registro de pacientes evacuados', apaisada: true, txt: 'Lo que sale del hospital. Una fila por paciente: servicio de origen, prioridad, movilidad, destino, móvil, horarios y llegada confirmada. Hoja apaisada. Adaptado de HICS 255.' },
+  ficha: { ico: 'assignment_ind', titulo: 'Ficha de traslado del paciente', txt: 'Una por paciente que va a otra institución; lo acompaña y la última parte la completa quien lo recibe. Adaptado de HICS 260 y OPS EVAC-H.' },
+  ingresos: { ico: 'login', titulo: 'Registro de ingresos por el evento', apaisada: true, txt: 'Lo que llega al hospital o al centro de salud: lesionados, evacuados en resguardo preventivo, embarazadas, personas derivadas desde albergues. Una fila por persona, con procedencia, clasificación y destino final. Adaptado de HICS 254.' },
+  albergue: { ico: 'night_shelter', titulo: 'Ficha de derivación a albergue', txt: 'Para la persona que sale del hospital o del centro de salud hacia un albergue: cuidados y apoyos que necesita, medicación entregada, centro de salud que hace el seguimiento, y contrarreferencia si tiene que volver.' },
+  parte: { ico: 'campaign', titulo: 'Informe de derivaciones al COE', txt: 'Parte periódico para la mesa conjunta: cuántos llegaron y de dónde, cuántos salieron y a dónde, capacidad estimada que queda, necesidades y próximos pasos. La frecuencia se acuerda con el COE.' }
+};
 function vistaModelos() {
   borrador = null; const r = redVista();
-  $('#titulo').innerHTML = `Planillas modelo de traslado · ${E(r.nombre)}<small>Para imprimir o descargar en Word</small>`;
+  $('#titulo').innerHTML = `Planillas modelo · ${E(r.nombre)}<small>Para imprimir o descargar en Word</small>`;
   const tarjeta = (id, ico, tit, txt) => `<div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><div class="est-cab"><b><span class="ms" style="color:#C62828;margin-right:6px">${ico}</span>${tit}</b></div>
     <p class="sub" style="margin:6px 0 10px">${txt}</p><div style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn" data-act="modImp" data-mod="${id}"><span class="ms">print</span>Imprimir</button>
     <button class="btn sec" data-act="modWord" data-mod="${id}"><span class="ms">download</span>Descargar en Word</button></div></div>`;
   app.innerHTML = `${redesTabs(r)}${secTabs('modelos')}
     <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Los pacientes no se registran en la app. Estas planillas se imprimen o se descargan en Word para completarlas a mano o en la computadora en un simulacro o en una emergencia, y quedan en el establecimiento.</div>
-    ${tarjeta('registro', 'list_alt', 'Registro de pacientes evacuados', 'Una fila por paciente: servicio de origen, prioridad, movilidad, destino, móvil, horarios y llegada confirmada. Hoja apaisada. Adaptado de HICS 255.')}
-    ${tarjeta('ficha', 'assignment_ind', 'Ficha de traslado del paciente', 'Una por paciente; acompaña al paciente y la completa en la última parte quien lo recibe. Adaptado de HICS 260 y OPS EVAC-H.')}`;
+    ${Object.keys(MODELOS).map(k => tarjeta(k, MODELOS[k].ico, MODELOS[k].titulo, MODELOS[k].txt)).join('')}`;
 }
 function modeloHTML(id, r, word) {
   const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
@@ -407,6 +498,35 @@ function modeloHTML(id, r, word) {
   const fila = (l, val) => `<tr><td class="l">${E(l)}</td><td class="v">${val || ''}</td></tr>`;
   const enc = word ? `<img src="https://hyslhmh-sudo.github.io/starh/${/trelew/i.test(r.nombre) ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
   const pie = word ? `<p style="font-size:7.5pt;color:#4B5B73;text-align:center">${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}<br><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" height="34"></p>` : pieImp(r);
+  const cols = (c, n) => `<table class="reg"><tr>${c.map(x => `<td class="l">${x}</td>`).join('')}</tr>${Array.from({ length: n }, (_, i) => `<tr>${c.map((x, j) => `<td>${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  const nota = t => `<p style="font-size:7.5pt;color:#4B5B73">${t}</p>`;
+  if (id === 'ingresos') {
+    return `<section class="hoja apaisada">${enc}<div class="kick">EMERGENCIA · REGISTRO DE INGRESOS POR EL EVENTO</div>
+      <h1>Establecimiento: ____________________________ Evento: ____________________ Fecha: ___/___/______ Hoja ___ de ___</h1>
+      ${cols(['N.º', 'Hora de llegada', 'Apellido y nombre (o N.º de tarjeta de triage)', 'DNI o HC', 'Edad · sexo', 'Procedencia', 'Llegó por', 'Clasificación', 'Motivo', 'Destino final · hora', 'Avisado al COE'], 14)}
+      ${nota('Procedencia: lugar del evento · domicilio · albergue (nombre) · otra institución. Llegó por: ambulancia · medios propios · fuerzas de seguridad o bomberos · otro. Clasificación: rojo (inmediato) · amarillo (diferido) · verde (leve) · negro. Motivo: lesionado · resguardo preventivo (enfermedad crónica sin luz o agua) · embarazada · derivado desde albergue · otro. Destino final: alta · internación · quirófano · derivado (dónde) · albergue · morgue. Adaptado de HICS 254 (Disaster Victim/Patient Tracking, California EMSA, 2014). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Responsable del registro: ______________________ Firma: ____________')}${pie}</section>`;
+  }
+  if (id === 'albergue') {
+    return `<section class="hoja">${enc}<div class="kick">EMERGENCIA · FICHA DE DERIVACIÓN A ALBERGUE</div><h1>Persona: ______________________________</h1>
+      <div style="color:#4B5B73">Acompaña a la persona y queda en el albergue. Albergue: ______________________________</div>
+      <h2>1. Persona</h2><table class="f260">${fila('Apellido y nombre')}${fila('DNI o historia clínica · edad')}${fila('Grupo familiar o acompañante (nombre y teléfono)')}${fila('Establecimiento y servicio que deriva')}</table>
+      <h2>2. Motivo</h2><table class="f260">${fila('Motivo', ['Alta anticipada', 'Vivienda afectada', 'Sin luz o sin agua en la vivienda', 'Otro'].map(cas).join(' '))}${fila('Criterio del COE aplicado (código)')}${fila('Diagnóstico o problema de salud principal')}</table>
+      <h2>3. Cuidados y apoyos que necesita</h2><table class="f260">${fila('Movilidad', ['Autónomo', 'Con apoyo', 'Silla de ruedas', 'Postrado'].map(cas).join(' '))}${fila('Equipos', ['Oxígeno', 'Concentrador (necesita energía)', 'Nebulizador', 'Otro'].map(cas).join(' '))}${fila('Ayuda para la vida diaria (comer, higiene, vestirse)', ops('sino'))}${fila('Dieta especial')}${fila('Medicación entregada (nombre, dosis, para cuántos días)')}${fila('Signos de alarma por los que tiene que volver a consultar')}</table>
+      <h2>4. Seguimiento</h2><table class="f260">${fila('Centro de salud que hace el seguimiento')}${fila('Próximo control (fecha y lugar)')}${fila('Referente de salud del albergue avisado (nombre · hora)')}${fila('COE avisado (hora)')}</table>
+      <h2>5. Contrarreferencia (si vuelve a salud)</h2><table class="f260">${fila('Fecha y hora · motivo')}${fila('Derivado a')}${fila('Quién deriva (nombre y firma)')}</table>
+      ${nota('Las personas con necesidades funcionales (equipos, energía, ayuda para la vida diaria) no se derivan a un establecimiento de salud solo por esa razón: se ubican en albergues con apoyos (FEMA, Guía FNSS, 2010). Datos de salud: uso exclusivo para la gestión de la emergencia. Derivó: ______________________ Firma: ____________')}${pie}</section>`;
+  }
+  if (id === 'parte') {
+    const tabla = (t, filas) => `<h2>${t}</h2><table class="f260">${filas.map(f => fila(f)).join('')}</table>`;
+    return `<section class="hoja">${enc}<div class="kick">MESA CONJUNTA DEL COE · INFORME DE DERIVACIONES</div><h1>Establecimiento: ______________________________</h1>
+      <div style="color:#4B5B73">Evento: ____________________ Parte N.º ____ · Período: desde ___/___ ___:___ h hasta ___/___ ___:___ h</div>
+      ${tabla('1. Llegaron al establecimiento', ['Lesionados del evento (rojo · amarillo · verde · negro)', 'Resguardo preventivo (enfermedades crónicas, sin luz o agua)', 'Embarazadas', 'Derivados desde albergues', 'Derivados desde otras instituciones'])}
+      ${tabla('2. Salieron del establecimiento', ['Altas a domicilio', 'Altas anticipadas a albergue (cuál y cuántos)', 'Derivados a otra institución (cuál y cuántos)', 'Críticos trasladados con soporte vital', 'Fallecidos'])}
+      ${tabla('3. Capacidad estimada que queda', ['Camas de internación general · terapia intensiva · pediatría · neonatología', 'Guardia: funcionamiento y demora', 'Servicios afectados (agua, energía, gases, accesos)'])}
+      ${tabla('4. Necesidades y pedidos al COE', ['Traslados (móviles) que se necesitan', 'Insumos, medicación o personal', 'Albergues: personas que se necesita ubicar y con qué apoyos'])}
+      ${tabla('5. Próximos pasos y próximo parte', ['Acciones previstas', 'Próximo parte (fecha y hora)'])}
+      ${nota('Frecuencia a acordar con el COE (por ejemplo, cada 6 o 12 horas) y ante cada novedad importante. Basado en el sistema de comando de incidentes hospitalario (HICS) y en los registros de ingresos (HICS 254) y de evacuados (HICS 255). Informó: ______________________ Cargo: ______________ Firma: ____________')}${pie}</section>`;
+  }
   if (id === 'registro') {
     const cols = ['N.º', 'Paciente (apellido y nombre)', 'DNI o HC', 'Servicio de origen', 'Prioridad', 'Movilidad', 'Destino (zona segura o institución)', 'Hora de aviso', 'Móvil o patente', 'Hora de salida', 'HC · med. · familia', 'Llegada confirmada · hora'];
     return `<section class="hoja apaisada">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · REGISTRO DE PACIENTES EVACUADOS</div>
@@ -425,20 +545,7 @@ function modeloHTML(id, r, word) {
     <p style="font-size:7.5pt;color:#4B5B73">Adaptado de HICS 260 (Patient Evacuation Tracking Form, California EMSA, 2014) y de OPS, EVAC-H (2024). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Preparó: ______________________ Firma: ____________</p>${pie}</section>`;
 }
 function modeloImprimir(id) { $('#imp').innerHTML = modeloHTML(id, redVista(), false); setTimeout(() => window.print(), 300); }
-function modeloWord(id) {
-  const r = redVista(), apa = id === 'registro';
-  const css = `@page Section1{size:${apa ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:36pt 32pt}div.Section1{page:Section1}
-    body{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:9pt;color:#172B4D}h1{font-size:12pt;color:#8E1B1B;margin:2pt 0}h2{font-size:10pt;color:#8E1B1B;border-bottom:1.5pt solid #D32F2F;margin:8pt 0 3pt}
-    .kick{font-size:7.5pt;color:#C62828;font-weight:bold;letter-spacing:1pt}table{width:100%;border-collapse:collapse}td{border:1pt solid #E9C9C6;padding:3pt 5pt;vertical-align:top;font-size:8.5pt}
-    td.l{background:#FDECEA;color:#7F1D1D;font-weight:bold}.f260 td.l{width:42%}.f260 td{height:18pt}.reg td{height:22pt}.reg td.l{height:auto;font-size:7.5pt}`;
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${apa ? 'Registro de pacientes evacuados' : 'Ficha de traslado del paciente'}</title>
-    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${modeloHTML(id, r, true)}</div></body></html>`;
-  const blob = new Blob(['﻿', html], { type: 'application/msword' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = (apa ? 'Registro de pacientes evacuados' : 'Ficha de traslado del paciente') + ' - ' + r.nombre + '.doc';
-  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  toast('Descargado. Se abre con Word; para editarlo, tocá «Habilitar edición».');
-}
+function modeloWord(id) { const m = MODELOS[id]; bajarWord(m.titulo, modeloHTML(id, redVista(), true), m.apaisada); }
 function encImp(r) { return /trelew/i.test(r.nombre) ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">'; }
 function pieImp(r) { return `<div class="pieimp"><div><b>${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'}</b><br>Impreso el ${S.hoy()}</div><img src="logo-hysl.png" alt="HySL"><div>${E(r.nombre)}</div></div>`; }
 function imprimirInst() {
@@ -482,24 +589,30 @@ function imprimir(modo) {
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', async ev => {
-  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep],[data-inst]'); if (!t) return;
+  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep],[data-inst],[data-fila]'); if (!t) return;
   if (t.dataset.ir) { ir(t.dataset.ir); window.scrollTo(0, 0); return; }
   if (t.dataset.red) { redActual = t.dataset.red; render(); return; }
   if (t.dataset.dep) return abrirDep(t.dataset.dep);
   if (t.dataset.inst) return abrirFila('inst', t.dataset.inst);
+  if (t.dataset.fila) return abrirFila(t.dataset.fila, t.dataset.id);
   const a = t.dataset.act;
   if (a === 'modImp') return modeloImprimir(t.dataset.mod);
   if (a === 'modWord') return modeloWord(t.dataset.mod);
   if (a === 'impInst') return imprimirInst();
   if (a === 'nuevaInst') return abrirFila('inst', '');
+  if (a === 'nuevaFila') return abrirFila(t.dataset.tipo, '');
+  if (a === 'impAlb') return imprimirAlb();
+  if (a === 'impCrit') { $('#imp').innerHTML = critHTML(redVista(), false); setTimeout(() => window.print(), 300); return; }
+  if (a === 'wordCrit') return bajarWord('Criterios de derivación para la mesa del COE', critHTML(redVista(), true), true);
   if (a === 'cerrarFila') { if (borradorFila && Object.keys(borradorFila.datos).length && !confirm('Hay cambios sin guardar. ¿Cerrar igual?')) return; return cerrarFila(); }
   if (a === 'guardarFila' || a === 'borrarFila') {
     if (a === 'borrarFila' && !confirm('¿Quitar este registro? No se puede deshacer desde la app.')) return;
     const b = borradorFila, r = redVista();
-    if (a === 'guardarFila' && b.tipo === 'inst' && !b.id && !String(b.datos.nombre || '').trim()) { toast('Falta el nombre de la institución.', true); return; }
+    if (a === 'guardarFila' && !b.id && b.tipo !== 'crit' && !String(b.datos.nombre || '').trim()) { toast('Falta el nombre.', true); return; }
+    if (a === 'guardarFila' && !b.id && b.tipo === 'crit' && !String(b.datos.grupo || '').trim()) { toast('Falta el grupo de personas.', true); return; }
     if (!navigator.onLine) { toast('Para guardar se necesita conexión.', true); return; }
     t.disabled = true;
-    try { const res = await S.api('evac_institucion', { red: r.nombre, id: b.id, borrar: a === 'borrarFila', datos: b.datos }); if (!res.ok) throw res; toast(a === 'borrarFila' ? 'Quitado.' : 'Guardado.'); borradorFila = null; cerrarFila(); await cargar(false); }
+    try { const res = await S.api(TIPOS_FILA[b.tipo].api, { red: r.nombre, id: b.id, borrar: a === 'borrarFila', datos: b.datos }); if (!res.ok) throw res; toast(a === 'borrarFila' ? 'Quitado.' : 'Guardado.'); borradorFila = null; cerrarFila(); await cargar(false); }
     catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.', true); t.disabled = false; }
     return;
   }
@@ -554,7 +667,8 @@ function vistaAyuda() {
       <li>Cuando la ficha esté completa, cambiá su estado a «Completa». «Validada» queda para cuando la revisa la Dirección o el Servicio de Higiene y Seguridad del lugar.</li>
       <li>«Imprimir en blanco» da la ficha para completar a mano en el recorrido; «Imprimir con lo cargado», la ficha con los datos.</li></ol>
     <h3>Traslados y derivación</h3><p>Es una base orientadora para planificar, no un registro en tiempo real. En <b>Instituciones receptoras</b> se cargan las instituciones que podrían recibir pacientes y la cantidad <b>estimada</b> de camas por tipo, con el origen y la fecha de la estimación; en una emergencia la disponibilidad se confirma con cada institución. Los pacientes no se registran en la app: en <b>Planillas modelo de traslado</b> se imprimen o se descargan en Word el registro de pacientes evacuados y la ficha de traslado.</p>
-    <h3>Desde la planilla</h3><p>Cada red tiene su planilla EVAC (hojas ESTABLECIMIENTOS, DEPENDENCIAS y CAMPOS). En la hoja CAMPOS se agregan, se cambian o se desactivan campos, y la app los toma sola.</p>
+    <h3>Albergues y criterios con el COE</h3><p>En <b>Albergues</b> se cargan las escuelas, gimnasios y otros edificios que el municipio o Protección Civil podría habilitar, con capacidad estimada, servicios (agua, energía, calefacción, cocina), accesibilidad, si pueden recibir personas con necesidades de salud y su centro de salud de referencia. La app calcula una capacidad orientativa según el Proyecto Esfera (3,5 m² por persona y 1 inodoro cada 20 personas). En <b>Criterios con el COE</b> está la propuesta de criterios de derivación para la mesa conjunta (qué sale del hospital, qué llega, qué va o viene del albergue y cómo se informa); se imprime o se baja en Word para la reunión y, cuando el COE valida un criterio, se cambia su estado y se anotan la fecha y el acta. En <b>Planillas modelo</b> están, además, el registro de ingresos por el evento, la ficha de derivación a albergue y el informe de derivaciones al COE.</p>
+    <h3>Desde la planilla</h3><p>Cada red tiene su planilla EVAC (hojas ESTABLECIMIENTOS, DEPENDENCIAS, CAMPOS, INSTITUCIONES, ALBERGUES y CRITERIOS). En la hoja CAMPOS se agregan, se cambian o se desactivan campos, y la app los toma sola.</p>
     <p class="sub">Modelos: OPS, EVAC-H: Evacuación de hospitales y sus áreas críticas (2024); OPS/OMS, Índice de seguridad hospitalaria, Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII, capítulo 18; Res. SRT 905/2015, Anexo II. Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
 }
 

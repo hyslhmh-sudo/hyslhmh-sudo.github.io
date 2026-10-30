@@ -211,6 +211,8 @@ function atender_(e) {
       case 'evac_catalogo': return json_(evacCatalogo_(u));
       case 'evac_guardar':  return json_(evacGuardar_(u, req));
       case 'evac_institucion': return json_(evacInstitucion_(u, req));
+      case 'evac_albergue': return json_(evacAlbergue_(u, req));
+      case 'evac_criterio': return json_(evacCriterio_(u, req));
       default: return json_({ ok: false, error: 'Acción desconocida' });
     }
   } catch (err) {
