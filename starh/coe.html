@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>COE · Participantes</title>
+<meta name="description" content="Participantes del comité y del centro de operaciones de emergencia: datos, contactos, proyectos y funciones.">
+<meta name="theme-color" content="#0D313F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#0D313F;--medio:#5894A7;--claro:#E6EFF2;--borde:#C9DCE3;--acento:#6A3D8F;--acento-claro:#F0E9F6;
+  --texto:#3A4A52;--suave:#6B7A82;--tenue:#8A979E;--linea:#E3E8EB;--fondo:#F6F7F8;--papel:#fff;--radio:12px;
+  --sombra:0 1px 2px rgba(13,49,63,.06),0 4px 14px rgba(13,49,63,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga';user-select:none}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;align-items:center;gap:6px}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{background:transparent;border:0;color:#fff;height:40px;min-width:40px;padding:0 8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none;font-weight:600;font-size:13px}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:1100px;margin:0 auto;padding:14px 16px 90px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+h2{font-size:17px;margin:4px 0 10px;color:var(--fuerte)}
+.sub{color:var(--suave);font-size:13px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+.tab{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center}
+.tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.herr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.herr input,.herr select{border:1px solid #CBD3D8;border-radius:10px;padding:9px 10px;background:#fff;min-height:42px}
+.herr input[type=search]{flex:1;min-width:180px}
+.herr label{display:inline-flex;align-items:center;gap:5px}.herr input[type=checkbox]{width:18px;height:18px;min-height:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:42px;text-decoration:none}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--borde)}
+.btn.mini{min-height:32px;padding:5px 9px;font-size:12.5px}
+.btn.peligro{background:#fff;color:#B3261E;border-color:#F2C4C0}
+.btn:disabled{opacity:.5;cursor:default}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.kpi{padding:12px}.kpi b{display:block;font-size:22px;color:#24343B}.kpi span{font-size:12px;color:var(--suave)}
+.lista{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.per{padding:14px;display:grid;gap:6px}
+.per-cab{display:flex;gap:8px;align-items:flex-start}
+.per-cab b{flex:1;font-size:15.5px;color:#24343B}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.int{background:var(--claro);color:var(--fuerte)}
+.chip.ext{background:#FDEDE4;color:#B8441A}
+.chip.inac{background:#EEF1F3;color:var(--suave)}
+.chip.proy{background:var(--acento-claro);color:var(--acento);white-space:normal}
+.contactos{display:flex;gap:6px;flex-wrap:wrap}
+.contactos a{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--fuerte);text-decoration:none;background:#F3F6F7;border-radius:8px;padding:5px 9px}
+.proys{display:flex;gap:5px;flex-wrap:wrap}
+.acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.tabla-wrap{overflow-x:auto;background:#fff;border:1px solid var(--linea);border-radius:var(--radio)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:middle}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--suave);background:#FAFBFB;position:sticky;top:0}
+td select,td input{border:1px solid #D5DCE0;border-radius:8px;padding:6px 7px;background:#fff;width:100%;min-width:110px}
+td.nom{min-width:170px;font-weight:600}
+tr.nueva td{background:#FAF7FC}
+.guardado{color:#2E7D4F;font-size:12px;font-weight:700}
+.proy-blq{margin-bottom:14px;overflow:hidden}
+.proy-blq h3{margin:0;padding:12px 14px;font-size:15px;color:#fff;background:var(--acento);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.proy-blq h3 small{font-weight:600;opacity:.9}
+.vacio{padding:26px;text-align:center;color:var(--suave)}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:24px 22px}
+.campo{display:block;margin:10px 0}
+.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:4px}
+.campo input,.campo select,.campo textarea{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:10px 11px;background:#fff}
+.campo textarea{min-height:64px;resize:vertical}
+.rejilla{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.opciones{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.op{border:1.5px solid #CBD3D8;background:#fff;border-radius:10px;padding:9px;cursor:pointer;font-weight:700}
+.op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
+.msg{margin-top:10px;font-size:13.5px;padding:9px 11px;border-radius:10px;background:#FCE8E6;color:#B3261E}
+.dlg{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
+.dlg-in{background:var(--fondo);width:100%;max-width:640px;max-height:100%;display:flex;flex-direction:column;border-radius:16px 16px 0 0;overflow:hidden}
+@media (min-width:760px){.dlg{align-items:center;padding:24px}.dlg-in{border-radius:16px;max-height:94vh}}
+.dlg-cab{background:var(--fuerte);color:#fff;padding:12px 12px 12px 16px;display:flex;align-items:center;gap:8px}
+.dlg-cab b{flex:1}
+.dlg-cuerpo{overflow-y:auto;padding:12px 16px 16px}
+.dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#24343B;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
+.ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:min(340px,80%)}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+@media (max-width:760px){.lista{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.rejilla{grid-template-columns:1fr}}
+@media print{.barra,.tabs,.herr,.acc,footer,.btn{display:none!important}body{background:#fff}main{padding:0}.tarjeta{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1 id="titulo">COE · Participantes<small>Comité y centro de operaciones de emergencia</small></h1>
+  <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
+  <button class="icono oculto" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
+  <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · COE · Versión 0</p></footer>
+<div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
+let cat = S.store.get('coe.cat', null), vista = S.store.get('coe.vista', 'personas');
+let q = '', fTipo = '', fProy = '', fRed = '', verInactivos = false, ocupado = false;
+
+function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
+const per = id => cat.personas.find(p => p.id === id) || {};
+const partsDe = id => cat.participaciones.filter(x => x.persona === id);
+const chipTipo = t => t ? `<span class="chip ${t === 'Externo' ? 'ext' : 'int'}">${E(t)}</span>` : '';
+const telLink = t => 'tel:' + String(t).replace(/[^\d+]/g, '');
+const opts = (lista, val, vacio) => (vacio != null ? `<option value="">${E(vacio)}</option>` : '') + lista.map(x => `<option ${x === val ? 'selected' : ''}>${E(x)}</option>`).join('') + (val && lista.indexOf(val) < 0 ? `<option selected>${E(val)}</option>` : '');
+const proyectos = () => { const l = (cat.listas.proyectos || []).slice(); cat.participaciones.forEach(x => { if (x.proyecto && l.indexOf(x.proyecto) < 0) l.push(x.proyecto); }); return l; };
+
+async function cargar(avisar) {
+  if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return render(); }
+  try {
+    const r = await S.api('coe_catalogo');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); cat = null; toast(r.error); return render(); } throw r; }
+    cat = r; S.store.set('coe.cat', r); if (avisar) toast('Datos actualizados.'); render();
+  } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudieron traer los datos.'; if (!cat) app.innerHTML = `<div class="tarjeta vacio">${E(m)}</div>`; else toast(m); }
+}
+async function enviar(accion, datos, ok) {
+  if (ocupado) return; if (!navigator.onLine) { toast('Para guardar en el COE se necesita conexión.'); return false; }
+  ocupado = true;
+  try { const r = await S.api(accion, datos); if (!r.ok) throw r; if (ok) toast(ok); await cargar(false); return r; }
+  catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); return false; }
+  finally { ocupado = false; }
+}
+
+function render() {
+  const logueado = !!S.sesion.token();
+  ['btnAct', 'btnSalir', 'btnAyuda'].forEach(b => $('#' + b).classList.toggle('oculto', !logueado));
+  if (!logueado) return vistaIngreso();
+  if (!cat) { app.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
+  if (location.hash === '#ayuda') return vistaAyuda();
+  const activos = cat.personas.filter(p => p.estado !== 'Inactivo');
+  const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto']]
+    .map(t => `<button class="tab" data-vista="${t[0]}" aria-pressed="${vista === t[0]}"><span class="ms" style="font-size:18px">${t[1]}</span>${t[2]}</button>`).join('');
+  const kpis = `<div class="kpis">
+    <div class="tarjeta kpi"><b>${activos.length}</b><span>participantes activos</span></div>
+    <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo !== 'Externo').length}</b><span>actores internos</span></div>
+    <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo === 'Externo').length}</b><span>actores externos</span></div>
+    <div class="tarjeta kpi"><b>${new Set(cat.participaciones.map(x => x.proyecto)).size}</b><span>proyectos con participantes</span></div></div>`;
+  app.innerHTML = `<div class="tabs">${tabs}</div>${kpis}<div id="vista"></div>
+    <p class="sub">Datos al ${new Date(cat.generado).toLocaleString('es-AR')}. Se guardan en las hojas COE PARTICIPANTES y COE PROYECTOS del libro${cat.puedeCargar ? '' : ' · Tu acceso es de consulta'}.</p>`;
+  if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
+}
+
+function filtrosHTML(conProy) {
+  return `<div class="herr"><input id="fq" type="search" placeholder="Buscar nombre, institución, cargo…" value="${E(q)}">
+    <select id="fTipo" aria-label="Tipo de actor">${opts(cat.listas.tipos, fTipo, 'Interno y externo')}</select>
+    ${conProy ? `<select id="fProy" aria-label="Proyecto">${opts(proyectos(), fProy, 'Todos los proyectos')}</select>` : ''}
+    <select id="fRed" aria-label="Red">${opts(cat.listas.redes, fRed, 'Todas las redes')}</select>
+    <label class="sub"><input type="checkbox" id="fIn" ${verInactivos ? 'checked' : ''}> inactivos</label>
+    ${cat.puedeCargar ? '<button class="btn" data-act="nueva"><span class="ms">person_add</span>Agregar participante</button>' : ''}</div>`;
+}
+function atarFiltros(fn) {
+  const f = $('#fq'); if (f) f.addEventListener('input', () => { q = f.value; const p = f.selectionStart; fn(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); });
+  [['#fTipo', v => fTipo = v], ['#fProy', v => fProy = v], ['#fRed', v => fRed = v]].forEach(([s, set]) => { const el = $(s); if (el) el.addEventListener('change', () => { set(el.value); fn(); }); });
+  const i = $('#fIn'); if (i) i.addEventListener('change', () => { verInactivos = i.checked; fn(); });
+}
+function pasa(p) {
+  if (!verInactivos && p.estado === 'Inactivo') return false;
+  if (fTipo && p.tipo !== fTipo) return false;
+  if (fRed && p.red !== fRed && p.red !== 'Ambas redes') return false;
+  if (fProy && !partsDe(p.id).some(x => x.proyecto === fProy)) return false;
+  const t = [p.nombre, p.institucion, p.servicio, p.cargo, p.mail, p.tel].join(' ').toLowerCase();
+  return !q || t.indexOf(q.toLowerCase()) >= 0;
+}
+
+/* ---------- 1. Participantes ---------- */
+function vistaPersonas() {
+  const l = cat.personas.filter(pasa).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  $('#vista').innerHTML = filtrosHTML(true) + (l.length ? `<div class="lista">${l.map(p => `<div class="tarjeta per">
+    <div class="per-cab"><b>${E(p.nombre)}</b>${chipTipo(p.tipo)}${p.estado === 'Inactivo' ? '<span class="chip inac">Inactivo</span>' : ''}</div>
+    <div class="sub">${E([p.cargo, p.servicio, p.institucion].filter(Boolean).join(' · ') || 's/d')}${p.red ? ' · ' + E(p.red) : ''}</div>
+    <div class="contactos">${p.tel ? `<a href="${telLink(p.tel)}"><span class="ms" style="font-size:17px">call</span>${E(p.tel)}</a>` : ''}${p.tel2 ? `<a href="${telLink(p.tel2)}"><span class="ms" style="font-size:17px">call</span>${E(p.tel2)}</a>` : ''}${p.mail ? `<a href="mailto:${E(p.mail)}"><span class="ms" style="font-size:17px">mail</span>${E(p.mail)}</a>` : ''}${!p.tel && !p.tel2 && !p.mail ? '<span class="sub">Sin contactos cargados (s/d)</span>' : ''}</div>
+    <div class="proys">${partsDe(p.id).map(x => `<span class="chip proy">${E(x.proyecto)}${x.funcion ? ' · ' + E(x.funcion) : ''}</span>`).join('') || '<span class="sub">Todavía no está en ningún proyecto</span>'}</div>
+    ${p.obs ? `<div class="sub">${E(p.obs)}</div>` : ''}
+    ${cat.puedeCargar ? `<div class="acc"><button class="btn sec mini" data-act="editar" data-id="${E(p.id)}"><span class="ms" style="font-size:17px">edit</span>Editar</button>
+      <button class="btn sec mini" data-act="asignar" data-id="${E(p.id)}"><span class="ms" style="font-size:17px">add_task</span>Agregar a un proyecto</button></div>` : ''}</div>`).join('')}</div>`
+    : `<div class="tarjeta vacio">${cat.personas.length ? 'No hay participantes con estos filtros.' : 'Todavía no hay participantes. ' + (cat.puedeCargar ? 'Empezá con «Agregar participante».' : '')}</div>`);
+  atarFiltros(vistaPersonas);
+}
+
+/* ---------- 2. Grilla: tipo de actor, proyecto y función ---------- */
+function vistaGrilla() {
+  const pers = cat.personas.filter(pasa), ids = new Set(pers.map(p => p.id));
+  const filas = cat.participaciones.filter(x => ids.has(x.persona) && (!fProy || x.proyecto === fProy))
+    .sort((a, b) => (a.proyecto + per(a.persona).nombre).localeCompare(b.proyecto + per(b.persona).nombre, 'es'));
+  const ed = cat.puedeCargar;
+  const dl = `<datalist id="dlFun">${(cat.listas.funciones || []).map(f => `<option value="${E(f)}">`).join('')}</datalist>`;
+  const nueva = ed ? `<tr class="nueva" data-fila="">
+      <td class="nom"><select data-c="persona"><option value="">Elegí participante…</option>${cat.personas.filter(p => p.estado !== 'Inactivo').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map(p => `<option value="${E(p.id)}">${E(p.nombre)}</option>`).join('')}</select></td>
+      <td><select data-c="tipo" disabled><option>—</option></select></td>
+      <td><select data-c="proyecto">${opts(proyectos(), fProy, 'Elegí proyecto…')}</select></td>
+      <td><input data-c="funcion" list="dlFun" placeholder="Función en el proyecto"></td>
+      <td><input data-c="desde" placeholder="dd/mm/aaaa"></td>
+      <td><input data-c="obs" placeholder="Observaciones"></td>
+      <td><button class="btn mini" data-act="agregarFila"><span class="ms" style="font-size:17px">add</span>Agregar</button></td></tr>` : '';
+  $('#vista').innerHTML = filtrosHTML(true) + dl + `<div class="tabla-wrap"><table><thead><tr><th>Participante</th><th>Tipo de actor</th><th>Proyecto</th><th>Función</th><th>Desde</th><th>Observaciones</th><th></th></tr></thead><tbody>${nueva}
+    ${filas.map(x => { const p = per(x.persona); return ed ? `<tr data-fila="${E(x.id)}" data-persona="${E(x.persona)}">
+      <td class="nom">${E(p.nombre || x.persona)}</td>
+      <td><select data-c="tipo">${opts(cat.listas.tipos, p.tipo)}</select></td>
+      <td><select data-c="proyecto">${opts(proyectos(), x.proyecto)}</select></td>
+      <td><input data-c="funcion" list="dlFun" value="${E(x.funcion)}"></td>
+      <td><input data-c="desde" value="${E(x.desde)}" placeholder="dd/mm/aaaa"></td>
+      <td><input data-c="obs" value="${E(x.obs)}"></td>
+      <td><button class="btn peligro mini" data-act="quitar" data-id="${E(x.id)}" title="Quitar de este proyecto"><span class="ms" style="font-size:17px">delete</span></button></td></tr>`
+      : `<tr><td class="nom">${E(p.nombre || x.persona)}</td><td>${chipTipo(p.tipo)}</td><td>${E(x.proyecto)}</td><td>${E(x.funcion || 's/d')}</td><td>${E(x.desde || '')}</td><td>${E(x.obs || '')}</td><td></td></tr>`; }).join('')}
+    ${filas.length ? '' : '<tr><td colspan="7" class="vacio">No hay filas con estos filtros.</td></tr>'}</tbody></table></div>
+    ${ed ? '<p class="sub">Los cambios se guardan solos al salir de cada casillero. El tipo de actor es de la persona (vale para todos sus proyectos); la función es propia de cada proyecto.</p>' : ''}`;
+  atarFiltros(vistaGrilla);
+  if (!ed) return;
+  const nv = $('tr.nueva');
+  if (nv) nv.querySelector('[data-c=persona]').addEventListener('change', ev => { const p = per(ev.target.value); nv.querySelector('[data-c=tipo]').innerHTML = `<option>${E(p.tipo || '—')}</option>`; });
+  document.querySelectorAll('tr[data-fila]:not(.nueva)').forEach(tr => tr.addEventListener('change', async ev => {
+    const c = ev.target.dataset.c; if (!c) return;
+    // se guarda sin redibujar la grilla, para no perder el casillero en que se está escribiendo
+    if (!navigator.onLine) { toast('Para guardar en el COE se necesita conexión.'); return; }
+    const v = k => tr.querySelector(`[data-c=${k}]`).value;
+    try {
+      if (c === 'tipo') {
+        const p = Object.assign({}, per(tr.dataset.persona), { tipo: ev.target.value });
+        const r = await S.api('coe_persona', { persona: p }); if (!r.ok) throw r; per(tr.dataset.persona).tipo = p.tipo;
+      } else {
+        const d = { id: tr.dataset.fila, persona: tr.dataset.persona, proyecto: v('proyecto'), funcion: v('funcion'), desde: v('desde'), obs: v('obs') };
+        const r = await S.api('coe_participacion', { participacion: d }); if (!r.ok) throw r;
+        Object.assign(cat.participaciones.find(x => x.id === d.id) || {}, d);
+      }
+      S.store.set('coe.cat', cat);
+      ev.target.style.borderColor = '#2E7D4F'; setTimeout(() => { ev.target.style.borderColor = ''; }, 1500);
+    } catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); ev.target.style.borderColor = '#B3261E'; }
+  }));
+}
+
+/* ---------- 3. Por proyecto ---------- */
+function vistaProyectos() {
+  const pers = cat.personas.filter(pasa), ids = new Set(pers.map(p => p.id));
+  const ps = proyectos().filter(pr => !fProy || pr === fProy);
+  $('#vista').innerHTML = filtrosHTML(true) + `<div class="herr"><button class="btn sec" onclick="window.print()"><span class="ms">print</span>Imprimir directorio</button></div>` + ps.map(pr => {
+    const l = cat.participaciones.filter(x => x.proyecto === pr && ids.has(x.persona)).sort((a, b) => per(a.persona).nombre.localeCompare(per(b.persona).nombre, 'es'));
+    const ni = l.filter(x => per(x.persona).tipo !== 'Externo').length;
+    return `<div class="tarjeta proy-blq"><h3>${E(pr)}<small>${l.length} participantes · ${ni} internos · ${l.length - ni} externos</small></h3>
+      ${l.length ? `<div style="overflow-x:auto"><table><thead><tr><th>Función</th><th>Participante</th><th>Tipo</th><th>Institución · cargo</th><th>Teléfono</th><th>Correo</th></tr></thead><tbody>
+      ${l.map(x => { const p = per(x.persona); return `<tr><td><b>${E(x.funcion || 's/d')}</b></td><td>${E(p.nombre)}</td><td>${chipTipo(p.tipo)}</td><td>${E([p.institucion, p.cargo].filter(Boolean).join(' · ') || 's/d')}</td>
+        <td>${p.tel ? `<a href="${telLink(p.tel)}">${E(p.tel)}</a>` : 's/d'}</td><td>${p.mail ? `<a href="mailto:${E(p.mail)}">${E(p.mail)}</a>` : 's/d'}</td></tr>`; }).join('')}</tbody></table></div>`
+      : '<div class="vacio">Sin participantes cargados en este proyecto.</div>'}</div>`;
+  }).join('');
+  atarFiltros(vistaProyectos);
+}
+
+/* ---------- diálogos ---------- */
+function abrir(html) { $('#dlg').innerHTML = `<div class="dlg-in">${html}</div>`; $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden'; }
+function cerrar() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; }
+function dlgPersona(id) {
+  const p = id ? per(id) : { tipo: 'Interno', estado: 'Activo', red: '' };
+  abrir(`<div class="dlg-cab"><b>${id ? 'Editar participante' : 'Nuevo participante'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <form class="dlg-cuerpo" id="fPer">
+      <label class="campo"><span>Apellido y nombre *</span><input name="nombre" required value="${E(p.nombre || '')}"></label>
+      <div class="campo"><span>Tipo de actor</span><div class="opciones">${cat.listas.tipos.map(t => `<button type="button" class="op" data-tipo="${E(t)}" aria-pressed="${p.tipo === t}">${E(t)}${t === 'Interno' ? ' (del hospital o la red)' : ' (otro organismo)'}</button>`).join('')}</div><input type="hidden" name="tipo" value="${E(p.tipo || 'Interno')}"></div>
+      <div class="rejilla">
+        <label class="campo"><span>Institución u organismo</span><input name="institucion" value="${E(p.institucion || '')}" placeholder="HZT, Protección Civil, Bomberos…"></label>
+        <label class="campo"><span>Servicio o área</span><input name="servicio" value="${E(p.servicio || '')}"></label>
+        <label class="campo"><span>Cargo</span><input name="cargo" value="${E(p.cargo || '')}"></label>
+        <label class="campo"><span>Red</span><select name="red">${opts(cat.listas.redes, p.red, 's/d')}</select></label>
+        <label class="campo"><span>Teléfono</span><input name="tel" inputmode="tel" value="${E(p.tel || '')}"></label>
+        <label class="campo"><span>Otro teléfono</span><input name="tel2" inputmode="tel" value="${E(p.tel2 || '')}"></label>
+        <label class="campo"><span>Correo</span><input name="mail" type="email" value="${E(p.mail || '')}"></label>
+        <label class="campo"><span>Estado</span><select name="estado">${opts(['Activo', 'Inactivo'], p.estado || 'Activo')}</select></label>
+      </div>
+      <label class="campo"><span>Observaciones</span><textarea name="obs">${E(p.obs || '')}</textarea></label>
+      ${id ? `<p class="sub">Proyectos y funciones: ${partsDe(id).map(x => E(x.proyecto + (x.funcion ? ' · ' + x.funcion : ''))).join(' — ') || 'ninguno'}. Se editan en «Proyectos y funciones».</p>` : '<p class="sub">Después de guardarlo, agregalo a uno o más proyectos con su función.</p>'}
+    </form>
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarPer" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button></div>`);
+}
+function dlgAsignar(id) {
+  const p = per(id);
+  abrir(`<div class="dlg-cab"><b>Agregar a un proyecto<small style="display:block;font-weight:500;opacity:.85">${E(p.nombre)}</small></b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <form class="dlg-cuerpo" id="fAsig"><datalist id="dlFun2">${(cat.listas.funciones || []).map(f => `<option value="${E(f)}">`).join('')}</datalist>
+      <label class="campo"><span>Proyecto *</span><select name="proyecto">${opts(proyectos().filter(pr => !partsDe(id).some(x => x.proyecto === pr)), '', 'Elegí proyecto…')}</select></label>
+      <label class="campo"><span>Función en este proyecto</span><input name="funcion" list="dlFun2" placeholder="Titular, alterno, enlace, vocero…"></label>
+      <div class="rejilla"><label class="campo"><span>Desde</span><input name="desde" placeholder="dd/mm/aaaa" value="${S.hoy()}"></label>
+      <label class="campo"><span>Observaciones</span><input name="obs"></label></div>
+      <p class="sub">Para agregar un proyecto nuevo a la lista, sumalo en la hoja COE LISTAS (columna Proyectos).</p></form>
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarAsig" data-id="${E(id)}"><span class="ms">save</span>Guardar</button></div>`);
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest('[data-act],[data-vista],[data-tipo]'); if (!t) return;
+  if (t.dataset.vista) { vista = t.dataset.vista; S.store.set('coe.vista', vista); location.hash = ''; render(); return; }
+  if (t.dataset.tipo) { document.querySelectorAll('[data-tipo]').forEach(b => b.setAttribute('aria-pressed', b === t)); $('#fPer').tipo.value = t.dataset.tipo; return; }
+  const a = t.dataset.act;
+  if (a === 'cerrar') return cerrar();
+  if (a === 'nueva') return dlgPersona('');
+  if (a === 'editar') return dlgPersona(t.dataset.id);
+  if (a === 'asignar') return dlgAsignar(t.dataset.id);
+  if (a === 'guardarPer') {
+    const f = $('#fPer'); if (!f.nombre.value.trim()) { toast('Falta el apellido y nombre.'); return; }
+    const p = { id: t.dataset.id || '' }; ['nombre', 'tipo', 'institucion', 'servicio', 'cargo', 'red', 'tel', 'tel2', 'mail', 'estado', 'obs'].forEach(k => p[k] = f[k].value);
+    t.disabled = true; const r = await enviar('coe_persona', { persona: p }, 'Participante guardado.'); t.disabled = false;
+    if (r) { cerrar(); if (!p.id && r.id) dlgAsignar(r.id); }
+    return;
+  }
+  if (a === 'guardarAsig') {
+    const f = $('#fAsig'); if (!f.proyecto.value) { toast('Elegí el proyecto.'); return; }
+    t.disabled = true; const r = await enviar('coe_participacion', { participacion: { persona: t.dataset.id, proyecto: f.proyecto.value, funcion: f.funcion.value, desde: f.desde.value, obs: f.obs.value } }, 'Agregado al proyecto.'); t.disabled = false;
+    if (r) cerrar(); return;
+  }
+  if (a === 'agregarFila') {
+    const tr = t.closest('tr'), v = k => tr.querySelector(`[data-c=${k}]`).value;
+    if (!v('persona') || !v('proyecto')) { toast('Elegí participante y proyecto.'); return; }
+    await enviar('coe_participacion', { participacion: { persona: v('persona'), proyecto: v('proyecto'), funcion: v('funcion'), desde: v('desde'), obs: v('obs') } }, 'Fila agregada.');
+    return;
+  }
+  if (a === 'quitar') { if (!confirm('¿Quitar a esta persona de este proyecto? La persona sigue en la lista de participantes.')) return; await enviar('coe_participacion', { participacion: { id: t.dataset.id, borrar: true } }, 'Quitado del proyecto.'); }
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrar(); });
+$('#btnAct').addEventListener('click', () => cargar(true));
+$('#btnAyuda').addEventListener('click', () => { location.hash = location.hash === '#ayuda' ? '' : '#ayuda'; render(); });
+$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('coe.cat'); render(); });
+window.addEventListener('hashchange', render);
+
+function vistaIngreso() {
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo DNI y clave de STAR-H, PHR e ISH.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
+    <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
+  $('#fIng').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target, m = $('#msg');
+    try { const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r;
+      if (r.usuario.coe === false) throw { error: 'Tu acceso no incluye el COE. Consultá con Higiene y Seguridad Laboral.' };
+      S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Cargando…</div>'; cargar(false); }
+    catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+  });
+}
+function vistaAyuda() {
+  app.innerHTML = `<div class="tarjeta ayuda"><h2>Ayuda · COE</h2>
+    <p>Acá se registran las personas que integran el comité de crisis y el centro de operaciones de emergencia (COE), con sus datos y contactos, y en qué proyectos participan y con qué función.</p>
+    <ul><li><b>Participantes</b>: una ficha por persona, con teléfono y correo para llamar o escribir con un toque. «Agregar participante» crea la ficha; después «Agregar a un proyecto».</li>
+      <li><b>Proyectos y funciones</b>: la grilla para cargar rápido. Cada fila es una persona en un proyecto: tipo de actor, proyecto, función, desde cuándo y observaciones. La misma persona puede tener funciones distintas en cada proyecto. Los cambios se guardan al salir de cada casillero.</li>
+      <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
+      <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
+      <li>Si una persona deja de participar, cambiá su estado a «Inactivo»: no se borra y queda el historial.</li></ul>
+    <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COE PARTICIPANTES (personas), COE PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COE LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
+    <p class="sub">Acceso: Administración carga y modifica; quien tenga «COE» en la columna Módulos de ACCESOS puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
+    <button class="btn sec" onclick="location.hash=''"><span class="ms">arrow_back</span>Volver</button></div>`;
+}
+
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+if (S.sesion.token()) cargar(false);
+})();
+</script>
+</body>
+</html>

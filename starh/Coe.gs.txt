@@ -1,0 +1,182 @@
+/**
+ * COE · Participantes del comité y del centro de operaciones de emergencia (versión 0)
+ * y FUENTES (bibliografía de STAR-H, PHR e ISH).
+ * ------------------------------------------------------------------
+ * Va en el mismo proyecto de Apps Script que STAR-H, PHR e ISH (comparte accesos y sesión).
+ * Los datos quedan en este mismo libro, en cuatro hojas que se arman solas la primera vez
+ * (o con el menú STAR-H app › COE · Preparar hojas):
+ *  · COE PARTICIPANTES: una fila por persona (datos y contactos, tipo de actor interno o externo).
+ *  · COE PROYECTOS: una fila por persona y proyecto, con su función en ese proyecto
+ *    (la misma persona puede tener funciones distintas según el proyecto).
+ *  · COE LISTAS: proyectos, funciones sugeridas y tipos de actor (se pueden ampliar).
+ *  · FUENTES: bibliografía y normativa que se muestran en la página Fuentes.
+ * Acceso: Administración ve y carga todo; quien tenga «COE» en la columna Módulos de ACCESOS puede consultar.
+ */
+
+const COE = {
+  H_PER: 'COE PARTICIPANTES', H_PAR: 'COE PROYECTOS', H_LIS: 'COE LISTAS', H_FUE: 'FUENTES',
+  CAB_PER: ['ID', 'Apellido y nombre', 'Tipo de actor', 'Institución u organismo', 'Servicio o área', 'Cargo', 'Teléfono', 'Otro teléfono', 'Correo', 'Red', 'Estado', 'Observaciones', 'Actualizado'],
+  CAB_PAR: ['ID', 'ID participante', 'Participante', 'Tipo de actor', 'Proyecto', 'Función en el proyecto', 'Desde', 'Observaciones'],
+  TIPOS: ['Interno', 'Externo'],
+  REDES: ['Red Trelew', 'Red Rawson', 'Ambas redes', 'Provincial'],
+  ESTADOS: ['Activo', 'Inactivo'],
+  PROYECTOS: ['Comité de crisis El Niño 2026-2027', 'COE hospitalario', 'STAR-H', 'PHR', 'ISH'],
+  FUNCIONES: ['Coordinación general', 'Comandante del incidente', 'Titular', 'Alterno', 'Secretaría técnica', 'Enlace', 'Vocero', 'Seguridad',
+    'Jefe de operaciones', 'Jefe de planificación', 'Jefe de logística', 'Jefe de administración y finanzas', 'Referente del establecimiento',
+    'Evaluador', 'Relevador', 'Asesoría en Higiene y Seguridad Laboral', 'Integrante', 'Invitado'],
+  FUENTES: [
+    ['STAR-H', 'OPS/OMS. Herramienta estratégica de evaluación de riesgos para establecimientos de salud (STAR-H). Washington, D.C.: Organización Panamericana de la Salud; 2023.', '', 'Base del relevamiento de amenazas y de las escalas A, B, C y D.'],
+    ['STAR-H', 'OMS. Strategic toolkit for assessing risks (STAR): a comprehensive toolkit for all-hazards health emergency risk assessment. Ginebra: OMS; 2021.', '', 'Metodología general de la que deriva STAR-H.'],
+    ['PHR', 'OPS. Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015). Washington, D.C.: OPS; 2023.', 'https://educacionensalud.imss.gob.mx/p/portal/wp-content/uploads/2025/10/Instructivo-para-elaborar-un-plan-hospitalario-1.pdf', 'Copia publicada por el IMSS. Base de los 80 ítems del relevamiento inicial PHR.'],
+    ['ISH', 'OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed. Washington, D.C.: OPS; 2018.', 'https://www.salud.gob.ec/wp-content/uploads/2021/01/ISH-Guia-de-Evaluadores-2da-Edicion.pdf', 'Copia publicada por el Ministerio de Salud Pública de Ecuador. Cálculo, modelos de ponderación y categorías A, B y C.'],
+    ['ISH', 'OPS/OMS. Índice de seguridad hospitalaria. Formularios para la evaluación, 2.ª ed. Washington, D.C.: OPS; 2018.', 'https://www.salud.gob.ec/wp-content/uploads/2021/01/ISH-Formularios-2da-Edicion.pdf', 'Copia publicada por el Ministerio de Salud Pública de Ecuador. Formulario 2: lista de verificación de 151 ítems.'],
+    ['General', 'OPS. Hospitales seguros (iniciativa regional).', 'https://www.paho.org/es/emergencias-salud/hospitales-seguros', ''],
+    ['General', 'OPS. Caja de herramientas de preparación para emergencias de salud.', 'https://www.paho.org/es/emergencias-salud/preparacion-paises-para-emergencias-salud-rsi/caja-herramientas-preparacion', ''],
+    ['Normativa', 'Ley N.º 19.587 de Higiene y Seguridad en el Trabajo y su Decreto reglamentario N.º 351/79 (capítulo 18: protección contra incendios).', '', ''],
+    ['Normativa', 'Resolución SRT N.º 905/2015, Anexo II, punto 2.2: funciones de los Servicios de Higiene y Seguridad en el Trabajo (planes de contingencia y emergencias).', '', '']
+  ]
+};
+
+/* ---------- hojas ---------- */
+function coeHojas_() {
+  const ss = SpreadsheetApp.getActive();
+  const cab = (sh, n) => sh.getRange(1, 1, 1, n).setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#0D313F').setWrap(true).setVerticalAlignment('middle');
+  let li = ss.getSheetByName(COE.H_LIS);
+  if (!li) {
+    li = ss.insertSheet(COE.H_LIS);
+    li.getRange(1, 1, 1, 4).setValues([['Proyectos', 'Funciones sugeridas', 'Tipos de actor', 'Redes']]);
+    const n = Math.max(COE.PROYECTOS.length, COE.FUNCIONES.length);
+    const filas = []; for (let i = 0; i < n; i++) filas.push([COE.PROYECTOS[i] || '', COE.FUNCIONES[i] || '', COE.TIPOS[i] || '', COE.REDES[i] || '']);
+    li.getRange(2, 1, n, 4).setValues(filas);
+    cab(li, 4); li.setFrozenRows(1); li.setColumnWidths(1, 2, 300); li.setColumnWidths(3, 2, 140);
+    li.getRange('F1').setValue('Agregá proyectos o funciones al final de cada columna: la app y las listas desplegables los toman solos.').setFontColor('#6B7A82');
+  }
+  let pe = ss.getSheetByName(COE.H_PER);
+  if (!pe) {
+    pe = ss.insertSheet(COE.H_PER);
+    pe.getRange(1, 1, 1, COE.CAB_PER.length).setValues([COE.CAB_PER]);
+    cab(pe, COE.CAB_PER.length); pe.setFrozenRows(1); pe.setFrozenColumns(2);
+    pe.setColumnWidth(1, 70); pe.setColumnWidth(2, 220); pe.setColumnWidths(4, 3, 200); pe.setColumnWidth(9, 220); pe.setColumnWidth(12, 260);
+    pe.getRange('G2:H').setNumberFormat('@');
+    pe.getRange('C2:C').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(li.getRange('C2:C'), true).build());
+    pe.getRange('J2:J').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(li.getRange('D2:D'), true).build());
+    pe.getRange('K2:K').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(COE.ESTADOS, true).build());
+    pe.getRange('A1').setNote('El ID lo pone la app (P-001, P-002…). Si cargás a mano, usá el siguiente número libre.');
+  }
+  let pa = ss.getSheetByName(COE.H_PAR);
+  if (!pa) {
+    pa = ss.insertSheet(COE.H_PAR);
+    pa.getRange(1, 1, 1, COE.CAB_PAR.length).setValues([COE.CAB_PAR]);
+    cab(pa, COE.CAB_PAR.length); pa.setFrozenRows(1);
+    pa.setColumnWidth(1, 70); pa.setColumnWidth(2, 100); pa.setColumnWidth(3, 220); pa.setColumnWidth(5, 260); pa.setColumnWidth(6, 260); pa.setColumnWidth(8, 260);
+    // Participante y tipo se ven solos a partir del ID
+    pa.getRange('C1').setFormula('={"Participante";ARRAYFORMULA(IF(B2:B="";"";IFERROR(VLOOKUP(B2:B;\'' + COE.H_PER + '\'!A:B;2;FALSE);"s/d")))}');
+    pa.getRange('D1').setFormula('={"Tipo de actor";ARRAYFORMULA(IF(B2:B="";"";IFERROR(VLOOKUP(B2:B;\'' + COE.H_PER + '\'!A:C;3;FALSE);"s/d")))}');
+    pa.getRange('C1:D').protect().setDescription('Se completa solo a partir del ID del participante').setWarningOnly(true);
+    pa.getRange('E2:E').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(li.getRange('A2:A'), true).build());
+    pa.getRange('F2:F').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(li.getRange('B2:B'), true).setAllowInvalid(true).build());
+    pa.getRange('B2:B').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(pe.getRange('A2:A'), true).build());
+  }
+  let fu = ss.getSheetByName(COE.H_FUE);
+  if (!fu) {
+    fu = ss.insertSheet(COE.H_FUE);
+    fu.getRange(1, 1, 1, 4).setValues([['Módulo', 'Cita', 'Enlace', 'Nota']]);
+    fu.getRange(2, 1, COE.FUENTES.length, 4).setValues(COE.FUENTES);
+    cab(fu, 4); fu.setFrozenRows(1); fu.setColumnWidth(1, 110); fu.setColumnWidth(2, 520); fu.setColumnWidth(3, 300); fu.setColumnWidth(4, 320);
+    fu.getRange(2, 1, COE.FUENTES.length, 4).setWrap(true).setVerticalAlignment('top');
+    fu.getRange('F1').setValue('Agregá o corregí filas: la página Fuentes de la app las muestra tal cual (Módulo: STAR-H, PHR, ISH, COE, General o Normativa).').setFontColor('#6B7A82');
+  }
+  return { li: li, pe: pe, pa: pa, fu: fu };
+}
+function coeInstalar() { coeHojas_(); avisar_('Listo: hojas ' + [COE.H_PER, COE.H_PAR, COE.H_LIS, COE.H_FUE].join(', ') + ' preparadas.'); }
+
+function coeCol_(sh, col) { return sh.getRange(2, col, Math.max(sh.getLastRow() - 1, 1), 1).getDisplayValues().map(x => String(x[0]).trim()).filter(Boolean); }
+function coeSiguienteId_(sh, pref) {
+  let max = 0;
+  coeCol_(sh, 1).forEach(v => { const m = v.match(/^[A-Z]+-(\d+)$/); if (m) max = Math.max(max, Number(m[1])); });
+  return pref + '-' + ('00' + (max + 1)).slice(-3);
+}
+function coeUltima_(sh) {
+  const a = sh.getRange(1, 1, Math.max(sh.getLastRow(), 1), 1).getDisplayValues();
+  for (let i = a.length - 1; i >= 0; i--) if (String(a[i][0]).trim()) return i + 1;
+  return 1;
+}
+function coeExigirCarga_(u) { if (u.rol !== 'Administración') throw new Error('Solo Administración puede cargar o modificar datos del COE.'); }
+
+/* ---------- API ---------- */
+function fuentes_() {
+  const h = coeHojas_();
+  const f = h.fu.getDataRange().getDisplayValues().slice(1).filter(x => x[1]).map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
+  return { ok: true, fuentes: f };
+}
+
+function coeCatalogo_(u) {
+  exigirModulo_(u, 'COE');
+  const h = coeHojas_();
+  const L = h.li.getDataRange().getDisplayValues().slice(1);
+  const col = i => L.map(x => String(x[i]).trim()).filter(Boolean);
+  const per = h.pe.getDataRange().getDisplayValues().slice(1).filter(x => x[0]).map(x => ({
+    id: x[0], nombre: x[1], tipo: x[2], institucion: x[3], servicio: x[4], cargo: x[5], tel: x[6], tel2: x[7], mail: x[8], red: x[9], estado: x[10] || 'Activo', obs: x[11], actualizado: x[12] }));
+  const par = h.pa.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && x[1]).map(x => ({
+    id: x[0], persona: x[1], proyecto: x[4], funcion: x[5], desde: x[6], obs: x[7] }));
+  return { ok: true, usuario: publico_(u), generado: new Date().toISOString(), puedeCargar: u.rol === 'Administración',
+    listas: { proyectos: col(0), funciones: col(1), tipos: col(2).length ? col(2) : COE.TIPOS, redes: col(3).length ? col(3) : COE.REDES },
+    personas: per, participaciones: par };
+}
+
+function coePersona_(u, p) {
+  exigirModulo_(u, 'COE'); coeExigirCarga_(u);
+  p = p || {};
+  const nombre = String(p.nombre || '').trim();
+  if (!nombre) throw new Error('Falta el apellido y nombre.');
+  if (p.tipo && COE.TIPOS.indexOf(p.tipo) < 0) throw new Error('Tipo de actor no válido.');
+  if (p.mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(p.mail).trim())) throw new Error('Revisá el correo.');
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const sh = coeHojas_().pe;
+    const ids = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 1).getDisplayValues().map(x => x[0]);
+    let fila = p.id ? ids.indexOf(p.id) + 2 : 0;
+    if (p.id && fila < 2) throw new Error('No existe el participante ' + p.id);
+    const id = p.id || coeSiguienteId_(sh, 'P');
+    if (!fila) fila = sh.getLastRow() + 1;
+    const t = s => String(s == null ? '' : s).trim().slice(0, 300);
+    const v = [id, t(nombre), t(p.tipo) || 'Interno', t(p.institucion), t(p.servicio), t(p.cargo), t(p.tel), t(p.tel2), t(p.mail).toLowerCase(), t(p.red), t(p.estado) || 'Activo', t(p.obs).slice(0, 1000),
+      Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm')];
+    sh.getRange(fila, 1, 1, v.length).setValues([v]);
+    registrar_(u, 'COE · Participante', v[9], '', id, v[1] + ' · ' + v[2]);
+    return { ok: true, id: id };
+  } finally { lock.releaseLock(); }
+}
+
+function coeParticipacion_(u, p) {
+  exigirModulo_(u, 'COE'); coeExigirCarga_(u);
+  p = p || {};
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const h = coeHojas_(), sh = h.pa;
+    const ids = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 1).getDisplayValues().map(x => x[0]);
+    if (p.borrar) {
+      const f = ids.indexOf(p.id) + 2;
+      if (f < 2) throw new Error('No existe la fila ' + p.id);
+      sh.deleteRow(f);
+      registrar_(u, 'COE · Quitar de proyecto', '', '', p.id, '');
+      return { ok: true };
+    }
+    if (coeCol_(h.pe, 1).indexOf(String(p.persona || '')) < 0) throw new Error('Elegí un participante.');
+    const proyecto = String(p.proyecto || '').trim();
+    if (!proyecto) throw new Error('Elegí el proyecto.');
+    // sin duplicar persona + proyecto
+    const filas = sh.getDataRange().getDisplayValues().slice(1);
+    const dup = filas.findIndex(x => x[1] === p.persona && x[4] === proyecto && x[0] !== p.id);
+    if (dup >= 0) throw new Error('Esa persona ya figura en ' + proyecto + ' (fila ' + filas[dup][0] + '): modificá esa fila.');
+    let fila = p.id ? ids.indexOf(p.id) + 2 : 0;
+    if (p.id && fila < 2) throw new Error('No existe la fila ' + p.id);
+    const id = p.id || coeSiguienteId_(sh, 'F');
+    if (!fila) fila = coeUltima_(sh) + 1; // por columna A (C y D tienen fórmulas)
+    const t = s => String(s == null ? '' : s).trim().slice(0, 300);
+    sh.getRange(fila, 1, 1, 2).setValues([[id, p.persona]]);
+    sh.getRange(fila, 5, 1, 4).setValues([[proyecto, t(p.funcion), t(p.desde), t(p.obs).slice(0, 1000)]]);
+    registrar_(u, 'COE · Proyecto y función', '', '', id, p.persona + ' · ' + proyecto + ' · ' + t(p.funcion));
+    return { ok: true, id: id };
+  } finally { lock.releaseLock(); }
+}

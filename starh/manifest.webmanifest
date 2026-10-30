@@ -1,7 +1,7 @@
 {
-  "name": "STAR-H · Relevamiento de riesgos",
-  "short_name": "STAR-H",
-  "description": "Relevamiento de riesgos de emergencias y desastres con la metodología STAR-H (OPS).",
+  "name": "Emergencias y desastres · STAR-H, PHR, ISH y COE",
+  "short_name": "Emergencias HySL",
+  "description": "Relevamientos STAR-H, PHR e ISH, COE, fuentes y formularios para imprimir (Higiene y Seguridad Laboral).",
   "lang": "es-AR",
   "start_url": "./index.html",
   "scope": "./",
