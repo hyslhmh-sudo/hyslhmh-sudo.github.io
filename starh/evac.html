@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Evacuación hospitalaria</title>
 <meta name="description" content="Fichas por establecimiento y por dependencia para los planes de evacuación.">
-<meta name="theme-color" content="#0D313F">
+<meta name="theme-color" content="#1B2A41">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -105,6 +105,38 @@ footer{text-align:center;padding:10px 16px 24px}footer img{width:min(340px,80%)}
   .imp .pieimp img{height:34px}
 }
 @media (max-width:640px){.campos{grid-template-columns:1fr}}
+/* ---------- Paleta de esta app (alerta de triaje): #F4FAFF #CFE9FF #3AA0FF #FF5A5F #1B2A41 ----------
+   Azul pálido de base, azul brillante para acciones, azul marino para texto; el coral solo para errores y acciones de alto riesgo. */
+:root{--fuerte:#1B2A41;--medio:#3AA0FF;--claro:#CFE9FF;--borde:#9CCFFF;--coral:#FF5A5F;--texto:#1B2A41;--suave:#44546C;--tenue:#5E6E86;--linea:#CFE9FF;--fondo:#F4FAFF}
+.barra,.dlg-cab{background:#1B2A41;color:#F4FAFF;border-bottom:3px solid #3AA0FF}
+.btn{background:#3AA0FF;color:#1B2A41}
+.btn:hover{filter:brightness(1.05)}
+.btn.sec{background:#fff;color:#1B2A41;border-color:#3AA0FF}
+.btn.peligro{background:#fff;color:#1B2A41;border-color:#FF5A5F;box-shadow:inset 4px 0 0 #FF5A5F}
+.red-tab{border-color:#CFE9FF}
+.red-tab[aria-pressed="true"]{background:#1B2A41;color:#F4FAFF;border-color:#1B2A41}
+.tarjeta{border-color:#CFE9FF;box-shadow:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
+.est:hover,.dep:hover{border-color:#3AA0FF}
+.chip{background:#CFE9FF;color:#1B2A41}
+.chip.pend{background:#F4FAFF;color:#1B2A41;border:1px dashed #3AA0FF}
+.chip.ok{background:#1B2A41;color:#F4FAFF}
+.barra-prog{background:#CFE9FF}.barra-prog i{background:#3AA0FF}
+.op{border-color:#9CCFFF}
+.op[aria-pressed="true"]{border-color:#3AA0FF;background:#CFE9FF;color:#1B2A41}
+.campo>span,.est-cab b,.dep b{color:#1B2A41}
+.campo input,.campo select,.campo textarea,.buscar input,.buscar select{border-color:#9CCFFF}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:#3AA0FF;box-shadow:0 0 0 3px #CFE9FF}
+.cambiado{border-color:#3AA0FF!important;background:#F4FAFF}
+.flotante{border-top:3px solid #3AA0FF;background:#fff}
+.flotante .sub{color:#1B2A41;font-weight:700}
+.toast{background:#1B2A41;color:#F4FAFF;border-left:5px solid #3AA0FF}
+.toast.error{border-left-color:#FF5A5F}
+.msg{background:#fff;color:#1B2A41;border:1.5px solid #FF5A5F;box-shadow:inset 5px 0 0 #FF5A5F}
+.critico{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:999px;background:#FF5A5F;color:#1B2A41}
+.datos-donde{padding:12px 14px;margin-bottom:12px;font-size:13.5px;background:#fff}
+.datos-donde a{color:#1B2A41;font-weight:700}
+footer p{color:#44546C}
+@media print{.imp td{border-color:#9CCFFF}.imp td.l{background:#CFE9FF;color:#1B2A41}.imp h2{border-bottom-color:#3AA0FF}.imp .kick{color:#1B2A41}}
 </style>
 </head>
 <body>
@@ -129,8 +161,8 @@ const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('
 let cat = S.store.get('evac.cat', null), redActual = S.store.get('evac.red', ''), q = '', fTipo = '';
 let borrador = null, borradorDep = null, ocupado = false;
 
-function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
-function tema(n) { const t = S.temaRed(n), r = document.documentElement.style; r.setProperty('--fuerte', t.fuerte); r.setProperty('--medio', t.medio); r.setProperty('--claro', t.claro); r.setProperty('--borde', t.borde); }
+function toast(t, error) { const d = document.createElement('div'); d.className = 'toast' + (error ? ' error' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
+function tema() { /* esta app usa siempre su paleta propia (ver estilos) */ }
 const red = n => cat && cat.redes.find(r => r.nombre === n);
 const camposDe = (r, ficha) => r.campos.filter(c => c.ficha === ficha);
 const secciones = l => { const o = []; l.forEach(c => { let s = o.find(x => x.n === c.seccion); if (!s) o.push(s = { n: c.seccion, c: [] }); s.c.push(c); }); return o; };
@@ -202,6 +234,8 @@ function vistaInicio() {
   const l = r.establecimientos.filter(e => (!fTipo || e.tipo === fTipo) && (!q || (e.nombre + ' ' + e.codigo).toLowerCase().indexOf(q.toLowerCase()) >= 0));
   app.innerHTML = `${cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''}
     <div class="buscar"><input id="q" type="search" placeholder="Buscar establecimiento" value="${E(q)}"><select id="fTipo"><option value="">Todos los tipos</option>${tipos.map(t => `<option ${t === fTipo ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></div>
+    <div class="tarjeta datos-donde"><b>Dónde se guardan los datos:</b> en la planilla EVAC de cada red (Google Sheets), a través del Apps Script del sistema. Lo que se carga acá queda en las hojas ESTABLECIMIENTOS y DEPENDENCIAS, y también se puede cargar o corregir directamente ahí.
+      ${cat.redes.filter(x => x.planilla).map(x => `<br><a href="${E(x.planilla)}" target="_blank" rel="noopener">Abrir planilla EVAC · ${E(x.nombre)}</a>`).join('')}</div>
     <div class="lista">${l.map(e => { const av = avance(e, lc), nd = r.dependencias.filter(d => d.codigo === e.codigo).length;
       return `<button class="tarjeta est" data-ir="#/est/${encodeURIComponent(r.nombre)}/${encodeURIComponent(e.codigo)}"><div class="est-cab"><b>${E(e.nombre)}</b>${chipEstado(e.estado)}</div>
         <div class="barra-prog" aria-label="${av} % completo"><i style="width:${av}%"></i></div>
@@ -225,7 +259,7 @@ function vistaEst(redN, cod) {
     <h3>Ficha del establecimiento</h3><div id="fichaEst">${seccionesHTML(lc, obj, dis, 'e_', true)}</div>
     <h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px">Dependencias (${deps.length})${puede ? '<button class="btn mini" data-act="nuevaDep"><span class="ms" style="font-size:17px">add</span>Agregar dependencia</button>' : ''}</h3>
     <p class="sub" style="margin:0 2px 8px">Una ficha por servicio, sector o área: internación, terapia, quirófano, guardia, consultorios, administración… Las áreas críticas primero.</p>
-    <div class="lista">${deps.map(d => `<button class="tarjeta dep" data-dep="${E(d.id)}"><span class="ms">meeting_room</span><b>${E(d.nombre)}<span class="sub" style="display:block;font-weight:500">${E([d.uso, d.sector, d.piso ? 'piso ' + d.piso : ''].filter(Boolean).join(' · ') || 's/d')}</span></b>${chipEstado(d.estado)}<span class="sub">${avance(d, ld)} %</span></button>`).join('') || '<div class="tarjeta vacio">Todavía no hay dependencias cargadas.</div>'}</div>`;
+    <div class="lista">${deps.map(d => `<button class="tarjeta dep" data-dep="${E(d.id)}"><span class="ms">meeting_room</span><b>${E(d.nombre)}<span class="sub" style="display:block;font-weight:500">${E([d.uso, d.sector, d.piso ? 'piso ' + d.piso : ''].filter(Boolean).join(' · ') || 's/d')}</span></b>${Number(d.pac_soporte) > 0 ? `<span class="critico" title="Pacientes con soporte vital: requieren el doble de personal para evacuar">${E(d.pac_soporte)} con soporte vital</span>` : ''}${chipEstado(d.estado)}<span class="sub">${avance(d, ld)} %</span></button>`).join('') || '<div class="tarjeta vacio">Todavía no hay dependencias cargadas.</div>'}</div>`;
   atarCampos($('#fichaEst'), borrador);
   const se = $('#selEstado'); if (se) se.addEventListener('change', () => { borrador.estado = se.value; avisarCambios(); $('#flot').classList.remove('oculto'); });
   if (Object.keys(borrador.datos).length || borrador.estado) $('#flot').classList.remove('oculto');
@@ -237,7 +271,7 @@ async function guardar(req, ok) {
   if (!navigator.onLine) { toast('Para guardar se necesita conexión. Los cambios siguen en pantalla.'); return false; }
   ocupado = true;
   try { const r = await S.api('evac_guardar', req); if (!r.ok) throw r; toast(ok); await cargar(false); return r; }
-  catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); return false; }
+  catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.', true); return false; }
   finally { ocupado = false; }
 }
 

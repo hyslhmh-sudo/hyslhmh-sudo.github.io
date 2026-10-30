@@ -284,7 +284,7 @@ function evacCatalogo_(u) {
     const est = E.filas.filter(x => veEstab_(u, x[0])).map(x => Object.assign(evacObj_(E.claves, x, EVAC_FIJAS_.est), { puedeCargar: cargaEstab_(u, r.nombre, x[0]) }));
     if (!est.length) return;
     const cods = est.map(e => e.codigo);
-    salida.redes.push({ nombre: r.nombre, campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
+    salida.redes.push({ nombre: r.nombre, planilla: u.rol === 'Administración' ? 'https://docs.google.com/spreadsheets/d/' + r.id + '/edit' : '', campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
   });
   return salida;
 }
