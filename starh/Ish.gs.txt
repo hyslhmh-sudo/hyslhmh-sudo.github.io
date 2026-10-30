@@ -575,14 +575,16 @@ function ishEstado_(u, req) {
   if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
   if (req.estado && ISH.ESTADOS_REL.indexOf(req.estado) < 0) throw new Error('Estado no válido');
   if (req.modelo && ISH.MODELOS.indexOf(req.modelo) < 0) throw new Error('Modelo no válido');
-  const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
-  const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
-  const i = cod.indexOf(req.codigo);
-  if (i < 0) throw new Error('Establecimiento inexistente');
-  const act = sh.getRange(i + 2, 5, 1, 4).getDisplayValues()[0];
-  const nuevo = [req.coordinador != null ? String(req.coordinador).slice(0, 200) || 's/d' : act[0],
-                 req.fecha != null ? String(req.fecha) || 's/d' : act[1], req.estado || act[2], req.modelo || act[3]];
-  sh.getRange(i + 2, 5, 1, 4).setValues([nuevo]);
-  registrar_(u, 'ISH · Datos de la evaluación', req.red, req.codigo, '', nuevo.join(' | '));
-  return { ok: true };
+  return conLock_(() => {
+    const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
+    const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
+    const i = cod.indexOf(req.codigo);
+    if (i < 0) throw new Error('Establecimiento inexistente');
+    const act = sh.getRange(i + 2, 5, 1, 4).getDisplayValues()[0];
+    const nuevo = [req.coordinador != null ? String(req.coordinador).slice(0, 200) || 's/d' : act[0],
+                   req.fecha != null ? String(req.fecha) || 's/d' : act[1], req.estado || act[2], req.modelo || act[3]];
+    sh.getRange(i + 2, 5, 1, 4).setValues([nuevo]);
+    registrar_(u, 'ISH · Datos de la evaluación', req.red, req.codigo, '', nuevo.join(' | '));
+    return { ok: true };
+  });
 }

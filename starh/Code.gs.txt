@@ -44,6 +44,7 @@ function onOpen() {
     .addItem('Generar o reiniciar clave (fila seleccionada en ACCESOS)', 'menuGenerarClave')
     .addItem('Definir una clave propia (fila seleccionada en ACCESOS)', 'menuDefinirClave')
     .addItem('Probar conexión con las planillas de las redes', 'menuProbarConexion')
+    .addItem('Actualizar tablero comparativo (DATOS)', 'menuActualizarComparativo')
     .addSeparator()
     .addItem('STAR-H · Pausar o reactivar para referentes y consultas', 'menuModoStarh')
     .addItem('PHR · Armar planillas de las redes nuevas', 'phrInstalar')
@@ -89,7 +90,7 @@ function prepararHojas() {
     sh = ss.insertSheet(CFG.HOJA_ACCESOS);
     sh.getRange(1, 1, 1, 11).setValues([[
       'DNI', 'Apellido y nombre', 'Rol', 'Redes', 'Establecimientos', 'Estado',
-      'Clave (cifrada, no editar)', 'Clave generada el', 'Último ingreso', 'Observaciones', 'Módulos (vacío = todos)']]);
+      'Clave (cifrada, no editar)', 'Clave generada el', 'Último ingreso', 'Observaciones', 'Módulos (vacío = STAR-H y PHR)']]);
     sh.setFrozenRows(1);
     sh.getRange('A1:K1').setFontWeight('bold').setFontColor('#FFFFFF').setBackground('#0D313F');
     sh.setColumnWidths(1, 10, 150);
@@ -249,7 +250,7 @@ function perfil_(f) {
   return {
     dni: f.dni, nombre: f.nombre, rol: f.rol,
     todasRedes: /^todas?$/i.test(redesTxt), redes: lista(redesTxt),
-    todosEstab: /^todos?$/i.test(estTxt) || estTxt === '', estab: lista(estTxt).map(x => x.toUpperCase()),
+    todosEstab: /^todos?$/i.test(estTxt) || (estTxt === '' && f.rol !== 'Referente'), estab: lista(estTxt).map(x => x.toUpperCase()),
     modulos: /^(todos?|)$/i.test(String(f.modulos || '').trim()) ? ['STAR-H', 'PHR'] : lista(f.modulos).map(x => x.toUpperCase())
   };
 }
@@ -387,7 +388,8 @@ function guardar_(u, items) {
           let n = fila[it.codigo + '|' + it.id];
           if (!n) {
             if (!it.nueva) throw new Error('No existe la amenaza ' + it.id + ' para ' + it.codigo);
-            n = sh.getLastRow() + 1;
+            n = ultimaConDatos_(sh) + 1;
+            if (n > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 20);
             sh.getRange(n, 1, 1, 7).setValues([[it.codigo, it.id, est[it.codigo], red,
               it.origen || 's/d', it.grupo || 'Agregada en la reunión', String(it.amenaza || 's/d').slice(0, 300)]]);
             fila[it.codigo + '|' + it.id] = n;
@@ -413,6 +415,7 @@ function guardar_(u, items) {
   } finally {
     lock.releaseLock();
   }
+  if (resultados.some(x => x.ok)) { try { actualizarComparativo_(); } catch (e) { /* el comparativo se puede actualizar desde el menú */ } }
   return { ok: true, resultados: resultados };
 }
 
@@ -423,21 +426,23 @@ function estado_(u, req) {
   if (!r) throw new Error('Red no activa');
   if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
   if (req.estado && CFG.ESTADOS_RELEV.indexOf(req.estado) < 0) throw new Error('Estado no válido');
-  const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
-  const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
-  const i = cod.indexOf(req.codigo);
-  if (i < 0) throw new Error('Establecimiento inexistente');
-  const n = i + 2;
-  const actual = sh.getRange(n, 7, 1, 4).getDisplayValues()[0];
-  const nuevo = [
-    req.referente != null ? String(req.referente).slice(0, 200) || 's/d' : actual[0],
-    req.fechaReunion != null ? String(req.fechaReunion) || 's/d' : actual[1],
-    req.estado || actual[2],
-    req.ish != null ? String(req.ish) || 's/d' : actual[3]
-  ];
-  sh.getRange(n, 7, 1, 4).setValues([nuevo]);
-  registrar_(u, 'Datos del relevamiento', req.red, req.codigo, '', nuevo.join(' | '));
-  return { ok: true };
+  return conLock_(() => {
+    const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
+    const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
+    const i = cod.indexOf(req.codigo);
+    if (i < 0) throw new Error('Establecimiento inexistente');
+    const n = i + 2;
+    const actual = sh.getRange(n, 7, 1, 4).getDisplayValues()[0];
+    const nuevo = [
+      req.referente != null ? String(req.referente).slice(0, 200) || 's/d' : actual[0],
+      req.fechaReunion != null ? String(req.fechaReunion) || 's/d' : actual[1],
+      req.estado || actual[2],
+      req.ish != null ? String(req.ish) || 's/d' : actual[3]
+    ];
+    sh.getRange(n, 7, 1, 4).setValues([nuevo]);
+    registrar_(u, 'Datos del relevamiento', req.red, req.codigo, '', nuevo.join(' | '));
+    return { ok: true };
+  });
 }
 
 /* ---------- Tablero ---------- */
@@ -522,7 +527,7 @@ function volcarRegistro_() {
   if (!LOG_.length) return;
   try {
     const sh = SpreadsheetApp.getActive().getSheetByName(CFG.HOJA_REGISTRO);
-    if (sh) sh.getRange(sh.getLastRow() + 1, 1, LOG_.length, 8).setValues(LOG_);
+    if (sh) conLock_(() => sh.getRange(sh.getLastRow() + 1, 1, LOG_.length, 8).setValues(LOG_));
   } catch (e) { /* el registro nunca frena la carga */ }
   LOG_.length = 0;
 }
@@ -533,3 +538,79 @@ function avisar_(msg) {
 }
 
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+
+/* =========================================================
+ *  TABLERO COMPARATIVO EN LA PLANILLA (respaldo con Apps Script)
+ *  Copia la hoja EVALUACIÓN de cada red activa en DATOS, como valores.
+ *  Reemplaza a IMPORTRANGE: no hace falta «Permitir acceso».
+ *  Se actualiza solo después de cada carga STAR-H desde la app,
+ *  y a mano desde el menú STAR-H app › Actualizar tablero comparativo.
+ * ========================================================= */
+function menuActualizarComparativo() {
+  const r = actualizarComparativo_();
+  avisar_('Tablero comparativo actualizado.\n' + r.join('\n'));
+}
+
+function actualizarComparativo_() {
+  const ss = SpreadsheetApp.getActive();
+  const datos = ss.getSheetByName('DATOS'), hr = ss.getSheetByName(CFG.HOJA_REDES);
+  if (!datos || !hr) return ['Faltan las hojas DATOS o REDES.'];
+  const enc = ['Red', 'Código', 'ID amenaza', 'Establecimiento', 'Origen', 'Amenaza', 'Aplica', 'Probabilidad', 'Gravedad', 'Impacto', 'Riesgo', 'Nivel de riesgo'];
+  const filas = [], informe = [];
+  const listaRedes = hr.getDataRange().getDisplayValues();
+  const estado = listaRedes.slice(1).map(() => ['']);
+  listaRedes.slice(1).forEach((x, i) => {
+    if (!x[0]) return;
+    if (!x[1]) { estado[i] = ['Sin planilla cargada']; return; }
+    if (!/^activa$/i.test(String(x[2]).trim())) { estado[i] = ['No se lee (estado: ' + (x[2] || 's/d') + ')']; return; }
+    try {
+      const ev = SpreadsheetApp.openById(idPlanilla_(x[1])).getSheetByName('EVALUACIÓN');
+      const n = ev.getLastRow() - 1;
+      const v = n > 0 ? ev.getRange(2, 1, n, 18).getValues() : [];
+      let k = 0;
+      v.forEach(f => {
+        if (!f[0]) return;
+        k++;
+        filas.push([x[0].trim(), f[0], f[1], f[2], f[4], f[6], f[7], f[8], f[14], f[15], typeof f[16] === 'number' ? f[16] : '', f[17]]);
+      });
+      estado[i] = ['Conectada · ' + k + ' filas · ' + Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm')];
+      informe.push('✔ ' + x[0] + ': ' + k + ' filas');
+    } catch (e) {
+      estado[i] = ['Sin acceso: ' + e.message];
+      informe.push('✖ ' + x[0] + ': ' + e.message);
+    }
+  });
+  datos.getRange(2, 1, Math.max(datos.getMaxRows() - 1, 1), 12).clearContent();
+  datos.getRange(1, 1, 1, 12).setValues([enc]);
+  if (filas.length) {
+    if (datos.getMaxRows() < filas.length + 1) datos.insertRowsAfter(datos.getMaxRows(), filas.length + 1 - datos.getMaxRows());
+    datos.getRange(2, 1, filas.length, 12).setValues(filas);
+  }
+  if (estado.length) {
+    hr.getRange(1, 6).setValue('Conexión (la actualiza el script)');
+    hr.getRange(2, 6, estado.length, 1).setValues(estado);
+  }
+  return informe.length ? informe : ['No hay redes activas en REDES.'];
+}
+
+/* ---------- Bloqueo y numeración sin repetir ---------- */
+// Ejecuta fn con el bloqueo del script (evita que dos cargas simultáneas se pisen).
+function conLock_(fn) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+// Próximo número de un código (P-, F-, D-, I-, E-): nunca reutiliza uno borrado.
+// clave: identifica la hoja (por ejemplo 'EVAC|<id planilla>|E'); maxActual: el mayor número presente en la hoja.
+function siguienteNumero_(clave, maxActual) {
+  const pr = PropertiesService.getScriptProperties();
+  const n = Math.max(Number(pr.getProperty('ID_' + clave)) || 0, maxActual) + 1;
+  pr.setProperty('ID_' + clave, String(n));
+  return n;
+}
+// Última fila con código en la columna A (las columnas con ARRAYFORMULA no cuentan).
+function ultimaConDatos_(sh) {
+  const a = sh.getRange(1, 1, Math.max(sh.getLastRow(), 1), 1).getDisplayValues();
+  for (let i = a.length - 1; i >= 0; i--) if (String(a[i][0]).trim()) return i + 1;
+  return 1;
+}

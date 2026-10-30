@@ -316,10 +316,13 @@ function evacGuardar_(u, req) {
         sh.deleteRow(f); registrar_(u, 'EVAC · Quitar dependencia', req.red, req.codigo, req.id, ''); return { ok: true };
       }
       const nombre = String(req.nombre || '').trim(); if (!nombre) throw new Error('Falta el nombre de la dependencia.');
-      if (req.id) { fila = todas.indexOf(req.id) + 1; if (fila < 3) throw new Error('No existe la dependencia ' + req.id); id = req.id; }
+      if (req.id) {
+        fila = todas.indexOf(req.id) + 1; if (fila < 3) throw new Error('No existe la dependencia ' + req.id); id = req.id;
+        if (sh.getRange(fila, 2).getDisplayValue() !== req.codigo) throw new Error('La dependencia no es de ese establecimiento');
+      }
       else {
         let max = 0; todas.forEach(v => { const m = String(v).match(/^D-(\d+)$/); if (m) max = Math.max(max, Number(m[1])); });
-        id = 'D-' + ('00' + (max + 1)).slice(-3);
+        id = 'D-' + String(siguienteNumero_('EVAC|' + r.id + '|D', max)).padStart(3, '0');
         let ult = todas.length; while (ult > 2 && !String(todas[ult - 1]).trim()) ult--;
         fila = ult + 1;
       }
@@ -419,7 +422,7 @@ function evacDefCampos_(def) { return def.map(d => ({ clave: d[0], campo: d[1], 
 function evacSiguiente_(sh, pref, ancho) {
   let max = 0;
   sh.getRange(1, 1, Math.max(sh.getLastRow(), 1), 1).getDisplayValues().forEach(x => { const m = String(x[0]).match(new RegExp('^' + pref + '-(\\d+)$')); if (m) max = Math.max(max, Number(m[1])); });
-  return pref + '-' + ('0000' + (max + 1)).slice(-ancho);
+  return pref + '-' + String(siguienteNumero_('EVAC|' + sh.getParent().getId() + '|' + pref, max)).padStart(ancho, '0');
 }
 function evacUltimaFila_(sh) {
   const a = sh.getRange(1, 1, Math.max(sh.getLastRow(), 2), 1).getDisplayValues();

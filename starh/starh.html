@@ -313,6 +313,7 @@ function aplicarEstadoLocal(it) {
 }
 function encolar(it) {
   const clave = c => c.tipo + '|' + c.red + '|' + c.codigo + '|' + (c.id || '');
+  if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { it = Object.assign({}, v, it); delete it.error; } } 
   cola = cola.filter(c => clave(c) !== clave(it));
   cola.push(it); guardarCola(); programarSync();
 }

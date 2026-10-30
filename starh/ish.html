@@ -293,7 +293,7 @@ function aplicarLocal(it) {
   const e = r.relevamiento.find(x => x.codigo === it.codigo && Number(x.n) === Number(it.n)); if (e) ['nivel', 'obs', 'fecha', 'evaluador'].forEach(k => e[k] = it[k] || '');
 }
 function aplicarEstadoLocal(it) { const r = red(it.red), e = r && r.establecimientos.find(x => x.codigo === it.codigo); if (e) ['coordinador', 'fecha', 'estado', 'modelo'].forEach(k => { if (it[k] != null) e[k] = it[k]; }); }
-function encolar(it) { cola = cola.filter(c => clave(c) !== clave(it)); cola.push(it); guardarCola(); programarSync(); }
+function encolar(it) { if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { it = Object.assign({}, v, it); delete it.error; } } cola = cola.filter(c => clave(c) !== clave(it)); cola.push(it); guardarCola(); programarSync(); }
 
 /* ---------- navegación ---------- */
 function ir(h) { if (location.hash !== h) location.hash = h; else render(); }

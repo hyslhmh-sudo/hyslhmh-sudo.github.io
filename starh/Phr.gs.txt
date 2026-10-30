@@ -258,7 +258,7 @@ function phrArmar_(ss, red, est) {
     f.push(fila);
   });
   tb.getRange(5, 1, f.length, encab.length).setFormulas(f);
-  const tot = ['', 'Total de la red', '', '', '', '=IFERROR(AVERAGE(RELEVAMIENTO!K2:K);"s/d")'];
+  const tot = ['', '="Total de la red"', '', '', '','=IFERROR(AVERAGE(RELEVAMIENTO!K2:K);"s/d")'];
   PHR.SECCIONES.forEach(s => tot.push('=IFERROR(AVERAGEIFS(RELEVAMIENTO!$K:$K;RELEVAMIENTO!$F:$F;"' + s[0] + ' · *");"s/d")'));
   tb.getRange(5 + f.length, 1, 1, encab.length).setFormulas([tot]).setFontWeight('bold');
   tb.getRange(4, 1, 1, encab.length).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
@@ -360,16 +360,18 @@ function phrEstado_(u, req) {
   if (!r) throw new Error('Red no activa');
   if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
   if (req.estado && PHR.ESTADOS_REL.indexOf(req.estado) < 0) throw new Error('Estado no válido');
-  const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
-  const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
-  const i = cod.indexOf(req.codigo);
-  if (i < 0) throw new Error('Establecimiento inexistente');
-  const act = sh.getRange(i + 2, 5, 1, 3).getDisplayValues()[0];
-  const nuevo = [req.referente != null ? String(req.referente).slice(0, 200) || 's/d' : act[0],
-                 req.fecha != null ? String(req.fecha) || 's/d' : act[1], req.estado || act[2]];
-  sh.getRange(i + 2, 5, 1, 3).setValues([nuevo]);
-  registrar_(u, 'PHR · Datos del relevamiento', req.red, req.codigo, '', nuevo.join(' | '));
-  return { ok: true };
+  return conLock_(() => {
+    const sh = SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS');
+    const cod = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getDisplayValues().map(x => x[0]);
+    const i = cod.indexOf(req.codigo);
+    if (i < 0) throw new Error('Establecimiento inexistente');
+    const act = sh.getRange(i + 2, 5, 1, 3).getDisplayValues()[0];
+    const nuevo = [req.referente != null ? String(req.referente).slice(0, 200) || 's/d' : act[0],
+                   req.fecha != null ? String(req.fecha) || 's/d' : act[1], req.estado || act[2]];
+    sh.getRange(i + 2, 5, 1, 3).setValues([nuevo]);
+    registrar_(u, 'PHR · Datos del relevamiento', req.red, req.codigo, '', nuevo.join(' | '));
+    return { ok: true };
+  });
 }
 
 function phrTablero_(u) {

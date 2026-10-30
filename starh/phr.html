@@ -283,7 +283,7 @@ function aplicarLocal(it) {
   ['evidencia', 'brecha', 'responsable', 'prioridad', 'fecha', 'relevador'].forEach(k => e[k] = it[k] || '');
 }
 function aplicarEstadoLocal(it) { const r = red(it.red), e = r && r.establecimientos.find(x => x.codigo === it.codigo); if (e) ['referente', 'fecha', 'estado'].forEach(k => { if (it[k] != null) e[k] = it[k]; }); }
-function encolar(it) { const k = c => c.tipo + '|' + c.red + '|' + c.codigo + '|' + (c.id || ''); cola = cola.filter(c => k(c) !== k(it)); cola.push(it); guardarCola(); programarSync(); }
+function encolar(it) { if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { it = Object.assign({}, v, it); delete it.error; } } const k = c => c.tipo + '|' + c.red + '|' + c.codigo + '|' + (c.id || ''); cola = cola.filter(c => k(c) !== k(it)); cola.push(it); guardarCola(); programarSync(); }
 
 /* ---------- navegación ---------- */
 function ir(h) { if (location.hash !== h) location.hash = h; else render(); }

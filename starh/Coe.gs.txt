@@ -97,7 +97,7 @@ function coeCol_(sh, col) { return sh.getRange(2, col, Math.max(sh.getLastRow() 
 function coeSiguienteId_(sh, pref) {
   let max = 0;
   coeCol_(sh, 1).forEach(v => { const m = v.match(/^[A-Z]+-(\d+)$/); if (m) max = Math.max(max, Number(m[1])); });
-  return pref + '-' + ('00' + (max + 1)).slice(-3);
+  return pref + '-' + String(siguienteNumero_('COE|' + sh.getName() + '|' + pref, max)).padStart(3, '0');
 }
 function coeUltima_(sh) {
   const a = sh.getRange(1, 1, Math.max(sh.getLastRow(), 1), 1).getDisplayValues();
@@ -108,8 +108,9 @@ function coeExigirCarga_(u) { if (u.rol !== 'Administración') throw new Error('
 
 /* ---------- API ---------- */
 function fuentes_() {
-  const h = coeHojas_();
-  const f = h.fu.getDataRange().getDisplayValues().slice(1).filter(x => x[1]).map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
+  const fu = SpreadsheetApp.getActive().getSheetByName('FUENTES');
+  if (!fu) return { ok: true, fuentes: [] };
+  const f = fu.getDataRange().getDisplayValues().slice(1).filter(x => x[1]).map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
   return { ok: true, fuentes: f };
 }
 
