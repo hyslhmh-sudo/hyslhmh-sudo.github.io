@@ -62,10 +62,19 @@ body{background:#F4FAFF}
 .btn.peligro{background:#fff;color:#1B2A41;border-color:#FF5A5F;box-shadow:inset 4px 0 0 #FF5A5F}
 .msg{background:#fff;color:#1B2A41;border:1.5px solid #FF5A5F;box-shadow:inset 5px 0 0 #FF5A5F}
 .toast{background:#1B2A41;color:#F4FAFF;border-left:5px solid #3AA0FF}
-.mod{border-top-color:#3AA0FF!important}
-.mod .ico{background:#CFE9FF!important;color:#1B2A41!important}
-.mod .pie a{color:#1B2A41!important}
-.mod:hover{box-shadow:0 2px 4px rgba(27,42,65,.08),0 10px 24px rgba(58,160,255,.18)}
+.mod{background:var(--bg)!important;color:var(--fg);border:0!important;border-radius:18px;overflow:hidden;min-height:184px;
+  box-shadow:0 2px 4px rgba(27,42,65,.10),0 10px 26px rgba(27,42,65,.14)}
+.mod:hover{transform:translateY(-3px);box-shadow:0 4px 8px rgba(27,42,65,.12),0 16px 34px rgba(58,160,255,.28)}
+.mod:focus-visible{outline:3px solid #3AA0FF;outline-offset:3px}
+.mod .num{color:var(--fg);opacity:.65}
+.mod .ico{background:var(--chip)!important;color:var(--fg)!important;border-radius:14px}
+.mod b{color:var(--fg);font-size:18px;position:relative}
+.mod p{color:var(--fg);opacity:.88;position:relative}
+.mod .pie{position:relative}
+.mod .pie a{color:var(--fg)!important;background:var(--chip);padding:6px 11px;border-radius:999px}
+.mod .pie a:hover{filter:brightness(1.1)}
+.mod .fantasma{position:absolute;right:-14px;bottom:-22px;font-size:118px;color:var(--fg);opacity:.08;pointer-events:none}
+.mod .candado{background:var(--chip);color:var(--fg)}
 .sesion button{background:#3AA0FF;color:#1B2A41}
 .ingreso h2{color:#1B2A41}
 </style>
@@ -95,13 +104,13 @@ body{background:#F4FAFF}
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 // clave: flag del usuario que habilita la sección (null = abierta a todos)
 const MODS = [
-  { n: 1, t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', c: '#1B2A41', cc: '#CFE9FF' },
-  { n: 2, t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1B2A41', cc: '#CFE9FF' },
-  { n: 3, t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023).', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#1B2A41', cc: '#CFE9FF' },
-  { n: 4, t: 'Fuentes', d: 'Bibliografía y normativa en que se basan los relevamientos, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#3AA0FF', cc: '#CFE9FF' },
-  { n: 5, t: 'COE', d: 'Participantes del comité y del centro de operaciones de emergencia: datos, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#1B2A41', cc: '#CFE9FF' },
-  { n: 6, t: 'Formularios para imprimir', d: 'Formularios de campo de STAR-H, PHR e ISH, en blanco o con lo cargado, por establecimiento.', ico: 'print', href: 'imprimir.html', flag: null, c: '#1B2A41', cc: '#F4FAFF' },
-  { n: 7, t: 'Evacuación hospitalaria', d: 'Fichas de cada establecimiento y dependencia para los planes de evacuación: población, edificio, salidas, gases, incendio y organización.', ico: 'directions_run', href: 'evac.html', flag: 'evac', c: '#1B2A41', cc: '#CFE9FF' }
+  { n: 1, t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#1B2A41 0%,#2E4A70 100%)', fg: '#F4FAFF', chip: 'rgba(244,250,255,.16)' },
+  { n: 2, t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#3AA0FF 0%,#6CB8FF 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.12)' },
+  { n: 3, t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023).', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#1B2A41 0%,#2C5C93 100%)', fg: '#F4FAFF', chip: 'rgba(244,250,255,.16)' },
+  { n: 4, t: 'Fuentes', d: 'Bibliografía y normativa en que se basan los relevamientos, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, bg: 'linear-gradient(135deg,#CFE9FF 0%,#F4FAFF 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.08)' },
+  { n: 5, t: 'COE', d: 'Participantes del comité y del centro de operaciones de emergencia: datos, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', bg: 'linear-gradient(135deg,#9CCFFF 0%,#3AA0FF 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.12)' },
+  { n: 6, t: 'Formularios para imprimir', d: 'Formularios de campo de STAR-H, PHR e ISH, en blanco o con lo cargado, por establecimiento.', ico: 'print', href: 'imprimir.html', flag: null, bg: 'linear-gradient(135deg,#2E4A70 0%,#1B2A41 100%)', fg: '#F4FAFF', chip: 'rgba(244,250,255,.16)' },
+  { n: 7, t: 'Evacuación hospitalaria', d: 'Fichas de cada establecimiento y dependencia para los planes de evacuación: población, edificio, salidas, gases, incendio y organización.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(135deg,#FF5A5F 0%,#FF8A8D 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.12)' }
 ];
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
@@ -110,7 +119,7 @@ function pintar() {
   if (u) $('#quien').textContent = (u.nombre || '') + (u.rol ? ' · ' + u.rol : '');
   $('#rejilla').innerHTML = MODS.map(m => {
     const cerrado = u && m.flag && u[m.flag] === false;
-    return `<div class="tarjeta mod" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.n + '. ' + m.t)}" style="--c:${m.c};--cc:${m.cc};cursor:pointer">
+    return `<div class="tarjeta mod" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.n + '. ' + m.t)}" style="--bg:${m.bg};--fg:${m.fg};--chip:${m.chip};cursor:pointer"><span class="ms fantasma" aria-hidden="true">${m.ico}</span>
       <span class="num">${m.n}</span><span class="ico"><span class="ms">${m.ico}</span></span>
       <b>${E(m.t)}</b><p>${E(m.d)}</p>
       <span class="pie">${cerrado ? `<span class="candado"><span class="ms">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>` : ''}
