@@ -290,7 +290,7 @@ async function cargarUsuarios() {
   catch (e) { $('#vista').innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || 'No se pudieron traer los usuarios.')}</div>`; }
 }
 const MOD_TXT = { 'STAR-H': 'STAR-H', PHR: 'PHR', ISH: 'ISH', COE: 'COE (consulta)', EVAC: 'Evacuación' };
-const modsDe = x => { const t = String(x.modulos || '').trim(); return !t || /^todos?$/i.test(t) ? ['STAR-H', 'PHR'] : t.split(/[;,]/).map(y => y.trim().toUpperCase()).filter(Boolean); };
+const modsDe = x => { if (x.rol === 'Administración') return ['STAR-H', 'PHR', 'ISH', 'COE', 'EVAC']; const t = String(x.modulos || '').trim(); return !t || /^todos?$/i.test(t) ? ['STAR-H', 'PHR'] : t.split(/[;,]/).map(y => y.trim().toUpperCase()).filter(Boolean); };
 function vistaUsuarios() {
   if (!acc) return cargarUsuarios();
   const l = acc.usuarios.filter(x => !q || (x.nombre + ' ' + x.dni).toLowerCase().indexOf(q.toLowerCase()) >= 0).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));

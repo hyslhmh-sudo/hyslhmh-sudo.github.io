@@ -1,6 +1,6 @@
 /* STAR-H · trabajo sin señal: guarda la app en el dispositivo.
  * Al publicar una versión nueva, cambiar el número de VERSION para que todos la reciban. */
-const VERSION = 'starh-v0.18';
+const VERSION = 'starh-v0.19';
 const ARCHIVOS = ['./', 'index.html', 'starh.html', 'coe.html', 'fuentes.html', 'evac.html', 'tablero.html', 'phr.html', 'phr-tablero.html', 'imprimir.html', 'ish.html', 'ish-tablero.html', 'guias.js', 'starh.js', 'config.js', 'demo-amenazas.js',
   'logo-hysl.png', 'enc-trelew.png', 'enc-secretaria.png', 'enc-hsst.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
