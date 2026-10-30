@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ISH · Índice de Seguridad Hospitalaria</title>
 <meta name="description" content="Índice de Seguridad Hospitalaria (OPS/OMS, Guía para evaluadores, 2.ª ed., 2018).">
-<meta name="theme-color" content="#1B2A41">
+<meta name="theme-color" content="#172B4D">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -15,9 +15,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
 <style>
 :root{
-  --fuerte:#1B2A41; --medio:#3AA0FF; --claro:#CFE9FF; --borde:#9CCFFF;
-  --texto:#1B2A41; --suave:#44546C; --tenue:#5E6E86; --linea:#CFE9FF; --fondo:#F4FAFF; --papel:#FFFFFF;
-  --ok:#3AA0FF; --alerta:#3AA0FF; --error:#1B2A41;
+  --fuerte:#172B4D; --medio:#2F5BEA; --claro:#E4EAFB; --borde:#C5D1F2;
+  --texto:#172B4D; --suave:#4B5B73; --tenue:#6B7A90; --linea:#E4EAFB; --fondo:#F5F7FB; --papel:#FFFFFF;
+  --ok:#2F5BEA; --alerta:#2F5BEA; --error:#172B4D;
   --radio:12px; --sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06);
 }
 *{box-sizing:border-box}
@@ -35,7 +35,7 @@ a{color:var(--fuerte)}
 .icono:hover{background:rgba(255,255,255,.14)}
 .sync{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:999px;padding:6px 10px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
 .sync .ms{font-size:18px}
-.demo{background:#CFE9FF;color:#1B2A41;font-size:12.5px;padding:7px 16px;text-align:center;border-bottom:1px solid #9CCFFF}
+.demo{background:#E4EAFB;color:#172B4D;font-size:12.5px;padding:7px 16px;text-align:center;border-bottom:1px solid #C5D1F2}
 
 main{max-width:880px;margin:0 auto;padding:16px 16px 120px}
 .tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
@@ -48,7 +48,7 @@ h3{font-size:14.5px;margin:0 0 8px;color:var(--fuerte)}
 .ingreso h2{font-size:21px;margin:0 0 4px}
 .campo{display:block;margin:14px 0}
 .campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:5px}
-.campo input,.campo select,.campo textarea{width:100%;border:1px solid #9CCFFF;border-radius:10px;padding:11px 12px;background:#fff;outline:none}
+.campo input,.campo select,.campo textarea{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:11px 12px;background:#fff;outline:none}
 .campo textarea{min-height:68px;resize:vertical}
 .campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--medio);box-shadow:0 0 0 3px var(--claro)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px}
@@ -57,7 +57,7 @@ h3{font-size:14.5px;margin:0 0 8px;color:var(--fuerte)}
 .btn.sec:hover{background:var(--claro)}
 .btn.ancho{width:100%}
 .btn:disabled{opacity:.55;cursor:default}
-.msg{margin-top:12px;font-size:13.5px;padding:10px 12px;border-radius:10px;background:#FFC9CB;color:var(--error)}
+.msg{margin-top:12px;font-size:13.5px;padding:10px 12px;border-radius:10px;background:#FFE5CC;color:var(--error)}
 
 /* selector de red */
 .redes{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
@@ -73,11 +73,11 @@ h3{font-size:14.5px;margin:0 0 8px;color:var(--fuerte)}
 .est{padding:14px;display:grid;gap:8px;cursor:pointer;text-align:left;width:100%}
 .est:hover{border-color:var(--borde)}
 .est-cab{display:flex;gap:10px;align-items:flex-start}
-.est-cab b{flex:1;font-size:15px;color:#1B2A41}
+.est-cab b{flex:1;font-size:15px;color:#172B4D}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
-.chip.pend{background:#F4FAFF;color:var(--suave)}
-.chip.cola{background:#CFE9FF;color:#1B2A41}
-.barra-prog{height:6px;border-radius:99px;background:#F4FAFF;overflow:hidden}
+.chip.pend{background:#F5F7FB;color:var(--suave)}
+.chip.cola{background:#E4EAFB;color:#172B4D}
+.barra-prog{height:6px;border-radius:99px;background:#F5F7FB;overflow:hidden}
 .barra-prog i{display:block;height:100%;background:var(--medio);border-radius:99px}
 .est-pie{display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--suave);align-items:center}
 .niv{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
@@ -93,9 +93,9 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .filtro{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .filtro[aria-pressed="true"]{background:var(--claro);border-color:var(--borde);color:var(--fuerte)}
 .buscar{position:relative;margin-bottom:10px}
-.buscar input{width:100%;border:1px solid #9CCFFF;border-radius:10px;padding:10px 12px 10px 38px;background:#fff}
+.buscar input{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:10px 12px 10px 38px;background:#fff}
 .buscar .ms{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--tenue)}
-.guia{margin:0 2px 8px;font-size:13px;color:#1B2A41}
+.guia{margin:0 2px 8px;font-size:13px;color:#172B4D}
 .guia summary{cursor:pointer;color:var(--fuerte);font-weight:700;font-size:13px;list-style:none;display:flex;align-items:center;gap:4px}
 .guia summary::-webkit-details-marker{display:none}
 .guia .g-in{background:var(--claro);border-radius:10px;padding:10px 12px;margin-top:6px}
@@ -105,7 +105,7 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .grupo-tit{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--suave);margin:16px 2px 6px}
 .amen{display:flex;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--linea);cursor:pointer;background:#fff;width:100%;text-align:left;border-left:0;border-right:0;border-top:0}
 .amen:last-child{border-bottom:0}
-.amen:hover{background:#F4FAFF}
+.amen:hover{background:#F5F7FB}
 .amen .id{font-size:12px;font-weight:700;color:var(--tenue);width:34px;flex:none}
 .amen .nom{flex:1;min-width:0;font-size:14px}
 .bloque{overflow:hidden}
@@ -126,14 +126,14 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .opciones{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .opciones.tres{grid-template-columns:repeat(3,1fr)}
 .opciones.dos{grid-template-columns:repeat(2,1fr)}
-.op{border:1.5px solid #9CCFFF;background:#fff;border-radius:10px;padding:9px 4px;cursor:pointer;font-weight:700;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.op{border:1.5px solid #C5D1F2;background:#fff;border-radius:10px;padding:9px 4px;cursor:pointer;font-weight:700;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 .op small{font-weight:500;font-size:10.5px;color:var(--suave);line-height:1.15;text-align:center}
 .op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
 .op[aria-pressed="true"] small{color:var(--fuerte)}
 .desc{font-size:13px;color:var(--suave);margin-top:8px;min-height:18px}
 .resultado{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:grid;gap:10px}
 .calc{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
-.calc b{font-size:16px;color:#1B2A41;font-variant-numeric:tabular-nums}
+.calc b{font-size:16px;color:#172B4D;font-variant-numeric:tabular-nums}
 .calc .niv{font-size:13px;padding:5px 10px}
 .acciones{display:flex;gap:8px}
 .acciones .btn{flex:1}
@@ -149,21 +149,21 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .tabla-esc{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 10px}
 .tabla-esc td,.tabla-esc th{border:1px solid var(--linea);padding:5px 7px;text-align:left;vertical-align:top}
 .tabla-esc th{background:var(--claro);color:var(--fuerte)}
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#1B2A41;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;box-shadow:var(--sombra);max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#172B4D;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;box-shadow:var(--sombra);max-width:calc(100% - 32px)}
 footer{text-align:center;padding:24px 16px 12px}
 footer img{width:min(340px,80%);height:auto;opacity:.95}
 footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 .vacio{padding:28px;text-align:center;color:var(--suave)}
 @media (max-width:520px){.resumen b{font-size:19px}.rejilla{grid-template-columns:1fr}.op small{display:none}}
 .secciones{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.sec-chip{font-size:12px;padding:4px 8px;border-radius:6px;color:#1B2A41;white-space:nowrap}
+.sec-chip{font-size:12px;padding:4px 8px;border-radius:6px;color:#172B4D;white-space:nowrap}
 .tabs{display:flex;gap:6px;overflow-x:auto;margin:4px 0 10px;padding-bottom:2px}
 .tab{border:1px solid var(--linea);background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-start;gap:1px}
 .tab small{font-weight:600;font-size:11px;color:var(--suave)}
 .tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
 .tab[aria-pressed="true"] small{color:#fff;opacity:.85}
 .indice{display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap}
-.indice .big{font-size:30px;font-weight:800;color:#1B2A41;font-variant-numeric:tabular-nums}
+.indice .big{font-size:30px;font-weight:800;color:#172B4D;font-variant-numeric:tabular-nums}
 .cat{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:10px;font-size:20px;font-weight:800}
 .opciones.cuatro{grid-template-columns:repeat(4,1fr)}
 .amen .id{width:40px}
@@ -204,8 +204,8 @@ let filtro = 'pend', busqueda = '', sincronizando = false, ultimoError = '';
 let borrador = null, listaHoja = [];
 const NIV = ['Bajo', 'Medio', 'Alto', 'No evaluado'];
 const AMN = ['No existe', 'Bajo', 'Medio', 'Alto'];
-const COLOR = { 'Alto': ['#3AA0FF', '#1B2A41'], 'Medio': ['#CFE9FF', '#1B2A41'], 'Bajo': ['#FF5A5F', '#1B2A41'], 'No evaluado': ['#F4FAFF', '#44546C'], 'No existe': ['#F4FAFF', '#44546C'] };
-const COLOR_AM = { 'Alto': COLOR['Bajo'], 'Medio': COLOR['Medio'], 'Bajo': COLOR['Alto'], 'No existe': COLOR['No existe'] };
+const COLOR = { 'Alto': ['#C8E6C9', '#1B5E20'], 'Medio': ['#FFF3C4', '#5D4500'], 'Bajo': ['#FFD8B0', '#7A3300'], 'No evaluado': ['#EEF2F7', '#4B5B73'], 'No existe': ['#EEF2F7', '#4B5B73'] };
+const COLOR_AM = { 'Alto': ['#F8C9C7', '#7F1D1D'], 'Medio': COLOR['Medio'], 'Bajo': COLOR['Alto'], 'No existe': COLOR['No existe'] };
 const MODS = [['1', 'Amenazas'], ['2', 'Estructural'], ['3', 'No estructural'], ['4', 'Gestión']];
 
 if (S.DEMO) { $('#demo').textContent = 'La app ISH necesita la conexión con el Apps Script (no tiene modo demostración).'; $('#demo').classList.remove('oculto'); }
@@ -215,8 +215,8 @@ function guardarCat() { S.store.set(K + 'cat', cat); }
 function guardarCola() { S.store.set(K + 'cola', cola); pintarSync(); }
 function tema(nombre) { const t = S.temaRed(nombre), r = document.documentElement.style; r.setProperty('--fuerte', t.fuerte); r.setProperty('--medio', t.medio); r.setProperty('--claro', t.claro); r.setProperty('--borde', t.borde); document.querySelector('meta[name=theme-color]').setAttribute('content', t.fuerte); }
 function chip(v, tabla) { const c = (tabla || COLOR)[v]; return c ? `<span class="niv" style="background:${c[0]};color:${c[1]}">${S.esc(v)}</span>` : ''; }
-function chipValor(v) { return `<span class="niv" style="background:${G.colorValor(v)};color:#1B2A41">${G.fmt2(v)}</span>`; }
-function chipCat(c) { return c ? `<span class="cat" style="background:${{ A: '#3AA0FF', B: '#CFE9FF', C: '#FF5A5F' }[c.cat]};color:${{ A: '#1B2A41', B: '#1B2A41', C: '#1B2A41' }[c.cat]}">${c.cat}</span>` : '<span class="cat" style="background:#F4FAFF;color:#5E6E86">–</span>'; }
+function chipValor(v) { return `<span class="niv" style="background:${G.colorValor(v)};color:#172B4D">${G.fmt2(v)}</span>`; }
+function chipCat(c) { return c ? `<span class="cat" style="background:${{ A: '#C8E6C9', B: '#FFF3C4', C: '#FFD8B0' }[c.cat]};color:${{ A: '#1B5E20', B: '#5D4500', C: '#7A3300' }[c.cat]}">${c.cat}</span>` : '<span class="cat" style="background:#F5F7FB;color:#6B7A90">–</span>'; }
 function red(n) { return cat && cat.redes.find(r => r.nombre === n); }
 function subNombre(c) { const s = (cat.submodulos || []).find(x => x[0] === c); return s ? s[2] : c; }
 function hecho(x) { return !!x.nivel; }
@@ -349,7 +349,7 @@ function vistaInicio() {
         ${pend ? `<span class="chip cola">${pend} sin enviar</span>` : ''}</div></button>`;
   }).join('');
   app.innerHTML = `${cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${S.esc(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${S.esc(x.nombre)}</button>`).join('')}</div>` : ''}
-    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px;font-size:13.5px"><b>Índice de Seguridad Hospitalaria</b> · 151 ítems en los módulos 2 (estructural), 3 (no estructural) y 4 (gestión de emergencias), más el módulo 1 de amenazas, que no suma. El índice va de 0 a 1: <b>A</b> 0,66 a 1 · <b>B</b> 0,36 a 0,65 · <b>C</b> 0 a 0,35.</div>
+    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px;font-size:13.5px"><b>Índice de Seguridad Hospitalaria</b> · 151 ítems en los módulos 2 (estructural), 3 (no estructural) y 4 (gestión de emergencias), más el módulo 1 de amenazas, que no suma. El índice va de 0 a 1: <b>A</b> 0,66 a 1 · <b>B</b> 0,36 a 0,65 · <b>C</b> 0 a 0,35.<br><b>Se aplica solo a los hospitales</b> (HZT, HMH y HSST): la lista de verificación de la OPS/OMS está diseñada para hospitales. Los CAPS, la Sede ex ADOS y los dispositivos de Salud Mental no se evalúan con el ISH; su seguridad se releva con STAR-H, PHR y Evacuación hospitalaria.</div>
     <h2>Hospitales</h2><div class="lista">${filas}</div>`;
 }
 
@@ -396,7 +396,7 @@ function vistaHospital(redN, codigo) {
     ${Object.keys(grupos).map(g => `<div class="grupo-tit">${S.esc(g)}${modActual !== '1' ? ' · ' + G.fmt2(c.sub[g.split(' · ')[0]]) : ''}</div><div class="tarjeta bloque">${grupos[g].map(x => {
       const id = modActual === '1' ? x.id : String(x.n);
       return `<button class="amen" data-it="${S.esc(id)}"><span class="id">${S.esc(modActual === '1' ? x.id.replace('M1-', '') : x.n)}</span><span class="nom">${S.esc(x.item || x.amenaza)}</span>
-      ${enCola.has(id) ? '<span class="ms" title="Sin enviar" style="color:#3AA0FF;font-size:18px">cloud_upload</span>' : ''}
+      ${enCola.has(id) ? '<span class="ms" title="Sin enviar" style="color:#2F5BEA;font-size:18px">cloud_upload</span>' : ''}
       ${x.nivel ? chip(x.nivel, modActual === '1' ? COLOR_AM : COLOR) : '<span class="chip pend">Pendiente</span>'}${modActual === '1' && x.prepararse === 'Sí' ? '<span class="chip">Prepararse</span>' : ''}</button>`; }).join('')}</div>`).join('')
       || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan pendientes en este módulo!' : 'No hay ítems con este filtro.'}</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
@@ -427,7 +427,7 @@ function pintarHoja() {
   $('#hoja').innerHTML = `<div class="hoja-in">
     <div class="hoja-cab"><b>${am ? S.esc(b.cod + ' · ' + b.grupo) : 'Ítem ' + S.esc(b.n) + ' · ' + S.esc(subNombre(b.sub))}<small>${S.esc(est.nombre)}</small></b><button class="icono" data-act="cerrarHoja" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="hoja-cuerpo">
-      <div class="tarjeta contexto"><p style="font-size:15px;color:#1B2A41"><b>${S.esc(am ? b.amenaza : b.item)}</b></p>
+      <div class="tarjeta contexto"><p style="font-size:15px;color:#172B4D"><b>${S.esc(am ? b.amenaza : b.item)}</b></p>
         <p class="sub">${am ? 'Módulo 1 · no suma puntaje' : 'Módulo ' + S.esc(b.modulo) + ' · submódulo ' + S.esc(b.sub)} · OPS/OMS, Guía para evaluadores del ISH, 2018 (Formulario 2).</p></div>
       ${am ? `<div class="tarjeta dim"><h3>Nivel de la amenaza</h3>${op('nivel', AMN)}</div>
         <div class="tarjeta dim"><h3>¿El hospital debe prepararse para esta amenaza?</h3>${op('prepararse', ['Sí', 'No'])}</div>`
@@ -481,6 +481,7 @@ function vistaAyuda() {
   const g = G.ISH_GUIA;
   app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Volver</button>
   <div class="tarjeta ayuda"><h2>Ayuda · Índice de Seguridad Hospitalaria</h2>
+    <p><b>Alcance: solo hospitales.</b> La herramienta de la OPS/OMS (2018) está pensada para hospitales: pregunta por quirófanos, terapia intensiva, comité hospitalario, centro de operaciones de emergencia y equipos de soporte vital. Por eso en esta sección figuran solo HZT, HMH y HSST; los CAPS, la Sede ex ADOS y los dispositivos de Salud Mental se relevan con STAR-H, PHR y Evacuación hospitalaria.</p>
     <p>El ISH estima la probabilidad de que un hospital siga funcionando durante y después de una emergencia o desastre. Se aplica con la lista de verificación de la OPS/OMS (Formulario 2, 151 ítems), recorriendo el hospital con su equipo.</p>
     <h3>Recordatorios para completar</h3><ul>${g.general.map(t => `<li>${S.esc(t)}</li>`).join('')}</ul>
     <h3>Niveles de seguridad</h3><table class="tabla-esc"><tr><th>Nivel</th><th>Cuándo se usa</th><th>Valor</th></tr>${['Bajo', 'Medio', 'Alto'].map(n => `<tr><td><b>${n}</b></td><td>${S.esc(g.niveles[n])}</td><td>${{ Bajo: '0', Medio: '0,5', Alto: '1' }[n]}</td></tr>`).join('')}<tr><td><b>No evaluado</b></td><td>No se pudo evaluar o no corresponde. No cuenta.</td><td>—</td></tr></table>

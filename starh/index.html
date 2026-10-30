@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Emergencias y desastres · Inicio</title>
 <meta name="description" content="Pantalla principal: STAR-H, ISH, PHR, Fuentes, COE y formularios para imprimir.">
-<meta name="theme-color" content="#1B2A41">
+<meta name="theme-color" content="#172B4D">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -14,8 +14,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
 <style>
-:root{--fuerte:#1B2A41;--medio:#3AA0FF;--claro:#CFE9FF;--borde:#9CCFFF;--naranja:#1B2A41;--naranja-claro:#CFE9FF;
-  --texto:#1B2A41;--suave:#44546C;--tenue:#5E6E86;--linea:#CFE9FF;--fondo:#F4FAFF;--papel:#fff;--radio:14px;
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--naranja:#172B4D;--naranja-claro:#E4EAFB;
+  --texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--papel:#fff;--radio:14px;
   --sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
@@ -33,50 +33,75 @@ main{max-width:960px;margin:-10px auto 0;padding:0 16px 40px}
 .ingreso{padding:16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
 .ingreso h2{grid-column:1/-1;font-size:15px;margin:0;color:var(--fuerte)}
 .ingreso label span{display:block;font-size:12px;font-weight:600;color:var(--suave);margin-bottom:4px}
-.ingreso input{width:100%;border:1px solid #9CCFFF;border-radius:10px;padding:10px 12px}
+.ingreso input{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:10px 12px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px}
-.msg{grid-column:1/-1;font-size:13px;padding:8px 10px;border-radius:8px;background:#FFC9CB;color:#1B2A41}
+.msg{grid-column:1/-1;font-size:13px;padding:8px 10px;border-radius:8px;background:#FFE5CC;color:#172B4D}
 .rejilla{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .mod{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px 18px 14px;text-decoration:none;color:inherit;min-height:168px;transition:transform .12s,box-shadow .12s;border-top:5px solid var(--c,var(--fuerte))}
 .mod:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(27,42,65,.08),0 10px 24px rgba(27,42,65,.1)}
 .mod .num{position:absolute;top:12px;right:14px;font-size:12px;font-weight:800;color:var(--tenue)}
 .mod .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--cc,var(--claro));color:var(--c,var(--fuerte))}
 .mod .ico .ms{font-size:26px}
-.mod b{font-size:17px;color:#1B2A41;margin-top:4px}
+.mod b{font-size:17px;color:#172B4D;margin-top:4px}
 .mod p{margin:0;font-size:13px;color:var(--suave);flex:1}
 .mod .pie{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12.5px}
 .mod .pie a{color:var(--c,var(--fuerte));font-weight:700;text-decoration:none}
-.candado{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#F4FAFF;color:var(--suave)}
+.candado{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#F5F7FB;color:var(--suave)}
 .candado .ms{font-size:15px}
 .nota{font-size:12.5px;color:var(--tenue);margin:18px 2px 0}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:min(340px,80%)}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 @media (max-width:820px){.rejilla{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:520px){.rejilla{grid-template-columns:1fr}.mod{min-height:0}.ingreso{grid-template-columns:1fr}.barra h1{font-size:18px}}
-/* Paleta del sitio (alerta de triaje): #F4FAFF #CFE9FF #3AA0FF #FF5A5F #1B2A41. Coral solo para errores y alta prioridad. */
-:root{--fuerte:#1B2A41;--medio:#3AA0FF;--claro:#CFE9FF;--borde:#9CCFFF;--texto:#1B2A41;--suave:#44546C;--tenue:#5E6E86;--linea:#CFE9FF;--fondo:#F4FAFF}
-body{background:#F4FAFF}
-.barra{background:#1B2A41;color:#F4FAFF;border-bottom:3px solid #3AA0FF}
-.tarjeta,.grupo{border-color:#CFE9FF}
-.btn{background:#3AA0FF;color:#1B2A41}
-.btn.sec{background:#fff;color:#1B2A41;border-color:#3AA0FF}
-.btn.peligro{background:#fff;color:#1B2A41;border-color:#FF5A5F;box-shadow:inset 4px 0 0 #FF5A5F}
-.msg{background:#fff;color:#1B2A41;border:1.5px solid #FF5A5F;box-shadow:inset 5px 0 0 #FF5A5F}
-.toast{background:#1B2A41;color:#F4FAFF;border-left:5px solid #3AA0FF}
-.mod{background:var(--bg)!important;color:var(--fg);border:0!important;border-radius:18px;overflow:hidden;min-height:184px;
-  box-shadow:0 2px 4px rgba(27,42,65,.10),0 10px 26px rgba(27,42,65,.14)}
-.mod:hover{transform:translateY(-3px);box-shadow:0 4px 8px rgba(27,42,65,.12),0 16px 34px rgba(58,160,255,.28)}
-.mod:focus-visible{outline:3px solid #3AA0FF;outline-offset:3px}
-.mod .num{color:var(--fg);opacity:.65}
-.mod .ico{background:var(--chip)!important;color:var(--fg)!important;border-radius:14px}
-.mod b{color:var(--fg);font-size:18px;position:relative}
-.mod p{color:var(--fg);opacity:.88;position:relative}
-.mod .pie{position:relative}
-.mod .pie a{color:var(--fg)!important;background:var(--chip);padding:6px 11px;border-radius:999px}
-.mod .pie a:hover{filter:brightness(1.1)}
-.mod .fantasma{position:absolute;right:-14px;bottom:-22px;font-size:118px;color:var(--fg);opacity:.08;pointer-events:none}
-.mod .candado{background:var(--chip);color:var(--fg)}
-.sesion button{background:#3AA0FF;color:#1B2A41}
-.ingreso h2{color:#1B2A41}
+/* Paleta del sitio (alerta de triaje): #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Coral solo para errores y alta prioridad. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB}
+body{background:#F5F7FB}
+.barra{background:#172B4D;color:#F5F7FB;border-bottom:3px solid #2F5BEA}
+.tarjeta,.grupo{border-color:#E4EAFB}
+.btn{background:#2F5BEA;color:#FFFFFF}
+.btn.sec{background:#fff;color:#172B4D;border-color:#2F5BEA}
+.btn.peligro{background:#fff;color:#172B4D;border-color:#F57C00;box-shadow:inset 4px 0 0 #F57C00}
+.msg{background:#fff;color:#172B4D;border:1.5px solid #F57C00;box-shadow:inset 5px 0 0 #F57C00}
+.toast{background:#172B4D;color:#F5F7FB;border-left:5px solid #2F5BEA}
+/* Pantalla principal: grupos por tipo de sección */
+main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
+.grupo-tit{display:flex;align-items:center;gap:10px;margin:22px 4px 10px;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4B5B73}
+.grupo-tit::after{content:'';flex:1;height:1px;background:#DCE3EF}
+.grupo-tit .ms{font-size:19px}
+.fila{display:grid;gap:16px;justify-content:center}
+.fila.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fila.una{grid-template-columns:minmax(0,1fr)}
+.mod{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--bg);color:var(--fg);border:0;border-radius:20px;overflow:hidden;
+  padding:20px 20px 16px;min-height:196px;cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .15s;
+  box-shadow:0 2px 4px rgba(23,43,77,.10),0 12px 28px rgba(23,43,77,.16)}
+.mod:hover{transform:translateY(-3px);box-shadow:0 4px 8px rgba(23,43,77,.14),0 18px 36px rgba(23,43,77,.22)}
+.mod:focus-visible{outline:3px solid #2F5BEA;outline-offset:3px}
+.mod .ico{width:50px;height:50px;border-radius:15px;display:grid;place-items:center;background:rgba(255,255,255,.18);color:var(--fg)}
+.mod .ico .ms{font-size:28px}
+.mod b{font-size:20px;color:var(--fg);margin-top:6px;position:relative}
+.mod p{margin:0;font-size:13.5px;color:var(--fg);opacity:.9;flex:1;position:relative;max-width:520px}
+.mod .pie{display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative;margin-top:6px}
+.mod .pie a,.mod .pie span.pill{color:var(--fg);background:rgba(255,255,255,.18);padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:700;text-decoration:none;display:inline-flex;gap:4px;align-items:center}
+.mod .pie a:hover{background:rgba(255,255,255,.28)}
+.mod .fantasma{position:absolute;right:-12px;bottom:-26px;font-size:130px;color:#fff;opacity:.09;pointer-events:none}
+.mod.ancho{min-height:150px;flex-direction:row;align-items:center;gap:18px;padding:22px 26px}
+.mod.ancho .ico{width:64px;height:64px;border-radius:18px;flex:none}.mod.ancho .ico .ms{font-size:36px}
+.mod.ancho .txt{flex:1;display:flex;flex-direction:column;gap:4px}
+.mod.ancho b{margin-top:0;font-size:22px}
+.mod.ancho .fantasma{font-size:170px;right:10px;bottom:-40px}
+.chica{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #DCE3EF;border-radius:16px;padding:14px 16px;cursor:pointer;
+  box-shadow:0 1px 2px rgba(23,43,77,.06),0 6px 16px rgba(23,43,77,.07);transition:transform .15s,box-shadow .15s;min-height:84px}
+.chica:hover{transform:translateY(-2px);box-shadow:0 2px 6px rgba(23,43,77,.10),0 12px 24px rgba(23,43,77,.12)}
+.chica:focus-visible{outline:3px solid #2F5BEA;outline-offset:3px}
+.chica .ico{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:var(--cc);color:var(--c);flex:none}
+.chica b{display:block;font-size:15.5px;color:#172B4D}
+.chica span.d{display:block;font-size:12.5px;color:#4B5B73;line-height:1.35}
+.candado{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.2);color:var(--fg)}
+.chica .candado{background:#EEF2F7;color:#4B5B73}
+.etq{position:absolute;top:16px;right:16px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.2);color:var(--fg);padding:4px 9px;border-radius:999px}
+@media (max-width:860px){.fila.tres{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.fila.tres{grid-template-columns:1fr}.mod.ancho{flex-direction:column;align-items:flex-start}.mod{min-height:0}}
+.sesion button{background:#2F5BEA;color:#FFFFFF}
+.ingreso h2{color:#172B4D}
 </style>
 </head>
 <body>
@@ -92,7 +117,7 @@ body{background:#F4FAFF}
     <button class="btn" type="submit"><span class="ms">login</span>Ingresar</button>
     <div class="msg oculto" id="msg"></div>
   </form>
-  <div class="rejilla" id="rejilla"></div>
+  <div id="rejilla"></div>
   <p class="nota">Los relevamientos complementan y no reemplazan el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p>
 </main>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral</p></footer>
@@ -103,28 +128,35 @@ body{background:#F4FAFF}
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 // clave: flag del usuario que habilita la sección (null = abierta a todos)
+const BLANCO = '#FFFFFF';
 const MODS = [
-  { n: 1, t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#1B2A41 0%,#2E4A70 100%)', fg: '#F4FAFF', chip: 'rgba(244,250,255,.16)' },
-  { n: 2, t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#3AA0FF 0%,#6CB8FF 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.12)' },
-  { n: 3, t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023).', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#1B2A41 0%,#2C5C93 100%)', fg: '#F4FAFF', chip: 'rgba(244,250,255,.16)' },
-  { n: 4, t: 'Fuentes', d: 'Bibliografía y normativa en que se basan los relevamientos, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, bg: 'linear-gradient(135deg,#CFE9FF 0%,#F4FAFF 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.08)' },
-  { n: 5, t: 'COE', d: 'Participantes del comité y del centro de operaciones de emergencia: datos, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', bg: 'linear-gradient(135deg,#9CCFFF 0%,#3AA0FF 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.12)' },
-  { n: 6, t: 'Formularios para imprimir', d: 'Formularios de campo de STAR-H, PHR e ISH, en blanco o con lo cargado, por establecimiento.', ico: 'print', href: 'imprimir.html', flag: null, bg: 'linear-gradient(135deg,#2E4A70 0%,#1B2A41 100%)', fg: '#F4FAFF', chip: 'rgba(244,250,255,.16)' },
-  { n: 7, t: 'Evacuación hospitalaria', d: 'Fichas de cada establecimiento y dependencia para los planes de evacuación: población, edificio, salidas, gases, incendio y organización.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(135deg,#FF5A5F 0%,#FF8A8D 100%)', fg: '#1B2A41', chip: 'rgba(27,42,65,.12)' }
+  { k: 'starh', grupo: 'relev', t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
+  { k: 'ish', grupo: 'relev', t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
+  { k: 'phr', grupo: 'relev', t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
+  { k: 'evac', grupo: 'resp', t: 'Evacuación hospitalaria', d: 'Fichas de cada establecimiento y dependencia para los planes de evacuación: población, edificio y salidas, gases medicinales, incendio y organización.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
+  { k: 'coe', grupo: 'gest', t: 'COE', d: 'Participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
+  { k: 'fuentes', grupo: 'gest', t: 'Fuentes', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
+  { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#E4EAFB' }
 ];
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
   $('#sesion').classList.toggle('oculto', !u);
   if (u) $('#quien').textContent = (u.nombre || '') + (u.rol ? ' · ' + u.rol : '');
-  $('#rejilla').innerHTML = MODS.map(m => {
-    const cerrado = u && m.flag && u[m.flag] === false;
-    return `<div class="tarjeta mod" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.n + '. ' + m.t)}" style="--bg:${m.bg};--fg:${m.fg};--chip:${m.chip};cursor:pointer"><span class="ms fantasma" aria-hidden="true">${m.ico}</span>
-      <span class="num">${m.n}</span><span class="ico"><span class="ms">${m.ico}</span></span>
-      <b>${E(m.t)}</b><p>${E(m.d)}</p>
-      <span class="pie">${cerrado ? `<span class="candado"><span class="ms">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>` : ''}
-      ${m.tab && !cerrado ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span> Tablero</a>` : ''}</span></div>`;
-  }).join('');
+  const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
+  const cerr = m => u && m.flag && u[m.flag] === false;
+  const grande = m => `<div class="mod ${m.grupo === 'resp' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">
+      <span class="ms fantasma" aria-hidden="true">${m.ico}</span>${m.grupo === 'resp' ? '<span class="etq">Respuesta</span>' : ''}
+      <span class="ico"><span class="ms">${m.ico}</span></span>
+      ${m.grupo === 'resp' ? '<span class="txt">' : ''}<b>${E(m.t)}</b><p>${E(m.d)}</p>
+      <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' ? '</span>' : ''}</div>`;
+  const chica = m => `<div class="chica" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--c:${m.c};--cc:${m.cc}">
+      <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}</b><span class="d">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
+  const g = k => MODS.filter(m => m.grupo === k);
+  $('#rejilla').innerHTML = `
+    <div class="grupo-tit"><span class="ms">assignment</span>Relevamientos</div><div class="fila tres">${g('relev').map(grande).join('')}</div>
+    <div class="grupo-tit"><span class="ms">emergency</span>Respuesta</div><div class="fila una">${g('resp').map(grande).join('')}</div>
+    <div class="grupo-tit"><span class="ms">folder_open</span>Gestión y apoyo</div><div class="fila tres">${g('gest').map(chica).join('')}</div>`;
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');

@@ -123,5 +123,5 @@
   }
   global.GUIAS.ishCalcular = ishCalcular;
   global.GUIAS.fmt2 = v => v == null || isNaN(v) ? 's/d' : (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
-  global.GUIAS.colorValor = v => v == null ? '#F4FAFF' : v >= 0.655 ? '#3AA0FF' : v >= 0.355 ? '#CFE9FF' : '#FF5A5F';
+  global.GUIAS.colorValor = v => v == null ? '#EEF2F7' : v >= 0.655 ? '#C8E6C9' : v >= 0.355 ? '#FFF3C4' : '#FFD8B0';
 })(window);
