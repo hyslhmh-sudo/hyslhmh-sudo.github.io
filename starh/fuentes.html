@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fuentes · Emergencias y desastres</title>
 <meta name="description" content="Bibliografía y normativa de STAR-H, PHR, ISH y COE.">
-<meta name="theme-color" content="#0D313F">
+<meta name="theme-color" content="#1B2A41">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,6 +31,18 @@ li small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
 .pie{font-size:12px;color:var(--tenue)}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:min(340px,80%)}
 @media print{.barra .icono{display:none}}
+/* Paleta del sitio (alerta de triaje): #F4FAFF #CFE9FF #3AA0FF #FF5A5F #1B2A41. Coral solo para errores y alta prioridad. */
+:root{--fuerte:#1B2A41;--medio:#3AA0FF;--claro:#CFE9FF;--borde:#9CCFFF;--texto:#1B2A41;--suave:#44546C;--tenue:#5E6E86;--linea:#CFE9FF;--fondo:#F4FAFF}
+body{background:#F4FAFF}
+.barra{background:#1B2A41;color:#F4FAFF;border-bottom:3px solid #3AA0FF}
+.tarjeta,.grupo{border-color:#CFE9FF}
+.btn{background:#3AA0FF;color:#1B2A41}
+.btn.sec{background:#fff;color:#1B2A41;border-color:#3AA0FF}
+.btn.peligro{background:#fff;color:#1B2A41;border-color:#FF5A5F;box-shadow:inset 4px 0 0 #FF5A5F}
+.msg{background:#fff;color:#1B2A41;border:1.5px solid #FF5A5F;box-shadow:inset 5px 0 0 #FF5A5F}
+.toast{background:#1B2A41;color:#F4FAFF;border-left:5px solid #3AA0FF}
+.grupo h2{color:#1B2A41}
+li a{color:#1B2A41;text-decoration:underline;text-decoration-color:#3AA0FF}
 </style>
 </head>
 <body>
