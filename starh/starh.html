@@ -123,6 +123,14 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .op small{font-weight:500;font-size:10.5px;color:var(--suave);line-height:1.15;text-align:center}
 .op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
 .op[aria-pressed="true"] small{color:var(--fuerte)}
+.op[data-g]{border-top:4px solid var(--g)}
+.op[data-g="1"]{--g:#2E7D32;--gb:#C8E6C9;--gt:#1B5E20}
+.op[data-g="2"]{--g:#7CB342;--gb:#DCEFD9;--gt:#2E5E1A}
+.op[data-g="3"]{--g:#F9A825;--gb:#FFF3C4;--gt:#5D4500}
+.op[data-g="4"]{--g:#EF6C00;--gb:#FFD8B0;--gt:#7A3300}
+.op[data-g="5"]{--g:#D32F2F;--gb:#F8C9C7;--gt:#7F1D1D}
+.op[data-g][aria-pressed="true"]{background:var(--gb);border-color:var(--g);color:var(--gt);box-shadow:inset 0 0 0 1.5px var(--g)}
+.op[data-g][aria-pressed="true"] small{color:var(--gt)}
 .desc{font-size:13px;color:var(--suave);margin-top:8px;min-height:18px}
 .resultado{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:grid;gap:10px}
 .calc{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
@@ -484,7 +492,8 @@ function pintarHoja(r, est, a) {
   const b = borrador, esc = r.escalas, dis = b.puede ? '' : 'disabled';
   const op = (campo, lista, clase, sub) => `<div class="opciones ${clase || ''}" role="group">${lista.map(o => {
     const v = o.etiqueta, corto = /·/.test(v) ? v.split('·')[0].trim() : v, txt = /·/.test(v) ? v.split('·')[1].trim() : '';
-    return `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" aria-pressed="${b[campo] === v}" ${dis}>${S.esc(corto)}${txt && sub !== false ? `<small>${S.esc(txt)}</small>` : ''}</button>`;
+    const g = /^(A|B1|B2|B3)$/.test(campo) ? Number(corto) || '' : campo === 'C' ? { Alta: 4, Media: 3, Baja: 1 }[corto] : campo === 'D' ? { Alta: 1, Media: 3, Baja: 4 }[corto] : '';
+    return `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" ${g ? `data-g="${g}"` : ''} aria-pressed="${b[campo] === v}" ${dis}>${S.esc(corto)}${txt && sub !== false ? `<small>${S.esc(txt)}</small>` : ''}</button>`;
   }).join('')}</div>`;
   const desc = (campo, lista, k) => { const o = lista.find(x => x.etiqueta === b[campo]); return `<div class="desc">${o ? S.esc(o[k || 'desc']) : 'Elegí una opción.'}</div>`; };
   const idx = listaHoja.indexOf(b.id);

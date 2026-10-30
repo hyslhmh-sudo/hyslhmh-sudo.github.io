@@ -130,6 +130,14 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 .op small{font-weight:500;font-size:10.5px;color:var(--suave);line-height:1.15;text-align:center}
 .op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
 .op[aria-pressed="true"] small{color:var(--fuerte)}
+.op[data-g]{border-top:4px solid var(--g)}
+.op[data-g="1"]{--g:#2E7D32;--gb:#C8E6C9;--gt:#1B5E20}
+.op[data-g="2"]{--g:#7CB342;--gb:#DCEFD9;--gt:#2E5E1A}
+.op[data-g="3"]{--g:#F9A825;--gb:#FFF3C4;--gt:#5D4500}
+.op[data-g="4"]{--g:#EF6C00;--gb:#FFD8B0;--gt:#7A3300}
+.op[data-g="5"]{--g:#D32F2F;--gb:#F8C9C7;--gt:#7F1D1D}
+.op[data-g][aria-pressed="true"]{background:var(--gb);border-color:var(--g);color:var(--gt);box-shadow:inset 0 0 0 1.5px var(--g)}
+.op[data-g][aria-pressed="true"] small{color:var(--gt)}
 .desc{font-size:13px;color:var(--suave);margin-top:8px;min-height:18px}
 .resultado{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:grid;gap:10px}
 .calc{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
@@ -403,7 +411,7 @@ function cerrarHoja() { $('#hoja').classList.add('oculto'); $('#hoja').innerHTML
 function pintarHoja() {
   const b = borrador, r = red(b.red), est = r.establecimientos.find(x => x.codigo === b.codigo), it = r.items.find(x => x.id === b.id) || {}, dis = b.puede ? '' : 'disabled';
   const idx = listaHoja.indexOf(b.id);
-  const op = (campo, lista) => `<div class="opciones ${lista.length === 3 ? 'tres' : 'dos'}">${lista.map(v => `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" aria-pressed="${b[campo] === v}" ${dis}>${S.esc(v)}</button>`).join('')}</div>`;
+  const op = (campo, lista) => `<div class="opciones ${lista.length === 3 ? 'tres' : 'dos'}">${lista.map(v => { const g = ({ estado: { 'Cumple': 1, 'Parcial': 3, 'No cumple': 4 }, prioridad: { 'Alta': 4, 'Media': 3, 'Baja': 2 } }[campo] || {})[v] || ''; return `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" ${g ? `data-g="${g}"` : ''} aria-pressed="${b[campo] === v}" ${dis}>${S.esc(v)}</button>`; }).join('')}</div>`;
   $('#hoja').innerHTML = `<div class="hoja-in">
     <div class="hoja-cab"><b>${S.esc(b.id)} · ${S.esc(b.seccion.split('·').slice(1).join('·').trim())}<small>${S.esc(est.nombre)}</small></b><button class="icono" data-act="cerrarHoja" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="hoja-cuerpo">

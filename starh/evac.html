@@ -161,6 +161,28 @@ body{background:#FAF7F7}
 .critico{background:#D32F2F;color:#fff}
 .datos-donde a,.volver,h2,h3,details.sec>summary{color:#8E1B1B}
 @media print{.imp td{border-color:#E9C9C6}.imp td.l{background:#FDECEA;color:#7F1D1D}.imp h2{border-bottom-color:#D32F2F;color:#8E1B1B}.imp h1{color:#8E1B1B}.imp .kick{color:#C62828}}
+.secciones-tabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.stab{border:1px solid #F3DADA;background:#fff;border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center;color:#8E1B1B}
+.stab[aria-pressed="true"]{background:#8E1B1B;color:#fff;border-color:#8E1B1B}
+.sem{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.sem.v{background:#C8E6C9;color:#1B5E20}.sem.a{background:#FFF3C4;color:#5D4500}.sem.n{background:#FFD8B0;color:#7A3300}.sem.r{background:#D32F2F;color:#fff}.sem.g{background:#EEF2F7;color:#4B5B73}
+.inst{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%}
+.inst b{font-size:15px;color:#172B4D}
+.camas{display:flex;gap:6px;flex-wrap:wrap}
+.cama{font-size:12px;background:#F5F7FB;border:1px solid #DCE3EF;border-radius:8px;padding:3px 7px}
+.tabla-wrap{overflow-x:auto;border:1px solid #F3DADA;border-radius:12px;background:#fff}
+.tabla{width:100%;border-collapse:collapse;font-size:13px}
+.tabla th,.tabla td{padding:7px 8px;border-bottom:1px solid #F3DADA;text-align:left;vertical-align:middle}
+.tabla th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#4B5B73;background:#FDF5F5}
+.tabla td.num,.tabla th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tabla tr.clic{cursor:pointer}.tabla tr.clic:hover td{background:#FFF7F6}
+.grilla-camas{width:100%;border-collapse:collapse;font-size:13px}
+.grilla-camas td,.grilla-camas th{padding:5px 6px;border-bottom:1px solid #F3DADA;text-align:left}
+.grilla-camas input{width:84px;border:1px solid #E9C9C6;border-radius:8px;padding:6px 8px}
+.aviso-datos{font-size:12.5px;color:#7F1D1D;background:#FDECEA;border-radius:10px;padding:8px 11px;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.kpi{padding:12px}.kpi b{display:block;font-size:22px;color:#172B4D}.kpi span{font-size:12px;color:#4B5B73}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media print{body{background:#fff!important}.imp .f260 td{height:22px}.imp .casilla{display:inline-block;width:10px;height:10px;border:1px solid #7F1D1D;margin:0 3px 0 8px;vertical-align:-1px}}
 </style>
 </head>
 <body>
@@ -182,7 +204,7 @@ body{background:#FAF7F7}
 (function () {
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
-let cat = S.store.get('evac.cat', null), redActual = S.store.get('evac.red', ''), q = '', fTipo = '';
+let cat = S.store.get('evac.cat', null), redActual = S.store.get('evac.red', ''), q = '', fTipo = '', fEvento = '';
 let borrador = null, borradorDep = null, ocupado = false;
 
 function toast(t, error) { const d = document.createElement('div'); d.className = 'toast' + (error ? ' error' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
@@ -246,6 +268,8 @@ function render() {
   const p = (location.hash || '#/').slice(2).split('/').map(decodeURIComponent);
   if (p[0] === 'ayuda') return vistaAyuda();
   if (p[0] === 'est' && red(p[1])) return vistaEst(p[1], p[2]);
+  if (p[0] === 'inst') return vistaInst();
+  if (p[0] === 'evacuados') return vistaEvacuados();
   return vistaInicio();
 }
 function vistaInicio() {
@@ -256,7 +280,7 @@ function vistaInicio() {
   $('#titulo').innerHTML = `Evacuación · ${E(r.nombre)}<small>Fichas por establecimiento y dependencia</small>`;
   const lc = camposDe(r, 'Establecimiento'), tipos = [...new Set(r.establecimientos.map(e => e.tipo).filter(Boolean))];
   const l = r.establecimientos.filter(e => (!fTipo || e.tipo === fTipo) && (!q || (e.nombre + ' ' + e.codigo).toLowerCase().indexOf(q.toLowerCase()) >= 0));
-  app.innerHTML = `${cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''}
+  app.innerHTML = `${redesTabs(r)}${secTabs('fichas')}
     <div class="buscar"><input id="q" type="search" placeholder="Buscar establecimiento" value="${E(q)}"><select id="fTipo"><option value="">Todos los tipos</option>${tipos.map(t => `<option ${t === fTipo ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></div>
     <div class="tarjeta datos-donde"><b>Dónde se guardan los datos:</b> en la planilla EVAC de cada red (Google Sheets), a través del Apps Script del sistema. Lo que se carga acá queda en las hojas ESTABLECIMIENTOS y DEPENDENCIAS, y también se puede cargar o corregir directamente ahí.
       ${cat.redes.filter(x => x.planilla).map(x => `<br><a href="${E(x.planilla)}" target="_blank" rel="noopener">Abrir planilla EVAC · ${E(x.nombre)}</a>`).join('')}</div>
@@ -300,6 +324,131 @@ async function guardar(req, ok) {
 }
 
 /* ---------- dependencias ---------- */
+/* ---------- traslados y derivación ---------- */
+function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''; }
+function secTabs(act) {
+  return `<div class="secciones-tabs">${[['fichas', '#/', 'domain', 'Fichas de evacuación'], ['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['evacuados', '#/evacuados', 'transfer_within_a_station', 'Registro de evacuados']]
+    .map(t => `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}
+    <button class="stab" data-act="fichaTraslado"><span class="ms" style="font-size:18px">print</span>Ficha de traslado en blanco</button></div>`;
+}
+function redVista() { if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual); return red(redActual); }
+const semAcuerdo = v => !v ? '<span class="sem g">Acuerdo s/d</span>' : /formal/i.test(v) ? `<span class="sem v">${E(v)}</span>` : /informal/i.test(v) ? `<span class="sem a">${E(v)}</span>` : /Sin/i.test(v) ? `<span class="sem n">${E(v)}</span>` : `<span class="sem g">${E(v)}</span>`;
+const semGuardia = v => !v ? '' : /Abierta/.test(v) ? '<span class="sem v">Guardia abierta</span>' : /Cerrada/.test(v) ? '<span class="sem n">Guardia cerrada</span>' : `<span class="sem g">${E(v)}</span>`;
+const semMov = v => ({ 'Autónomo': 'v', 'Con apoyo': 'a', 'Totalmente dependiente': 'n', 'Con soporte vital': 'r' }[v] ? `<span class="sem ${{ 'Autónomo': 'v', 'Con apoyo': 'a', 'Totalmente dependiente': 'n', 'Con soporte vital': 'r' }[v]}">${E(v)}</span>` : (v ? `<span class="sem g">${E(v)}</span>` : ''));
+const semPrio = v => ({ 'Inmediata': 'r', 'Diferida': 'n', 'Menor': 'a' }[v] ? `<span class="sem ${{ 'Inmediata': 'r', 'Diferida': 'n', 'Menor': 'a' }[v]}">${E(v)}</span>` : '');
+const num = v => { const n = Number(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+
+function vistaInst() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Instituciones receptoras · ${E(r.nombre)}<small>Derivación de pacientes y camas disponibles</small>`;
+  const l = (r.instituciones || []).filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.recibe_de).toLowerCase().indexOf(q.toLowerCase()) >= 0);
+  const tot = k => (r.instituciones || []).reduce((a, x) => a + num(x[k]), 0);
+  app.innerHTML = `${redesTabs(r)}${secTabs('inst')}
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar institución o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaInst"><span class="ms">add</span>Agregar institución</button>' : ''}
+      <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
+    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Camas disponibles en la red de derivación</b> <span class="sub">(suma de todas las instituciones; categorías HAvBED)</span>
+      <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo de cama</th><th class="num">En 24 h</th><th class="num">En 72 h</th></tr>
+      ${cat.camas.map(c => `<tr><td>${E(c[1])}</td><td class="num"><b>${tot(c[0] + '_24')}</b></td><td class="num">${tot(c[0] + '_72')}</td></tr>`).join('')}
+      <tr><td>Respiradores libres</td><td class="num"><b>${tot('respiradores')}</b></td><td class="num">—</td></tr></table></div></div>
+    <div class="lista">${l.map(x => { const c24 = cat.camas.reduce((a, c) => a + num(x[c[0] + '_24']), 0);
+      return `<button class="tarjeta inst" data-inst="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${semGuardia(x.guardia)}</div>
+        <div class="sub">${E([x.tipo, x.localidad, x.distancia ? x.distancia + ' km' : '', x.tiempo ? x.tiempo + ' min' : ''].filter(Boolean).join(' · ') || 's/d')} · recibe de: ${E(x.recibe_de || 's/d')}</div>
+        <div class="pie">${semAcuerdo(x.acuerdo)}${x.tel ? `<span><span class="ms" style="font-size:16px">call</span> ${E(x.tel)}</span>` : ''}<span><b>${c24}</b> camas disponibles en 24 h</span>${x.camas_fecha ? `<span>al ${E(x.camas_fecha)}</span>` : ''}</div>
+        <div class="camas">${cat.camas.filter(c => num(x[c[0] + '_24'])).map(c => `<span class="cama">${E(c[1])}: <b>${E(x[c[0] + '_24'])}</b></span>`).join('')}</div></button>`; }).join('')
+      || '<div class="tarjeta vacio">Todavía no hay instituciones receptoras cargadas.</div>'}</div>`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaInst(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+}
+let borradorFila = null;
+function abrirFila(tipo, id, pre) {
+  const r = redVista(), lista = tipo === 'inst' ? r.instituciones : r.evacuados, x = id ? lista.find(y => y.id === id) : Object.assign({}, pre || {});
+  const def = (tipo === 'inst' ? cat.defInst : cat.defEva).filter(c => ['id', 'actualizado', 'por'].indexOf(c.clave) < 0);
+  const puede = tipo === 'inst' ? r.puedeInst : (!x.codigo || (r.establecimientos.find(e => e.codigo === x.codigo) || {}).puedeCargar !== false);
+  const dis = puede ? '' : 'disabled';
+  borradorFila = { tipo, id: id || '', datos: Object.assign({}, pre || {}) };
+  let cuerpo;
+  if (tipo === 'inst') {
+    const comunes = def.filter(c => !/_(24|72)$/.test(c.clave));
+    cuerpo = `<div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><div class="campos" style="padding:0">${comunes.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>
+      <div class="tarjeta" style="padding:10px 14px"><b style="color:#8E1B1B">Camas disponibles</b><p class="sub" style="margin:2px 0 6px">Camas libres y con personal, por tipo, que la institución podría ofrecer (HAvBED).</p>
+      <table class="grilla-camas"><tr><th>Tipo de cama</th><th>En 24 h</th><th>En 72 h</th></tr>${cat.camas.map(c => `<tr><td>${E(c[1])}</td>
+        <td><input data-k="${c[0]}_24" inputmode="numeric" value="${E(x[c[0] + '_24'] || '')}" ${dis}></td><td><input data-k="${c[0]}_72" inputmode="numeric" value="${E(x[c[0] + '_72'] || '')}" ${dis}></td></tr>`).join('')}</table></div>`;
+  } else {
+    const ests = r.establecimientos.filter(e => e.puedeCargar !== false);
+    cuerpo = `<div class="aviso-datos">Contiene datos de pacientes: uso exclusivo para la gestión de la emergencia.</div>
+      <div class="tarjeta" style="padding:6px 14px 10px"><div class="campos" style="padding:0">
+      <label class="campo"><span>Establecimiento *</span><select data-k="codigo" ${dis}><option value="">Elegí…</option>${ests.map(e => `<option value="${E(e.codigo)}" ${e.codigo === x.codigo ? 'selected' : ''}>${E(e.codigo + ' · ' + e.nombre)}</option>`).join('')}</select></label>
+      ${def.filter(c => c.clave !== 'codigo').map(c => campoHTML(c, x[c.clave] != null ? x[c.clave] : (c.clave === 'fecha' && !id ? S.hoy() : ''), dis, 'v_')).join('')}</div>
+      <datalist id="dlInst">${(r.instituciones || []).map(i => `<option value="${E(i.nombre)}">`).join('')}</datalist></div>`;
+  }
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${tipo === 'inst' ? (id ? E(x.nombre) : 'Nueva institución receptora') : (id ? 'Paciente ' + E(x.paciente || '') : 'Nuevo paciente evacuado')}</b><button class="icono" data-act="cerrarFila" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo" id="fichaFila">${cuerpo}</div>
+    <div class="dlg-pie">${id && puede ? '<button class="btn peligro" data-act="borrarFila"><span class="ms">delete</span>Quitar</button>' : ''}${tipo === 'eva' && id ? '<button class="btn sec" data-act="imprimirTraslado"><span class="ms">print</span>Ficha de traslado</button>' : ''}<button class="btn sec" data-act="cerrarFila">Cerrar</button>${puede ? '<button class="btn" data-act="guardarFila"><span class="ms">save</span>Guardar</button>' : ''}</div></div>`;
+  $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden';
+  const dest = $('#v_destino'); if (dest) dest.setAttribute('list', 'dlInst');
+  atarCampos($('#fichaFila'), borradorFila);
+}
+function cerrarFila() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; borradorFila = null; }
+
+function vistaEvacuados() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Registro de evacuados · ${E(r.nombre)}<small>Pacientes evacuados o derivados</small>`;
+  const ev = r.evacuados || [];
+  const eventos = [...new Set(ev.map(x => x.evento).filter(Boolean))];
+  const l = ev.filter(x => (!fEvento || x.evento === fEvento) && (!q || (x.paciente + ' ' + x.documento + ' ' + x.destino + ' ' + x.origen).toLowerCase().indexOf(q.toLowerCase()) >= 0))
+    .sort((a, b) => String(b.id).localeCompare(String(a.id)));
+  const enCamino = l.filter(x => x.destino_tipo === 'Otra institución' && x.llegada !== 'Sí').length;
+  app.innerHTML = `${redesTabs(r)}${secTabs('evacuados')}
+    <div class="aviso-datos">Contiene datos de pacientes: uso exclusivo para la gestión de la emergencia. Adaptado de los formularios HICS 255 y 260.</div>
+    <div class="kpis"><div class="tarjeta kpi"><b>${l.length}</b><span>pacientes registrados</span></div><div class="tarjeta kpi"><b>${l.filter(x => x.destino_tipo === 'Otra institución').length}</b><span>derivados a otra institución</span></div>
+      <div class="tarjeta kpi"><b style="color:${enCamino ? '#D32F2F' : '#172B4D'}">${enCamino}</b><span>sin llegada confirmada</span></div><div class="tarjeta kpi"><b>${l.filter(x => x.movilidad === 'Con soporte vital').length}</b><span>con soporte vital</span></div></div>
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar paciente, DNI, destino" value="${E(q)}"><select id="fEv"><option value="">Todos los eventos</option>${eventos.map(e => `<option ${e === fEvento ? 'selected' : ''}>${E(e)}</option>`).join('')}</select>
+      <button class="btn" data-act="nuevoEva"><span class="ms">person_add</span>Registrar paciente</button><button class="btn sec" data-act="impEva"><span class="ms">print</span>Imprimir registro</button></div>
+    ${l.length ? `<div class="tabla-wrap"><table class="tabla"><tr><th>ID</th><th>Fecha</th><th>Paciente</th><th>Origen</th><th>Prioridad</th><th>Movilidad</th><th>Destino</th><th>Salida</th><th>Llegada</th></tr>
+      ${l.map(x => `<tr class="clic" data-eva="${E(x.id)}"><td>${E(x.id)}</td><td>${E(x.fecha)}</td><td><b>${E(x.paciente)}</b><br><span class="sub">${E(x.documento || '')}</span></td><td>${E(x.codigo)}<br><span class="sub">${E(x.origen || '')}</span></td>
+        <td>${semPrio(x.prioridad)}</td><td>${semMov(x.movilidad)}</td><td>${E(x.destino_tipo || '')}<br><span class="sub">${E(x.destino || '')}</span></td><td>${E(x.hora_salida || '')}</td>
+        <td>${x.llegada === 'Sí' ? `<span class="sem v">Sí ${E(x.hora_llegada || '')}</span>` : x.destino_tipo === 'Otra institución' ? '<span class="sem n">Sin confirmar</span>' : ''}</td></tr>`).join('')}</table></div>`
+      : '<div class="tarjeta vacio">Todavía no hay pacientes registrados.</div>'}`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaEvacuados(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+  $('#fEv').addEventListener('change', ev2 => { fEvento = ev2.target.value; vistaEvacuados(); });
+}
+function encImp(r) { return /trelew/i.test(r.nombre) ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">'; }
+function pieImp(r) { return `<div class="pieimp"><div><b>${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'}</b><br>Impreso el ${S.hoy()}</div><img src="logo-hysl.png" alt="HySL"><div>${E(r.nombre)}</div></div>`; }
+function imprimirTraslado(x) {
+  const r = redVista(); x = x || {};
+  const est = r.establecimientos.find(e => e.codigo === x.codigo) || {};
+  const v = k => E(x[k] || ''), cas = (k, o) => `<span class="casilla" style="${String(x[k] || '').split('; ').indexOf(o) >= 0 ? 'background:#7F1D1D' : ''}"></span>${E(o)}`;
+  const fila = (l, val) => `<tr><td class="l">${E(l)}</td><td class="v">${val}</td></tr>`;
+  const ops = k => (cat.defEva.find(c => c.clave === k) || { opciones: [] }).opciones.map(o => cas(k, o)).join(' ');
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DE TRASLADO DEL PACIENTE</div><h1>${v('paciente') || 'Paciente: ______________________________'}</h1>
+    <div style="color:#4B5B73">Acompaña al paciente. ${x.id ? 'Registro ' + v('id') + ' · ' : ''}${E(est.nombre || '')}</div>
+    <h2>1. Paciente</h2><table class="f260">${fila('Apellido y nombre', v('paciente'))}${fila('DNI o historia clínica', v('documento'))}${fila('Servicio o dependencia de origen', v('origen'))}${fila('Diagnóstico y médico a cargo', '')}${fila('Familia avisada (nombre y teléfono)', v('familia'))}</table>
+    <h2>2. Evacuación</h2><table class="f260">${fila('Fecha y evento', [v('fecha'), v('evento')].filter(Boolean).join(' · '))}${fila('Prioridad', ops('prioridad'))}${fila('Movilidad (EVAC-H)', ops('movilidad'))}${fila('Se traslada en', ops('traslado_en'))}${fila('Equipos que lleva', ops('equipos'))}${fila('Aislamiento', ops('aislamiento'))}${fila('Necesidades especiales', '')}</table>
+    <h2>3. Salida del servicio</h2><table class="f260">${fila('Habitación o cama · hora', '')}${fila('Pulsera de identificación verificada por', '')}${fila('Historia clínica enviada', ops('hc_enviada'))}${fila('Medicación enviada', ops('med_enviada'))}${fila('Pertenencias y valores', '')}</table>
+    <h2>4. Traslado a otra institución</h2><table class="f260">${fila('Institución de destino', v('destino'))}${fila('Hora en que se avisó al destino', v('hora_aviso'))}${fila('Tipo de móvil', ops('movil'))}${fila('Móvil, empresa o patente', v('movil_id'))}${fila('Hora de salida', v('hora_salida'))}</table>
+    <h2>5. Llegada (completa quien recibe)</h2><table class="f260">${fila('Llegada confirmada · hora', [v('llegada'), v('hora_llegada')].filter(Boolean).join(' · '))}${fila('Sector donde quedó', v('sector_ingreso'))}${fila('Recibió (nombre, cargo y firma)', '')}${fila('Historia clínica, medicación y pertenencias recibidas', '')}</table>
+    <h2>Observaciones</h2><table class="f260"><tr><td style="height:46px">${v('observaciones')}</td></tr></table>
+    <p style="font-size:7.5pt;color:#4B5B73">Adaptado de HICS 260 (Patient Evacuation Tracking Form, California EMSA, 2014) y de OPS, EVAC-H (2024). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Preparó: ______________________ Firma: ____________</p>${pieImp(r)}</section>`;
+  setTimeout(() => window.print(), 300);
+}
+function imprimirInst() {
+  const r = redVista();
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">EVACUACIÓN HOSPITALARIA · INSTITUCIONES RECEPTORAS</div><h1>Directorio de derivación · ${E(r.nombre)}</h1>
+    <table><tr><td class="l">Institución</td><td class="l">Contacto 24 h</td><td class="l">Acuerdo · guardia</td><td class="l">Camas en 24 h</td></tr>
+    ${(r.instituciones || []).map(x => `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.distancia ? x.distancia + ' km' : ''].filter(Boolean).join(' · '))}<br>Recibe de: ${E(x.recibe_de || 's/d')}</td><td>${E(x.contacto || '')}<br>${E(x.tel || '')}<br>${E(x.correo || '')}</td><td>${E(x.acuerdo || 's/d')}<br>${E(x.guardia || '')}</td>
+      <td>${cat.camas.filter(c => num(x[c[0] + '_24'])).map(c => E(c[1]) + ': ' + E(x[c[0] + '_24'])).join('<br>') || 's/d'}${x.camas_fecha ? '<br>al ' + E(x.camas_fecha) : ''}</td></tr>`).join('') || '<tr><td colspan="4">Sin instituciones cargadas.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Camas según las categorías HAvBED (disponibles en 24 y 72 horas).</p>${pieImp(r)}</section>`;
+  setTimeout(() => window.print(), 300);
+}
+function imprimirEva() {
+  const r = redVista(), l = (r.evacuados || []).filter(x => !fEvento || x.evento === fEvento);
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">EVACUACIÓN HOSPITALARIA · REGISTRO DE PACIENTES EVACUADOS</div><h1>${E(fEvento || 'Todos los eventos')}</h1>
+    <table><tr><td class="l">Paciente</td><td class="l">Origen</td><td class="l">Prioridad · movilidad</td><td class="l">Destino</td><td class="l">Móvil · salida</td><td class="l">HC · med. · familia</td><td class="l">Llegada</td></tr>
+    ${l.map(x => `<tr><td><b>${E(x.paciente)}</b><br>${E(x.documento || '')}</td><td>${E(x.codigo)} · ${E(x.origen || '')}</td><td>${E(x.prioridad || '')}<br>${E(x.movilidad || '')}</td><td>${E(x.destino_tipo || '')}<br>${E(x.destino || '')}</td>
+      <td>${E(x.movil || '')} ${E(x.movil_id || '')}<br>${E(x.hora_salida || '')}</td><td>${E([x.hc_enviada, x.med_enviada, x.familia].map(y => y || '–').join(' · '))}</td><td>${E(x.llegada || '')} ${E(x.hora_llegada || '')}<br>${E(x.sector_ingreso || '')}</td></tr>`).join('') || '<tr><td colspan="7">Sin registros.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Adaptado de HICS 255 (Master Patient Evacuation Tracking, California EMSA, 2014). Datos de pacientes: uso exclusivo para la gestión de la emergencia.</p>${pieImp(r)}</section>`;
+  setTimeout(() => window.print(), 300);
+}
+
 function abrirDep(id) {
   const r = red(borrador.red), e = r.establecimientos.find(x => x.codigo === borrador.codigo), d = id ? r.dependencias.find(x => x.id === id) : {};
   const puede = e.puedeCargar !== false, dis = puede ? '' : 'disabled';
@@ -331,11 +480,31 @@ function imprimir(modo) {
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', async ev => {
-  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep]'); if (!t) return;
+  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep],[data-inst],[data-eva]'); if (!t) return;
   if (t.dataset.ir) { ir(t.dataset.ir); window.scrollTo(0, 0); return; }
   if (t.dataset.red) { redActual = t.dataset.red; render(); return; }
   if (t.dataset.dep) return abrirDep(t.dataset.dep);
+  if (t.dataset.inst) return abrirFila('inst', t.dataset.inst);
+  if (t.dataset.eva) return abrirFila('eva', t.dataset.eva);
   const a = t.dataset.act;
+  if (a === 'fichaTraslado') return imprimirTraslado(null);
+  if (a === 'impInst') return imprimirInst();
+  if (a === 'impEva') return imprimirEva();
+  if (a === 'nuevaInst') return abrirFila('inst', '');
+  if (a === 'nuevoEva') return abrirFila('eva', '');
+  if (a === 'cerrarFila') { if (borradorFila && Object.keys(borradorFila.datos).length && !confirm('Hay cambios sin guardar. ¿Cerrar igual?')) return; return cerrarFila(); }
+  if (a === 'imprimirTraslado') { const r = redVista(); const x = Object.assign({}, r.evacuados.find(y => y.id === borradorFila.id), borradorFila.datos); return imprimirTraslado(x); }
+  if (a === 'guardarFila' || a === 'borrarFila') {
+    if (a === 'borrarFila' && !confirm('¿Quitar este registro? No se puede deshacer desde la app.')) return;
+    const b = borradorFila, r = redVista();
+    if (a === 'guardarFila' && b.tipo === 'eva') { const ant = b.id ? r.evacuados.find(y => y.id === b.id) || {} : {}; const d = Object.assign({}, ant, b.datos); if (!d.codigo) { toast('Elegí el establecimiento.', true); return; } if (!String(d.paciente || '').trim()) { toast('Falta el paciente.', true); return; } if (!b.datos.codigo) b.datos.codigo = d.codigo; }
+    if (a === 'guardarFila' && b.tipo === 'inst' && !b.id && !String(b.datos.nombre || '').trim()) { toast('Falta el nombre de la institución.', true); return; }
+    if (!navigator.onLine) { toast('Para guardar se necesita conexión.', true); return; }
+    t.disabled = true;
+    try { const res = await S.api(b.tipo === 'inst' ? 'evac_institucion' : 'evac_evacuado', { red: r.nombre, id: b.id, borrar: a === 'borrarFila', datos: b.datos }); if (!res.ok) throw res; toast(a === 'borrarFila' ? 'Quitado.' : 'Guardado.'); borradorFila = null; cerrarFila(); await cargar(false); }
+    catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.', true); t.disabled = false; }
+    return;
+  }
   if (a === 'volver') { if (borrador && (Object.keys(borrador.datos).length || borrador.estado) && !confirm('Hay cambios sin guardar en la ficha. ¿Salir igual?')) return; borrador = null; ir('#/'); return; }
   if (a === 'imprimir') return imprimir(t.dataset.modo);
   if (a === 'nuevaDep') return abrirDep('');
@@ -357,7 +526,7 @@ document.addEventListener('click', async ev => {
     if (ok) { borradorDep = null; cerrarDep(); render(); }
   }
 });
-document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && borradorDep) cerrarDep(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && borradorDep) cerrarDep(); else if (ev.key === 'Escape' && borradorFila) cerrarFila(); });
 window.addEventListener('beforeunload', ev => { if ((borrador && Object.keys(borrador.datos).length) || (borradorDep && Object.keys(borradorDep.datos).length)) { ev.preventDefault(); ev.returnValue = ''; } });
 window.addEventListener('hashchange', render);
 $('#btnAct').addEventListener('click', () => cargar(true));
