@@ -88,7 +88,7 @@ tr.nueva td{background:#F5F7FB}
 .dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#172B4D;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
 .ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
-footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 @media (max-width:760px){.lista{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.rejilla{grid-template-columns:1fr}}
 @media print{.barra,.tabs,.herr,.acc,footer,.btn{display:none!important}body{background:#fff}main{padding:0}.tarjeta{box-shadow:none;break-inside:avoid}}
 /* Paleta del sitio (alerta de triaje): #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Coral solo para errores y alta prioridad. */
@@ -326,7 +326,7 @@ function encReu(word) {
     <td style="border:0;padding:0 0 4px"><b style="font-size:13pt;color:#172B4D">Preparación y Respuesta a Emergencias y desastres</b><br><span style="font-size:9pt;color:#4B5B73">Higiene y Seguridad Laboral</span></td>
 </tr></table>`;
 }
-function pieReu(word) { return `<div class="r-pie"><p style="font-size:7pt;color:#6B7A90;margin-top:8px">Documento en versión 0 · Se archiva junto con las demás actas, informes y bitácoras de la emergencia.</p><p align="center" style="text-align:center;margin:4px 0 0">${word ? '<img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL">' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto">'}</p></div>`; }
+function pieReu(word) { return `<div class="r-pie"><p style="font-size:7pt;color:#6B7A90;margin:4px 0 0">Documento en versión 0 · Se archiva junto con las demás actas, informes y bitácoras de la emergencia.</p><p align="center" style="text-align:center;margin:4px 0 0">${word ? '<img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL">' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto;max-height:10mm;object-fit:contain">'}</p></div>`; }
 function participantes() {
   if (!reuProy || !cat) return [];
   return cat.participaciones.filter(x => x.proyecto === reuProy).map(x => ({ p: per(x.persona), f: x.funcion }))
@@ -382,7 +382,7 @@ function reuWord(id) {
     .r-t td.l{background:#E4EAFB;font-weight:bold;width:32%}.r-t td.h{background:#E4EAFB;font-weight:bold;font-size:7.5pt}`;
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(m.titulo)}</title>
     <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${reuHTML(id, true).replace(/<img[^>]*__LOGOW__[^>]*>/g, '')}</div>
-    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="${ap ? 690 : 472}" alt="HySL"></p></div></body></html>`;
+    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="472" alt="HySL"></p></div></body></html>`;
   const blob = new Blob(['﻿', html], { type: 'application/msword' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = m.titulo + (reuProy ? ' - ' + reuProy : '') + '.doc';
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);

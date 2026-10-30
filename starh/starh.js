@@ -264,7 +264,7 @@
       .volver:hover{background:#E4EAFB!important}
       #volver{display:inline-flex;align-items:center;gap:4px;background:#fff;color:#172B4D!important;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;text-decoration:none;margin-left:10px;vertical-align:middle}
       @media (max-width:420px){.nav-inicio{padding:8px 10px!important;font-size:13px}.nav-inicio .txt{display:none}}
-      footer img{width:66.67%!important;max-width:740px!important;height:auto!important}
+      footer img{width:66.67%!important;max-width:740px!important;height:auto!important;max-height:56px!important;object-fit:contain}
       @media print{.nav-inicio,.volver{display:none!important}}`;
     document.head.appendChild(st);
     const barra = document.querySelector('header.barra, .barra');
@@ -287,7 +287,7 @@
   const st = document.createElement('style');
   st.textContent = `table.pag{width:100%;border-collapse:collapse;margin:0}table.pag>tbody>tr>td,table.pag>tfoot>tr>td{border:0!important;padding:0!important;background:none!important;width:auto!important;height:auto!important}
     @media print{html,body{background:#fff!important}}
-    table.pag>tfoot{display:table-footer-group}table.pag>tfoot>tr>td{padding-top:6px!important}`;
+    table.pag>tfoot{display:table-footer-group}table.pag>tfoot>tr>td{padding-top:3px!important}`;
   document.head.appendChild(st);
   function envolver(raiz) {
     raiz.querySelectorAll('section.hoja:not([data-pag]), section.r-hoja:not([data-pag])').forEach(h => {

@@ -86,7 +86,7 @@ details.sec[open]>summary{border-bottom:1px solid var(--linea)}
 .ingreso{max-width:420px;margin:7vh auto 0;padding:24px 22px}
 .msg{margin-top:10px;font-size:13.5px;padding:9px 11px;border-radius:10px;background:#FFE5CC;color:#172B4D}
 .ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
-footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 /* impresión */
 .imp{display:none}
 @media print{
@@ -101,9 +101,9 @@ footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-widt
   .imp td.l{width:42%;background:var(--claro);font-weight:700;color:var(--fuerte)}
   .imp td.v{height:20px}
   .imp .hoja{break-after:page}.imp .hoja:last-child{break-after:auto}
-  .imp .pieimp{margin-top:12px;text-align:center;font-size:7.5pt;color:var(--suave)}
+  .imp .pieimp{margin-top:6px;text-align:center;font-size:7.5pt;color:var(--suave)}
   .imp .pieimp .pt{display:flex;justify-content:space-between;text-align:left;margin-bottom:4px}
-  .imp .pieimp img{width:66.67%;height:auto}
+  .imp .pieimp img{width:66.67%;height:auto;max-height:10mm;object-fit:contain}
 }
 @media (max-width:640px){.campos{grid-template-columns:1fr}}
 /* ---------- Paleta de esta app (alerta de triaje): #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D ----------
@@ -465,7 +465,7 @@ function bajarWord(nombre, cuerpo, apaisada) {
     td.l{background:#FDECEA;color:#7F1D1D;font-weight:bold}.f260 td.l{width:42%}.f260 td{height:18pt}.reg td{height:22pt}.reg td.l{height:auto;font-size:7.5pt}`;
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(nombre)}</title>
     <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${cuerpo.replace(/<img[^>]*__LOGOW__[^>]*>/g, '')}</div>
-    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="${apaisada ? 690 : 472}" alt="HySL"></p></div></body></html>`;
+    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="472" alt="HySL"></p></div></body></html>`;
   const blob = new Blob(['﻿', html], { type: 'application/msword' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre + ' - ' + r.nombre + '.doc';
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -590,7 +590,7 @@ function tarjetaHTML(p, r, word) {
     <div class="tj-talon"><span>✂ Talón para el registro de evacuados (queda en el establecimiento)</span>
       <table class="tj-t" style="margin-top:3px"><tr><td style="background:${p.c};color:${p.t};width:18%;text-align:center"><b>${p.n} · ${p.nombre}</b></td><td>N.º ______</td><td>Paciente: ______________________</td><td>Destino: ________________</td><td>Hora ___:___</td></tr></table></div>
     <div style="font-size:6pt;color:#4B5B73;margin-top:2px">${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)} · Adaptado de METTAG, SMART, HICS 255 y 260 y OPS EVAC-H · Uso exclusivo para la emergencia.</div>
-    <div class="tj-logo" style="text-align:center">${word ? '<p align="center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto">'}</div>
+    <div class="tj-logo" style="text-align:center">${word ? '<p align="center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto;max-height:6.5mm;object-fit:contain">'}</div>
   </section>`;
 }
 function tarjetasHTML(cual, r, word) { return PRIOR.filter(p => !cual || String(p.n) === String(cual)).map(p => tarjetaHTML(p, r, word)).join(word ? '<br style="page-break-before:always">' : ''); }
