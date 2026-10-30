@@ -372,7 +372,7 @@ const EVAC_INST = [
   ['acuerdo', 'Acuerdo de derivación', 'lista', 'Convenio o acuerdo formal;Acuerdo informal;Sin acuerdo;s/d'], ['acuerdo_fecha', 'Fecha del acuerdo', 'fecha'],
   ['capacidades', 'Especialidades y capacidades', 'largo'], ['guardia', 'Guardia las 24 horas', 'lista', 'Sí, recibe ambulancias;No tiene guardia;s/d'],
   ['descontaminacion', 'Descontaminación de múltiples víctimas', 'lista', 'Sí;No;s/d'], ['arm', 'Puede recibir pacientes con asistencia respiratoria mecánica', 'lista', 'Sí;No;s/d']
-].concat(EVAC_CAMAS.map(c => [c[0] + '_est', c[1] + ' · camas que podría recibir (estimado)', 'numero']))
+].concat(EVAC_CAMAS.map(c => [c[0] + '_est', c[1] + (c[0] === 'quirofanos' ? ' que podría ofrecer (estimado)' : ' · camas que podría recibir (estimado)'), 'numero']))
  .concat([['camas_origen', 'Origen de la estimación', 'lista', 'Convenio o acuerdo;Consulta a la institución;Estimación propia;Dato histórico;s/d'],
           ['camas_fecha', 'Fecha de la estimación', 'texto'], ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Actualizado por', 'texto']]);
 
