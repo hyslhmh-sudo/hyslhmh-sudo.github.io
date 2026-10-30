@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Imprimir formularios · STAR-H y PHR</title>
 <meta name="description" content="Formularios de campo STAR-H y PHR listos para imprimir, por establecimiento, en blanco o con lo cargado.">
-<meta name="theme-color" content="#0D313F">
+<meta name="theme-color" content="#1B2A41">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,8 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
 <style>
 :root{
-  --fuerte:#0D313F; --medio:#5894A7; --claro:#E6EFF2; --borde:#C9DCE3;
-  --texto:#3A4A52; --suave:#6B7A82; --linea:#D5E1E5; --fondo:#F6F7F8;
+  --fuerte:#1B2A41; --medio:#3AA0FF; --claro:#CFE9FF; --borde:#9CCFFF;
+  --texto:#1B2A41; --suave:#44546C; --linea:#CFE9FF; --fondo:#F4FAFF;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14px;line-height:1.4}
@@ -53,14 +53,14 @@ th{background:var(--fuerte);color:#fff;font-weight:700}
 tr{break-inside:avoid}
 td.lab{background:var(--claro);color:var(--fuerte);font-weight:700;width:34%}
 td.c{text-align:center}
-tr.na td{background:#F1F3F4;color:#8A979E}
+tr.na td{background:#F4FAFF;color:#5E6E86}
 tr.vacia td{height:20px}
 td.buscar{color:var(--suave);font-size:7pt;display:block;border:0;padding:1px 0 0}
 .it small{display:block;color:var(--suave);font-size:6.8pt;margin-top:1px}
-.calc{background:#F7F9FA;color:#9AA6AC}
+.calc{background:#F4FAFF;color:#5E6E86}
 ul.inst{font-size:9pt;margin:4px 0 0 0;padding-left:18px}
 ul.inst li{margin-bottom:2px}
-.guia{font-size:7.5pt;color:#3A4A52;background:var(--claro);border-left:3px solid var(--medio);padding:4px 7px;margin:0 0 4px;break-inside:avoid}
+.guia{font-size:7.5pt;color:#1B2A41;background:var(--claro);border-left:3px solid var(--medio);padding:4px 7px;margin:0 0 4px;break-inside:avoid}
 .guia b{color:var(--fuerte)}
 .nota{font-size:8pt;color:var(--medio);font-style:italic;margin-top:6px}
 .firmas td{height:58px;vertical-align:bottom;font-size:8pt;color:var(--suave)}
@@ -112,7 +112,7 @@ const MOD = {
   phr: { nombre: 'PHR · Plan hospitalario de respuesta', accion: 'phr_catalogo', clave: 'phr.cat', app: 'phr.html' },
   ish: { nombre: 'ISH · Índice de Seguridad Hospitalaria', accion: 'ish_catalogo', clave: 'ish.cat', app: 'ish.html' }
 };
-const COLOR_NIVEL = { 'Muy alto': '#F4B4B4', 'Alto': '#FFD3A6', 'Moderado': '#FFF2B3', 'Bajo': '#E6F2C2', 'Muy bajo': '#C8E6C9' };
+const COLOR_NIVEL = { 'Muy alto': '#FF5A5F', 'Alto': '#FFC9CB', 'Moderado': '#CFE9FF', 'Bajo': '#9CCFFF', 'Muy bajo': '#3AA0FF' };
 let datos = { starh: null, phr: null, ish: null };
 let mod = ['starh', 'phr', 'ish'].indexOf(qs.get('m')) >= 0 ? qs.get('m') : null;
 

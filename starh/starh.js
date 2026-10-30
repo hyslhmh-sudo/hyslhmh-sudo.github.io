@@ -75,14 +75,14 @@
     return n;
   }
   const NIVELES = ['Muy alto', 'Alto', 'Moderado', 'Bajo', 'Muy bajo'];
-  const COLOR_NIVEL = { 'Muy alto': '#F4B4B4', 'Alto': '#FFD3A6', 'Moderado': '#FFF2B3', 'Bajo': '#E6F2C2', 'Muy bajo': '#C8E6C9' };
-  const TINTA_NIVEL = { 'Muy alto': '#7A1F1F', 'Alto': '#7A3E06', 'Moderado': '#5E4B00', 'Bajo': '#3D5214', 'Muy bajo': '#1E5223' };
+  const COLOR_NIVEL = { 'Muy alto': '#FF5A5F', 'Alto': '#FFC9CB', 'Moderado': '#CFE9FF', 'Bajo': '#9CCFFF', 'Muy bajo': '#3AA0FF' };
+  const TINTA_NIVEL = { 'Muy alto': '#1B2A41', 'Alto': '#1B2A41', 'Moderado': '#1B2A41', 'Bajo': '#1B2A41', 'Muy bajo': '#1B2A41' };
 
   /* Trelew (HZT/HMH) usa los azules institucionales; el resto, la paleta de la Secretaría de Salud */
   function temaRed(nombre) {
     return /trelew/i.test(nombre || '')
-      ? { fuerte: '#0D313F', medio: '#5894A7', claro: '#E6EFF2', borde: '#C9DCE3' }
-      : { fuerte: '#B8441A', medio: '#E8602A', claro: '#FDEDE4', borde: '#F3D3C2' };
+      ? { fuerte: '#1B2A41', medio: '#3AA0FF', claro: '#CFE9FF', borde: '#9CCFFF' }
+      : { fuerte: '#1B2A41', medio: '#3AA0FF', claro: '#CFE9FF', borde: '#9CCFFF' };
   }
 
   function hoy() {

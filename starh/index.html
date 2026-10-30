@@ -14,9 +14,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
 <style>
-:root{--fuerte:#0D313F;--medio:#5894A7;--claro:#E6EFF2;--borde:#C9DCE3;--naranja:#B8441A;--naranja-claro:#FDEDE4;
-  --texto:#3A4A52;--suave:#6B7A82;--tenue:#8A979E;--linea:#E3E8EB;--fondo:#F6F7F8;--papel:#fff;--radio:14px;
-  --sombra:0 1px 2px rgba(13,49,63,.06),0 4px 14px rgba(13,49,63,.06)}
+:root{--fuerte:#1B2A41;--medio:#3AA0FF;--claro:#CFE9FF;--borde:#9CCFFF;--naranja:#1B2A41;--naranja-claro:#CFE9FF;
+  --texto:#1B2A41;--suave:#44546C;--tenue:#5E6E86;--linea:#CFE9FF;--fondo:#F4FAFF;--papel:#fff;--radio:14px;
+  --sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
 button,input{font:inherit;color:inherit}
@@ -33,20 +33,20 @@ main{max-width:960px;margin:-10px auto 0;padding:0 16px 40px}
 .ingreso{padding:16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
 .ingreso h2{grid-column:1/-1;font-size:15px;margin:0;color:var(--fuerte)}
 .ingreso label span{display:block;font-size:12px;font-weight:600;color:var(--suave);margin-bottom:4px}
-.ingreso input{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:10px 12px}
+.ingreso input{width:100%;border:1px solid #9CCFFF;border-radius:10px;padding:10px 12px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px}
-.msg{grid-column:1/-1;font-size:13px;padding:8px 10px;border-radius:8px;background:#FCE8E6;color:#B3261E}
+.msg{grid-column:1/-1;font-size:13px;padding:8px 10px;border-radius:8px;background:#FFC9CB;color:#1B2A41}
 .rejilla{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .mod{position:relative;display:flex;flex-direction:column;gap:6px;padding:18px 18px 14px;text-decoration:none;color:inherit;min-height:168px;transition:transform .12s,box-shadow .12s;border-top:5px solid var(--c,var(--fuerte))}
-.mod:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(13,49,63,.08),0 10px 24px rgba(13,49,63,.1)}
+.mod:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(27,42,65,.08),0 10px 24px rgba(27,42,65,.1)}
 .mod .num{position:absolute;top:12px;right:14px;font-size:12px;font-weight:800;color:var(--tenue)}
 .mod .ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--cc,var(--claro));color:var(--c,var(--fuerte))}
 .mod .ico .ms{font-size:26px}
-.mod b{font-size:17px;color:#24343B;margin-top:4px}
+.mod b{font-size:17px;color:#1B2A41;margin-top:4px}
 .mod p{margin:0;font-size:13px;color:var(--suave);flex:1}
 .mod .pie{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12.5px}
 .mod .pie a{color:var(--c,var(--fuerte));font-weight:700;text-decoration:none}
-.candado{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#EEF1F3;color:var(--suave)}
+.candado{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:#F4FAFF;color:var(--suave)}
 .candado .ms{font-size:15px}
 .nota{font-size:12.5px;color:var(--tenue);margin:18px 2px 0}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:min(340px,80%)}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
@@ -95,12 +95,12 @@ body{background:#F4FAFF}
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 // clave: flag del usuario que habilita la sección (null = abierta a todos)
 const MODS = [
-  { n: 1, t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', c: '#0D313F', cc: '#E6EFF2' },
-  { n: 2, t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1E6B52', cc: '#E3F2EC' },
-  { n: 3, t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023).', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#B8441A', cc: '#FDEDE4' },
-  { n: 4, t: 'Fuentes', d: 'Bibliografía y normativa en que se basan los relevamientos, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#5894A7', cc: '#E6EFF2' },
-  { n: 5, t: 'COE', d: 'Participantes del comité y del centro de operaciones de emergencia: datos, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#6A3D8F', cc: '#F0E9F6' },
-  { n: 6, t: 'Formularios para imprimir', d: 'Formularios de campo de STAR-H, PHR e ISH, en blanco o con lo cargado, por establecimiento.', ico: 'print', href: 'imprimir.html', flag: null, c: '#3A4A52', cc: '#EEF1F3' },
+  { n: 1, t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', c: '#1B2A41', cc: '#CFE9FF' },
+  { n: 2, t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1B2A41', cc: '#CFE9FF' },
+  { n: 3, t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023).', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#1B2A41', cc: '#CFE9FF' },
+  { n: 4, t: 'Fuentes', d: 'Bibliografía y normativa en que se basan los relevamientos, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#3AA0FF', cc: '#CFE9FF' },
+  { n: 5, t: 'COE', d: 'Participantes del comité y del centro de operaciones de emergencia: datos, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#1B2A41', cc: '#CFE9FF' },
+  { n: 6, t: 'Formularios para imprimir', d: 'Formularios de campo de STAR-H, PHR e ISH, en blanco o con lo cargado, por establecimiento.', ico: 'print', href: 'imprimir.html', flag: null, c: '#1B2A41', cc: '#F4FAFF' },
   { n: 7, t: 'Evacuación hospitalaria', d: 'Fichas de cada establecimiento y dependencia para los planes de evacuación: población, edificio, salidas, gases, incendio y organización.', ico: 'directions_run', href: 'evac.html', flag: 'evac', c: '#1B2A41', cc: '#CFE9FF' }
 ];
 function pintar() {
