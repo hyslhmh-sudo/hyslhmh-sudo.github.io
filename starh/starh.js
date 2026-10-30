@@ -243,3 +243,36 @@
 
   global.STARH = { DEMO, API, api, store, sesion, calcular, nivelDe, NIVELES, COLOR_NIVEL, TINTA_NIVEL, temaRed, hoy, uid, esc, Demo };
 })(window);
+
+/* ---------- Navegación visible en todas las pantallas ----------
+ * Botón «Inicio» claro y grande en la barra de arriba, y botones «Volver» con forma de botón.
+ * Se agrega desde acá para que todas las páginas queden iguales. */
+(function () {
+  'use strict';
+  function aplicar() {
+    if (/(^|\/)(index\.html)?$/.test(location.pathname)) return; // pantalla de inicio
+    const st = document.createElement('style');
+    st.textContent = `
+      .nav-inicio{display:inline-flex!important;align-items:center;gap:5px;flex:0 0 auto;background:#fff!important;color:#172B4D!important;text-decoration:none;
+        border-radius:999px;padding:8px 14px 8px 10px!important;font:700 14px 'Plus Jakarta Sans',system-ui,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.28);margin-right:10px;white-space:nowrap}
+      .nav-inicio .ms{font-size:20px!important;color:#2F5BEA}
+      .nav-inicio:hover{background:#E4EAFB!important}
+      .volver{display:inline-flex!important;align-items:center;gap:6px;background:#fff!important;border:2px solid #2F5BEA!important;color:#172B4D!important;
+        border-radius:999px!important;padding:9px 16px 9px 11px!important;font-weight:700!important;font-size:14.5px!important;margin:2px 0 12px!important;
+        box-shadow:0 1px 3px rgba(23,43,77,.18);cursor:pointer;text-decoration:none}
+      .volver .ms{font-size:20px!important;color:#2F5BEA}
+      .volver:hover{background:#E4EAFB!important}
+      #volver{display:inline-flex;align-items:center;gap:4px;background:#fff;color:#172B4D!important;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;text-decoration:none;margin-left:10px;vertical-align:middle}
+      @media (max-width:420px){.nav-inicio{padding:8px 10px!important;font-size:13px}.nav-inicio .txt{display:none}}
+      @media print{.nav-inicio,.volver{display:none!important}}`;
+    document.head.appendChild(st);
+    const barra = document.querySelector('header.barra, .barra');
+    if (!barra) return;
+    let a = barra.querySelector('a[href="index.html"]');
+    if (!a) { a = document.createElement('a'); a.href = 'index.html'; barra.insertBefore(a, barra.firstChild); }
+    a.className = 'nav-inicio'; a.removeAttribute('title');
+    a.setAttribute('aria-label', 'Volver al inicio');
+    a.innerHTML = '<span class="ms">home</span><span class="txt">Inicio</span>';
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicar); else aplicar();
+})();
