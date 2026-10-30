@@ -111,6 +111,18 @@ body{background:#F5F7FB}
 .contactos a{background:#E4EAFB;color:#172B4D}
 th{background:#F5F7FB}
 .dlg-cab{background:#172B4D;border-bottom:3px solid #2F5BEA}
+/* modelos de reuniones para imprimir */
+.imp{display:none}
+@media print{
+  body.conimp{background:#fff!important}body.conimp>*:not(#imp){display:none!important}body.conimp #imp{display:block}
+  @page{size:A4;margin:13mm 12mm}
+  .r-hoja{break-after:page;font-size:9pt;color:#172B4D}.r-hoja:last-child{break-after:auto}.r-hoja.apaisada{page:apaisada}@page apaisada{size:A4 landscape;margin:10mm}
+  .r-kick{font-size:11pt;font-weight:800;color:#2F5BEA;margin:4px 0}.r-h2{font-size:10pt;margin:8px 0 3px;border-bottom:1.5px solid #2F5BEA;color:#172B4D}
+  table.r-t{width:100%;border-collapse:collapse}.r-t td{border:1px solid #C5D1F2;padding:3px 5px;font-size:8.3pt;vertical-align:top}
+  .r-t td.l{background:#E4EAFB;font-weight:700;width:32%;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .r-t td.h{background:#E4EAFB;font-weight:700;font-size:7.6pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .casilla{display:inline-block;width:10px;height:10px;border:1px solid #172B4D;margin:0 3px 0 8px;vertical-align:-1px}
+}
 </style>
 </head>
 <body>
@@ -124,6 +136,7 @@ th{background:#F5F7FB}
 <main id="app"></main>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · COE</p></footer>
 <div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
+<div id="imp" class="imp"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
 <script>
@@ -165,16 +178,16 @@ function render() {
   if (location.hash === '#ayuda') return vistaAyuda();
   const activos = cat.personas.filter(p => p.estado !== 'Inactivo');
   if (vista === 'usuarios' && !cat.puedeCargar) vista = 'personas';
-  const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto']].concat(cat.puedeCargar ? [['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
+  const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas']].concat(cat.puedeCargar ? [['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
     .map(t => `<button class="tab" data-vista="${t[0]}" aria-pressed="${vista === t[0]}"><span class="ms" style="font-size:18px">${t[1]}</span>${t[2]}</button>`).join('');
   const kpis = `<div class="kpis">
     <div class="tarjeta kpi"><b>${activos.length}</b><span>participantes activos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo !== 'Externo').length}</b><span>actores internos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo === 'Externo').length}</b><span>actores externos</span></div>
     <div class="tarjeta kpi"><b>${new Set(cat.participaciones.map(x => x.proyecto)).size}</b><span>proyectos con participantes</span></div></div>`;
-  app.innerHTML = `<div class="tabs">${tabs}</div>${vista === 'usuarios' ? '' : kpis}<div id="vista"></div>
+  app.innerHTML = `<div class="tabs">${tabs}</div>${vista === 'usuarios' || vista === 'reuniones' ? '' : kpis}<div id="vista"></div>
     <p class="sub">Datos al ${new Date(cat.generado).toLocaleString('es-AR')}. Se guardan en las hojas COE PARTICIPANTES y COE PROYECTOS del libro${cat.puedeCargar ? '' : ' · Tu acceso es de consulta'}.</p>`;
-  if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
+  if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'reuniones') vistaReuniones(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
 }
 
 function filtrosHTML(conProy) {
@@ -279,6 +292,101 @@ function vistaProyectos() {
       : '<div class="vacio">Sin participantes cargados en este proyecto.</div>'}</div>`;
   }).join('');
   atarFiltros(vistaProyectos);
+}
+
+/* ---------- 5. Reuniones: actas, acuerdos y registros (modelos para imprimir o bajar en Word) ----------
+ * Basado en: OMS, Marco para un centro de operaciones de emergencia de salud pública (2015) y Manual PHEOC de OMS/AFRO
+ * (acta compartida en 24 h, seguimiento de tareas, informe de situación, archivo central); FEMA, ICS 201, 202, 209, 214 y 230;
+ * y actas de COE de la región (información, tipo de reunión, orden del día, desarrollo, acuerdos y compromisos, firmas). */
+let reuProy = '';
+const REU = {
+  acta: { ico: 'description', titulo: 'Acta de reunión', txt: 'Para cada reunión del COE o de la mesa conjunta: datos, participantes, orden del día, situación, temas tratados, decisiones, tareas con responsable y plazo, próxima reunión y firmas.' },
+  tareas: { ico: 'checklist', titulo: 'Registro de acuerdos y seguimiento de tareas', apaisada: true, txt: 'Una planilla única donde se pasan las tareas de todas las actas y se sigue su estado reunión a reunión (pendiente, en curso, cumplida, vencida).' },
+  asistencia: { ico: 'how_to_reg', titulo: 'Planilla de asistencia', txt: 'Nombre, institución, función, contacto y firma. Si elegís un proyecto, sale con los participantes cargados.' },
+  situacion: { ico: 'summarize', titulo: 'Informe de situación', txt: 'Resumen breve para abrir la reunión o para enviar al COE: lo más importante, situación actual, acciones hechas, necesidades y próximos pasos.' },
+  bitacora: { ico: 'history_edu', titulo: 'Bitácora de actividades', txt: 'Registro cronológico de novedades, llamadas y decisiones de cada función durante la emergencia. Sirve después para la evaluación posterior.' }
+};
+function vistaReuniones() {
+  const t = (id, m) => `<div class="tarjeta" style="padding:14px 16px"><b><span class="ms" style="color:#2F5BEA;margin-right:6px">${m.ico}</span>${m.titulo}</b>
+    <p class="sub" style="margin:6px 0 10px">${m.txt}</p><div class="acc" style="border:0;padding:0;margin:0"><button class="btn mini" data-act="reuImp" data-mod="${id}"><span class="ms" style="font-size:17px">print</span>Imprimir</button>
+    <button class="btn sec mini" data-act="reuWord" data-mod="${id}"><span class="ms" style="font-size:17px">download</span>Descargar en Word</button></div></div>`;
+  $('#vista').innerHTML = `<div class="tarjeta" style="padding:12px 16px;margin-bottom:12px">
+      <p class="sub" style="margin:0 0 8px">Modelos con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de Higiene y Seguridad Laboral. Se imprimen para completar a mano o se bajan en Word para completar en la computadora.</p>
+      <label class="campo" style="max-width:420px"><span>Proyecto (opcional: precarga participantes y funciones)</span><select id="reuProy">${opts(proyectos(), reuProy, 'Sin precargar')}</select></label></div>
+    <div class="lista">${Object.keys(REU).map(k => t(k, REU[k])).join('')}</div>
+    <div class="tarjeta" style="padding:12px 16px;margin-top:12px"><b>Cómo se recomienda registrar (OMS y sistema de comando de incidentes)</b><ul class="sub" style="margin:6px 0 0 -10px">
+      <li>Cada reunión tiene acta, con número, y se comparte con los participantes para comentarios dentro de las 24 horas.</li>
+      <li>Las decisiones van separadas de lo conversado, y cada tarea lleva responsable y plazo; las tareas se siguen en un registro único que se revisa al inicio de cada reunión.</li>
+      <li>La reunión se abre con un informe de situación breve (imagen común de la situación) y se cierra fijando la próxima reunión.</li>
+      <li>Cada función lleva su bitácora; actas, informes y bitácoras se archivan juntos para la evaluación posterior.</li></ul></div>`;
+  const s = $('#reuProy'); s.addEventListener('change', () => { reuProy = s.value; });
+}
+function encReu(word) {
+  const logo = (word ? 'https://hyslhmh-sudo.github.io/starh/' : '') + 'logo-hysl.png';
+  return `<table class="r-enc" style="width:100%;border-collapse:collapse;border-bottom:2.5px solid #2F5BEA;margin-bottom:6px"><tr>
+    <td style="border:0;padding:0 0 4px"><b style="font-size:13pt;color:#172B4D">Preparación y Respuesta a Emergencias y desastres</b><br><span style="font-size:9pt;color:#4B5B73">Higiene y Seguridad Laboral</span></td>
+    <td style="border:0;padding:0 0 4px;text-align:right;width:34%"><img src="${logo}" style="width:260px;height:auto" width="260" alt="HySL"></td></tr></table>`;
+}
+function pieReu() { return `<p style="font-size:7pt;color:#6B7A90;margin-top:8px">Documento en versión 0 · Se archiva junto con las demás actas, informes y bitácoras de la emergencia.</p>`; }
+function participantes() {
+  if (!reuProy || !cat) return [];
+  return cat.participaciones.filter(x => x.proyecto === reuProy).map(x => ({ p: per(x.persona), f: x.funcion }))
+    .sort((a, b) => (a.p.nombre || '').localeCompare(b.p.nombre || '', 'es'));
+}
+function reuHTML(id, word) {
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const fila = (l, h) => `<tr><td class="l">${E(l)}</td><td style="height:${h || 18}px"></td></tr>`;
+  const grilla = (cols, n, pre) => `<table class="r-t"><tr>${cols.map(c => `<td class="h">${c}</td>`).join('')}</tr>${(pre || []).concat(Array.from({ length: Math.max(n - (pre || []).length, 0) }, () => null)).map((x, i) => `<tr>${cols.map((c, j) => `<td style="height:22px">${j === 0 ? i + 1 : x && x[j - 1] != null ? E(x[j - 1]) : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  const ps = participantes().map(x => [x.p.nombre, [x.p.institucion, x.p.cargo].filter(Boolean).join(' · '), x.f || '', '']);
+  const proy = reuProy ? E(reuProy) : '______________________________';
+  const h2 = t => `<h2 class="r-h2">${t}</h2>`;
+  if (id === 'acta') return `<section class="r-hoja">${encReu(word)}<div class="r-kick">ACTA DE REUNIÓN N.º ______ / ______</div>
+    <table class="r-t">${fila('Comité, COE o mesa · proyecto')}<tr><td class="l">Fecha · hora de inicio y de cierre</td><td>___/___/______ · ___:___ a ___:___ h</td></tr>${fila('Lugar o modalidad (presencial, virtual)')}
+      <tr><td class="l">Tipo de reunión</td><td>${['Ordinaria', 'Extraordinaria', 'Activación por emergencia', 'Simulacro o ejercicio'].map(cas).join(' ')}</td></tr>${fila('Convocó · coordinó')}${fila('Redactó el acta')}</table>
+    <div style="font-size:8.5pt;color:#4B5B73;margin:4px 0">Proyecto: ${proy}</div>
+    ${h2('1. Participantes')}${grilla(['N.º', 'Apellido y nombre', 'Institución · cargo', 'Función en el comité', 'Firma'], Math.max(ps.length, 8), ps)}
+    ${h2('2. Orden del día')}<table class="r-t">${[1, 2, 3, 4].map(n => `<tr><td style="width:24px">${n}</td><td style="height:18px"></td></tr>`).join('')}</table>
+    ${h2('3. Situación al inicio de la reunión')}<table class="r-t"><tr><td style="height:60px;font-size:7.5pt;color:#6B7A90;vertical-align:top">Resumen del informe de situación: qué pasó, qué está afectado, qué se hizo desde la reunión anterior y revisión de las tareas pendientes.</td></tr></table>
+    ${h2('4. Temas tratados')}<table class="r-t"><tr><td style="height:80px"></td></tr></table>
+    ${h2('5. Decisiones y acuerdos')}${grilla(['N.º', 'Decisión o acuerdo', 'Fundamento o criterio (si corresponde)'], 5)}
+    ${h2('6. Tareas y compromisos')}${grilla(['N.º', 'Tarea', 'Responsable', 'Plazo', 'Estado'], 6)}
+    ${h2('7. Temas pendientes · próxima reunión')}<table class="r-t">${fila('Temas pendientes', 30)}<tr><td class="l">Próxima reunión (fecha, hora y lugar)</td><td>___/___/______ · ___:___ h · ______________________</td></tr>${fila('Se compartió el acta con los participantes el (fecha)')}</table>
+    ${h2('8. Firmas')}<table class="r-t"><tr><td style="height:46px;width:50%;vertical-align:bottom;text-align:center;font-size:7.5pt">Coordinó (firma y aclaración)</td><td style="vertical-align:bottom;text-align:center;font-size:7.5pt">Redactó (firma y aclaración)</td></tr></table>${pieReu()}</section>`;
+  if (id === 'tareas') return `<section class="r-hoja apaisada">${encReu(word)}<div class="r-kick">REGISTRO DE ACUERDOS Y SEGUIMIENTO DE TAREAS</div>
+    <div style="font-size:9pt;margin:2px 0 6px">Comité, COE o mesa · proyecto: ${proy} &nbsp;&nbsp; Hoja ___ de ___</div>
+    ${grilla(['N.º', 'Acta N.º y fecha', 'Acuerdo o tarea', 'Responsable', 'Plazo', 'Estado', 'Fecha de cumplimiento', 'Observaciones'], 14)}
+    <p style="font-size:7.5pt;color:#4B5B73">Estado: Pendiente · En curso · Cumplida · Vencida · Reprogramada. Se revisa al inicio de cada reunión; las tareas vencidas se tratan primero.</p>${pieReu()}</section>`;
+  if (id === 'asistencia') return `<section class="r-hoja">${encReu(word)}<div class="r-kick">PLANILLA DE ASISTENCIA</div>
+    <table class="r-t">${fila('Reunión · proyecto')}<tr><td class="l">Fecha · hora · lugar</td><td>___/___/______ · ___:___ h · ______________________</td></tr></table>
+    <div style="font-size:8.5pt;color:#4B5B73;margin:4px 0">Proyecto: ${proy}</div>
+    ${grilla(['N.º', 'Apellido y nombre', 'Institución · cargo', 'Función', 'Teléfono o correo', 'Firma'], Math.max(ps.length, 18), ps.map(x => [x[0], x[1], x[2], '', '']))}${pieReu()}</section>`;
+  if (id === 'situacion') return `<section class="r-hoja">${encReu(word)}<div class="r-kick">INFORME DE SITUACIÓN N.º ______</div>
+    <table class="r-t">${fila('Evento o emergencia')}<tr><td class="l">Fecha y hora del informe · período que cubre</td><td>___/___/______ ___:___ h · desde ___/___ ___:___ hasta ___/___ ___:___</td></tr>${fila('Establecimiento, red o comité que informa')}</table>
+    ${h2('1. Lo más importante')}<table class="r-t"><tr><td style="height:50px"></td></tr></table>
+    ${h2('2. Situación actual')}<table class="r-t">${fila('Qué pasó y dónde', 30)}${fila('Personas afectadas, atendidas, derivadas o evacuadas', 30)}${fila('Servicios y edificios afectados (agua, energía, gases, accesos)', 30)}${fila('Personal disponible y afectado', 24)}</table>
+    ${h2('3. Acciones realizadas')}<table class="r-t"><tr><td style="height:56px"></td></tr></table>
+    ${h2('4. Necesidades y pedidos')}<table class="r-t"><tr><td style="height:46px"></td></tr></table>
+    ${h2('5. Próximos pasos · próximo informe')}<table class="r-t"><tr><td style="height:40px"></td></tr>${fila('Próximo informe (fecha y hora)')}</table>
+    <table class="r-t" style="margin-top:6px">${fila('Elaboró (nombre, función y firma)', 26)}</table>${pieReu()}</section>`;
+  return `<section class="r-hoja">${encReu(word)}<div class="r-kick">BITÁCORA DE ACTIVIDADES</div>
+    <table class="r-t">${fila('Evento o emergencia')}${fila('Función o área (por ejemplo: coordinación, operaciones, logística, enlace)')}${fila('Responsable')}<tr><td class="l">Período</td><td>desde ___/___ ___:___ hasta ___/___ ___:___</td></tr></table>
+    ${grilla(['N.º', 'Fecha y hora', 'Actividad, novedad, llamada o decisión', 'Quién'], 22)}
+    <p style="font-size:7.5pt;color:#4B5B73">Anotar en el momento, con hora, lo importante: decisiones, pedidos, llamadas, cambios de situación. Adaptado de ICS 214 (Activity Log, FEMA).</p>${pieReu()}</section>`;
+}
+function reuImprimir(id) { const d = $('#imp'); d.innerHTML = reuHTML(id, false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); }
+window.addEventListener('afterprint', () => document.body.classList.remove('conimp'));
+function reuWord(id) {
+  const m = REU[id], ap = !!m.apaisada;
+  const css = `@page Section1{size:${ap ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:34pt 32pt}div.Section1{page:Section1}
+    body{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:9pt;color:#172B4D}.r-kick{font-size:11pt;font-weight:bold;color:#2F5BEA;margin:4pt 0}
+    .r-h2{font-size:10pt;color:#172B4D;border-bottom:1.5pt solid #2F5BEA;margin:8pt 0 3pt}table.r-t{width:100%;border-collapse:collapse}.r-t td{border:1pt solid #C5D1F2;padding:3pt 5pt;font-size:8.5pt;vertical-align:top}
+    .r-t td.l{background:#E4EAFB;font-weight:bold;width:32%}.r-t td.h{background:#E4EAFB;font-weight:bold;font-size:7.5pt}`;
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(m.titulo)}</title>
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${reuHTML(id, true)}</div></body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = m.titulo + (reuProy ? ' - ' + reuProy : '') + '.doc';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Descargado. Se abre con Word; para editarlo, tocá «Habilitar edición».');
 }
 
 /* ---------- 4. Usuarios y accesos (solo Administración) ---------- */
@@ -386,6 +494,8 @@ document.addEventListener('click', async ev => {
   if (a === 'nueva') return dlgPersona('');
   if (a === 'editar') return dlgPersona(t.dataset.id);
   if (a === 'asignar') return dlgAsignar(t.dataset.id);
+  if (a === 'reuImp') return reuImprimir(t.dataset.mod);
+  if (a === 'reuWord') return reuWord(t.dataset.mod);
   if (a === 'nuevoUsr') return dlgUsuario('');
   if (a === 'editarUsr') return dlgUsuario(t.dataset.dni);
   if (a === 'copiarClave') { try { await navigator.clipboard.writeText(t.dataset.txt); toast('Copiado.'); } catch (e) { toast('No se pudo copiar: anotala a mano.'); } return; }
@@ -456,6 +566,7 @@ function vistaAyuda() {
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
       <li>Si una persona deja de participar, cambiá su estado a «Inactivo»: no se borra y queda el historial.</li></ul>
+    <h3>Reuniones y actas</h3><p>Modelos para imprimir o bajar en Word, con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de HySL: acta de reunión, registro de acuerdos y seguimiento de tareas, planilla de asistencia, informe de situación y bitácora de actividades. Si elegís un proyecto, el acta y la asistencia salen con los participantes y sus funciones. Siguen las recomendaciones de la OMS para centros de operaciones de emergencia (acta compartida dentro de las 24 horas, tareas con responsable y plazo, informe de situación y archivo central) y los formularios del sistema de comando de incidentes.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COE PARTICIPANTES (personas), COE PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COE LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
     <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su DNI). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo».</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COE» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>

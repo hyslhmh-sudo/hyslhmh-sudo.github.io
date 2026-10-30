@@ -179,6 +179,12 @@ body{background:#FAF7F7}
 .grilla-camas{width:100%;border-collapse:collapse;font-size:13px}
 .grilla-camas td,.grilla-camas th{padding:5px 6px;border-bottom:1px solid #F3DADA;text-align:left}
 .grilla-camas input{width:84px;border:1px solid #E9C9C6;border-radius:8px;padding:6px 8px}
+.tj-mini{display:flex;gap:6px;flex-wrap:wrap}.tj-mini span{border-radius:8px;padding:5px 10px;font-size:12.5px}
+.tj{display:none}
+@media print{.imp .tj-hoja{display:block}.imp .tj{display:block;border:1.5px solid #172B4D;border-radius:6px;padding:7px 9px;height:132mm;box-sizing:border-box;break-inside:avoid;margin-bottom:2mm;overflow:hidden}
+  .imp .tj:nth-child(2n){break-after:page}.imp .tj-banda{padding:5px 10px;margin:3px 0 4px;border-radius:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .imp .tj-cab td{border:0;padding:0;font-size:9pt}.imp .tj-t td{font-size:7.6pt;padding:2px 5px;height:13px}.imp .tj-t td.l{width:24%}
+  .imp .tj-talon{border-top:1.5px dashed #4B5B73;margin-top:5px;padding-top:3px;font-size:7pt}.imp .tj-talon td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .aviso-datos{font-size:12.5px;color:#7F1D1D;background:#FDECEA;border-radius:10px;padding:8px 11px;margin-bottom:10px}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.kpi{padding:12px}.kpi b{display:block;font-size:22px;color:#172B4D}.kpi span{font-size:12px;color:#4B5B73}
 @media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
@@ -490,6 +496,12 @@ function vistaModelos() {
     <button class="btn sec" data-act="modWord" data-mod="${id}"><span class="ms">download</span>Descargar en Word</button></div></div>`;
   app.innerHTML = `${redesTabs(r)}${secTabs('modelos')}
     <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Los pacientes no se registran en la app. Estas planillas se imprimen o se descargan en Word para completarlas a mano o en la computadora en un simulacro o en una emergencia, y quedan en el establecimiento.</div>
+    <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><div class="est-cab"><b><span class="ms" style="color:#C62828;margin-right:6px">badge</span>Tarjeta de prioridad de derivación</b></div>
+      <p class="sub" style="margin:6px 0 8px">Se ata a la muñeca o a la camilla y acompaña al paciente hasta el destino. El color indica la prioridad de derivación; tiene los datos del paciente, su estado, la atención que necesita, lo que lleva, el destino y un talón desprendible para el registro de evacuados. Dos tarjetas por hoja A4. Si la impresora es blanco y negro, el número y el nombre del color quedan escritos en grande.</p>
+      <div class="tj-mini">${PRIOR.map(p => `<span style="background:${p.c};color:${p.t}"><b>${p.n}</b> ${p.titulo.split(' · ')[1]}</span>`).join('')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="tjImp" data-col=""><span class="ms">print</span>Imprimir las cuatro</button>
+        ${PRIOR.map(p => `<button class="btn sec" data-act="tjImp" data-col="${p.n}" style="border-color:${p.c}"><span class="ms" style="color:${p.c}">print</span>${p.nombre.charAt(0) + p.nombre.slice(1).toLowerCase()}</button>`).join('')}
+        <button class="btn sec" data-act="tjWord" data-col=""><span class="ms">download</span>Descargar en Word</button></div></div>
     ${Object.keys(MODELOS).map(k => tarjeta(k, MODELOS[k].ico, MODELOS[k].titulo, MODELOS[k].txt)).join('')}`;
 }
 function modeloHTML(id, r, word) {
@@ -544,6 +556,47 @@ function modeloHTML(id, r, word) {
     <h2>Observaciones</h2><table class="f260"><tr><td style="height:46px"></td></tr></table>
     <p style="font-size:7.5pt;color:#4B5B73">Adaptado de HICS 260 (Patient Evacuation Tracking Form, California EMSA, 2014) y de OPS, EVAC-H (2024). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Preparó: ______________________ Firma: ____________</p>${pie}</section>`;
 }
+/* ---------- Tarjeta de prioridad de derivación (se ata o pega al paciente) ----------
+ * Colores según la regla de la app: rojo emergencia, naranja urgencia, amarillo alerta, verde normal.
+ * Modelos: tarjetas de triage METTAG y SMART, tarjeta de seguimiento de pacientes de Nueva Jersey (talones desprendibles
+ * y número único), HICS 255 y 260, OPS EVAC-H (movilidad) y categorías de camas HAvBED. */
+const PRIOR = [
+  { n: 1, c: '#C62828', t: '#FFFFFF', nombre: 'ROJA', titulo: 'PRIORIDAD 1 · INMEDIATA', txt: 'Crítico o con soporte vital. Va a una institución con terapia intensiva, en móvil de alta complejidad y con confirmación previa de cama.' },
+  { n: 2, c: '#EF6C00', t: '#FFFFFF', nombre: 'NARANJA', titulo: 'PRIORIDAD 2 · URGENTE', txt: 'Necesita seguir internado y depende del personal. Va a otra institución con internación, con ficha de traslado.' },
+  { n: 3, c: '#F9A825', t: '#3A2A00', nombre: 'AMARILLA', titulo: 'PRIORIDAD 3 · DIFERIDA', txt: 'Estable, se moviliza con apoyo. Puede esperar; internación general o zona segura interna.' },
+  { n: 4, c: '#2E7D32', t: '#FFFFFF', nombre: 'VERDE', titulo: 'PRIORIDAD 4 · NO URGENTE', txt: 'Autónomo y estable. Alta anticipada a domicilio o albergue, con indicaciones y seguimiento.' }
+];
+function tarjetaHTML(p, r, word) {
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const ops = l => l.map(cas).join(' ');
+  const lin = (l, ancho) => `<tr><td class="l">${E(l)}</td><td class="v"${ancho ? ` colspan="${ancho}"` : ''}></td></tr>`;
+  const banda = (h, size) => `<div class="tj-banda" style="background:${p.c};color:${p.t};${size || ''}"><b style="font-size:${word ? '20pt' : '22px'}">${p.titulo}</b><br><span style="font-size:${word ? '8.5pt' : '11px'}">TARJETA ${p.nombre} · ${E(p.txt)}</span></div>`;
+  const tw = /trelew/i.test(r.nombre);
+  return `<section class="tj">
+    <table class="tj-cab"><tr><td style="border:0"><b>TARJETA DE PRIORIDAD DE DERIVACIÓN</b><br><span style="font-size:7.5pt">Atar a la muñeca o a la camilla · acompaña al paciente hasta el destino</span></td><td style="border:0;text-align:center;width:24%"><img src="${word ? 'https://hyslhmh-sudo.github.io/starh/' : ''}logo-hysl.png" style="height:26px" height="26"></td><td style="border:0;text-align:right;white-space:nowrap"><b style="font-size:13pt">N.º ________</b></td></tr></table>
+    ${banda()}
+    <table class="tj-t">${lin('Apellido y nombre', 3)}<tr><td class="l">DNI o historia clínica</td><td class="v"></td><td class="l">Edad · sexo</td><td class="v"></td></tr>
+      <tr><td class="l">Establecimiento · servicio · cama de origen</td><td class="v" colspan="3"></td></tr><tr><td class="l">Diagnóstico principal</td><td class="v" colspan="3"></td></tr>
+      <tr><td class="l">Alergias</td><td class="v"></td><td class="l">Aislamiento</td><td class="v">${ops(['No', 'Contacto', 'Gotas', 'Aéreo'])}</td></tr></table>
+    <table class="tj-t"><tr><td class="l" style="width:22%">Estado · hora ___:___</td><td class="v" colspan="3">${ops(['Consciente', 'Desorientado', 'No responde'])}&nbsp;&nbsp; TA ____/____ &nbsp;FC ____ &nbsp;FR ____ &nbsp;Sat O₂ ____ %</td></tr>
+      <tr><td class="l">Movilidad (EVAC-H)</td><td class="v" colspan="3">${ops(['Autónomo', 'Con apoyo', 'Totalmente dependiente', 'Con soporte vital'])}</td></tr>
+      <tr><td class="l">Atención que necesita</td><td class="v" colspan="3">${ops(['Terapia intensiva adultos', 'Terapia intensiva pediátrica', 'Neonatología', 'Internación general', 'Pediatría', 'Quirófano', 'Quemados', 'Salud mental', 'Maternidad', 'Diálisis', 'Aislamiento respiratorio'])}</td></tr>
+      <tr><td class="l">Lleva</td><td class="v" colspan="3">${ops(['Oxígeno', 'Respirador', 'Monitor', 'Bombas de infusión', 'Incubadora', 'Historia clínica', 'Medicación'])}</td></tr>
+      <tr><td class="l">Destino · móvil · hora de salida</td><td class="v" colspan="3"></td></tr>
+      <tr><td class="l">Si cambia el estado, nueva prioridad</td><td class="v" colspan="3">${ops(['1 Roja', '2 Naranja', '3 Amarilla', '4 Verde'])} · hora ___:___ · firma ________</td></tr>
+      <tr><td class="l">Clasificó (nombre y firma)</td><td class="v" colspan="3"></td></tr></table>
+    <div class="tj-talon"><span>✂ Talón para el registro de evacuados (queda en el establecimiento)</span>
+      <table class="tj-t" style="margin-top:3px"><tr><td style="background:${p.c};color:${p.t};width:18%;text-align:center"><b>${p.n} · ${p.nombre}</b></td><td>N.º ______</td><td>Paciente: ______________________</td><td>Destino: ________________</td><td>Hora ___:___</td></tr></table></div>
+    <div style="font-size:6pt;color:#4B5B73;margin-top:2px">${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)} · Adaptado de METTAG, SMART, HICS 255 y 260 y OPS EVAC-H · Uso exclusivo para la emergencia.</div>
+  </section>`;
+}
+function tarjetasHTML(cual, r, word) { return PRIOR.filter(p => !cual || String(p.n) === String(cual)).map(p => tarjetaHTML(p, r, word)).join(word ? '<br style="page-break-before:always">' : ''); }
+function tarjetaImprimir(cual) { $('#imp').innerHTML = `<div class="tj-hoja">${tarjetasHTML(cual, redVista(), false)}</div>`; setTimeout(() => window.print(), 300); }
+function tarjetaWord(cual) {
+  const css = `.tj{border:1.5pt solid #172B4D;padding:6pt;margin-bottom:10pt}.tj-banda{padding:8pt 10pt;margin:4pt 0 6pt;-webkit-print-color-adjust:exact}.tj-t td.l{width:30%}.tj-t td{font-size:8pt;height:14pt}.tj-talon{border-top:1.5pt dashed #4B5B73;margin-top:6pt;padding-top:3pt;font-size:7pt}.tj-cab td{font-size:9pt}`;
+  bajarWord('Tarjetas de prioridad de derivación' + (cual ? ' ' + cual : ''), `<style>${css}</style>` + tarjetasHTML(cual, redVista(), true), false);
+}
+
 function modeloImprimir(id) { $('#imp').innerHTML = modeloHTML(id, redVista(), false); setTimeout(() => window.print(), 300); }
 function modeloWord(id) { const m = MODELOS[id]; bajarWord(m.titulo, modeloHTML(id, redVista(), true), m.apaisada); }
 function encImp(r) { return /trelew/i.test(r.nombre) ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">'; }
@@ -596,6 +649,8 @@ document.addEventListener('click', async ev => {
   if (t.dataset.inst) return abrirFila('inst', t.dataset.inst);
   if (t.dataset.fila) return abrirFila(t.dataset.fila, t.dataset.id);
   const a = t.dataset.act;
+  if (a === 'tjImp') return tarjetaImprimir(t.dataset.col);
+  if (a === 'tjWord') return tarjetaWord(t.dataset.col);
   if (a === 'modImp') return modeloImprimir(t.dataset.mod);
   if (a === 'modWord') return modeloWord(t.dataset.mod);
   if (a === 'impInst') return imprimirInst();
