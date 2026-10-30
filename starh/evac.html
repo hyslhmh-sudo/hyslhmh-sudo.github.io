@@ -206,6 +206,7 @@ body{background:#FAF7F7}
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
 let cat = S.store.get('evac.cat', null), redActual = S.store.get('evac.red', ''), q = '', fTipo = '', fEvento = '';
 let borrador = null, borradorDep = null, ocupado = false;
+if (cat && !cat.camas) cat = null; // datos guardados de una versión anterior: se vuelven a pedir
 
 function toast(t, error) { const d = document.createElement('div'); d.className = 'toast' + (error ? ' error' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
 function tema() { /* esta app usa siempre su paleta propia (ver estilos) */ }
