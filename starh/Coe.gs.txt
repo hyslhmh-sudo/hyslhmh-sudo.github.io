@@ -30,6 +30,9 @@ const COE = {
     ['PHR', 'OPS. Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015). Washington, D.C.: OPS; 2023.', 'https://educacionensalud.imss.gob.mx/p/portal/wp-content/uploads/2025/10/Instructivo-para-elaborar-un-plan-hospitalario-1.pdf', 'Copia publicada por el IMSS. Base de los 80 ítems del relevamiento inicial PHR.'],
     ['ISH', 'OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed. Washington, D.C.: OPS; 2018.', 'https://www.salud.gob.ec/wp-content/uploads/2021/01/ISH-Guia-de-Evaluadores-2da-Edicion.pdf', 'Copia publicada por el Ministerio de Salud Pública de Ecuador. Cálculo, modelos de ponderación y categorías A, B y C.'],
     ['ISH', 'OPS/OMS. Índice de seguridad hospitalaria. Formularios para la evaluación, 2.ª ed. Washington, D.C.: OPS; 2018.', 'https://www.salud.gob.ec/wp-content/uploads/2021/01/ISH-Formularios-2da-Edicion.pdf', 'Copia publicada por el Ministerio de Salud Pública de Ecuador. Formulario 2: lista de verificación de 151 ítems.'],
+    ['Evacuación', 'OPS. EVAC-H: Evacuación de hospitales y sus áreas críticas. Washington, D.C.: OPS; 2024.', 'https://www.paho.org/es/documentos/evac-h-evacuacion-hospitales-sus-areas-criticas', 'Clasificación de pacientes por movilidad, evacuación horizontal y vertical, zonas seguras, áreas críticas. Base de las fichas de dependencia.'],
+    ['Evacuación', 'OPS/OMS. Índice de seguridad hospitalaria, 2.ª ed., 2018: Formulario 1 (información general acerca del hospital) e ítem 147 (plan de evacuación).', 'https://www.salud.gob.ec/wp-content/uploads/2021/01/ISH-Formularios-2da-Edicion.pdf', 'Base de la ficha del establecimiento.'],
+    ['Evacuación', 'Decreto N.º 351/79, Anexo VII, capítulo 18: protección contra incendios y medios de escape.', '', ''],
     ['General', 'OPS. Hospitales seguros (iniciativa regional).', 'https://www.paho.org/es/emergencias-salud/hospitales-seguros', ''],
     ['General', 'OPS. Caja de herramientas de preparación para emergencias de salud.', 'https://www.paho.org/es/emergencias-salud/preparacion-paises-para-emergencias-salud-rsi/caja-herramientas-preparacion', ''],
     ['Normativa', 'Ley N.º 19.587 de Higiene y Seguridad en el Trabajo y su Decreto reglamentario N.º 351/79 (capítulo 18: protección contra incendios).', '', ''],
@@ -84,7 +87,7 @@ function coeHojas_() {
     fu.getRange(2, 1, COE.FUENTES.length, 4).setValues(COE.FUENTES);
     cab(fu, 4); fu.setFrozenRows(1); fu.setColumnWidth(1, 110); fu.setColumnWidth(2, 520); fu.setColumnWidth(3, 300); fu.setColumnWidth(4, 320);
     fu.getRange(2, 1, COE.FUENTES.length, 4).setWrap(true).setVerticalAlignment('top');
-    fu.getRange('F1').setValue('Agregá o corregí filas: la página Fuentes de la app las muestra tal cual (Módulo: STAR-H, PHR, ISH, COE, General o Normativa).').setFontColor('#6B7A82');
+    fu.getRange('F1').setValue('Agregá o corregí filas: la página Fuentes de la app las muestra tal cual (Módulo: STAR-H, PHR, ISH, COE, Evacuación, General o Normativa).').setFontColor('#6B7A82');
   }
   return { li: li, pe: pe, pa: pa, fu: fu };
 }

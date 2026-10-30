@@ -52,6 +52,7 @@ function onOpen() {
     .addItem('ISH · Abrir o cerrar (hoy: solo Administración)', 'menuModoIsh')
     .addSeparator()
     .addItem('COE y Fuentes · Preparar hojas', 'coeInstalar')
+    .addItem('EVAC · Armar o actualizar planillas de evacuación', 'evacInstalar')
     .addToUi();
 }
 
@@ -67,8 +68,9 @@ function menuAyuda() {
     '· <b>Consulta</b>: solo ve el tablero de sus redes (por ejemplo, una Dirección).<br>' +
     'En Redes y Establecimientos podés poner «Todas» / «Todos» o una lista separada por punto y coma ' +
     '(por ejemplo «Red Rawson» y «RW-01; RW-02»).<br><br>' +
-    '<b>Módulos</b>: en la columna K («Módulos») poné STAR-H, PHR, ISH, COE o varios separados por punto y coma. Vacío = STAR-H y PHR. ' +
+    '<b>Módulos</b>: en la columna K («Módulos») poné STAR-H, PHR, ISH, COE, EVAC o varios separados por punto y coma. Vacío = STAR-H y PHR. ' +
     'COE (participantes y contactos): Administración carga; quien tenga «COE» en Módulos puede consultar.<br>' +
+    'EVAC (evacuación hospitalaria): Administración carga todo; un Referente con «EVAC» carga sus establecimientos. Los campos se editan en la hoja CAMPOS de cada planilla EVAC.<br>' +
     'El ISH (Índice de Seguridad Hospitalaria) es por ahora solo para Administración; con <i>ISH · Abrir o cerrar</i> se habilita a quienes tengan «ISH» en Módulos.<br>' +
     'STAR-H puede estar en pausa (menú STAR-H app › Pausar o reactivar): en pausa solo entra Administración.<br><br>' +
     '<b>3. Quitar un acceso</b><br>Cambiá Estado a «Inactivo». Rige desde la siguiente acción de esa persona.<br><br>' +
@@ -201,6 +203,8 @@ function atender_(e) {
       case 'coe_catalogo': return json_(coeCatalogo_(u));
       case 'coe_persona':  return json_(coePersona_(u, req.persona));
       case 'coe_participacion': return json_(coeParticipacion_(u, req.participacion));
+      case 'evac_catalogo': return json_(evacCatalogo_(u));
+      case 'evac_guardar':  return json_(evacGuardar_(u, req));
       default: return json_({ ok: false, error: 'Acción desconocida' });
     }
   } catch (err) {
@@ -223,7 +227,7 @@ function login_(dniIn, clave) {
   }
   cache.remove('fallos_' + dni);
   const u = perfil_(f);
-  if (!moduloPermitido_(u, 'STAR-H') && !moduloPermitido_(u, 'PHR') && !moduloPermitido_(u, 'ISH') && !moduloPermitido_(u, 'COE')) return { ok: false, error: 'Tu acceso no tiene módulos habilitados por ahora. Consultá con Higiene y Seguridad Laboral.' };
+  if (!moduloPermitido_(u, 'STAR-H') && !moduloPermitido_(u, 'PHR') && !moduloPermitido_(u, 'ISH') && !moduloPermitido_(u, 'COE') && !moduloPermitido_(u, 'EVAC')) return { ok: false, error: 'Tu acceso no tiene módulos habilitados por ahora. Consultá con Higiene y Seguridad Laboral.' };
   f.sh.getRange(f.fila, 9).setValue(new Date());
   registrar_(u, 'Ingreso', '', '', '', '');
   return { ok: true, token: firmar_(dni), usuario: publico_(u) };
@@ -250,7 +254,7 @@ function perfil_(f) {
 function publico_(u) {
   return { nombre: u.nombre, rol: u.rol, comparativo: u.rol === 'Administración',
            puedeCargar: u.rol === 'Administración' || u.rol === 'Referente',
-           starh: moduloPermitido_(u, 'STAR-H'), phr: moduloPermitido_(u, 'PHR'), ish: moduloPermitido_(u, 'ISH'), coe: moduloPermitido_(u, 'COE') };
+           starh: moduloPermitido_(u, 'STAR-H'), phr: moduloPermitido_(u, 'PHR'), ish: moduloPermitido_(u, 'ISH'), coe: moduloPermitido_(u, 'COE'), evac: moduloPermitido_(u, 'EVAC') };
 }
 
 /* ---------- Módulos (STAR-H y PHR) ----------

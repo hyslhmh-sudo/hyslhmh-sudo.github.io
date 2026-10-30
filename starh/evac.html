@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evacuación hospitalaria</title>
+<meta name="description" content="Fichas por establecimiento y por dependencia para los planes de evacuación.">
+<meta name="theme-color" content="#0D313F">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#0D313F;--medio:#5894A7;--claro:#E6EFF2;--borde:#C9DCE3;
+  --texto:#3A4A52;--suave:#6B7A82;--tenue:#8A979E;--linea:#E3E8EB;--fondo:#F6F7F8;--papel:#fff;--radio:12px;
+  --sombra:0 1px 2px rgba(13,49,63,.06),0 4px 14px rgba(13,49,63,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga';user-select:none}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;align-items:center;gap:6px}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{background:transparent;border:0;color:#fff;height:40px;min-width:40px;padding:0 8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:920px;margin:0 auto;padding:14px 16px 110px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+h2{font-size:18px;margin:4px 0 10px;color:var(--fuerte)}
+h3{font-size:15px;margin:16px 2px 8px;color:var(--fuerte)}
+.sub{color:var(--suave);font-size:13px}
+.redes{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px}
+.red-tab{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.red-tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px;text-decoration:none}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--borde)}
+.btn.mini{min-height:32px;padding:5px 9px;font-size:12.5px}
+.btn.peligro{background:#fff;color:#B3261E;border-color:#F2C4C0}
+.btn:disabled{opacity:.5;cursor:default}
+.lista{display:grid;gap:10px}
+.est{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%}
+.est-cab{display:flex;gap:10px;align-items:flex-start}.est-cab b{flex:1;font-size:15px;color:#24343B}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
+.chip.pend{background:#EEF1F3;color:var(--suave)}
+.chip.ok{background:#C8E6C9;color:#1E5223}
+.barra-prog{height:6px;border-radius:99px;background:#EEF1F3;overflow:hidden}.barra-prog i{display:block;height:100%;background:var(--medio)}
+.pie{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--suave)}
+.buscar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.buscar input,.buscar select{border:1px solid #CBD3D8;border-radius:10px;padding:9px 11px;background:#fff;min-height:42px}
+.buscar input{flex:1;min-width:170px}
+.volver{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--fuerte);font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:6px}
+.cab{padding:14px 16px;margin-bottom:12px;display:grid;gap:8px}
+.cab h2{margin:0}
+.acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+details.sec{margin-bottom:10px}
+details.sec>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;font-weight:700;color:var(--fuerte)}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary small{font-weight:600;color:var(--suave);font-size:12px}
+details.sec[open]>summary{border-bottom:1px solid var(--linea)}
+.campos{padding:6px 14px 12px;display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.campo{display:block;margin:9px 0}
+.campo.ancho{grid-column:1/-1}
+.campo>span{display:block;font-size:12.5px;font-weight:700;color:#3A4A52;margin-bottom:4px}
+.campo>small{display:block;font-size:11.5px;color:var(--tenue);margin-top:3px}
+.campo input,.campo select,.campo textarea{width:100%;border:1px solid #CBD3D8;border-radius:10px;padding:9px 11px;background:#fff}
+.campo textarea{min-height:62px;resize:vertical}
+.campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--medio);box-shadow:0 0 0 3px var(--claro)}
+.ops{display:flex;gap:6px;flex-wrap:wrap}
+.op{border:1.5px solid #CBD3D8;background:#fff;border-radius:9px;padding:7px 11px;cursor:pointer;font-weight:600;font-size:13.5px}
+.op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
+.cambiado{border-color:#B26A00!important}
+.flotante{position:fixed;left:0;right:0;bottom:0;z-index:25;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:10px;justify-content:center;align-items:center;box-shadow:0 -4px 14px rgba(13,49,63,.08)}
+.dep{padding:12px 14px;display:flex;gap:10px;align-items:center;cursor:pointer;width:100%;text-align:left}
+.dep b{flex:1;color:#24343B}
+.dlg{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
+.dlg-in{background:var(--fondo);width:100%;max-width:760px;max-height:100%;height:100%;display:flex;flex-direction:column}
+@media (min-width:800px){.dlg{align-items:center;padding:24px}.dlg-in{height:auto;max-height:94vh;border-radius:16px;overflow:hidden}}
+.dlg-cab{background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;display:flex;align-items:center;gap:8px}
+.dlg-cab b{flex:1}
+.dlg-cuerpo{overflow-y:auto;padding:12px 14px;flex:1}
+.dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 80px);transform:translateX(-50%);background:#24343B;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
+.vacio{padding:26px;text-align:center;color:var(--suave)}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:24px 22px}
+.msg{margin-top:10px;font-size:13.5px;padding:9px 11px;border-radius:10px;background:#FCE8E6;color:#B3261E}
+.ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:min(340px,80%)}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+/* impresión */
+.imp{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body{background:#fff;font-size:9pt}
+  .barra,main,footer,.flotante,.dlg,.toast{display:none!important}
+  .imp{display:block}
+  .imp h1{font-size:13pt;color:var(--fuerte);margin:0 0 2px}.imp .kick{font-size:7.5pt;color:var(--medio);font-weight:700;letter-spacing:.06em}
+  .imp h2{font-size:10.5pt;margin:10px 0 4px;border-bottom:1.5px solid var(--fuerte)}
+  .imp table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  .imp td{border:1px solid #C9D2D7;padding:4px 6px;vertical-align:top}
+  .imp td.l{width:42%;background:var(--claro);font-weight:700;color:var(--fuerte)}
+  .imp td.v{height:20px}
+  .imp .hoja{break-after:page}.imp .hoja:last-child{break-after:auto}
+  .imp .pieimp{margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;color:var(--suave)}
+  .imp .pieimp img{height:34px}
+}
+@media (max-width:640px){.campos{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1 id="titulo">Evacuación hospitalaria<small>Fichas por establecimiento y dependencia</small></h1>
+  <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
+  <button class="icono oculto" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
+  <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Evacuación hospitalaria</p></footer>
+<div id="flot" class="flotante oculto"><span class="sub" id="flotTxt">Hay cambios sin guardar</span><button class="btn" data-act="guardarEst"><span class="ms">save</span>Guardar ficha</button></div>
+<div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
+<div id="imp" class="imp"></div>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
+let cat = S.store.get('evac.cat', null), redActual = S.store.get('evac.red', ''), q = '', fTipo = '';
+let borrador = null, borradorDep = null, ocupado = false;
+
+function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
+function tema(n) { const t = S.temaRed(n), r = document.documentElement.style; r.setProperty('--fuerte', t.fuerte); r.setProperty('--medio', t.medio); r.setProperty('--claro', t.claro); r.setProperty('--borde', t.borde); }
+const red = n => cat && cat.redes.find(r => r.nombre === n);
+const camposDe = (r, ficha) => r.campos.filter(c => c.ficha === ficha);
+const secciones = l => { const o = []; l.forEach(c => { let s = o.find(x => x.n === c.seccion); if (!s) o.push(s = { n: c.seccion, c: [] }); s.c.push(c); }); return o; };
+const lleno = v => v != null && String(v).trim() !== '';
+const avance = (obj, l) => l.length ? Math.round(l.filter(c => lleno(obj[c.clave])).length * 100 / l.length) : 0;
+const chipEstado = e => `<span class="chip ${/Completa|Validada/.test(e) ? 'ok' : /En curso/.test(e) ? '' : 'pend'}">${E(e || 'Pendiente')}</span>`;
+
+async function cargar(avisar) {
+  if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return render(); }
+  try {
+    const r = await S.api('evac_catalogo');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); cat = null; toast(r.error); return render(); } throw r; }
+    cat = r; S.store.set('evac.cat', r); if (avisar) toast('Datos actualizados.'); render();
+  } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudieron traer los datos.'; if (!cat) app.innerHTML = `<div class="tarjeta vacio">${E(m)}</div>`; else toast(m); }
+}
+
+/* ---------- campos ---------- */
+function campoHTML(c, v, dis, pref) {
+  const id = pref + c.clave, val = v == null ? '' : String(v), a = `data-k="${E(c.clave)}" id="${E(id)}" ${dis}`;
+  const ancho = c.tipo === 'largo' || c.tipo === 'multi' || c.campo.length > 60;
+  let ctl;
+  if (c.tipo === 'largo') ctl = `<textarea ${a}>${E(val)}</textarea>`;
+  else if (c.tipo === 'sino') ctl = `<div class="ops" data-op="${E(c.clave)}">${['Sí', 'No', 's/d'].map(o => `<button type="button" class="op" data-v="${o}" aria-pressed="${val === o}" ${dis}>${o}</button>`).join('')}</div>`;
+  else if (c.tipo === 'multi') { const sel = val.split(';').map(s => s.trim()); ctl = `<div class="ops" data-multi="${E(c.clave)}">${c.opciones.map(o => `<button type="button" class="op" data-v="${E(o)}" aria-pressed="${sel.indexOf(o) >= 0}" ${dis}>${E(o)}</button>`).join('')}</div>`; }
+  else if (c.tipo === 'lista') ctl = `<select ${a}><option value="">s/d</option>${c.opciones.map(o => `<option ${o === val ? 'selected' : ''}>${E(o)}</option>`).join('')}${val && c.opciones.indexOf(val) < 0 ? `<option selected>${E(val)}</option>` : ''}</select>`;
+  else if (c.tipo === 'numero' || c.tipo === 'porcentaje') ctl = `<input ${a} inputmode="decimal" value="${E(val)}" placeholder="${c.tipo === 'porcentaje' ? '0 a 100' : 's/d'}">`;
+  else if (c.tipo === 'fecha') ctl = `<input ${a} value="${E(val)}" placeholder="dd/mm/aaaa">`;
+  else if (c.tipo === 'telefono') ctl = `<input ${a} inputmode="tel" value="${E(val)}">`;
+  else if (c.tipo === 'correo') ctl = `<input ${a} type="email" value="${E(val)}">`;
+  else ctl = `<input ${a} value="${E(val)}">`;
+  return `<label class="campo ${ancho ? 'ancho' : ''}" ${c.tipo === 'sino' || c.tipo === 'multi' ? 'onclick="event.preventDefault()"' : ''}><span>${E(c.campo)}</span>${ctl}${c.ayuda ? `<small>${E(c.ayuda)}</small>` : ''}</label>`;
+}
+function seccionesHTML(l, obj, dis, pref, abrirPrimera) {
+  return secciones(l).map((s, i) => { const n = s.c.filter(c => lleno(obj[c.clave])).length;
+    return `<details class="tarjeta sec" ${abrirPrimera && i === 0 ? 'open' : ''}><summary>${E(s.n)}<small>${n} de ${s.c.length}</small></summary><div class="campos">${s.c.map(c => campoHTML(c, obj[c.clave], dis, pref)).join('')}</div></details>`; }).join('');
+}
+function atarCampos(cont, b) {
+  cont.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k) { b.datos[k] = ev.target.value; ev.target.classList.add('cambiado'); avisarCambios(); } });
+  cont.addEventListener('change', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k) { b.datos[k] = ev.target.value; ev.target.classList.add('cambiado'); avisarCambios(); } });
+  cont.addEventListener('click', ev => {
+    const o = ev.target.closest('.op'); if (!o || o.disabled) return;
+    const g = o.parentElement;
+    if (g.dataset.op) { g.querySelectorAll('.op').forEach(x => x.setAttribute('aria-pressed', x === o)); b.datos[g.dataset.op] = o.dataset.v; }
+    else if (g.dataset.multi) { o.setAttribute('aria-pressed', o.getAttribute('aria-pressed') !== 'true'); b.datos[g.dataset.multi] = [...g.querySelectorAll('.op[aria-pressed=true]')].map(x => x.dataset.v).join('; '); }
+    g.classList.add('cambiado'); avisarCambios();
+  });
+}
+function avisarCambios() { if (borrador && Object.keys(borrador.datos).length && !borradorDep) $('#flot').classList.remove('oculto'); }
+
+/* ---------- vistas ---------- */
+function render() {
+  $('#flot').classList.add('oculto');
+  const logueado = !!S.sesion.token();
+  ['btnAct', 'btnSalir', 'btnAyuda'].forEach(b => $('#' + b).classList.toggle('oculto', !logueado));
+  if (!logueado) return vistaIngreso();
+  if (!cat) { app.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
+  const p = (location.hash || '#/').slice(2).split('/').map(decodeURIComponent);
+  if (p[0] === 'ayuda') return vistaAyuda();
+  if (p[0] === 'est' && red(p[1])) return vistaEst(p[1], p[2]);
+  return vistaInicio();
+}
+function vistaInicio() {
+  borrador = null;
+  if (!cat.redes.length) { app.innerHTML = '<div class="tarjeta vacio">No hay planillas de evacuación activas (hoja REDES EVAC del libro) o tu acceso no tiene establecimientos asignados.</div>'; return; }
+  if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual);
+  const r = red(redActual); tema(r.nombre);
+  $('#titulo').innerHTML = `Evacuación · ${E(r.nombre)}<small>Fichas por establecimiento y dependencia</small>`;
+  const lc = camposDe(r, 'Establecimiento'), tipos = [...new Set(r.establecimientos.map(e => e.tipo).filter(Boolean))];
+  const l = r.establecimientos.filter(e => (!fTipo || e.tipo === fTipo) && (!q || (e.nombre + ' ' + e.codigo).toLowerCase().indexOf(q.toLowerCase()) >= 0));
+  app.innerHTML = `${cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''}
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar establecimiento" value="${E(q)}"><select id="fTipo"><option value="">Todos los tipos</option>${tipos.map(t => `<option ${t === fTipo ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></div>
+    <div class="lista">${l.map(e => { const av = avance(e, lc), nd = r.dependencias.filter(d => d.codigo === e.codigo).length;
+      return `<button class="tarjeta est" data-ir="#/est/${encodeURIComponent(r.nombre)}/${encodeURIComponent(e.codigo)}"><div class="est-cab"><b>${E(e.nombre)}</b>${chipEstado(e.estado)}</div>
+        <div class="barra-prog" aria-label="${av} % completo"><i style="width:${av}%"></i></div>
+        <div class="pie"><span>${E(e.codigo)} · ${E(e.tipo || 's/d')}</span><span>Ficha ${av} % completa</span><span>${nd} dependencia${nd === 1 ? '' : 's'}</span>${e.actualizado ? `<span>Actualizado ${E(e.actualizado)}</span>` : ''}</div></button>`; }).join('') || '<div class="tarjeta vacio">Sin resultados.</div>'}</div>`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaInicio(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+  $('#fTipo').addEventListener('change', ev => { fTipo = ev.target.value; vistaInicio(); });
+}
+function vistaEst(redN, cod) {
+  const r = red(redN), e = r.establecimientos.find(x => x.codigo === cod); if (!e) return ir('#/');
+  tema(r.nombre); redActual = redN;
+  $('#titulo').innerHTML = `${E(e.codigo)} · ${E(e.nombre)}<small>${E(r.nombre)} · Evacuación</small>`;
+  const puede = e.puedeCargar !== false, dis = puede ? '' : 'disabled', lc = camposDe(r, 'Establecimiento');
+  if (!borrador || borrador.codigo !== cod) borrador = { red: redN, codigo: cod, datos: {} };
+  const obj = Object.assign({}, e, borrador.datos);
+  const deps = r.dependencias.filter(d => d.codigo === cod), ld = camposDe(r, 'Dependencia');
+  app.innerHTML = `<button class="volver" data-act="volver"><span class="ms">arrow_back</span>Establecimientos</button>
+    <div class="tarjeta cab"><h2>${E(e.nombre)}</h2><div class="sub">${E(e.codigo)} · ${E(e.tipo || 's/d')} · ficha ${avance(obj, lc)} % completa${e.actualizado ? ' · actualizada ' + E(e.actualizado) + (e.por ? ' por ' + E(e.por) : '') : ''}</div>
+      <div class="acc"><label class="sub">Estado de la ficha <select id="selEstado" ${dis}>${cat.estados.map(s => `<option ${s === (e.estado || 'Pendiente') ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+        <button class="btn sec mini" data-act="imprimir" data-modo="cargado"><span class="ms" style="font-size:17px">print</span>Imprimir con lo cargado</button>
+        <button class="btn sec mini" data-act="imprimir" data-modo="blanco"><span class="ms" style="font-size:17px">print</span>Imprimir en blanco</button></div></div>
+    <h3>Ficha del establecimiento</h3><div id="fichaEst">${seccionesHTML(lc, obj, dis, 'e_', true)}</div>
+    <h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px">Dependencias (${deps.length})${puede ? '<button class="btn mini" data-act="nuevaDep"><span class="ms" style="font-size:17px">add</span>Agregar dependencia</button>' : ''}</h3>
+    <p class="sub" style="margin:0 2px 8px">Una ficha por servicio, sector o área: internación, terapia, quirófano, guardia, consultorios, administración… Las áreas críticas primero.</p>
+    <div class="lista">${deps.map(d => `<button class="tarjeta dep" data-dep="${E(d.id)}"><span class="ms">meeting_room</span><b>${E(d.nombre)}<span class="sub" style="display:block;font-weight:500">${E([d.uso, d.sector, d.piso ? 'piso ' + d.piso : ''].filter(Boolean).join(' · ') || 's/d')}</span></b>${chipEstado(d.estado)}<span class="sub">${avance(d, ld)} %</span></button>`).join('') || '<div class="tarjeta vacio">Todavía no hay dependencias cargadas.</div>'}</div>`;
+  atarCampos($('#fichaEst'), borrador);
+  const se = $('#selEstado'); if (se) se.addEventListener('change', () => { borrador.estado = se.value; avisarCambios(); $('#flot').classList.remove('oculto'); });
+  if (Object.keys(borrador.datos).length || borrador.estado) $('#flot').classList.remove('oculto');
+}
+function ir(h) { if (location.hash !== h) location.hash = h; else render(); }
+
+async function guardar(req, ok) {
+  if (ocupado) return false;
+  if (!navigator.onLine) { toast('Para guardar se necesita conexión. Los cambios siguen en pantalla.'); return false; }
+  ocupado = true;
+  try { const r = await S.api('evac_guardar', req); if (!r.ok) throw r; toast(ok); await cargar(false); return r; }
+  catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); return false; }
+  finally { ocupado = false; }
+}
+
+/* ---------- dependencias ---------- */
+function abrirDep(id) {
+  const r = red(borrador.red), e = r.establecimientos.find(x => x.codigo === borrador.codigo), d = id ? r.dependencias.find(x => x.id === id) : {};
+  const puede = e.puedeCargar !== false, dis = puede ? '' : 'disabled';
+  borradorDep = { id: id || '', datos: {}, nombre: d.nombre || '', estado: d.estado || '' };
+  $('#flot').classList.add('oculto');
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${id ? E(d.nombre) : 'Nueva dependencia'}<small style="display:block;font-weight:500;opacity:.85">${E(e.nombre)}</small></b><button class="icono" data-act="cerrarDep" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo" id="fichaDep"><div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><label class="campo"><span>Nombre de la dependencia *</span><input id="depNombre" value="${E(d.nombre || '')}" ${dis} placeholder="Ej.: Terapia intensiva adultos"></label>
+      <label class="campo"><span>Estado de la ficha</span><select id="depEstado" ${dis}>${cat.estados.map(s => `<option ${s === (d.estado || 'En curso') ? 'selected' : ''}>${s}</option>`).join('')}</select></label></div>
+      ${seccionesHTML(camposDe(r, 'Dependencia'), d, dis, 'd_', true)}</div>
+    <div class="dlg-pie">${id && puede ? '<button class="btn peligro" data-act="borrarDep"><span class="ms">delete</span>Quitar</button>' : ''}<button class="btn sec" data-act="cerrarDep">Cerrar</button>${puede ? '<button class="btn" data-act="guardarDep"><span class="ms">save</span>Guardar</button>' : ''}</div></div>`;
+  $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden';
+  atarCampos($('#fichaDep'), borradorDep);
+}
+function cerrarDep() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; borradorDep = null; avisarCambios(); }
+
+/* ---------- impresión ---------- */
+function imprimir(modo) {
+  const r = red(borrador.red), e = r.establecimientos.find(x => x.codigo === borrador.codigo), cargado = modo === 'cargado';
+  const tw = /trelew/i.test(r.nombre);
+  const tabla = (l, obj) => secciones(l).map(s => `<h2>${E(s.n)}</h2><table>${s.c.map(c => `<tr><td class="l">${E(c.campo)}${c.tipo === 'lista' || c.tipo === 'multi' ? `<br><span style="font-weight:400;color:#6B7A82;font-size:7.5pt">${E(c.opciones.join(' · '))}</span>` : c.tipo === 'sino' ? '<br><span style="font-weight:400;color:#6B7A82;font-size:7.5pt">Sí · No</span>' : ''}</td><td class="v">${cargado ? E(obj[c.clave] || '') : ''}</td></tr>`).join('')}</table>`).join('');
+  const enc = tw ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">';
+  const pie = `<div class="pieimp"><div><b>${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'}</b><br>Impreso el ${S.hoy()}</div><img src="logo-hysl.png" alt="HySL"><div>${E(r.nombre)}</div></div>`;
+  const deps = cargado ? r.dependencias.filter(d => d.codigo === e.codigo) : [{}];
+  $('#imp').innerHTML = `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DEL ESTABLECIMIENTO</div><h1>${E(e.nombre)}</h1><div style="color:#6B7A82">${E(e.codigo)} · ${E(e.tipo || '')} · ${E(r.nombre)}</div>
+      ${tabla(camposDe(r, 'Establecimiento'), e)}<p style="font-size:7.5pt;color:#6B7A82">Si falta un dato, anotar «s/d». Modelos: OPS, EVAC-H (2024); OPS/OMS, ISH Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII. Esta ficha complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p>${pie}</section>`
+    + deps.map(d => `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DE DEPENDENCIA</div><h1>${cargado ? E(d.nombre) : 'Dependencia: ______________________________'}</h1><div style="color:#6B7A82">${E(e.nombre)} · ${E(e.codigo)}</div>${tabla(camposDe(r, 'Dependencia'), d)}${pie}</section>`).join('');
+  setTimeout(() => window.print(), 300);
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep]'); if (!t) return;
+  if (t.dataset.ir) { ir(t.dataset.ir); window.scrollTo(0, 0); return; }
+  if (t.dataset.red) { redActual = t.dataset.red; render(); return; }
+  if (t.dataset.dep) return abrirDep(t.dataset.dep);
+  const a = t.dataset.act;
+  if (a === 'volver') { if (borrador && (Object.keys(borrador.datos).length || borrador.estado) && !confirm('Hay cambios sin guardar en la ficha. ¿Salir igual?')) return; borrador = null; ir('#/'); return; }
+  if (a === 'imprimir') return imprimir(t.dataset.modo);
+  if (a === 'nuevaDep') return abrirDep('');
+  if (a === 'cerrarDep') { if (borradorDep && Object.keys(borradorDep.datos).length && !confirm('Hay cambios sin guardar. ¿Cerrar igual?')) return; return cerrarDep(); }
+  if (a === 'guardarEst') {
+    t.disabled = true;
+    const ok = await guardar({ ficha: 'Establecimiento', red: borrador.red, codigo: borrador.codigo, datos: borrador.datos, estado: borrador.estado }, 'Ficha guardada.');
+    t.disabled = false; if (ok) { borrador.datos = {}; borrador.estado = ''; render(); } return;
+  }
+  if (a === 'guardarDep') {
+    const nombre = $('#depNombre').value.trim(); if (!nombre) { toast('Falta el nombre de la dependencia.'); return; }
+    t.disabled = true;
+    const ok = await guardar({ ficha: 'Dependencia', red: borrador.red, codigo: borrador.codigo, id: borradorDep.id, nombre: nombre, estado: $('#depEstado').value, datos: borradorDep.datos }, 'Dependencia guardada.');
+    t.disabled = false; if (ok) { borradorDep = null; cerrarDep(); render(); } return;
+  }
+  if (a === 'borrarDep') {
+    if (!confirm('¿Quitar esta dependencia y sus datos? No se puede deshacer desde la app.')) return;
+    const ok = await guardar({ ficha: 'Dependencia', red: borrador.red, codigo: borrador.codigo, id: borradorDep.id, borrar: true }, 'Dependencia quitada.');
+    if (ok) { borradorDep = null; cerrarDep(); render(); }
+  }
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && borradorDep) cerrarDep(); });
+window.addEventListener('beforeunload', ev => { if ((borrador && Object.keys(borrador.datos).length) || (borradorDep && Object.keys(borradorDep.datos).length)) { ev.preventDefault(); ev.returnValue = ''; } });
+window.addEventListener('hashchange', render);
+$('#btnAct').addEventListener('click', () => cargar(true));
+$('#btnAyuda').addEventListener('click', () => ir('#/ayuda'));
+$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('evac.cat'); render(); });
+
+function vistaIngreso() {
+  tema('');
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo DNI y clave de STAR-H, PHR, ISH y COE.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
+    <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
+  $('#fIng').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target, m = $('#msg');
+    try { const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r;
+      if (r.usuario.evac === false) throw { error: 'Tu acceso no incluye Evacuación hospitalaria. Consultá con Higiene y Seguridad Laboral.' };
+      S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Cargando…</div>'; cargar(false); }
+    catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+  });
+}
+function vistaAyuda() {
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Volver</button><div class="tarjeta ayuda"><h2>Ayuda · Evacuación hospitalaria</h2>
+    <p>Acá se reúne la información de cada establecimiento y de cada dependencia que necesita un plan de evacuación: contacto, población, edificio y salidas, gases medicinales, energía, protección contra incendios, organización y entorno.</p>
+    <ol><li>Elegí la red y el establecimiento. Completá la ficha por secciones; si falta un dato, dejalo vacío o poné «s/d». Tocá «Guardar ficha».</li>
+      <li>Agregá una ficha por dependencia (servicio, sector o área). Empezá por las áreas críticas: terapia, neonatología, quirófano, guardia.</li>
+      <li>En cada dependencia, contá a los pacientes según su movilidad (EVAC-H): autónomos, con apoyo, totalmente dependientes y con soporte vital. Con eso se calcula el personal y los elementos que hacen falta para evacuar.</li>
+      <li>Cuando la ficha esté completa, cambiá su estado a «Completa». «Validada» queda para cuando la revisa la Dirección o el Servicio de Higiene y Seguridad del lugar.</li>
+      <li>«Imprimir en blanco» da la ficha para completar a mano en el recorrido; «Imprimir con lo cargado», la ficha con los datos.</li></ol>
+    <h3>Desde la planilla</h3><p>Cada red tiene su planilla EVAC (hojas ESTABLECIMIENTOS, DEPENDENCIAS y CAMPOS). En la hoja CAMPOS se agregan, se cambian o se desactivan campos, y la app los toma sola.</p>
+    <p class="sub">Modelos: OPS, EVAC-H: Evacuación de hospitales y sus áreas críticas (2024); OPS/OMS, Índice de seguridad hospitalaria, Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII, capítulo 18; Res. SRT 905/2015, Anexo II. Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
+}
+
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+if (S.sesion.token()) cargar(false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+/**
+ * EVAC · Evacuación hospitalaria · fichas por establecimiento y por dependencia (relevamiento base de los planes de evacuación)
+ * ------------------------------------------------------------------
+ * Modelos: OPS. EVAC-H: Evacuación de hospitales y sus áreas críticas (2024); OPS/OMS. Índice de seguridad hospitalaria,
+ * Formulario 1 «Información general acerca del hospital» y ítem 147 «Plan de evacuación» (2018); Decreto 351/79, Anexo VII
+ * (capítulo 18: protección contra incendios y medios de escape); Res. SRT 905/2015, Anexo II, punto 2.2.
+ *
+ * Va en el mismo proyecto de Apps Script (comparte accesos y sesión). Cada red tiene su planilla EVAC, listada en la hoja
+ * «REDES EVAC» del libro, y se arma con evacInstalar() (menú STAR-H app › EVAC · Armar planillas).
+ * Los campos de las fichas están en la hoja CAMPOS de cada planilla: se pueden agregar, cambiar de texto o desactivar,
+ * y la app y las columnas se actualizan solas (volver a correr el menú para sumar las columnas nuevas).
+ *
+ * Acceso: Administración ve y carga todo; Referente con «EVAC» en la columna Módulos de ACCESOS carga en sus establecimientos;
+ * Consulta con «EVAC» solo ve.
+ */
+
+const EVAC = {
+  HOJA_REDES: 'REDES EVAC',
+  FIJAS_EST: ['Código', 'Establecimiento', 'Tipo', 'Red', 'Estado de la ficha', 'Actualizado', 'Actualizado por'],
+  FIJAS_DEP: ['ID', 'Código', 'Establecimiento', 'Dependencia', 'Estado de la ficha', 'Actualizado', 'Actualizado por'],
+  ESTADOS: ['Pendiente', 'En curso', 'Completa', 'Validada'],
+  // [ficha, clave, sección, campo, tipo, opciones, ayuda]
+  // tipos: texto, largo, numero, porcentaje, fecha, sino, lista, multi, telefono, correo
+  CAMPOS: [
+    ['Establecimiento', 'direccion', '1. Identificación y contacto', 'Dirección', 'texto', '', 'Calle, número y entre calles.'],
+    ['Establecimiento', 'localidad', '1. Identificación y contacto', 'Localidad', 'texto', '', ''],
+    ['Establecimiento', 'coordenadas', '1. Identificación y contacto', 'Coordenadas (latitud, longitud)', 'texto', '', 'Del mapa del celular: tocar y mantener sobre el edificio.'],
+    ['Establecimiento', 'telefono', '1. Identificación y contacto', 'Teléfono principal', 'telefono', '', ''],
+    ['Establecimiento', 'telefono_guardia', '1. Identificación y contacto', 'Teléfono de guardia o de emergencias', 'telefono', '', ''],
+    ['Establecimiento', 'correo', '1. Identificación y contacto', 'Correo institucional', 'correo', '', ''],
+    ['Establecimiento', 'director', '1. Identificación y contacto', 'Director o responsable del establecimiento', 'texto', '', 'Nombre y teléfono.'],
+    ['Establecimiento', 'referente_evac', '1. Identificación y contacto', 'Referente o coordinador de evacuación', 'texto', '', 'Nombre, cargo y teléfono.'],
+    ['Establecimiento', 'horario', '1. Identificación y contacto', 'Horario de funcionamiento', 'lista', '24 horas;Diurno (mañana y tarde);Solo mañana;Otro', ''],
+
+    ['Establecimiento', 'trab_total', '2. Población', 'Cantidad total de trabajadores', 'numero', '', 'Planta, contratados y tercerizados que trabajan en el lugar.'],
+    ['Establecimiento', 'trab_manana', '2. Población', 'Trabajadores presentes turno mañana', 'numero', '', 'Promedio de personas presentes al mismo tiempo.'],
+    ['Establecimiento', 'trab_tarde', '2. Población', 'Trabajadores presentes turno tarde', 'numero', '', ''],
+    ['Establecimiento', 'trab_noche', '2. Población', 'Trabajadores presentes turno noche', 'numero', '', 'Es el turno con menos personal para evacuar.'],
+    ['Establecimiento', 'poblacion_area', '2. Población', 'Población del área de responsabilidad (habitantes)', 'numero', '', 'Área programática o población a cargo.'],
+    ['Establecimiento', 'atenciones_dia', '2. Población', 'Atenciones o consultas por día (promedio)', 'numero', '', ''],
+    ['Establecimiento', 'guardia_dia', '2. Población', 'Atenciones de guardia por día (promedio)', 'numero', '', ''],
+    ['Establecimiento', 'camas', '2. Población', 'Camas de internación habilitadas', 'numero', '', ''],
+    ['Establecimiento', 'ocupacion', '2. Población', 'Ocupación promedio de camas (%)', 'porcentaje', '', 'Del último año, según estadística.'],
+    ['Establecimiento', 'publico_promedio', '2. Población', 'Público y acompañantes presentes (promedio)', 'numero', '', ''],
+    ['Establecimiento', 'personas_max', '2. Población', 'Máximo de personas presentes al mismo tiempo (estimado)', 'numero', '', 'Pacientes, trabajadores, público y acompañantes en el momento de mayor ocupación.'],
+
+    ['Establecimiento', 'anio', '3. Edificio y medios de salida', 'Año de construcción (y de la última ampliación)', 'texto', '', ''],
+    ['Establecimiento', 'superficie', '3. Edificio y medios de salida', 'Superficie cubierta (m²)', 'numero', '', ''],
+    ['Establecimiento', 'edificios', '3. Edificio y medios de salida', 'Cantidad de edificios o cuerpos', 'numero', '', ''],
+    ['Establecimiento', 'niveles', '3. Edificio y medios de salida', 'Pisos sobre nivel de calle (incluida planta baja)', 'numero', '', ''],
+    ['Establecimiento', 'subsuelos', '3. Edificio y medios de salida', 'Subsuelos', 'numero', '', ''],
+    ['Establecimiento', 'estructura', '3. Edificio y medios de salida', 'Tipo de construcción', 'lista', 'Hormigón armado;Mampostería;Estructura metálica;Modular o prefabricada;Madera;Mixta', ''],
+    ['Establecimiento', 'salidas', '3. Edificio y medios de salida', 'Salidas al exterior utilizables para evacuar', 'numero', '', ''],
+    ['Establecimiento', 'escaleras', '3. Edificio y medios de salida', 'Escaleras', 'numero', '', ''],
+    ['Establecimiento', 'escalera_protegida', '3. Edificio y medios de salida', '¿Hay escaleras protegidas o de emergencia?', 'lista', 'Sí;No;Parcial;s/d', 'Decreto 351/79, Anexo VII.'],
+    ['Establecimiento', 'rampas', '3. Edificio y medios de salida', '¿Hay rampas aptas para camas o camillas?', 'sino', '', ''],
+    ['Establecimiento', 'ascensores', '3. Edificio y medios de salida', 'Ascensores (cantidad y si son camilleros)', 'texto', '', 'En incendio no se usan para evacuar, salvo indicación de bomberos.'],
+    ['Establecimiento', 'antipanico', '3. Edificio y medios de salida', 'Puertas de salida con barral antipánico', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'accesos_vehiculos', '3. Edificio y medios de salida', 'Accesos para ambulancias y autobombas', 'largo', '', 'Calles, portones, playas de maniobra.'],
+
+    ['Establecimiento', 'oxigeno', '4. Gases medicinales y combustibles', '¿Hay oxígeno medicinal?', 'sino', '', ''],
+    ['Establecimiento', 'oxigeno_forma', '4. Gases medicinales y combustibles', 'Forma de provisión del oxígeno', 'multi', 'Tubos o cilindros;Tanque criogénico (termo);Red centralizada;Concentradores', 'Marcar todas las que correspondan.'],
+    ['Establecimiento', 'tubos_cant', '4. Gases medicinales y combustibles', 'Tubos de oxígeno en el establecimiento (cantidad aproximada)', 'numero', '', 'Llenos y vacíos.'],
+    ['Establecimiento', 'central_gases', '4. Gases medicinales y combustibles', 'Ubicación de la central o depósito de gases', 'largo', '', ''],
+    ['Establecimiento', 'valvulas_corte', '4. Gases medicinales y combustibles', '¿Hay válvulas de corte por zona, identificadas?', 'lista', 'Sí;No;Parcial;s/d', 'Antes de evacuar un sector se cierran las llaves de gas.'],
+    ['Establecimiento', 'otros_gases', '4. Gases medicinales y combustibles', 'Otros gases medicinales', 'multi', 'Aire comprimido medicinal;Vacío (aspiración);Óxido nitroso;Dióxido de carbono;Ninguno', ''],
+    ['Establecimiento', 'gas_combustible', '4. Gases medicinales y combustibles', 'Gas combustible', 'multi', 'Red de gas natural;Garrafas o tubos de GLP;Zeppelin de GLP;No tiene', ''],
+    ['Establecimiento', 'gases_obs', '4. Gases medicinales y combustibles', 'Otros materiales peligrosos (químicos, combustibles, fuentes radiactivas)', 'largo', '', ''],
+
+    ['Establecimiento', 'grupo', '5. Energía y agua', '¿Hay grupo electrógeno?', 'sino', '', ''],
+    ['Establecimiento', 'grupo_datos', '5. Energía y agua', 'Grupo electrógeno: potencia, autonomía y áreas que cubre', 'largo', '', ''],
+    ['Establecimiento', 'ups', '5. Energía y agua', 'Alimentación ininterrumpida (UPS) en áreas críticas', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'reserva_agua', '5. Energía y agua', 'Reserva de agua (litros) y autonomía estimada', 'texto', '', ''],
+
+    ['Establecimiento', 'deteccion', '6. Protección contra incendios', 'Detección automática de incendio', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'alarma', '6. Protección contra incendios', 'Alarma o sistema de aviso de evacuación', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'extintores', '6. Protección contra incendios', 'Extintores (cantidad)', 'numero', '', ''],
+    ['Establecimiento', 'hidrantes', '6. Protección contra incendios', 'Red de hidrantes o bocas de incendio', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'rociadores', '6. Protección contra incendios', 'Rociadores automáticos', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'luz_emergencia', '6. Protección contra incendios', 'Iluminación de emergencia en circulaciones', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'senalizacion', '6. Protección contra incendios', 'Señalización de salidas y rutas de evacuación', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'planos', '6. Protección contra incendios', 'Planos de evacuación expuestos', 'lista', 'Sí;No;Parcial;s/d', ''],
+    ['Establecimiento', 'carga_fuego', '6. Protección contra incendios', '¿Tiene estudio de carga de fuego?', 'lista', 'Sí;No;En elaboración;s/d', ''],
+
+    ['Establecimiento', 'plan', '7. Organización para la evacuación', '¿Tiene plan de evacuación escrito?', 'lista', 'Sí;No;En elaboración;s/d', 'ISH, ítem 147.'],
+    ['Establecimiento', 'plan_fecha', '7. Organización para la evacuación', 'Fecha de la última versión del plan', 'fecha', '', ''],
+    ['Establecimiento', 'simulacro', '7. Organización para la evacuación', 'Fecha del último simulacro', 'fecha', '', ''],
+    ['Establecimiento', 'brigada', '7. Organización para la evacuación', 'Brigada de evacuación conformada', 'lista', 'Sí;No;En formación;s/d', ''],
+    ['Establecimiento', 'brigadistas', '7. Organización para la evacuación', 'Brigadistas capacitados (cantidad)', 'numero', '', ''],
+    ['Establecimiento', 'punto_encuentro', '7. Organización para la evacuación', 'Punto de encuentro exterior', 'largo', '', ''],
+    ['Establecimiento', 'zona_segura', '7. Organización para la evacuación', 'Zonas seguras internas (para evacuación horizontal)', 'largo', '', ''],
+    ['Establecimiento', 'sitio_alternativo', '7. Organización para la evacuación', 'Sitio alternativo de atención si se evacúa todo el edificio', 'largo', '', ''],
+    ['Establecimiento', 'derivacion', '7. Organización para la evacuación', 'Establecimientos de derivación de pacientes', 'largo', '', ''],
+    ['Establecimiento', 'ambulancias', '7. Organización para la evacuación', 'Ambulancias o vehículos propios disponibles', 'texto', '', ''],
+    ['Establecimiento', 'elementos_evac', '7. Organización para la evacuación', 'Elementos para evacuar pacientes (sillas de evacuación, colchonetas de arrastre, camillas)', 'largo', '', ''],
+
+    ['Establecimiento', 'bomberos', '8. Entorno y apoyo externo', 'Cuartel de bomberos más cercano (nombre, distancia y teléfono)', 'largo', '', ''],
+    ['Establecimiento', 'policia', '8. Entorno y apoyo externo', 'Policía (comisaría y teléfono)', 'texto', '', ''],
+    ['Establecimiento', 'proteccion_civil', '8. Entorno y apoyo externo', 'Protección Civil o Defensa Civil (teléfono)', 'texto', '', ''],
+    ['Establecimiento', 'amenazas_entorno', '8. Entorno y apoyo externo', 'Amenazas del entorno que pueden obligar a evacuar', 'largo', '', 'Inundación, viento, incendio forestal, industria cercana. Ver el relevamiento STAR-H.'],
+    ['Establecimiento', 'observaciones', '9. Observaciones', 'Observaciones', 'largo', '', ''],
+
+    ['Dependencia', 'sector', '1. Ubicación y uso', 'Edificio, ala o sector', 'texto', '', ''],
+    ['Dependencia', 'piso', '1. Ubicación y uso', 'Piso o nivel', 'texto', '', ''],
+    ['Dependencia', 'uso', '1. Ubicación y uso', 'Tipo de dependencia', 'lista', 'Internación general;Cuidados críticos (terapia intensiva, unidad coronaria, neonatología);Quirófano o recuperación;Guardia o emergencias;Sala de partos;Consultorios externos;Diagnóstico por imágenes;Laboratorio;Hemodiálisis;Salud mental;Farmacia o esterilización;Administración;Servicios generales (cocina, lavadero, mantenimiento);Depósito o archivo;Otro', 'EVAC-H pone el foco en las áreas críticas.'],
+    ['Dependencia', 'funciona', '1. Ubicación y uso', 'Horario de funcionamiento', 'lista', '24 horas;Diurno (mañana y tarde);Solo mañana;Otro', ''],
+    ['Dependencia', 'responsable', '1. Ubicación y uso', 'Responsable de la evacuación del sector (titular y alterno)', 'texto', '', 'Nombre, cargo y teléfono interno.'],
+
+    ['Dependencia', 'camas', '2. Personas', 'Camas o puestos de atención', 'numero', '', ''],
+    ['Dependencia', 'ocupacion', '2. Personas', 'Ocupación promedio (%)', 'porcentaje', '', ''],
+    ['Dependencia', 'pac_autonomos', '2. Personas', 'Pacientes autónomos (salen por sus propios medios)', 'numero', '', 'EVAC-H: son los primeros en evacuar.'],
+    ['Dependencia', 'pac_apoyo', '2. Personas', 'Pacientes que necesitan apoyo (silla de ruedas, acompañante)', 'numero', '', ''],
+    ['Dependencia', 'pac_dependientes', '2. Personas', 'Pacientes totalmente dependientes (camilla o cama)', 'numero', '', 'EVAC-H: salen al final y requieren más personal.'],
+    ['Dependencia', 'pac_soporte', '2. Personas', 'Pacientes con soporte vital (ventilación, bombas, monitoreo)', 'numero', '', 'EVAC-H: requieren el doble de personal de apoyo.'],
+    ['Dependencia', 'trab_manana', '2. Personas', 'Trabajadores presentes turno mañana', 'numero', '', ''],
+    ['Dependencia', 'trab_tarde', '2. Personas', 'Trabajadores presentes turno tarde', 'numero', '', ''],
+    ['Dependencia', 'trab_noche', '2. Personas', 'Trabajadores presentes turno noche', 'numero', '', ''],
+    ['Dependencia', 'publico', '2. Personas', 'Público y acompañantes (promedio)', 'numero', '', ''],
+
+    ['Dependencia', 'oxigeno_forma', '3. Gases y equipos', 'Oxígeno en el sector', 'multi', 'Red centralizada;Tubos o cilindros;Concentradores;No usa', ''],
+    ['Dependencia', 'valvula_sector', '3. Gases y equipos', 'Válvula de corte de gases del sector (ubicación)', 'texto', '', ''],
+    ['Dependencia', 'equipos_criticos', '3. Gases y equipos', 'Equipos que acompañan al paciente al evacuar', 'largo', '', 'Respiradores, monitores, bombas, incubadoras, con o sin batería.'],
+    ['Dependencia', 'riesgos', '3. Gases y equipos', 'Riesgos especiales del sector', 'largo', '', 'Químicos, radiaciones, cocina, depósitos, cargas de fuego altas.'],
+
+    ['Dependencia', 'salidas', '4. Medios de salida', 'Salidas del sector', 'numero', '', ''],
+    ['Dependencia', 'distancia', '4. Medios de salida', 'Distancia a la salida o zona segura más cercana (m)', 'numero', '', ''],
+    ['Dependencia', 'tipo_evac', '4. Medios de salida', 'Tipo de evacuación posible', 'multi', 'Horizontal (al mismo piso, otro sector);Vertical (a otro piso);Al exterior', 'EVAC-H: primero horizontal; vertical solo si hace falta.'],
+    ['Dependencia', 'zona_segura', '4. Medios de salida', 'Zona segura o sector de destino', 'texto', '', ''],
+    ['Dependencia', 'ruta', '4. Medios de salida', 'Ruta de evacuación (descripción)', 'largo', '', ''],
+    ['Dependencia', 'obstaculos', '4. Medios de salida', 'Obstáculos o problemas en la ruta', 'largo', '', 'Puertas trabadas, pasillos ocupados, desniveles.'],
+    ['Dependencia', 'elementos', '4. Medios de salida', 'Elementos de evacuación en el sector', 'largo', '', 'Sillas de evacuación, colchonetas, camillas, linternas.'],
+    ['Dependencia', 'observaciones', '5. Observaciones', 'Observaciones', 'largo', '', '']
+  ]
+};
+
+/* ---------- utilidades ---------- */
+function evacRedes_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(EVAC.HOJA_REDES);
+  if (!sh) return [];
+  return sh.getDataRange().getDisplayValues().slice(1)
+    .filter(x => x[0] && x[1] && /^activa$/i.test(String(x[2]).trim()))
+    .map(x => ({ nombre: x[0].trim(), id: idPlanilla_(x[1]) }));
+}
+function evacCampos_(ss) {
+  return ss.getSheetByName('CAMPOS').getDataRange().getDisplayValues().slice(1)
+    .filter(x => x[0] && x[1] && !/^no$/i.test(String(x[7]).trim()))
+    .map(x => ({ ficha: x[0], clave: x[1].trim(), seccion: x[2], campo: x[3], tipo: x[4] || 'texto', opciones: String(x[5] || '').split(';').map(s => s.trim()).filter(Boolean), ayuda: x[6] }));
+}
+// Hojas de datos: fila 1 = nombre visible, fila 2 = clave (no tocar), datos desde la fila 3
+function evacCabeceras_(sh, fijas, campos, t) {
+  const n = sh.getLastColumn();
+  const claves = n ? sh.getRange(2, 1, 1, n).getDisplayValues()[0] : [];
+  const fijasClaves = fijas.map((f, i) => '_f' + i);
+  if (!n) {
+    sh.getRange(1, 1, 2, fijas.length).setValues([fijas, fijasClaves]);
+  }
+  let col = Math.max(sh.getLastColumn(), fijas.length);
+  campos.forEach(c => {
+    const i = claves.indexOf(c.clave);
+    if (i >= 0) { sh.getRange(1, i + 1).setValue(c.campo); return; }
+    col++;
+    sh.getRange(1, col, 2, 1).setValues([[c.campo], [c.clave]]);
+    claves[col - 1] = c.clave;
+  });
+  const total = sh.getLastColumn();
+  sh.getRange(1, 1, 1, total).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte).setWrap(true).setVerticalAlignment('middle');
+  sh.getRange(2, 1, 1, total).setFontColor('#8A979E').setFontSize(8).setBackground('#F3F6F7');
+  sh.setFrozenRows(2); sh.setFrozenColumns(Math.min(fijas.length, 4) - (fijas[0] === 'ID' ? 0 : 2));
+  sh.setRowHeight(1, 54);
+  // listas desplegables
+  const cl = sh.getRange(2, 1, 1, total).getDisplayValues()[0];
+  campos.forEach(c => {
+    const i = cl.indexOf(c.clave); if (i < 0) return;
+    const r = sh.getRange(3, i + 1, Math.max(sh.getMaxRows() - 2, 1), 1);
+    if (c.tipo === 'lista' && c.opciones.length) r.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(c.opciones, true).setAllowInvalid(true).build());
+    else if (c.tipo === 'sino') r.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No', 's/d'], true).setAllowInvalid(true).build());
+    else if (c.tipo === 'telefono') r.setNumberFormat('@');
+  });
+}
+
+/* ---------- instalación ---------- */
+function evacInstalar() {
+  const libro = SpreadsheetApp.getActive();
+  let rp = libro.getSheetByName(EVAC.HOJA_REDES);
+  if (!rp) {
+    rp = libro.insertSheet(EVAC.HOJA_REDES);
+    rp.getRange(1, 1, 1, 3).setValues([['Red', 'Planilla EVAC (enlace o ID)', 'Estado']]).setFontWeight('bold');
+    avisar_('Creé la hoja ' + EVAC.HOJA_REDES + '. Completá una fila por red con el enlace de su planilla y Estado «Activa», y volvé a correr el menú.');
+    return;
+  }
+  const starh = {}; redes_().forEach(r => starh[r.nombre] = r.id);
+  const informe = [];
+  rp.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && x[1]).forEach(x => {
+    const red = x[0].trim(), ss = SpreadsheetApp.openById(idPlanilla_(x[1]));
+    if (!starh[red]) throw new Error('No encuentro la planilla STAR-H de ' + red + ' en REDES.');
+    const est = SpreadsheetApp.openById(starh[red]).getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1).filter(e => e[0]);
+    informe.push(red + ': ' + evacArmar_(ss, red, est));
+  });
+  avisar_(informe.join('\n') || 'No hay redes en ' + EVAC.HOJA_REDES + '.');
+}
+
+function evacArmar_(ss, red, est) {
+  const t = /trelew/i.test(red) ? { fuerte: '#0D313F', claro: '#E6EFF2' } : { fuerte: '#B8441A', claro: '#FDEDE4' };
+  const hoja = (n, i) => ss.getSheetByName(n) || ss.insertSheet(n, i);
+  ss.rename('EVAC · ' + red + ' · Evacuación hospitalaria · fichas por establecimiento y dependencia');
+
+  // AYUDA (se reescribe siempre)
+  const ay = hoja('AYUDA', 0); ay.clear();
+  const txt = [
+    ['Evacuación hospitalaria · ' + red],
+    ['Fichas para describir cada establecimiento y cada dependencia, como base de los planes de evacuación.'],
+    [''],
+    ['Cómo se carga'],
+    ['Desde la app (hyslhmh-sudo.github.io/starh/evac.html) o directamente acá. ESTABLECIMIENTOS: una fila por establecimiento. DEPENDENCIAS: una fila por servicio, sector o área de cada establecimiento (se agregan las que hagan falta).'],
+    ['En las hojas de datos, la fila 1 es el nombre del campo y la fila 2 su clave interna: no borrar ni cambiar la fila 2. Los datos van desde la fila 3. Si falta un dato, poner «s/d».'],
+    [''],
+    ['Cómo se agregan o cambian campos'],
+    ['En la hoja CAMPOS: una fila por campo (Ficha, Clave sin espacios ni tildes, Sección, Campo, Tipo, Opciones separadas por punto y coma, Ayuda, Activo). Para quitar un campo de la app, poner «No» en Activo (los datos quedan). Después correr el menú STAR-H app › EVAC · Armar planillas para sumar las columnas nuevas.'],
+    ['Tipos: texto, largo, numero, porcentaje, fecha, sino, lista, multi (varias opciones), telefono, correo.'],
+    [''],
+    ['Modelos usados'],
+    ['OPS. EVAC-H: Evacuación de hospitales y sus áreas críticas (2024): clasificación de pacientes por movilidad (autónomos, con apoyo, totalmente dependientes, con soporte vital), evacuación horizontal y vertical, zonas seguras. OPS/OMS. Índice de seguridad hospitalaria, Formulario 1 (información general del hospital) e ítem 147 (plan de evacuación), 2018. Decreto 351/79, Anexo VII, capítulo 18 (medios de escape y protección contra incendios). Res. SRT 905/2015, Anexo II, punto 2.2.'],
+    [''],
+    ['Alcance'],
+    ['Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento: los planes de evacuación de cada lugar los propone su servicio y los aprueba su Dirección.']
+  ];
+  ay.getRange(1, 1, txt.length, 1).setValues(txt).setWrap(true).setVerticalAlignment('top').setFontColor('#3A4A52');
+  ay.setColumnWidth(1, 820);
+  ay.getRange('A1').setFontSize(15).setFontWeight('bold').setFontColor(t.fuerte);
+  ['A4', 'A8', 'A12', 'A15'].forEach(a => ay.getRange(a).setFontWeight('bold').setFontColor(t.fuerte));
+
+  // CAMPOS (solo la primera vez: después es de ella)
+  let ca = ss.getSheetByName('CAMPOS');
+  if (!ca) {
+    ca = hoja('CAMPOS', 1);
+    ca.getRange(1, 1, 1, 8).setValues([['Ficha', 'Clave', 'Sección', 'Campo', 'Tipo', 'Opciones (separadas por ;)', 'Ayuda', 'Activo']]);
+    ca.getRange(2, 1, EVAC.CAMPOS.length, 8).setValues(EVAC.CAMPOS.map(c => c.concat(['Sí'])));
+    ca.getRange(1, 1, 1, 8).setFontWeight('bold').setFontColor('#FFFFFF').setBackground(t.fuerte);
+    ca.setFrozenRows(1); ca.setColumnWidth(2, 130); ca.setColumnWidth(3, 220); ca.setColumnWidth(4, 340); ca.setColumnWidth(6, 320); ca.setColumnWidth(7, 320);
+    ca.getRange('A2:A').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Establecimiento', 'Dependencia'], true).build());
+    ca.getRange('E2:E').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['texto', 'largo', 'numero', 'porcentaje', 'fecha', 'sino', 'lista', 'multi', 'telefono', 'correo'], true).build());
+    ca.getRange('H2:H').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Sí', 'No'], true).build());
+  }
+  const campos = evacCampos_(ss);
+
+  // ESTABLECIMIENTOS
+  const es = hoja('ESTABLECIMIENTOS', 2);
+  evacCabeceras_(es, EVAC.FIJAS_EST, campos.filter(c => c.ficha === 'Establecimiento'), t);
+  const ya = es.getLastRow() > 2 ? es.getRange(3, 1, es.getLastRow() - 2, 1).getDisplayValues().map(x => x[0]) : [];
+  const nuevos = est.filter(e => ya.indexOf(e[0]) < 0).map(e => [e[0], e[3], e[2], red, 'Pendiente', '', '']);
+  if (nuevos.length) es.getRange(Math.max(es.getLastRow(), 2) + 1, 1, nuevos.length, 7).setValues(nuevos);
+  es.getRange(3, 5, Math.max(es.getMaxRows() - 2, 1), 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(EVAC.ESTADOS, true).build());
+  es.setColumnWidth(2, 260);
+
+  // DEPENDENCIAS
+  const de = hoja('DEPENDENCIAS', 3);
+  evacCabeceras_(de, EVAC.FIJAS_DEP, campos.filter(c => c.ficha === 'Dependencia'), t);
+  de.getRange(3, 5, Math.max(de.getMaxRows() - 2, 1), 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(EVAC.ESTADOS, true).build());
+  de.setColumnWidth(3, 220); de.setColumnWidth(4, 220);
+
+  ['Hoja 1', 'Hoja1', 'Sheet1'].forEach(nm => { const s = ss.getSheetByName(nm); if (s && ss.getSheets().length > 1) ss.deleteSheet(s); });
+  return est.length + ' establecimientos (' + nuevos.length + ' nuevos) · ' + campos.length + ' campos activos.';
+}
+
+/* ---------- API ---------- */
+function evacLeerHoja_(sh) {
+  const v = sh.getDataRange().getDisplayValues();
+  if (v.length < 2) return { claves: [], filas: [] };
+  return { claves: v[1], filas: v.slice(2).filter(x => x[0]) };
+}
+const EVAC_FIJAS_ = { est: ['codigo', 'nombre', 'tipo', 'red', 'estado', 'actualizado', 'por'], dep: ['id', 'codigo', 'establecimiento', 'nombre', 'estado', 'actualizado', 'por'] };
+function evacObj_(claves, x, fijas) {
+  const o = {};
+  claves.forEach((k, i) => { if (!k) return; const m = k.match(/^_f(\d)$/); o[m ? fijas[Number(m[1])] : k] = x[i]; });
+  return o;
+}
+
+function evacCatalogo_(u) {
+  exigirModulo_(u, 'EVAC');
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), estados: EVAC.ESTADOS, redes: [] };
+  evacRedes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
+    const ss = SpreadsheetApp.openById(r.id);
+    const E = evacLeerHoja_(ss.getSheetByName('ESTABLECIMIENTOS')), D = evacLeerHoja_(ss.getSheetByName('DEPENDENCIAS'));
+    const est = E.filas.filter(x => veEstab_(u, x[0])).map(x => Object.assign(evacObj_(E.claves, x, EVAC_FIJAS_.est), { puedeCargar: cargaEstab_(u, r.nombre, x[0]) }));
+    if (!est.length) return;
+    const cods = est.map(e => e.codigo);
+    salida.redes.push({ nombre: r.nombre, campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
+  });
+  return salida;
+}
+
+function evacGuardar_(u, req) {
+  exigirModulo_(u, 'EVAC');
+  const r = evacRedes_().filter(x => x.nombre === req.red)[0];
+  if (!r) throw new Error('Red no activa');
+  if (!cargaEstab_(u, req.red, req.codigo)) throw new Error('Sin permiso de carga en ' + req.codigo);
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    const ss = SpreadsheetApp.openById(r.id);
+    const esDep = req.ficha === 'Dependencia';
+    const sh = ss.getSheetByName(esDep ? 'DEPENDENCIAS' : 'ESTABLECIMIENTOS');
+    const L = evacLeerHoja_(sh), claves = L.claves;
+    const validas = evacCampos_(ss).filter(c => c.ficha === (esDep ? 'Dependencia' : 'Establecimiento'));
+    const tipoDe = {}; validas.forEach(c => tipoDe[c.clave] = c);
+    const todas = sh.getRange(1, 1, Math.max(sh.getLastRow(), 2), 1).getDisplayValues().map(x => x[0]);
+    let fila, id = '';
+    if (esDep) {
+      if (req.borrar) {
+        const f = todas.indexOf(req.id) + 1; if (f < 3) throw new Error('No existe la dependencia');
+        if (sh.getRange(f, 2).getDisplayValue() !== req.codigo) throw new Error('La dependencia no es de ese establecimiento');
+        sh.deleteRow(f); registrar_(u, 'EVAC · Quitar dependencia', req.red, req.codigo, req.id, ''); return { ok: true };
+      }
+      const nombre = String(req.nombre || '').trim(); if (!nombre) throw new Error('Falta el nombre de la dependencia.');
+      if (req.id) { fila = todas.indexOf(req.id) + 1; if (fila < 3) throw new Error('No existe la dependencia ' + req.id); id = req.id; }
+      else {
+        let max = 0; todas.forEach(v => { const m = String(v).match(/^D-(\d+)$/); if (m) max = Math.max(max, Number(m[1])); });
+        id = 'D-' + ('00' + (max + 1)).slice(-3);
+        let ult = todas.length; while (ult > 2 && !String(todas[ult - 1]).trim()) ult--;
+        fila = ult + 1;
+      }
+      const est = ss.getSheetByName('ESTABLECIMIENTOS'); const ce = evacLeerHoja_(est).filas.filter(x => x[0] === req.codigo)[0];
+      sh.getRange(fila, 1, 1, 4).setValues([[id, req.codigo, ce ? ce[1] : '', nombre.slice(0, 200)]]);
+    } else {
+      fila = todas.indexOf(req.codigo) + 1; if (fila < 3) throw new Error('Establecimiento inexistente');
+    }
+    const datos = req.datos || {};
+    const fila1 = sh.getRange(fila, 1, 1, claves.length).getValues()[0];
+    Object.keys(datos).forEach(k => {
+      const i = claves.indexOf(k); if (i < 0 || !tipoDe[k]) return;
+      let v = datos[k] == null ? '' : String(datos[k]).trim().slice(0, 2000);
+      const c = tipoDe[k];
+      if ((c.tipo === 'numero' || c.tipo === 'porcentaje') && v !== '' && v !== 's/d') { const n = Number(v.replace(',', '.')); if (isNaN(n) || n < 0) throw new Error(c.campo + ': tiene que ser un número.'); v = n; }
+      if (c.tipo === 'correo' && v && v !== 's/d' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) throw new Error(c.campo + ': revisá el correo.');
+      fila1[i] = v;
+    });
+    const est = req.estado && EVAC.ESTADOS.indexOf(req.estado) >= 0 ? req.estado : (fila1[4] && fila1[4] !== 'Pendiente' ? fila1[4] : 'En curso');
+    fila1[4] = est; fila1[5] = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm'); fila1[6] = u.nombre;
+    // las columnas de teléfono quedan como texto
+    sh.getRange(fila, 1, 1, claves.length).setValues([fila1]);
+    registrar_(u, esDep ? 'EVAC · Ficha de dependencia' : 'EVAC · Ficha del establecimiento', req.red, req.codigo, id, Object.keys(datos).length + ' campos · ' + est);
+    return { ok: true, id: id };
+  } finally { lock.releaseLock(); }
+}
