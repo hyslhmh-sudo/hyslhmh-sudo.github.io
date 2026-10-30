@@ -88,7 +88,7 @@ tr.nueva td{background:#F5F7FB}
 .dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 20px);transform:translateX(-50%);background:#172B4D;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
 .ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
-footer{text-align:center;padding:10px 16px 24px}footer img{width:min(340px,80%)}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 @media (max-width:760px){.lista{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.rejilla{grid-template-columns:1fr}}
 @media print{.barra,.tabs,.herr,.acc,footer,.btn{display:none!important}body{background:#fff}main{padding:0}.tarjeta{box-shadow:none;break-inside:avoid}}
 /* Paleta del sitio (alerta de triaje): #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Coral solo para errores y alta prioridad. */
@@ -322,12 +322,11 @@ function vistaReuniones() {
   const s = $('#reuProy'); s.addEventListener('change', () => { reuProy = s.value; });
 }
 function encReu(word) {
-  const logo = (word ? 'https://hyslhmh-sudo.github.io/starh/' : '') + 'logo-hysl.png';
   return `<table class="r-enc" style="width:100%;border-collapse:collapse;border-bottom:2.5px solid #2F5BEA;margin-bottom:6px"><tr>
     <td style="border:0;padding:0 0 4px"><b style="font-size:13pt;color:#172B4D">Preparación y Respuesta a Emergencias y desastres</b><br><span style="font-size:9pt;color:#4B5B73">Higiene y Seguridad Laboral</span></td>
-    <td style="border:0;padding:0 0 4px;text-align:right;width:34%"><img src="${logo}" style="width:260px;height:auto" width="260" alt="HySL"></td></tr></table>`;
+</tr></table>`;
 }
-function pieReu() { return `<p style="font-size:7pt;color:#6B7A90;margin-top:8px">Documento en versión 0 · Se archiva junto con las demás actas, informes y bitácoras de la emergencia.</p>`; }
+function pieReu(word) { return `<div class="r-pie"><p style="font-size:7pt;color:#6B7A90;margin-top:8px">Documento en versión 0 · Se archiva junto con las demás actas, informes y bitácoras de la emergencia.</p><p align="center" style="text-align:center;margin:4px 0 0">${word ? '<img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL">' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto">'}</p></div>`; }
 function participantes() {
   if (!reuProy || !cat) return [];
   return cat.participaciones.filter(x => x.proyecto === reuProy).map(x => ({ p: per(x.persona), f: x.funcion }))
@@ -351,15 +350,15 @@ function reuHTML(id, word) {
     ${h2('5. Decisiones y acuerdos')}${grilla(['N.º', 'Decisión o acuerdo', 'Fundamento o criterio (si corresponde)'], 5)}
     ${h2('6. Tareas y compromisos')}${grilla(['N.º', 'Tarea', 'Responsable', 'Plazo', 'Estado'], 6)}
     ${h2('7. Temas pendientes · próxima reunión')}<table class="r-t">${fila('Temas pendientes', 30)}<tr><td class="l">Próxima reunión (fecha, hora y lugar)</td><td>___/___/______ · ___:___ h · ______________________</td></tr>${fila('Se compartió el acta con los participantes el (fecha)')}</table>
-    ${h2('8. Firmas')}<table class="r-t"><tr><td style="height:46px;width:50%;vertical-align:bottom;text-align:center;font-size:7.5pt">Coordinó (firma y aclaración)</td><td style="vertical-align:bottom;text-align:center;font-size:7.5pt">Redactó (firma y aclaración)</td></tr></table>${pieReu()}</section>`;
+    ${h2('8. Firmas')}<table class="r-t"><tr><td style="height:46px;width:50%;vertical-align:bottom;text-align:center;font-size:7.5pt">Coordinó (firma y aclaración)</td><td style="vertical-align:bottom;text-align:center;font-size:7.5pt">Redactó (firma y aclaración)</td></tr></table>${pieReu(word)}</section>`;
   if (id === 'tareas') return `<section class="r-hoja apaisada">${encReu(word)}<div class="r-kick">REGISTRO DE ACUERDOS Y SEGUIMIENTO DE TAREAS</div>
     <div style="font-size:9pt;margin:2px 0 6px">Comité, COE o mesa · proyecto: ${proy} &nbsp;&nbsp; Hoja ___ de ___</div>
     ${grilla(['N.º', 'Acta N.º y fecha', 'Acuerdo o tarea', 'Responsable', 'Plazo', 'Estado', 'Fecha de cumplimiento', 'Observaciones'], 14)}
-    <p style="font-size:7.5pt;color:#4B5B73">Estado: Pendiente · En curso · Cumplida · Vencida · Reprogramada. Se revisa al inicio de cada reunión; las tareas vencidas se tratan primero.</p>${pieReu()}</section>`;
+    <p style="font-size:7.5pt;color:#4B5B73">Estado: Pendiente · En curso · Cumplida · Vencida · Reprogramada. Se revisa al inicio de cada reunión; las tareas vencidas se tratan primero.</p>${pieReu(word)}</section>`;
   if (id === 'asistencia') return `<section class="r-hoja">${encReu(word)}<div class="r-kick">PLANILLA DE ASISTENCIA</div>
     <table class="r-t">${fila('Reunión · proyecto')}<tr><td class="l">Fecha · hora · lugar</td><td>___/___/______ · ___:___ h · ______________________</td></tr></table>
     <div style="font-size:8.5pt;color:#4B5B73;margin:4px 0">Proyecto: ${proy}</div>
-    ${grilla(['N.º', 'Apellido y nombre', 'Institución · cargo', 'Función', 'Teléfono o correo', 'Firma'], Math.max(ps.length, 18), ps.map(x => [x[0], x[1], x[2], '', '']))}${pieReu()}</section>`;
+    ${grilla(['N.º', 'Apellido y nombre', 'Institución · cargo', 'Función', 'Teléfono o correo', 'Firma'], Math.max(ps.length, 18), ps.map(x => [x[0], x[1], x[2], '', '']))}${pieReu(word)}</section>`;
   if (id === 'situacion') return `<section class="r-hoja">${encReu(word)}<div class="r-kick">INFORME DE SITUACIÓN N.º ______</div>
     <table class="r-t">${fila('Evento o emergencia')}<tr><td class="l">Fecha y hora del informe · período que cubre</td><td>___/___/______ ___:___ h · desde ___/___ ___:___ hasta ___/___ ___:___</td></tr>${fila('Establecimiento, red o comité que informa')}</table>
     ${h2('1. Lo más importante')}<table class="r-t"><tr><td style="height:50px"></td></tr></table>
@@ -367,22 +366,23 @@ function reuHTML(id, word) {
     ${h2('3. Acciones realizadas')}<table class="r-t"><tr><td style="height:56px"></td></tr></table>
     ${h2('4. Necesidades y pedidos')}<table class="r-t"><tr><td style="height:46px"></td></tr></table>
     ${h2('5. Próximos pasos · próximo informe')}<table class="r-t"><tr><td style="height:40px"></td></tr>${fila('Próximo informe (fecha y hora)')}</table>
-    <table class="r-t" style="margin-top:6px">${fila('Elaboró (nombre, función y firma)', 26)}</table>${pieReu()}</section>`;
+    <table class="r-t" style="margin-top:6px">${fila('Elaboró (nombre, función y firma)', 26)}</table>${pieReu(word)}</section>`;
   return `<section class="r-hoja">${encReu(word)}<div class="r-kick">BITÁCORA DE ACTIVIDADES</div>
     <table class="r-t">${fila('Evento o emergencia')}${fila('Función o área (por ejemplo: coordinación, operaciones, logística, enlace)')}${fila('Responsable')}<tr><td class="l">Período</td><td>desde ___/___ ___:___ hasta ___/___ ___:___</td></tr></table>
     ${grilla(['N.º', 'Fecha y hora', 'Actividad, novedad, llamada o decisión', 'Quién'], 22)}
-    <p style="font-size:7.5pt;color:#4B5B73">Anotar en el momento, con hora, lo importante: decisiones, pedidos, llamadas, cambios de situación. Adaptado de ICS 214 (Activity Log, FEMA).</p>${pieReu()}</section>`;
+    <p style="font-size:7.5pt;color:#4B5B73">Anotar en el momento, con hora, lo importante: decisiones, pedidos, llamadas, cambios de situación. Adaptado de ICS 214 (Activity Log, FEMA).</p>${pieReu(word)}</section>`;
 }
 function reuImprimir(id) { const d = $('#imp'); d.innerHTML = reuHTML(id, false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); }
 window.addEventListener('afterprint', () => document.body.classList.remove('conimp'));
 function reuWord(id) {
   const m = REU[id], ap = !!m.apaisada;
-  const css = `@page Section1{size:${ap ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:34pt 32pt}div.Section1{page:Section1}
+  const css = `@page Section1{size:${ap ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:34pt 32pt 60pt;mso-footer:f1;mso-footer-margin:18pt}div.Section1{page:Section1}
     body{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:9pt;color:#172B4D}.r-kick{font-size:11pt;font-weight:bold;color:#2F5BEA;margin:4pt 0}
     .r-h2{font-size:10pt;color:#172B4D;border-bottom:1.5pt solid #2F5BEA;margin:8pt 0 3pt}table.r-t{width:100%;border-collapse:collapse}.r-t td{border:1pt solid #C5D1F2;padding:3pt 5pt;font-size:8.5pt;vertical-align:top}
     .r-t td.l{background:#E4EAFB;font-weight:bold;width:32%}.r-t td.h{background:#E4EAFB;font-weight:bold;font-size:7.5pt}`;
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(m.titulo)}</title>
-    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${reuHTML(id, true)}</div></body></html>`;
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${reuHTML(id, true).replace(/<img[^>]*__LOGOW__[^>]*>/g, '')}</div>
+    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="${ap ? 690 : 472}" alt="HySL"></p></div></body></html>`;
   const blob = new Blob(['﻿', html], { type: 'application/msword' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = m.titulo + (reuProy ? ' - ' + reuProy : '') + '.doc';
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);

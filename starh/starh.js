@@ -264,6 +264,7 @@
       .volver:hover{background:#E4EAFB!important}
       #volver{display:inline-flex;align-items:center;gap:4px;background:#fff;color:#172B4D!important;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;text-decoration:none;margin-left:10px;vertical-align:middle}
       @media (max-width:420px){.nav-inicio{padding:8px 10px!important;font-size:13px}.nav-inicio .txt{display:none}}
+      footer img{width:66.67%!important;max-width:740px!important;height:auto!important}
       @media print{.nav-inicio,.volver{display:none!important}}`;
     document.head.appendChild(st);
     const barra = document.querySelector('header.barra, .barra');
@@ -275,4 +276,33 @@
     a.innerHTML = '<span class="ms">home</span><span class="txt">Inicio</span>';
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicar); else aplicar();
+})();
+
+
+/* ---------- Pie con el logo de HySL en cada hoja impresa ----------
+ * Cada hoja de impresión (section.hoja o section.r-hoja) se envuelve en una tabla cuyo pie (tfoot)
+ * contiene el pie de la hoja; el navegador lo repite al final de cada página impresa. */
+(function () {
+  'use strict';
+  const st = document.createElement('style');
+  st.textContent = `table.pag{width:100%;border-collapse:collapse;margin:0}table.pag>tbody>tr>td,table.pag>tfoot>tr>td{border:0!important;padding:0!important;background:none!important;width:auto!important;height:auto!important}
+    @media print{html,body{background:#fff!important}}
+    table.pag>tfoot{display:table-footer-group}table.pag>tfoot>tr>td{padding-top:6px!important}`;
+  document.head.appendChild(st);
+  function envolver(raiz) {
+    raiz.querySelectorAll('section.hoja:not([data-pag]), section.r-hoja:not([data-pag])').forEach(h => {
+      h.setAttribute('data-pag', '1');
+      const pies = h.querySelectorAll('.pieimp, .pie, .r-pie'); const pie = pies[pies.length - 1];
+      if (!pie || pie.closest('table.pag')) return;
+      pie.remove();
+      const t = document.createElement('table'); t.className = 'pag';
+      t.innerHTML = '<tbody><tr><td></td></tr></tbody><tfoot><tr><td></td></tr></tfoot>';
+      const cuerpo = t.querySelector('tbody td'); while (h.firstChild) cuerpo.appendChild(h.firstChild);
+      t.querySelector('tfoot td').appendChild(pie); h.appendChild(t);
+    });
+  }
+  function vigilar() {
+    ['imp', 'hojas'].forEach(id => { const el = document.getElementById(id); if (!el) return; envolver(el); new MutationObserver(() => envolver(el)).observe(el, { childList: true }); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigilar); else vigilar();
 })();

@@ -64,9 +64,9 @@ ul.inst li{margin-bottom:2px}
 .guia b{color:var(--fuerte)}
 .nota{font-size:8pt;color:var(--medio);font-style:italic;margin-top:6px}
 .firmas td{height:58px;vertical-align:bottom;font-size:8pt;color:var(--suave)}
-.pie{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:14px;padding-top:6px;border-top:.5pt solid var(--linea);font-size:7.5pt;color:var(--medio)}
+.pie{display:block;text-align:center;margin-top:14px;padding-top:6px;border-top:.5pt solid var(--linea);font-size:7.5pt;color:var(--medio)}.pie .pt{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;text-align:left;margin-bottom:4px}
 .pie b{color:var(--fuerte)}
-.pie img{height:14px}
+.pie img{width:66.67%;height:auto}
 .nivel{display:inline-block;padding:0 4px;border-radius:3px;font-weight:700}
 
 @media print{
@@ -183,7 +183,7 @@ function encabezado(r) {
 function codigo(m, r) { return ({ phr: 'EVA-PHR-', ish: 'EVA-ISH-' }[m] || 'EVA-STARH-') + (/trelew/i.test(r.nombre) ? '001' : '002') + '-F01'; }
 function pie(m, r) {
   const quien = /trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral';
-  return `<div class="pie"><div><b>${codigo(m, r)} · VERSIÓN 0</b><br>${quien}</div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"><div>Impreso el ${S.hoy()}</div></div>`;
+  return `<div class="pie"><div class="pt"><div><b>${codigo(m, r)} · VERSIÓN 0</b><br>${quien}</div><div>Impreso el ${S.hoy()}</div></div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"></div>`;
 }
 function v(x, cargado) { return cargado ? esc(x == null || x === 's/d' ? '' : x) : ''; }
 function datosEst(e, cargado, filas) {
