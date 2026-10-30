@@ -119,9 +119,13 @@ function coeCatalogo_(u) {
   const h = coeHojas_();
   const L = h.li.getDataRange().getDisplayValues().slice(1);
   const col = i => L.map(x => String(x[i]).trim()).filter(Boolean);
-  const per = h.pe.getDataRange().getDisplayValues().slice(1).filter(x => x[0]).map(x => ({
+  // Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red); Administración ve todo.
+  const veTodo = u.rol === 'Administración' || u.todasRedes;
+  const veP = red => veTodo || !red || red === 's/d' || /^(ambas redes|provincial)$/i.test(red) || u.redes.indexOf(red) >= 0;
+  const per = h.pe.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && veP(String(x[9]).trim())).map(x => ({
     id: x[0], nombre: x[1], tipo: x[2], institucion: x[3], servicio: x[4], cargo: x[5], tel: x[6], tel2: x[7], mail: x[8], red: x[9], estado: x[10] || 'Activo', obs: x[11], actualizado: x[12] }));
-  const par = h.pa.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && x[1]).map(x => ({
+  const visibles = {}; per.forEach(p => visibles[p.id] = true);
+  const par = h.pa.getDataRange().getDisplayValues().slice(1).filter(x => x[0] && x[1] && visibles[x[1]]).map(x => ({
     id: x[0], persona: x[1], proyecto: x[4], funcion: x[5], desde: x[6], obs: x[7] }));
   return { ok: true, usuario: publico_(u), generado: new Date().toISOString(), puedeCargar: u.rol === 'Administración',
     listas: { proyectos: col(0), funciones: col(1), tipos: col(2).length ? col(2) : COE.TIPOS, redes: col(3).length ? col(3) : COE.REDES },
@@ -183,4 +187,82 @@ function coeParticipacion_(u, p) {
     registrar_(u, 'COE · Proyecto y función', '', '', id, p.persona + ' · ' + proyecto + ' · ' + t(p.funcion));
     return { ok: true, id: id };
   } finally { lock.releaseLock(); }
+}
+
+/* =========================================================
+ *  USUARIOS Y ACCESOS (solo Administración, desde la pantalla COE)
+ *  Lee y escribe la hoja ACCESOS STAR-H del libro. La clave se guarda
+ *  cifrada y se muestra una sola vez a quien la genera.
+ * ========================================================= */
+const ACC_MODULOS = ['STAR-H', 'PHR', 'ISH', 'COE', 'EVAC'];
+function accExigirAdmin_(u) { if (u.rol !== 'Administración') throw new Error('Solo Administración puede gestionar usuarios.'); }
+function accHoja_() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(CFG.HOJA_ACCESOS);
+  if (!sh) throw new Error('Falta la hoja ' + CFG.HOJA_ACCESOS + ' (menú STAR-H app › Preparar hojas de la app).');
+  return sh;
+}
+function coeUsuarios_(u) {
+  accExigirAdmin_(u);
+  const v = accHoja_().getDataRange().getDisplayValues().slice(1);
+  const usuarios = v.filter(x => limpiarDni_(x[0])).map(x => ({ dni: limpiarDni_(x[0]), nombre: x[1], rol: x[2], redes: x[3], estab: x[4], estado: x[5] || 'Inactivo',
+    tieneClave: !!x[6], claveFecha: x[7], ultimoIngreso: x[8], obs: x[9], modulos: x[10] }));
+  const redes = [], establecimientos = [];
+  redes_().forEach(r => {
+    redes.push(r.nombre);
+    try {
+      SpreadsheetApp.openById(r.id).getSheetByName('ESTABLECIMIENTOS').getDataRange().getDisplayValues().slice(1)
+        .filter(x => x[0]).forEach(x => establecimientos.push({ codigo: x[0], red: r.nombre, tipo: x[2], nombre: x[3] }));
+    } catch (e) { /* red sin acceso: se omite */ }
+  });
+  return { ok: true, usuarios: usuarios, redes: redes, establecimientos: establecimientos, roles: CFG.ROLES, modulos: ACC_MODULOS };
+}
+function coeUsuario_(u, d) {
+  accExigirAdmin_(u);
+  d = d || {};
+  const dni = limpiarDni_(d.dni);
+  if (!dni) throw new Error('Revisá el DNI: sin puntos, entre 7 y 9 números.');
+  const nombre = String(d.nombre || '').trim().slice(0, 200);
+  if (!nombre) throw new Error('Falta el apellido y nombre.');
+  if (CFG.ROLES.indexOf(d.rol) < 0) throw new Error('Elegí el rol.');
+  const estado = d.estado === 'Inactivo' ? 'Inactivo' : 'Activo';
+  const lista = t => String(t || '').split(/[;,]/).map(x => x.trim()).filter(Boolean);
+  const redes = /^todas$/i.test(String(d.redes || '').trim()) ? 'Todas' : lista(d.redes).join('; ');
+  const estab = /^todos$/i.test(String(d.estab || '').trim()) ? 'Todos' : lista(d.estab).map(x => x.toUpperCase()).join('; ');
+  const mods = lista(d.modulos).map(x => x.toUpperCase()).filter(x => ACC_MODULOS.indexOf(x) >= 0);
+  if (!mods.length) throw new Error('Elegí al menos un módulo.');
+  if (d.rol !== 'Administración' && !redes) throw new Error('Elegí al menos una red (o «Todas»).');
+  if (d.rol === 'Referente' && !estab) throw new Error('Elegí los establecimientos en que carga el referente (o «Todos»).');
+  if (dni === u.dni && (d.rol !== 'Administración' || estado !== 'Activo')) throw new Error('No podés quitarte a vos misma el rol de Administración ni desactivarte.');
+  return conLock_(() => {
+    const sh = accHoja_();
+    const v = sh.getDataRange().getDisplayValues();
+    let fila = 0;
+    for (let i = 1; i < v.length; i++) if (limpiarDni_(v[i][0]) === dni) { fila = i + 1; break; }
+    const nuevo = !fila;
+    if (nuevo) { fila = ultimaConDatos_(sh) + 1; sh.getRange(fila, 1).setNumberFormat('@'); }
+    sh.getRange(fila, 1, 1, 6).setValues([[dni, nombre, d.rol, redes || (d.rol === 'Administración' ? 'Todas' : ''), estab || (d.rol === 'Administración' ? 'Todos' : ''), estado]]);
+    sh.getRange(fila, 10).setValue(String(d.obs || '').slice(0, 500));
+    sh.getRange(fila, 11).setValue(mods.length === ACC_MODULOS.length ? ACC_MODULOS.join('; ') : mods.join('; '));
+    registrar_(u, nuevo ? 'Usuario creado' : 'Usuario modificado', redes, estab, dni, [nombre, d.rol, estado, mods.join(' ')].join(' | '));
+    return { ok: true, nuevo: nuevo };
+  });
+}
+function coeClave_(u, d) {
+  accExigirAdmin_(u);
+  const dni = limpiarDni_(d && d.dni);
+  if (!dni) throw new Error('DNI no válido.');
+  return conLock_(() => {
+    const f = filaAcceso_(dni);
+    if (!f) throw new Error('Primero guardá el usuario.');
+    const letras = 'abcdefghjkmnpqrstuvwxyz', nums = '23456789', todo = letras + nums;
+    const al = s => s.charAt(Math.floor(Math.random() * s.length));
+    let clave = al(letras) + al(nums);
+    for (let i = 0; i < 6; i++) clave += al(todo);
+    clave = clave.split('').sort(() => Math.random() - 0.5).join('');
+    f.sh.getRange(f.fila, 7, 1, 2).setValues([[hashClave_(dni, clave), new Date()]]);
+    if (!f.estado) f.sh.getRange(f.fila, 6).setValue('Activo');
+    CacheService.getScriptCache().remove('fallos_' + dni);
+    registrar_(u, 'Clave generada', '', '', dni, 'Para ' + f.nombre);
+    return { ok: true, dni: dni, nombre: f.nombre, clave: clave };
+  });
 }

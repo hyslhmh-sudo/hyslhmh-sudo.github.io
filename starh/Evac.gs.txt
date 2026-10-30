@@ -208,7 +208,7 @@ function evacArmar_(ss, red, est) {
   const ay = hoja('AYUDA', 0); ay.clear();
   const txt = [
     ['Evacuación hospitalaria · ' + red],
-    ['Fichas para describir cada establecimiento y cada dependencia, como base de los planes de evacuación.'],
+    ['Fichas para describir cada establecimiento y cada dependencia, como base de los planes de evacuación. No es un registro en tiempo real: es una base de datos orientadora para planificar. Los valores (ocupación, personal, camas de las instituciones receptoras) son habituales o estimados y se revisan periódicamente.'],
     [''],
     ['Cómo se carga'],
     ['Desde la app (hyslhmh-sudo.github.io/starh/evac.html) o directamente acá. ESTABLECIMIENTOS: una fila por establecimiento. DEPENDENCIAS: una fila por servicio, sector o área de cada establecimiento (se agregan las que hagan falta).'],
@@ -222,7 +222,7 @@ function evacArmar_(ss, red, est) {
     ['OPS. EVAC-H: Evacuación de hospitales y sus áreas críticas (2024): clasificación de pacientes por movilidad (autónomos, con apoyo, totalmente dependientes, con soporte vital), evacuación horizontal y vertical, zonas seguras. OPS/OMS. Índice de seguridad hospitalaria, Formulario 1 (información general del hospital) e ítem 147 (plan de evacuación), 2018. Decreto 351/79, Anexo VII, capítulo 18 (medios de escape y protección contra incendios). Res. SRT 905/2015, Anexo II, punto 2.2.'],
     [''],
     ['Traslados y derivación'],
-    ['INSTITUCIONES: instituciones que reciben pacientes, contacto las 24 horas, acuerdo de derivación y camas disponibles por tipo en 24 y 72 horas (categorías HAvBED). EVACUADOS: registro de cada paciente evacuado o derivado (adaptado de los formularios HICS 255 y 260), con destino, móvil, horarios y confirmación de llegada. Contiene datos de pacientes: uso exclusivo para la gestión de la emergencia.'],
+    ['INSTITUCIONES: instituciones que podrían recibir pacientes, contacto las 24 horas, acuerdo de derivación y cantidad ESTIMADA de camas que podrían recibir por tipo (categorías HAvBED), con el origen y la fecha de la estimación. No son camas disponibles reales: son datos hipotéticos para planificar; en una emergencia la disponibilidad se confirma con cada institución. Los pacientes evacuados no se registran acá: la planilla modelo de registro y la ficha de traslado (adaptadas de los formularios HICS 255 y 260) se imprimen o se descargan en Word desde la app.'],
     [''],
     ['Alcance'],
     ['Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento: los planes de evacuación de cada lugar los propone su servicio y los aprueba su Dirección.']
@@ -281,15 +281,15 @@ function evacObj_(claves, x, fijas) {
 
 function evacCatalogo_(u) {
   exigirModulo_(u, 'EVAC');
-  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), estados: EVAC.ESTADOS, defInst: evacDefCampos_(EVAC_INST), defEva: evacDefCampos_(EVAC_EVA), camas: EVAC_CAMAS, redes: [] };
+  const salida = { ok: true, usuario: publico_(u), generado: new Date().toISOString(), estados: EVAC.ESTADOS, defInst: evacDefCampos_(EVAC_INST), camas: EVAC_CAMAS, redes: [] };
   evacRedes_().filter(r => veRed_(u, r.nombre)).forEach(r => {
     const ss = SpreadsheetApp.openById(r.id);
     const E = evacLeerHoja_(ss.getSheetByName('ESTABLECIMIENTOS')), D = evacLeerHoja_(ss.getSheetByName('DEPENDENCIAS'));
     const est = E.filas.filter(x => veEstab_(u, x[0])).map(x => Object.assign(evacObj_(E.claves, x, EVAC_FIJAS_.est), { puedeCargar: cargaEstab_(u, r.nombre, x[0]) }));
     if (!est.length) return;
     const cods = est.map(e => e.codigo);
-    const inst = evacLeerFijas_(ss, 'INSTITUCIONES'), eva = evacLeerFijas_(ss, 'EVACUADOS').filter(x => cods.indexOf(x.codigo) >= 0);
-    salida.redes.push({ nombre: r.nombre, instituciones: inst, evacuados: eva, puedeInst: u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)), planilla: u.rol === 'Administración' ? 'https://docs.google.com/spreadsheets/d/' + r.id + '/edit' : '', campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
+    const inst = evacLeerFijas_(ss, 'INSTITUCIONES');
+    salida.redes.push({ nombre: r.nombre, instituciones: inst, puedeInst: u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)), planilla: u.rol === 'Administración' ? 'https://docs.google.com/spreadsheets/d/' + r.id + '/edit' : '', campos: evacCampos_(ss), establecimientos: est, dependencias: D.filas.filter(x => cods.indexOf(x[1]) >= 0).map(x => evacObj_(D.claves, x, EVAC_FIJAS_.dep)) });
   });
   return salida;
 }
@@ -351,42 +351,30 @@ function evacGuardar_(u, req) {
 }
 
 /* =========================================================
- *  TRASLADOS Y DERIVACIÓN
- *  · INSTITUCIONES: instituciones que reciben pacientes de cada establecimiento y sus camas disponibles
- *    (categorías HAvBED, disponibles en 24 y 72 horas; AHRQ, EE. UU.).
- *  · EVACUADOS: registro de pacientes evacuados o derivados (adaptado de HICS 255 · registro maestro y
- *    HICS 260 · seguimiento del paciente evacuado, Hospital Incident Command System, California EMSA 2014).
+ *  TRASLADOS Y DERIVACIÓN · base orientadora para planificar
+ *  · INSTITUCIONES: instituciones que podrían recibir pacientes de cada establecimiento y la
+ *    capacidad ESTIMADA de recepción por tipo de cama (categorías HAvBED; AHRQ, EE. UU.).
+ *    No son camas disponibles reales: son datos hipotéticos para planificar, con su origen y fecha.
+ *  · Los pacientes evacuados NO se registran en la app: la planilla modelo (adaptada de HICS 255
+ *    y 260, California EMSA 2014) se imprime o se descarga en Word desde evac.html.
  *  Hojas con fila 1 = nombre visible, fila 2 = clave (no tocar), datos desde la fila 3.
  * ========================================================= */
 const EVAC_CAMAS = [
   ['uti_adultos', 'Terapia intensiva adultos'], ['internacion', 'Internación general (clínica y quirúrgica)'], ['uti_ped', 'Terapia intensiva pediátrica'],
   ['pediatria', 'Internación pediátrica'], ['neo', 'Neonatología'], ['quemados', 'Quemados'], ['salud_mental', 'Salud mental'],
-  ['aislamiento', 'Aislamiento respiratorio'], ['quirofanos', 'Quirófanos disponibles']
+  ['aislamiento', 'Aislamiento respiratorio'], ['quirofanos', 'Quirófanos']
 ];
 const EVAC_INST = [
   ['id', 'ID', 'texto'], ['nombre', 'Institución', 'texto'], ['tipo', 'Tipo', 'lista', 'Pública provincial;Pública municipal;Privada;Obra social;Fuerzas de seguridad o armadas;Otra'],
-  ['localidad', 'Localidad', 'texto'], ['recibe_de', 'Recibe pacientes de (códigos, o «Todos»)', 'texto'],
-  ['distancia', 'Distancia (km)', 'numero'], ['tiempo', 'Tiempo de traslado (minutos)', 'numero'],
+  ['localidad', 'Localidad', 'texto'], ['recibe_de', 'Podría recibir pacientes de (códigos, o «Todos»)', 'texto'],
+  ['distancia', 'Distancia (km)', 'numero'], ['tiempo', 'Tiempo estimado de traslado (minutos)', 'numero'],
   ['contacto', 'Contacto las 24 horas (nombre y cargo)', 'texto'], ['tel', 'Teléfono las 24 horas', 'telefono'], ['correo', 'Correo', 'correo'],
   ['acuerdo', 'Acuerdo de derivación', 'lista', 'Convenio o acuerdo formal;Acuerdo informal;Sin acuerdo;s/d'], ['acuerdo_fecha', 'Fecha del acuerdo', 'fecha'],
-  ['capacidades', 'Especialidades y capacidades', 'largo'], ['guardia', 'Guardia', 'lista', 'Abierta (recibe ambulancias);Cerrada;Sin guardia;s/d'],
-  ['descontaminacion', 'Descontaminación de múltiples víctimas', 'lista', 'Sí;No;s/d'], ['respiradores', 'Respiradores libres', 'numero']
-].concat(EVAC_CAMAS.reduce((a, c) => a.concat([[c[0] + '_24', c[1] + ' · disponibles en 24 h', 'numero'], [c[0] + '_72', c[1] + ' · disponibles en 72 h', 'numero']]), []))
- .concat([['camas_fecha', 'Camas actualizadas el', 'texto'], ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Actualizado por', 'texto']]);
-const EVAC_EVA = [
-  ['id', 'ID', 'texto'], ['fecha', 'Fecha', 'fecha'], ['evento', 'Evento o incidente', 'texto'], ['codigo', 'Código del establecimiento', 'texto'],
-  ['origen', 'Servicio o dependencia de origen', 'texto'], ['paciente', 'Paciente (apellido y nombre)', 'texto'], ['documento', 'DNI o historia clínica', 'texto'],
-  ['prioridad', 'Prioridad de evacuación', 'lista', 'Inmediata;Diferida;Menor'],
-  ['movilidad', 'Movilidad (EVAC-H)', 'lista', 'Autónomo;Con apoyo;Totalmente dependiente;Con soporte vital'],
-  ['traslado_en', 'Se traslada en', 'lista', 'Caminando;Silla de ruedas;Camilla;Cama;Incubadora;Otro'],
-  ['equipos', 'Equipos que lleva', 'multi', 'Oxígeno;Respirador;Monitor;Bombas de infusión;Incubadora o servocuna;Drenajes;Sonda vesical;Otro'],
-  ['aislamiento', 'Aislamiento', 'lista', 'No;Contacto;Gotas;Aéreo'], ['destino_tipo', 'Destino', 'lista', 'Zona segura interna;Otra institución;Alta a domicilio;Morgue'],
-  ['destino', 'Institución o sector de destino', 'texto'], ['hora_aviso', 'Hora en que se avisó al destino', 'texto'],
-  ['movil', 'Tipo de móvil', 'lista', 'Alta complejidad;Avanzado;Básico;Utilitario o particular;Aéreo;No corresponde'], ['movil_id', 'Móvil, empresa o patente', 'texto'],
-  ['hora_salida', 'Hora de salida', 'texto'], ['hc_enviada', 'Historia clínica enviada', 'lista', 'Sí;No'], ['med_enviada', 'Medicación enviada', 'lista', 'Sí;No'],
-  ['familia', 'Familia avisada', 'lista', 'Sí;No'], ['llegada', 'Llegada confirmada', 'lista', 'Sí;No'], ['hora_llegada', 'Hora de llegada', 'texto'],
-  ['sector_ingreso', 'Sector donde quedó', 'texto'], ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Cargado por', 'texto']
-];
+  ['capacidades', 'Especialidades y capacidades', 'largo'], ['guardia', 'Guardia las 24 horas', 'lista', 'Sí, recibe ambulancias;No tiene guardia;s/d'],
+  ['descontaminacion', 'Descontaminación de múltiples víctimas', 'lista', 'Sí;No;s/d'], ['arm', 'Puede recibir pacientes con asistencia respiratoria mecánica', 'lista', 'Sí;No;s/d']
+].concat(EVAC_CAMAS.map(c => [c[0] + '_est', c[1] + ' · camas que podría recibir (estimado)', 'numero']))
+ .concat([['camas_origen', 'Origen de la estimación', 'lista', 'Convenio o acuerdo;Consulta a la institución;Estimación propia;Dato histórico;s/d'],
+          ['camas_fecha', 'Fecha de la estimación', 'texto'], ['observaciones', 'Observaciones', 'largo'], ['actualizado', 'Actualizado', 'texto'], ['por', 'Actualizado por', 'texto']]);
 
 function evacHojaFija_(ss, nombre, def, t, i) {
   let sh = ss.getSheetByName(nombre);
@@ -415,7 +403,6 @@ function evacHojaFija_(ss, nombre, def, t, i) {
 function evacTraslados_(ss, red) {
   const t = /trelew/i.test(red) ? { fuerte: '#0D313F' } : { fuerte: '#B8441A' };
   evacHojaFija_(ss, 'INSTITUCIONES', EVAC_INST, t, 4).setColumnWidth(2, 260);
-  evacHojaFija_(ss, 'EVACUADOS', EVAC_EVA, t, 5).setColumnWidth(6, 220);
 }
 
 function evacDefCampos_(def) { return def.map(d => ({ clave: d[0], campo: d[1], tipo: d[2], opciones: d[3] ? d[3].split(';') : [] })); }
@@ -429,7 +416,7 @@ function evacUltimaFila_(sh) {
   for (let i = a.length - 1; i >= 2; i--) if (String(a[i][0]).trim()) return i + 1;
   return 2;
 }
-// Guarda una fila (alta, cambio o baja) en INSTITUCIONES o EVACUADOS
+// Guarda una fila (alta, cambio o baja) en INSTITUCIONES
 function evacGuardarFila_(u, req, hoja, def, pref, ancho, puede) {
   const r = evacRedes_().filter(x => x.nombre === req.red)[0];
   if (!r) throw new Error('Red no activa');
@@ -462,27 +449,13 @@ function evacGuardarFila_(u, req, hoja, def, pref, ancho, puede) {
     if (ia >= 0) v[ia] = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'dd/MM/yyyy HH:mm');
     if (ip >= 0) v[ip] = u.nombre;
     sh.getRange(fila, 1, 1, claves.length).setValues([v]);
-    registrar_(u, 'EVAC · ' + (hoja === 'INSTITUCIONES' ? 'Institución receptora' : 'Paciente evacuado'), req.red, datos.codigo || '', id, String(datos.nombre || datos.paciente || '').slice(0, 80));
+    registrar_(u, 'EVAC · ' + 'Institución receptora', req.red, datos.codigo || '', id, String(datos.nombre || '').slice(0, 80));
     return { ok: true, id: id };
   } finally { lock.releaseLock(); }
 }
 function evacInstitucion_(u, req) {
   exigirModulo_(u, 'EVAC');
   return evacGuardarFila_(u, req, 'INSTITUCIONES', EVAC_INST, 'I', 3, r => u.rol === 'Administración' || (u.rol === 'Referente' && veRed_(u, r.nombre)));
-}
-function evacEvacuado_(u, req) {
-  exigirModulo_(u, 'EVAC');
-  let cod = req.datos && req.datos.codigo || '', ant = null;
-  if (req.id) {
-    const r = evacRedes_().filter(x => x.nombre === req.red)[0];
-    if (r) ant = evacLeerFijas_(SpreadsheetApp.openById(r.id), 'EVACUADOS').filter(x => x.id === req.id)[0] || null;
-    if (!ant) throw new Error('No existe ' + req.id);
-    if (cod && cod !== ant.codigo && !cargaEstab_(u, req.red, ant.codigo)) throw new Error('Sin permiso de carga en ' + ant.codigo);
-    cod = cod || ant.codigo;
-  }
-  if (!cod) throw new Error('Falta el establecimiento.');
-  if (!req.borrar && !String((req.datos && req.datos.paciente) || (ant && ant.paciente) || '').trim()) throw new Error('Falta el paciente.');
-  return evacGuardarFila_(u, req, 'EVACUADOS', EVAC_EVA, 'E', 4, r => cargaEstab_(u, r.nombre, cod));
 }
 function evacLeerFijas_(ss, hoja) {
   const sh = ss.getSheetByName(hoja); if (!sh) return [];

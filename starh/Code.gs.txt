@@ -62,7 +62,8 @@ function menuAyuda() {
     '<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;color:#3A4A52">' +
     '<h3 style="color:#0D313F;margin:0 0 8px">STAR-H app · Ayuda para la administración</h3>' +
     '<b>1. Primera vez</b><br>Menú <i>STAR-H app › Preparar hojas de la app</i>. Crea ACCESOS STAR-H y REGISTRO APP.<br><br>' +
-    '<b>2. Dar acceso a una persona</b><br>En ACCESOS STAR-H completá DNI, nombre, rol, redes y establecimientos. ' +
+    '<b>Concepto</b><br>No es un sistema con información en tiempo real: es una base de datos orientadora para planificar. Los valores cargados (por ejemplo, las camas de las instituciones receptoras) son estimados o hipotéticos.<br><br>' +
+    '<b>2. Dar acceso a una persona</b><br>Lo más simple: en la app, pantalla COE › Usuarios y accesos (elegís qué ve y generás la clave). También se puede desde acá: en ACCESOS STAR-H completá DNI, nombre, rol, redes y establecimientos. ' +
     'Seleccioná la fila y elegí <i>Generar o reiniciar clave</i>. La clave se muestra una sola vez: pasala a la persona.<br>' +
     '· <b>Administración</b>: carga y ve todo, incluido el comparativo.<br>' +
     '· <b>Referente</b>: carga en los establecimientos asignados y ve el tablero de su red.<br>' +
@@ -204,10 +205,12 @@ function atender_(e) {
       case 'coe_catalogo': return json_(coeCatalogo_(u));
       case 'coe_persona':  return json_(coePersona_(u, req.persona));
       case 'coe_participacion': return json_(coeParticipacion_(u, req.participacion));
+      case 'coe_usuarios': return json_(coeUsuarios_(u));
+      case 'coe_usuario':  return json_(coeUsuario_(u, req.usuario));
+      case 'coe_clave':    return json_(coeClave_(u, req));
       case 'evac_catalogo': return json_(evacCatalogo_(u));
       case 'evac_guardar':  return json_(evacGuardar_(u, req));
       case 'evac_institucion': return json_(evacInstitucion_(u, req));
-      case 'evac_evacuado':  return json_(evacEvacuado_(u, req));
       default: return json_({ ok: false, error: 'Acción desconocida' });
     }
   } catch (err) {
