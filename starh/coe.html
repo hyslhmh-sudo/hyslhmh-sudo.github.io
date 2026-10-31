@@ -304,6 +304,8 @@ const REU = {
   tareas: { ico: 'checklist', titulo: 'Registro de acuerdos y seguimiento de tareas', apaisada: true, txt: 'Una planilla única donde se pasan las tareas de todas las actas y se sigue su estado reunión a reunión (pendiente, en curso, cumplida, vencida).' },
   asistencia: { ico: 'how_to_reg', titulo: 'Planilla de asistencia', txt: 'Nombre, institución, función, contacto y firma. Si elegís un proyecto, sale con los participantes cargados.' },
   situacion: { ico: 'summarize', titulo: 'Informe de situación', txt: 'Resumen breve para abrir la reunión o para enviar al COE: lo más importante, situación actual, acciones hechas, necesidades y próximos pasos.' },
+  autoeval: { ico: 'fact_check', titulo: 'Autoevaluación de la conducción', txt: 'Cinco preguntas para la Dirección y el comité: comando de incidentes, ejercicios, autonomía de 96 horas, acuerdos con receptores y compromiso directivo. Un «No sé» vale lo mismo que un «No» (Vítolo, 2026).' },
+  aar: { ico: 'assignment_turned_in', titulo: 'Informe posterior al ejercicio y plan de mejora', txt: 'Después de cada simulacro o emergencia: qué funcionó, qué no y por qué, brechas encontradas y un plan de mejora con acción, responsable, fecha y cómo se verifica.' },
   bitacora: { ico: 'history_edu', titulo: 'Bitácora de actividades', txt: 'Registro cronológico de novedades, llamadas y decisiones de cada función durante la emergencia. Sirve después para la evaluación posterior.' }
 };
 function vistaReuniones() {
@@ -367,6 +369,25 @@ function reuHTML(id, word) {
     ${h2('4. Necesidades y pedidos')}<table class="r-t"><tr><td style="height:46px"></td></tr></table>
     ${h2('5. Próximos pasos · próximo informe')}<table class="r-t"><tr><td style="height:40px"></td></tr>${fila('Próximo informe (fecha y hora)')}</table>
     <table class="r-t" style="margin-top:6px">${fila('Elaboró (nombre, función y firma)', 26)}</table>${pieReu(word)}</section>`;
+  if (id === 'autoeval') {
+    const P = [['Comando de incidentes', '¿Tenemos un comando de incidentes con puestos designados, fichas de acción propias y al menos dos personas entrenadas por puesto clave, incluido quien comanda (y la cadena de sucesión para decidir una evacuación)?'],
+      ['Ejercicios y mejora', '¿Hicimos al menos un ejercicio (de mesa, funcional o a escala completa) en los últimos 12 meses, con informe posterior y plan de mejora implementado?'],
+      ['Recursos críticos', '¿Sabemos cuántas horas funciona el establecimiento si fallan a la vez energía, agua y sistemas, y tenemos acuerdos de reabastecimiento formalizados?'],
+      ['Acuerdos de derivación', '¿Tenemos acuerdos vigentes con al menos dos establecimientos receptores por tipo de paciente y con el sistema de emergencias, verificados en el último año?'],
+      ['Compromiso directivo', '¿La conducción, y no solo quien coordina emergencias, conoce el plan, participó de un ejercicio y asigna recursos reales?']];
+    return `<section class="r-hoja">${encReu(word)}<div class="r-kick">AUTOEVALUACIÓN DE LA CONDUCCIÓN · ¿ESTÁ PREPARADO EL ESTABLECIMIENTO?</div>
+      <table class="r-t">${fila('Establecimiento')}${fila('Completaron (nombres y cargos)')}<tr><td class="l">Fecha</td><td>___/___/______</td></tr></table>
+      <table class="r-t" style="margin-top:8px"><tr><td class="h">Tema</td><td class="h">Pregunta</td><td class="h">Sí</td><td class="h">No</td><td class="h">No sé</td><td class="h">Qué falta y quién se ocupa</td></tr>
+      ${P.map(p => `<tr><td style="width:18%"><b>${E(p[0])}</b></td><td>${E(p[1])}</td><td style="width:6%">${cas('')}</td><td style="width:6%">${cas('')}</td><td style="width:7%">${cas('')}</td><td style="width:26%;height:48px"></td></tr>`).join('')}</table>
+      <p style="font-size:8pt;color:#4B5B73;margin-top:6px"><b>Un «No sé» es tan grave como un «No»:</b> si la conducción no lo sabe, no está operativo. Cada «No» o «No sé» se pasa al registro de acuerdos y seguimiento de tareas con responsable y plazo. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026).</p>${pieReu(word)}</section>`;
+  }
+  if (id === 'aar') return `<section class="r-hoja">${encReu(word)}<div class="r-kick">INFORME POSTERIOR AL EJERCICIO O A LA EMERGENCIA Y PLAN DE MEJORA</div>
+    <table class="r-t">${fila('Ejercicio o emergencia')}<tr><td class="l">Tipo</td><td>${['De discusión', 'De mesa', 'Funcional', 'Integrado o a escala completa', 'Emergencia real'].map(cas).join(' ')}</td></tr><tr><td class="l">Fecha · duración</td><td>___/___/______ · ______</td></tr>${fila('Escenario y amenaza')}${fila('Participantes y organismos externos')}${fila('Objetivos que se querían comprobar', 30)}</table>
+    ${h2('1. Qué funcionó bien')}<table class="r-t"><tr><td style="height:50px"></td></tr></table>
+    ${h2('2. Qué no funcionó y por qué')}<table class="r-t"><tr><td style="height:60px"></td></tr></table>
+    ${h2('3. Plan de mejora')}${grilla(['N.º', 'Brecha encontrada (plan, procedimiento, equipamiento, comunicaciones, personal o coordinación)', 'Acción correctiva', 'Responsable', 'Fecha compromiso', 'Cómo se verifica'], 7)}
+    <table class="r-t" style="margin-top:6px">${fila('Debriefing inmediato realizado (fecha y hora)')}${fila('Informe terminado el (recomendado: dentro de las 72 horas)')}${fila('Se compartió con')}${fila('Elaboró (nombre, cargo y firma)', 26)}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">El informe y el plan de mejora son el punto de partida del próximo ejercicio; el personal tiene que ver que las mejoras se implementan. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026).</p>${pieReu(word)}</section>`;
   return `<section class="r-hoja">${encReu(word)}<div class="r-kick">BITÁCORA DE ACTIVIDADES</div>
     <table class="r-t">${fila('Evento o emergencia')}${fila('Función o área (por ejemplo: coordinación, operaciones, logística, enlace)')}${fila('Responsable')}<tr><td class="l">Período</td><td>desde ___/___ ___:___ hasta ___/___ ___:___</td></tr></table>
     ${grilla(['N.º', 'Fecha y hora', 'Actividad, novedad, llamada o decisión', 'Quién'], 22)}

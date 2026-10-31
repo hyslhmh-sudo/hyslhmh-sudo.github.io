@@ -356,9 +356,12 @@ function vistaInst() {
     <div class="buscar"><input id="q" type="search" placeholder="Buscar institución o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaInst"><span class="ms">add</span>Agregar institución</button>' : ''}
       <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
     <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Capacidad estimada de recepción de la red de derivación</b> <span class="sub">(suma de lo que podrían recibir todas las instituciones; categorías HAvBED)</span>
-      <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo de cama</th><th class="num">Camas estimadas</th></tr>
-      ${cat.camas.map(c => `<tr><td>${E(c[1])}</td><td class="num"><b>${tot(c[0] + '_est')}</b></td></tr>`).join('')}
-      <tr><td>Instituciones que pueden recibir pacientes con asistencia respiratoria mecánica</td><td class="num"><b>${arm}</b></td></tr></table></div></div>
+      <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo de cama</th><th class="num">Camas estimadas</th><th class="num">Destinos</th></tr>
+      ${cat.camas.map(c => { const n = (r.instituciones || []).filter(x => num(x[c[0] + '_est']) > 0).length; return `<tr><td>${E(c[1])}</td><td class="num"><b>${tot(c[0] + '_est')}</b></td><td class="num">${n >= 2 ? `<span class="sem v">${n}</span>` : `<span class="sem ${n ? 'a' : 'n'}">${n}</span>`}</td></tr>`; }).join('')}
+      <tr><td>Instituciones que pueden recibir pacientes con asistencia respiratoria mecánica</td><td class="num"><b>${arm}</b></td><td></td></tr>
+      <tr><td>Instituciones a 50 km o más (para eventos regionales)</td><td class="num"><b>${(r.instituciones || []).filter(x => num(x.distancia) >= 50).length}</b></td><td></td></tr>
+      <tr><td>Con acuerdo formal firmado</td><td class="num"><b>${(r.instituciones || []).filter(x => /formal/i.test(x.acuerdo || '')).length}</b></td><td></td></tr></table></div>
+      <p class="sub" style="margin:6px 0 0">Recomendación (Vítolo, 2026): al menos <b>dos destinos alternativos por tipo de paciente</b>, uno a 50 km o más, con acuerdo firmado y revisado cada año. En verde, los tipos de cama que ya tienen dos destinos o más.</p></div>
     <div class="lista">${l.map(x => { const ce = cat.camas.reduce((a, c) => a + num(x[c[0] + '_est']), 0);
       return `<button class="tarjeta inst" data-inst="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${semGuardia(x.guardia)}</div>
         <div class="sub">${E([x.tipo, x.localidad, x.distancia ? x.distancia + ' km' : '', x.tiempo ? x.tiempo + ' min' : ''].filter(Boolean).join(' · ') || 's/d')} · podría recibir de: ${E(x.recibe_de || 's/d')}</div>
@@ -487,6 +490,7 @@ const MODELOS = {
   ficha: { ico: 'assignment_ind', titulo: 'Ficha de traslado del paciente', txt: 'Una por paciente que va a otra institución; lo acompaña y la última parte la completa quien lo recibe. Adaptado de HICS 260 y OPS EVAC-H.' },
   ingresos: { ico: 'login', titulo: 'Registro de ingresos por el evento', apaisada: true, txt: 'Lo que llega al hospital o al centro de salud: lesionados, evacuados en resguardo preventivo, embarazadas, personas derivadas desde albergues. Una fila por persona, con procedencia, clasificación y destino final. Adaptado de HICS 254.' },
   albergue: { ico: 'night_shelter', titulo: 'Ficha de derivación a albergue', txt: 'Para la persona que sale del hospital o del centro de salud hacia un albergue: cuidados y apoyos que necesita, medicación entregada, centro de salud que hace el seguimiento, y contrarreferencia si tiene que volver.' },
+  censo: { ico: 'groups_3', titulo: 'Censo rápido para evacuar', apaisada: true, txt: 'Por servicio, cuántas personas hay en cada categoría de traslado (se autoevacúa, camina con ayuda, en silla, requiere atención durante el traslado, soporte vital) y qué transporte y personal hacen falta. Adaptado de Vítolo (2019) y OPS EVAC-H.' },
   parte: { ico: 'campaign', titulo: 'Informe de derivaciones al COE', txt: 'Parte periódico para la mesa conjunta: cuántos llegaron y de dónde, cuántos salieron y a dónde, capacidad estimada que queda, necesidades y próximos pasos. La frecuencia se acuerda con el COE.' }
 };
 function vistaModelos() {
@@ -514,6 +518,12 @@ function modeloHTML(id, r, word) {
   const pie = word ? `<p style="font-size:7.5pt;color:#4B5B73">${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
   const cols = (c, n) => `<table class="reg"><tr>${c.map(x => `<td class="l">${x}</td>`).join('')}</tr>${Array.from({ length: n }, (_, i) => `<tr>${c.map((x, j) => `<td>${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>`;
   const nota = t => `<p style="font-size:7.5pt;color:#4B5B73">${t}</p>`;
+  if (id === 'censo') {
+    return `<section class="hoja apaisada">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · CENSO RÁPIDO PARA EVACUAR</div>
+      <h1>Establecimiento: ____________________________ Fecha y hora: ___/___/______ ___:___ h · Responsable: ____________________</h1>
+      ${cols(['N.º', 'Servicio o sector · piso', 'Pacientes en total', 'Se autoevacúa', 'Camina con ayuda', 'Silla (no camina)', 'Requiere atención en el traslado', 'Soporte vital', 'Personal presente', 'Personal que falta', 'Transporte que hace falta', 'Observaciones'], 14)}
+      ${nota('Cada fila debe sumar el total de pacientes del servicio. Transporte orientativo: autoevacuados y ambulatorios en micro o vehículo común; en silla, camioneta adaptada; con atención en el traslado, ambulancia; con soporte vital, móvil de alta complejidad. Cama o camilla solo para pacientes que no pueden sentarse o con soporte vital: pueden requerir hasta 6 personas por paciente. Adaptado de Vítolo, Evacuación de hospitales (2019), y OPS, EVAC-H (2024). Base orientadora: se completa en el momento o en simulacros.')}${pie}</section>`;
+  }
   if (id === 'ingresos') {
     return `<section class="hoja apaisada">${enc}<div class="kick">EMERGENCIA · REGISTRO DE INGRESOS POR EL EVENTO</div>
       <h1>Establecimiento: ____________________________ Evento: ____________________ Fecha: ___/___/______ Hoja ___ de ___</h1>
