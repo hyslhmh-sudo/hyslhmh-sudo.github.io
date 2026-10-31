@@ -97,7 +97,7 @@ const EVAC = {
     ['Establecimiento', 'bomberos', '8. Entorno y apoyo externo', 'Cuartel de bomberos más cercano (nombre, distancia y teléfono)', 'largo', '', ''],
     ['Establecimiento', 'policia', '8. Entorno y apoyo externo', 'Policía (comisaría y teléfono)', 'texto', '', ''],
     ['Establecimiento', 'proteccion_civil', '8. Entorno y apoyo externo', 'Protección Civil o Defensa Civil (teléfono)', 'texto', '', ''],
-    ['Establecimiento', 'amenazas_entorno', '8. Entorno y apoyo externo', 'Amenazas del entorno que pueden obligar a evacuar', 'largo', '', 'Inundación, viento, incendio forestal, industria cercana. Ver el relevamiento STAR-H.'],
+    ['Establecimiento', 'amenazas_entorno', '8. Entorno y apoyo externo', 'Amenazas del entorno que pueden obligar a evacuar', 'largo', '', 'Inundación, viento, incendio forestal, industria cercana.'],
     ['Establecimiento', 'autonomia_energia', '9. Continuidad operativa (96 horas)', 'Horas que funciona el establecimiento sin energía de red (estimado)', 'numero', '', 'Con el grupo electrógeno y el combustible que hay. Referencia: la Joint Commission pide planificar al menos 96 horas.'],
     ['Establecimiento', 'autonomia_agua', '9. Continuidad operativa (96 horas)', 'Horas que funciona sin agua de red (estimado)', 'numero', '', ''],
     ['Establecimiento', 'autonomia_oxigeno', '9. Continuidad operativa (96 horas)', 'Horas de oxígeno disponibles sin reposición (estimado)', 'numero', '', ''],

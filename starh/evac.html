@@ -491,6 +491,9 @@ const MODELOS = {
   ingresos: { ico: 'login', titulo: 'Registro de ingresos por el evento', apaisada: true, txt: 'Lo que llega al hospital o al centro de salud: lesionados, evacuados en resguardo preventivo, embarazadas, personas derivadas desde albergues. Una fila por persona, con procedencia, clasificación y destino final. Adaptado de HICS 254.' },
   albergue: { ico: 'night_shelter', titulo: 'Ficha de derivación a albergue', txt: 'Para la persona que sale del hospital o del centro de salud hacia un albergue: cuidados y apoyos que necesita, medicación entregada, centro de salud que hace el seguimiento, y contrarreferencia si tiene que volver.' },
   censo: { ico: 'groups_3', titulo: 'Censo rápido para evacuar', apaisada: true, txt: 'Por servicio, cuántas personas hay en cada categoría de traslado (se autoevacúa, camina con ayuda, en silla, requiere atención durante el traslado, soporte vital) y qué transporte y personal hacen falta. Adaptado de Vítolo (2019) y OPS EVAC-H.' },
+  autoeval: { vit: true, ico: 'fact_check', titulo: 'Autoevaluación de la conducción', txt: 'Cinco preguntas para la Dirección y el comité: comando de incidentes, ejercicios, autonomía de 96 horas, acuerdos con receptores y compromiso directivo. Un «No sé» vale lo mismo que un «No» (Vítolo, 2026).' },
+  madurez: { vit: true, ico: 'speed', titulo: 'Autoevaluación de preparación por escenario', txt: 'Seis cuestionarios (incendio, corte de energía, inundación, ciberataque, pandemia y víctimas múltiples) con escala de 1 a 4: no existe, existe en papel, entrenado, verificado y vigente. Incluye tabla consolidada. Adaptado del anexo de Vítolo (2026).' },
+  aar: { vit: true, ico: 'assignment_turned_in', titulo: 'Informe posterior al ejercicio y plan de mejora', txt: 'Después de cada simulacro o emergencia: qué funcionó, qué no y por qué, brechas encontradas y un plan de mejora con acción, responsable, fecha y cómo se verifica (Vítolo, 2026).' },
   parte: { ico: 'campaign', titulo: 'Informe de derivaciones al COE', txt: 'Parte periódico para la mesa conjunta: cuántos llegaron y de dónde, cuántos salieron y a dónde, capacidad estimada que queda, necesidades y próximos pasos. La frecuencia se acuerda con el COE.' }
 };
 function vistaModelos() {
@@ -508,9 +511,11 @@ function vistaModelos() {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="tjImp" data-col=""><span class="ms">print</span>Imprimir las cuatro</button>
         ${PRIOR.map(p => `<button class="btn sec" data-act="tjImp" data-col="${p.n}" style="border-color:${p.c}"><span class="ms" style="color:${p.c}">print</span>${p.nombre.charAt(0) + p.nombre.slice(1).toLowerCase()}</button>`).join('')}
         <button class="btn sec" data-act="tjWord" data-col=""><span class="ms">download</span>Descargar en Word</button></div></div>
-    ${Object.keys(MODELOS).map(k => tarjeta(k, MODELOS[k].ico, MODELOS[k].titulo, MODELOS[k].txt)).join('')}`;
+    ${Object.keys(MODELOS).map(k => tarjeta(k, MODELOS[k].ico, MODELOS[k].titulo, MODELOS[k].txt)).join('')}
+    <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><b>Autoevaluación por escenario: imprimir uno solo</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${MADUREZ.map(e => `<button class="btn sec" data-act="madImp" data-esc="${e[0]}"><span class="ms">print</span>${e[0]} · ${E(e[1])}</button>`).join('')}</div></div>`;
 }
 function modeloHTML(id, r, word) {
+  if (MODELOS[id] && MODELOS[id].vit) return vitoloHTML(id, r, word);
   const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
   const ops = k => OPC[k].map(cas).join(' ');
   const fila = (l, val) => `<tr><td class="l">${E(l)}</td><td class="v">${val || ''}</td></tr>`;
@@ -610,6 +615,106 @@ function tarjetaWord(cual) {
   bajarWord('Tarjetas de prioridad de derivación' + (cual ? ' ' + cual : ''), `<style>${css}</style>` + tarjetasHTML(cual, redVista(), true), false);
 }
 
+/* ---------- Material de Vítolo (NOBLE): autoevaluaciones e informe posterior al ejercicio ---------- */
+let madEsc = '';
+function vitEncPie(r, word) {
+  const tw = /trelew/i.test(r.nombre);
+  const encV = word ? `<img src="https://hyslhmh-sudo.github.io/starh/${tw ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const pieV = word ? `<p style="font-size:7.5pt;color:#4B5B73">${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/starh/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
+  return { encV, pieV };
+}
+function vitoloHTML(id, r, word) {
+  if (id === 'madurez') return madurezHTML(madEsc, r, word);
+  const { encV, pieV } = vitEncPie(r, word);
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const fila = (l, h) => `<tr><td class="l">${E(l)}</td><td style="height:${h || 18}px"></td></tr>`;
+  const h2 = t => `<h2>${t}</h2>`;
+  const grilla = (cols, n) => `<table class="reg"><tr>${cols.map(c => `<td class="l">${c}</td>`).join('')}</tr>${Array.from({ length: n }, (_, i) => `<tr>${cols.map((c, j) => `<td style="height:22px">${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  if (id === 'autoeval') {
+    const P = [['Comando de incidentes', '¿Tenemos un comando de incidentes con puestos designados, fichas de acción propias y al menos dos personas entrenadas por puesto clave, incluido quien comanda (y la cadena de sucesión para decidir una evacuación)?'],
+      ['Ejercicios y mejora', '¿Hicimos al menos un ejercicio (de mesa, funcional o a escala completa) en los últimos 12 meses, con informe posterior y plan de mejora implementado?'],
+      ['Recursos críticos', '¿Sabemos cuántas horas funciona el establecimiento si fallan a la vez energía, agua y sistemas, y tenemos acuerdos de reabastecimiento formalizados?'],
+      ['Acuerdos de derivación', '¿Tenemos acuerdos vigentes con al menos dos establecimientos receptores por tipo de paciente y con el sistema de emergencias, verificados en el último año?'],
+      ['Compromiso directivo', '¿La conducción, y no solo quien coordina emergencias, conoce el plan, participó de un ejercicio y asigna recursos reales?']];
+    return `<section class="hoja">${encV}<div class="kick">AUTOEVALUACIÓN DE LA CONDUCCIÓN · ¿ESTÁ PREPARADO EL ESTABLECIMIENTO?</div>
+      <table class="reg">${fila('Establecimiento')}${fila('Completaron (nombres y cargos)')}<tr><td class="l">Fecha</td><td>___/___/______</td></tr></table>
+      <table class="reg" style="margin-top:8px"><tr><td class="l">Tema</td><td class="l">Pregunta</td><td class="l">Sí</td><td class="l">No</td><td class="l">No sé</td><td class="l">Qué falta y quién se ocupa</td></tr>
+      ${P.map(p => `<tr><td style="width:18%"><b>${E(p[0])}</b></td><td>${E(p[1])}</td><td style="width:6%">${cas('')}</td><td style="width:6%">${cas('')}</td><td style="width:7%">${cas('')}</td><td style="width:26%;height:48px"></td></tr>`).join('')}</table>
+      <p style="font-size:8pt;color:#4B5B73;margin-top:6px"><b>Un «No sé» es tan grave como un «No»:</b> si la conducción no lo sabe, no está operativo. Cada «No» o «No sé» se pasa al registro de acuerdos y seguimiento de tareas con responsable y plazo. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026).</p>${pieV}</section>`;
+  }
+  if (id === 'aar') return `<section class="hoja">${encV}<div class="kick">INFORME POSTERIOR AL EJERCICIO O A LA EMERGENCIA Y PLAN DE MEJORA</div>
+    <table class="reg">${fila('Ejercicio o emergencia')}<tr><td class="l">Tipo</td><td>${['De discusión', 'De mesa', 'Funcional', 'Integrado o a escala completa', 'Emergencia real'].map(cas).join(' ')}</td></tr><tr><td class="l">Fecha · duración</td><td>___/___/______ · ______</td></tr>${fila('Escenario y amenaza')}${fila('Participantes y organismos externos')}${fila('Objetivos que se querían comprobar', 30)}</table>
+    ${h2('1. Qué funcionó bien')}<table class="reg"><tr><td style="height:50px"></td></tr></table>
+    ${h2('2. Qué no funcionó y por qué')}<table class="reg"><tr><td style="height:60px"></td></tr></table>
+    ${h2('3. Plan de mejora')}${grilla(['N.º', 'Brecha encontrada (plan, procedimiento, equipamiento, comunicaciones, personal o coordinación)', 'Acción correctiva', 'Responsable', 'Fecha compromiso', 'Cómo se verifica'], 7)}
+    <table class="reg" style="margin-top:6px">${fila('Debriefing inmediato realizado (fecha y hora)')}${fila('Informe terminado el (recomendado: dentro de las 72 horas)')}${fila('Se compartió con')}${fila('Elaboró (nombre, cargo y firma)', 26)}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">El informe y el plan de mejora son el punto de partida del próximo ejercicio; el personal tiene que ver que las mejoras se implementan. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026).</p>${pieV}</section>`;  return '';
+}
+const MADUREZ = [
+  ['A', 'Incendio', [
+    ['Planificación y documentación', [['Plan de respuesta ante incendios documentado y accesible', '¿Está en cada sector, no solo en la dirección?'], ['Protocolo RACE formalizado y señalizado en cada sector', '¿RACE y PASS exhibidos junto a los matafuegos?'], ['Plano actualizado de barreras pasivas, válvulas de gases y matafuegos', 'Plano por sector con puertas cortafuego, válvulas de zona y extintores.'], ['Responsables por sector para cada paso de RACE', '¿Cada trabajador sabe quién cierra las válvulas de gases?']]],
+    ['Sistemas de protección (activos y pasivos)', [['Detección y alarma operativas y probadas', 'Última prueba documentada y registros.'], ['Rociadores instalados y con mantenimiento al día', 'En las áreas requeridas, sin cabezales tapados, pintados o corroídos.'], ['Matafuegos correctos por área, accesibles y vigentes', 'Vencimiento, señalización, sin obstáculos.'], ['Puertas cortafuego que cierran y sellan', '¿Alguna está trabada habitualmente? ¿Hay registros de inspección?'], ['Barreras de fuego y humo sin perforaciones sin sellar', '¿Cada obra de cableado o plomería repara las barreras?']]],
+    ['Entrenamiento del personal', [['Todo el personal conoce y ejecuta RACE', 'Incluye administrativos, cocina, servicios generales y turno noche.'], ['Personal entrenado en el uso de matafuegos (PASS)', 'Práctica con extintores reales o simuladores en el último año.'], ['Personal de cocina entrenado en fuego de aceites', 'Protocolo específico y capacitación.'], ['Personal nuevo capacitado en incendio durante la inducción', 'Con registro de asistencia.']]],
+    ['Evacuación ante incendio', [['Evacuación horizontal definida por sector', 'Compartimento seguro conocido y señalizado.'], ['Procedimiento para pacientes de terapia intensiva y dependientes', 'Protocolo para pacientes ventilados o en cama.'], ['Simulacro de incendio en los últimos 12 meses', 'Al menos uno con todos los turnos y con informe.']]],
+    ['Coordinación externa y recuperación', [['Relación establecida con bomberos locales', '¿Conocen el plano, las válvulas y el acceso vehicular?'], ['Evaluación posterior al incendio antes de reocupar áreas', 'Lista de habilitación estructural y sanitaria.'], ['Debriefing con informe posterior y plan de mejora', 'Informe con lecciones aprendidas.']]]]],
+  ['B', 'Corte de energía eléctrica', [
+    ['Planificación y documentación', [['Plan ante corte eléctrico', 'Incluye falla de red, falla del grupo electrógeno y falla parcial por sector.'], ['Inventario de equipos críticos y su circuito', '¿Normal o de emergencia?'], ['Modo degradado para los sistemas de información', 'Formularios en papel, prescripción manual y registros disponibles físicamente.'], ['Orden de desconexión de cargas definido', 'Aprobado por dirección médica y mantenimiento.']]],
+    ['Infraestructura de respaldo', [['Transferencia automática al grupo electrógeno en 10 segundos o menos', 'Medida y documentada.'], ['Grupo electrógeno probado bajo carga (30 % de su capacidad)', 'Con registros de los últimos 12 meses.'], ['Autonomía de combustible verificada', '96 horas o más para áreas críticas.'], ['Centro de comando con energía de emergencia propia', ''], ['Subestación y tableros fuera de zonas inundables', '']]],
+    ['Cadena de frío y equipos críticos', [['Protocolo para medicamentos que requieren frío ante un corte', 'Tiempos de exposición aceptables por medicamento.'], ['Heladeras de medicamentos y hemoderivados en circuito de emergencia', 'Verificadas en 12 meses, con registro de temperatura.'], ['Equipos de soporte vital con baterías verificadas', 'Ventiladores, monitores, bombas.']]],
+    ['Entrenamiento y comunicación', [['Personal entrenado en modo degradado', 'Trabajo con formularios en papel.'], ['Personal que conoce qué equipos desconectar y en qué orden', ''], ['Simulacro de corte en los últimos 12 meses', 'Con activación del modo degradado y registro.']]],
+    ['Acuerdos externos y recuperación', [['Registro como infraestructura crítica ante la distribuidora', 'Con constancia y contacto directo de emergencias.'], ['Acuerdo con proveedor de combustible para reabastecimiento de emergencia', 'Con tiempo de respuesta.'], ['Verificación de equipos antes de reconectar', 'Lista de reinicio seguro.']]]]],
+  ['C', 'Inundación', [
+    ['Planificación y evaluación del riesgo', [['Análisis de amenazas con riesgo hídrico actualizado', 'Cursos de agua, cotas históricas.'], ['Plan ante inundación con fase preventiva y reactiva', '¿Distingue inundación pluvial (rápida) de fluvial (con preaviso)?'], ['Infraestructura vulnerable identificada', 'Subsuelos, tableros, equipos en planta baja; mapa de vulnerabilidad.'], ['Criterios escritos para evacuar o refugiarse en el lugar', '¿Quién tiene autoridad para decidir?']]],
+    ['Mitigación estructural', [['Sistemas eléctricos críticos por encima del nivel de riesgo', 'Grupo electrógeno, subestación, tableros.'], ['Bombas de achique operativas y probadas', 'Con registro.'], ['Barreras en accesos vulnerables', 'Compuertas, bolsas de arena.'], ['Desagües limpiados antes de la temporada de lluvias', 'Mantenimiento preventivo documentado.']]],
+    ['Preparación operativa preventiva', [['Protocolo para subir equipamiento a pisos altos', 'Qué se mueve, adónde y en qué plazo.'], ['Suscripción a alertas meteorológicas e hidrológicas', 'Servicio Meteorológico Nacional, autoridad del agua provincial.'], ['Procedimiento de altas anticipadas ante alerta', 'Criterio clínico y quién autoriza.'], ['Reserva de combustible verificada antes de la temporada de riesgo', '']]],
+    ['Evacuación y continuidad', [['Plan de evacuación de pacientes críticos con destinos y transporte definidos', ''], ['Acuerdos con instituciones receptoras vigentes', 'Confirmados en 12 meses, al menos uno fuera del área de riesgo compartida.'], ['Análisis microbiológico del agua antes de volver a usarla', ''], ['Simulacro o ejercicio de mesa de inundación en los últimos 24 meses', 'Que incluya la decisión de evacuar y la coordinación con Protección Civil.']]],
+    ['Coordinación externa y recuperación', [['Relación formal con Protección Civil municipal y provincial', 'Contactos actualizados y ejercicios conjuntos.'], ['Evaluación estructural certificada antes de readmitir pacientes', ''], ['Plan de recuperación económica', 'Seguro, documentación de daños, gestión de fondos.']]]]],
+  ['D', 'Ciberataque y falla de sistemas', [
+    ['Planificación y política', [['Plan de respuesta a incidentes informáticos', 'Incluye secuestro de datos, saturación y falla de proveedores.'], ['Responsable de seguridad informática con autoridad para aislar sistemas', 'En los primeros minutos.'], ['Inventario de sistemas críticos y sus dependencias', ''], ['Política de contraseñas y accesos privilegiados', 'Contraseñas únicas y verificación en dos pasos.']]],
+    ['Respaldo y continuidad', [['Copias de seguridad fuera de línea y fuera del edificio', 'Con restauración de prueba documentada.'], ['Modo degradado clínico en papel en cada sector', 'Prescripción, administración de medicación e identificación de pacientes.'], ['Red segmentada para contener un ataque sin apagar todo', ''], ['Equipos médicos críticos que funcionan sin la red', '']]],
+    ['Entrenamiento del personal', [['Capacitación en correos engañosos (phishing) en el último año', ''], ['Personal clínico entrenado en modo degradado', 'Prescribir, registrar y verificar medicación sin sistema.'], ['Coordinadores de modo degradado por turno', ''], ['Simulacro de ciberataque en los últimos 24 meses', 'Con activación del modo degradado.']]],
+    ['Comunicación y notificación', [['Comunicación interna alternativa', 'Radios portátiles operativas y personal entrenado.'], ['Contactos de la Dirección Nacional de Ciberseguridad y procedimiento de aviso', ''], ['Mensajes públicos preaprobados', 'Sin detalles técnicos ni montos de rescate.']]],
+    ['Recuperación y mejora', [['Preservar evidencia antes de apagar o restaurar', 'Contacto con especialistas forenses.'], ['Restauración progresiva con orden de prioridad', 'Lista de verificación antes de cada reactivación.'], ['Contrato con proveedor de ciberseguridad con tiempo de respuesta', ''], ['Debriefing con actualización del plan', '']]]]],
+  ['E', 'Pandemia o brote', [
+    ['Planificación y vigilancia', [['Plan pandémico por fases', 'Preparación, respuesta, meseta y recuperación.'], ['Suscripción a alertas del Ministerio de Salud y de OPS/OMS', ''], ['Vigilancia interna de brotes', 'Ausentismo por enfermedad y casos agrupados.'], ['Umbrales para activar el comando de incidentes por etapas', '']]],
+    ['Control de infecciones', [['Circuitos diferenciados con acceso y triage propios', 'Diseñados, señalizados y probados.'], ['Equipos de protección personal para al menos 30 días', 'Barbijos N95, guantes, camisolines, protección ocular.'], ['Al menos dos proveedores alternativos de equipos de protección', 'Con entrega de emergencia.'], ['Entrenamiento supervisado en colocación y retiro de equipos de protección', 'En el último año.'], ['Salas de presión negativa verificadas en los últimos 12 meses', '']]],
+    ['Expansión de capacidad', [['Espacios de expansión de camas y terapia identificados', 'Con sus requerimientos de gases e instalaciones.'], ['Plan de personal para la expansión', 'Reasignación y acreditación rápida.'], ['Criterios de uso de recursos escasos con comité de ética', ''], ['Plan para reactivar servicios suspendidos', '']]],
+    ['Comunicación', [['Actualización diaria al personal por canal oficial', ''], ['Comunicación pública de los servicios que siguen abiertos', ''], ['Reporte periódico de camas y equipos de protección al Ministerio', '']]],
+    ['Salud del personal y recuperación', [['Apoyo psicológico para el personal con mecanismo de derivación', ''], ['Testeo y seguimiento del personal', 'Criterios de regreso y rastreo de contactos.'], ['Debriefing posterior con cambios en el plan', '']]]]],
+  ['F', 'Incidente con múltiples víctimas', [
+    ['Planificación y umbral de activación', [['Plan con umbral de activación según la capacidad real', ''], ['Niveles de respuesta con recursos para cada uno', '¿Qué se activa ante 5, 20 o 50 víctimas?'], ['Fichas de acción del comando de incidentes para víctimas múltiples', 'Con contactos, sectores y circuitos propios.'], ['Llamado masivo de personal probado en el último año', 'Con datos actualizados.']]],
+    ['Triage y área de recepción', [['Triage START adoptado y entrenado en la guardia', 'Con tarjetas disponibles.'], ['Área de triage identificada y señalizada', 'Fuera del circuito habitual.'], ['Material de triage suficiente y accesible', 'Tarjetas de colores, etiquetas, formularios de registro.'], ['Reclasificación continua con frecuencia definida', '']]],
+    ['Expansión de capacidad', [['Liberación inmediata de la guardia', 'Altas y pase a sala; quién lo autoriza.'], ['Quirófanos activables en 30 minutos o menos', 'Con protocolo probado.'], ['Cirugía de control de daños adoptada y entrenada', ''], ['Áreas de expansión para víctimas leves identificadas', '']]],
+    ['Comunicación y familias', [['Canal directo con el sistema de emergencias para informar capacidad', ''], ['Centro de asistencia a familias fuera del área clínica', 'Con espacio, personal y protocolo.'], ['Identificación y seguimiento de víctimas', 'Etiqueta con identificación y destino interno.'], ['Área de prensa que no interfiera con las ambulancias', 'Con mensajes preaprobados.']]],
+    ['Entrenamiento y coordinación comunitaria', [['Simulacro de víctimas múltiples en los últimos 24 meses', 'Con comando, triage, expansión y asistencia a familias.'], ['Ejercicio conjunto con el sistema de emergencias y otros hospitales', ''], ['Debriefing con informe posterior y plan de mejora', ''], ['Registro de los incidentes con víctimas múltiples atendidos', 'Fechas, víctimas, lecciones.']]]]]
+];
+function madurezHTML(cual, r, word) {
+  const { encV, pieV } = vitEncPie(r, word);
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const esc = MADUREZ.filter(e => !cual || e[0] === cual);
+  const escala = `<table class="reg" style="margin:4px 0 6px"><tr><td class="l">1 · No existe</td><td class="l">2 · Existe en papel</td><td class="l">3 · Entrenado</td><td class="l">4 · Verificado y vigente</td></tr>
+    <tr><td style="font-size:7.3pt">No hay plan, protocolo ni recurso.</td><td style="font-size:7.3pt">Hay un documento, pero no se entrenó ni se verificó.</td><td style="font-size:7.3pt">Existe y se entrenó, pero no se verificó en los últimos 12 meses.</td><td style="font-size:7.3pt">Entrenado y verificado o ejercitado en los últimos 12 meses.</td></tr></table>`;
+  const bandas = `<p style="font-size:7.6pt;color:#4B5B73;margin:4px 0"><b>Resultado:</b> promedio = suma ÷ cantidad de ítems. <b>1,00 a 1,75</b> preparación inicial (brechas críticas: plan de acción inmediato con plazos) · <b>1,76 a 2,50</b> en desarrollo (predominan documentos no entrenados: priorizar ejercicios) · <b>2,51 a 3,25</b> consolidada (trabajar los ítems con 1 o 2) · <b>3,26 a 4,00</b> avanzada (revisión anual e integración comunitaria).</p>`;
+  const hojas = esc.map(e => { let n = 0; const items = e[2].reduce((a, d) => a + d[1].length, 0);
+    return `<section class="hoja">${encV}<div class="kick">AUTOEVALUACIÓN DE PREPARACIÓN · ESCENARIO ${e[0]} · ${E(e[1].toUpperCase())}</div>
+      <table class="reg"><tr><td class="l">Establecimiento · fecha</td><td>______________________________ · ___/___/______</td></tr><tr><td class="l">Equipo evaluador (dirección médica, enfermería, mantenimiento, emergencias)</td><td style="height:24px"></td></tr></table>
+      ${escala}
+      <table class="reg"><tr><td class="l" style="width:4%">N.º</td><td class="l">Aspecto y pregunta guía</td><td class="l" style="width:20%">Puntaje</td><td class="l" style="width:22%">Evidencia que se revisó</td></tr>
+      ${e[2].map(d => `<tr><td colspan="4" style="background:#F5F7FB;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact">${E(d[0])}</td></tr>` + d[1].map(it => `<tr><td>${++n}</td><td><b>${E(it[0])}</b>${it[1] ? `<br><span style="font-size:7.3pt;color:#4B5B73">${E(it[1])}</span>` : ''}</td><td style="white-space:nowrap">${['1', '2', '3', '4'].map(cas).join('')}</td><td></td></tr>`).join('')).join('')}
+      <tr><td></td><td style="text-align:right"><b>Suma · promedio (${items} ítems)</b></td><td colspan="2">______ / ${items * 4} · promedio ______</td></tr></table>
+      ${bandas}
+      <table class="reg"><tr><td class="l">Observaciones y acciones prioritarias (pasarlas al registro de tareas con responsable y plazo)</td><td style="height:52px"></td></tr></table>
+      <p style="font-size:7.3pt;color:#4B5B73">Evaluar en equipo y con evidencia (planes, registros de simulacros, contratos, inventarios): sin evidencia, el puntaje no puede ser 3 ni 4. Un plan no entrenado equivale a no tener plan. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026), Anexo; bandas recalculadas sobre el promedio.</p>${pieV}</section>`; }).join('');
+  if (cual) return hojas;
+  return hojas + `<section class="hoja">${encV}<div class="kick">AUTOEVALUACIÓN DE PREPARACIÓN · TABLA CONSOLIDADA</div>
+    <table class="reg"><tr><td class="l">Establecimiento · fecha</td><td>______________________________ · ___/___/______</td></tr></table>
+    <table class="reg" style="margin-top:6px"><tr><td class="l">Dimensión (por orden en cada cuestionario)</td>${MADUREZ.map(e => `<td class="l">${e[0]} · ${E(e[1])}</td>`).join('')}</tr>
+    ${[1, 2, 3, 4, 5].map(i => `<tr><td><b>Dimensión ${i}</b><br><span style="font-size:7pt;color:#4B5B73">${['Planificación', 'Sistemas e infraestructura', 'Entrenamiento', 'Comunicación o evacuación', 'Coordinación y recuperación'][i - 1]}</span></td>${MADUREZ.map(() => '<td style="height:30px">____ / ____</td>').join('')}</tr>`).join('')}
+    <tr><td><b>Total · promedio</b></td>${MADUREZ.map(() => '<td style="height:30px">____ / ____<br>prom. ____</td>').join('')}</tr></table>
+    <ul style="font-size:8pt;color:#4B5B73;margin-top:8px"><li>Una columna con mayoría de 1 y 2: brecha crítica en ese escenario; priorizarlo.</li><li>Una fila baja en todos los escenarios: debilidad transversal; mejorarla mejora todo.</li><li>Mayoría de 2: la brecha principal es el entrenamiento, no la documentación.</li><li>Mayoría de 3: falta verificación; fijar un ciclo anual de revisión y ejercicio.</li><li>El objetivo no es sacar un puntaje alto, sino saber dónde están las brechas.</li></ul>${pieV}</section>`;
+}
+
+
 function modeloImprimir(id) { $('#imp').innerHTML = modeloHTML(id, redVista(), false); setTimeout(() => window.print(), 300); }
 function modeloWord(id) { const m = MODELOS[id]; bajarWord(m.titulo, modeloHTML(id, redVista(), true), m.apaisada); }
 function encImp(r) { return /trelew/i.test(r.nombre) ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">'; }
@@ -664,6 +769,7 @@ document.addEventListener('click', async ev => {
   const a = t.dataset.act;
   if (a === 'tjImp') return tarjetaImprimir(t.dataset.col);
   if (a === 'tjWord') return tarjetaWord(t.dataset.col);
+  if (a === 'madImp') { madEsc = t.dataset.esc; modeloImprimir('madurez'); madEsc = ''; return; }
   if (a === 'modImp') return modeloImprimir(t.dataset.mod);
   if (a === 'modWord') return modeloWord(t.dataset.mod);
   if (a === 'impInst') return imprimirInst();
