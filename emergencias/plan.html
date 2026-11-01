@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<script>/* 01/11/2026 · Por ahora la app solo comparte PHR: esta pantalla es solo para Administración.
+   Sin sesión de Administración se vuelve al inicio sin mostrar nada. (Los datos además los bloquea el servidor.) */
+(function(){var ok=false;try{var u=JSON.parse(localStorage.getItem('starh.usuario')||'null');ok=!!(u&&u.rol==='Administración'&&localStorage.getItem('starh.token'));}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plan de Evacuación y Autoprotección</title>
+<meta name="description" content="Carga de los datos del Plan de Evacuación y Autoprotección por establecimiento.">
+<meta name="theme-color" content="#7A2E0E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#7A2E0E;--medio:#C2410C;--claro:#FFEDD5;--borde:#F3C9A8;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#F4E2D4;--fondo:#FBF8F5;--papel:#fff;--radio:12px;
+  --sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga';user-select:none}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#7A2E0E 0%,#C2410C 100%);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;align-items:center;gap:6px;border-bottom:3px solid #FDBA74}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.88}
+.icono{background:transparent;border:0;color:#fff;height:40px;min-width:40px;padding:0 8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:980px;margin:0 auto;padding:14px 16px 110px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+h2{font-size:18px;margin:4px 0 10px;color:var(--fuerte)}
+h3{font-size:15px;margin:16px 2px 8px;color:var(--fuerte)}
+.sub{color:var(--suave);font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--medio);color:#fff;min-height:44px;text-decoration:none}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--medio)}
+.btn.mini{min-height:32px;padding:5px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default}
+.lista{display:grid;gap:10px}
+.est{padding:14px;display:grid;gap:6px;cursor:pointer;text-align:left;width:100%}
+.est:hover{border-color:var(--medio)}
+.est b{font-size:15px;color:var(--texto)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
+.chip.sd{background:#EEF2F7;color:#4B5B73}
+.chip.ok{background:#DCFCE7;color:#14532D}
+.volver{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--fuerte);font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:6px}
+.cab{padding:14px 16px;margin-bottom:12px;display:grid;gap:8px}.cab h2{margin:0}
+.acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.regla{background:#FFF8E6;border:1.5px solid #F2C14E;border-radius:12px;padding:10px 13px;font-size:13px;color:#3D2E00;margin-bottom:12px}
+.regla b{color:#5A3E00}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.tab{border:1px solid var(--linea);background:#fff;border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;color:var(--fuerte)}
+.tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.tabla-wrap{overflow-x:auto;border:1px solid var(--linea);border-radius:12px;background:#fff}
+.tabla{width:100%;border-collapse:collapse;font-size:13px}
+.tabla th,.tabla td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+.tabla th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#4B5B73;background:#FDF6F0;white-space:nowrap}
+.tabla tr.clic{cursor:pointer}.tabla tr.clic:hover td{background:#FFF7F0}
+.sdv{color:#7A5B00;background:#FFF3C4;border-radius:6px;padding:1px 5px;font-size:12px}
+.campo{display:block;margin:10px 0}
+.campo>span{display:block;font-size:12.5px;font-weight:700;color:var(--texto);margin-bottom:4px}
+.campo>small{display:block;font-size:11.5px;color:var(--tenue);margin-top:3px}
+.campo input,.campo textarea{width:100%;border:1px solid var(--borde);border-radius:10px;padding:9px 11px;background:#fff}
+.campo textarea{min-height:60px;resize:vertical}
+.campo input:focus,.campo textarea:focus{outline:none;border-color:var(--medio);box-shadow:0 0 0 3px var(--claro)}
+.campo .calc{background:#F5F7FB;border:1px dashed #C5D1F2;border-radius:10px;padding:9px 11px;color:var(--suave);font-size:14px}
+.cambiado{border-color:var(--medio)!important;background:#FFF7F0!important}
+.dlg{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
+.dlg-in{background:var(--fondo);width:100%;max-width:760px;max-height:100%;height:100%;display:flex;flex-direction:column}
+@media (min-width:800px){.dlg{align-items:center;padding:24px}.dlg-in{height:auto;max-height:94vh;border-radius:16px;overflow:hidden}}
+.dlg-cab{background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;display:flex;align-items:center;gap:8px}
+.dlg-cab b{flex:1}
+.dlg-cuerpo{overflow-y:auto;padding:12px 16px;flex:1}
+.dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);background:#172B4D;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px);border-left:5px solid var(--medio)}
+.vacio{padding:26px;text-align:center;color:var(--suave)}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:24px 22px}
+.msg{margin-top:10px;font-size:13.5px;padding:9px 11px;border-radius:10px;background:#fff;border:1.5px solid #F57C00}
+.ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.kpi{padding:12px}.kpi b{display:block;font-size:22px;color:var(--texto)}.kpi span{font-size:12px;color:var(--suave)}
+@media (max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="evac.html" aria-label="Volver a Gestión de contingencias"><span class="ms">arrow_back</span></a>
+  <h1 id="titulo">Plan de Evacuación y Autoprotección<small>Carga de datos por establecimiento · versión 0</small></h1>
+  <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
+  <button class="icono" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
+  <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Plan de Evacuación y Autoprotección · versión 0</p></footer>
+<div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
+const REGLA = '<div class="regla"><b>REGLA DE EDICIÓN (v1):</b> todo se corrige acá, en la app, o en la planilla del plan; nunca en el Doc, porque si el borrador se vuelve a generar lo corregido a mano se pierde. Lo propio de este establecimiento va en sus datos (Ficha) o en Textos propios. El texto común lo corrige solo la administradora, en «PLAN · Texto común». El Doc se toca a mano solo en la revisión final, antes del PDF.</div>';
+let cat = S.store.get('plan.cat', null), hojaCache = {}, editando = null;
+
+function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
+function ruta() { return (location.hash || '#/').slice(1).split('/').filter(Boolean).map(decodeURIComponent); }
+function ir(h) { location.hash = h; }
+const esSd = v => /^s\/d/i.test(String(v || '').trim());
+const celda = v => esSd(v) ? '<span class="sdv">' + E(v) + '</span>' : E(v);
+
+async function cargar(avisar) {
+  try {
+    const r = await S.api('plan_catalogo');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); cat = null; toast(r.error); return render(); } throw r; }
+    cat = r; S.store.set('plan.cat', r); hojaCache = {}; if (avisar) toast('Datos actualizados.'); render();
+  } catch (e) { toast((e && (e.error || e.message)) || 'Sin conexión: se muestra lo último guardado.'); render(); }
+}
+async function leerHoja(codigo, hoja, forzar) {
+  const k = codigo + '|' + hoja;
+  if (!forzar && hojaCache[k]) return hojaCache[k];
+  const r = await S.api('plan_hoja', { codigo: codigo, hoja: hoja });
+  if (!r.ok) throw r;
+  hojaCache[k] = r; S.store.set('plan.h.' + k, r); return r;
+}
+
+function render() {
+  const logueado = !!S.sesion.token();
+  $('#btnSalir').classList.toggle('oculto', !logueado);
+  $('#btnAct').classList.toggle('oculto', !logueado);
+  const r = ruta();
+  if (r[0] === 'ayuda') return vistaAyuda();
+  if (!logueado) return vistaIngreso();
+  if (!cat) { app.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
+  if (r[0] === 'p' && r[1]) return r[2] ? vistaHoja(r[1], r[2]) : vistaEstado(r[1]);
+  return vistaLista();
+}
+
+function vistaLista() {
+  if (!cat.planes.length) { app.innerHTML = REGLA + '<div class="tarjeta vacio">No tenés planes asignados. Consultá con Higiene y Seguridad Laboral.</div>'; return; }
+  app.innerHTML = REGLA + '<h2>Establecimientos</h2><div class="lista">' + cat.planes.map(p =>
+    `<button class="tarjeta est" data-ir="#/p/${encodeURIComponent(p.codigo)}"><b>${E(p.nombre)}</b>
+      <span class="acc"><span class="chip">${E(p.codigo)}</span><span class="chip">${E(p.estado || 'v0')}</span>${p.puedeCargar ? '' : '<span class="chip sd">Solo consulta</span>'}</span></button>`).join('') + '</div>';
+}
+
+async function vistaEstado(codigo) {
+  const p = cat.planes.find(x => x.codigo === codigo); if (!p) return ir('#/');
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Establecimientos</button>${REGLA}
+    <div class="tarjeta cab"><h2>${E(p.nombre)}</h2><div class="acc"><a class="btn sec mini" href="${E(p.planilla)}" target="_blank" rel="noopener"><span class="ms">table</span>Abrir la planilla del plan</a>${p.carpeta ? `<a class="btn sec mini" href="${E(p.carpeta)}" target="_blank" rel="noopener"><span class="ms">folder</span>Carpeta del plan</a>` : ''}</div></div>
+    <div id="est"><div class="vacio">Leyendo el estado del plan…</div></div>`;
+  try {
+    const r = await S.api('plan_estado', { codigo: codigo }); if (!r.ok) throw r;
+    const filas = r.hojas.reduce((a, h) => a + h.filas, 0), sd = r.hojas.reduce((a, h) => a + h.sd, 0);
+    $('#est').innerHTML = `<div class="kpis"><div class="tarjeta kpi"><b>${r.hojas.length}</b><span>secciones</span></div><div class="tarjeta kpi"><b>${filas}</b><span>filas cargadas</span></div><div class="tarjeta kpi"><b>${sd}</b><span>datos en «s/d (revisar)»</span></div></div>
+      <div class="lista">` + r.hojas.map(h => `<button class="tarjeta est" data-ir="#/p/${encodeURIComponent(codigo)}/${encodeURIComponent(h.hoja)}"><b>${E(h.titulo)}</b>
+        <span class="acc">${h.existe ? `<span class="chip">${h.filas} filas</span>${h.sd ? `<span class="chip sd">${h.sd} s/d</span>` : '<span class="chip ok">sin s/d</span>'}` : '<span class="chip sd">Falta la hoja en la planilla</span>'}</span></button>`).join('') + '</div>';
+  } catch (e) { $('#est').innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || 'No se pudo leer el estado.')}</div>`; }
+}
+
+async function vistaHoja(codigo, hoja, forzar) {
+  const p = cat.planes.find(x => x.codigo === codigo); if (!p) return ir('#/');
+  const tabs = cat.hojas.map(h => `<button class="tab" aria-pressed="${h.nombre === hoja}" data-ir="#/p/${encodeURIComponent(codigo)}/${encodeURIComponent(h.nombre)}">${E(h.titulo)}</button>`).join('');
+  app.innerHTML = `<button class="volver" data-ir="#/p/${encodeURIComponent(codigo)}"><span class="ms">arrow_back</span>${E(p.nombre)}</button><div class="tabs">${tabs}</div><div id="hoja"><div class="vacio">Cargando…</div></div>`;
+  let d;
+  try { d = await leerHoja(codigo, hoja, forzar); }
+  catch (e) { d = S.store.get('plan.h.' + codigo + '|' + hoja, null); if (!d) { $('#hoja').innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || 'No se pudo leer.')}</div>`; return; } toast('Sin conexión: se muestra lo último guardado.'); }
+  // Columnas a mostrar en la tabla: las primeras 4 no calculadas + Estado si existe.
+  const vis = []; d.cab.forEach((c, j) => { if (c && !d.calculadas[j] && vis.length < 4) vis.push(j); });
+  const jEst = d.cab.indexOf('Estado'); if (jEst >= 0 && vis.indexOf(jEst) < 0) vis.push(jEst);
+  const puede = d.puedeCargar;
+  $('#hoja').innerHTML = (hoja === 'TEXTOS PROPIOS' ? '<div class="regla">Un texto propio reemplaza al bloque común <b>solo en este establecimiento</b>. Copiá el código del bloque tal como está en el texto común (por ejemplo T-05-02) y escribí el texto completo que lo reemplaza. Con estado «Aprobado v0» entra limpio al borrador; con otro estado entra marcado para revisar.</div>' : '') +
+    `<div class="acc" style="margin-bottom:10px"><span class="sub" style="flex:1">${d.filas.length} filas · tocá una fila para ver o cargar sus datos.${d.calculadas.some(Boolean) ? ' Las columnas calculadas se completan solas en la planilla.' : ''}</span>
+      ${puede && d.nuevas ? '<button class="btn mini" data-act="nueva"><span class="ms">add</span>Agregar fila</button>' : ''}</div>
+    <div class="tabla-wrap"><table class="tabla"><thead><tr>${vis.map(j => `<th>${E(d.cab[j])}</th>`).join('')}</tr></thead><tbody>` +
+    (d.filas.length ? d.filas.map((f, i) => `<tr class="clic" data-i="${i}">${vis.map(j => `<td>${celda(f.valores[j])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${vis.length}" class="vacio">Sin filas todavía.</td></tr>`) +
+    '</tbody></table></div>';
+  $('#hoja').dataset.codigo = codigo; $('#hoja').dataset.hoja = hoja;
+  editando = { codigo: codigo, hoja: hoja, d: d };
+}
+
+function abrirFila(i) {
+  const d = editando.d, f = i == null ? null : d.filas[i], puede = d.puedeCargar;
+  const campos = d.cab.map((c, j) => {
+    if (!c) return '';
+    const v = f ? f.valores[j] : '';
+    if (d.calculadas[j]) return `<div class="campo"><span>${E(c)} <small style="display:inline;font-weight:500">(se calcula sola)</small></span><div class="calc">${celda(v) || '—'}</div></div>`;
+    const largo = String(v || '').length > 60 || /texto|observaciones|medida|descripci|cambios|motivo/i.test(c);
+    const ayudaLink = /enlace|evidencia/i.test(c) ? '<small>Pegá el enlace de Drive: hasta 5 fotos o un PDF.</small>' : '';
+    const attrs = `data-col="${E(c)}" data-orig="${E(v)}" ${puede ? '' : 'readonly'}`;
+    return `<label class="campo"><span>${E(c)}</span>${largo ? `<textarea ${attrs}>${E(v)}</textarea>` : `<input ${attrs} value="${E(v)}">`}${ayudaLink}</label>`;
+  }).join('');
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${E(cat.hojas.find(h => h.nombre === editando.hoja).titulo)} · ${f ? 'fila ' + f.fila : 'fila nueva'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo">${puede ? '' : '<p class="sub">Tu acceso es de consulta.</p>'}<p class="sub">Si un dato falta, escribí «s/d». No lo dejes vacío cuando ya lo buscaste.</p>${campos}</div>
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cerrar</button>${puede ? `<button class="btn" data-act="guardar" data-fila="${f ? f.fila : ''}"><span class="ms">save</span>Guardar</button>` : ''}</div></div>`;
+  $('#dlg').classList.remove('oculto');
+  $('#dlg').querySelectorAll('[data-col]').forEach(el => el.addEventListener('input', () => el.classList.toggle('cambiado', el.value !== el.dataset.orig)));
+}
+function cerrarDlg() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; }
+
+async function guardar(btn) {
+  const valores = {}; let n = 0;
+  $('#dlg').querySelectorAll('[data-col]').forEach(el => { if (el.value !== el.dataset.orig) { valores[el.dataset.col] = el.value; n++; } });
+  if (!n) { toast('No hay cambios.'); return; }
+  btn.disabled = true;
+  try {
+    const r = await S.api('plan_guardar', { codigo: editando.codigo, hoja: editando.hoja, fila: btn.dataset.fila || '', valores: valores });
+    if (!r.ok) throw r;
+    toast('Guardado en la planilla del plan.'); cerrarDlg(); vistaHoja(editando.codigo, editando.hoja, true);
+  } catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar. Revisá la conexión.'); btn.disabled = false; }
+}
+
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-ir],[data-act],tr.clic'); if (!t) return;
+  if (t.dataset.ir) return ir(t.dataset.ir);
+  if (t.matches('tr.clic')) return abrirFila(Number(t.dataset.i));
+  const a = t.dataset.act;
+  if (a === 'nueva') return abrirFila(null);
+  if (a === 'cerrar') return cerrarDlg();
+  if (a === 'guardar') return guardar(t);
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarDlg(); });
+window.addEventListener('hashchange', render);
+$('#btnAct').addEventListener('click', () => cargar(true));
+$('#btnAyuda').addEventListener('click', () => ir('#/ayuda'));
+$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('plan.cat'); render(); });
+
+function vistaIngreso() {
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo DNI y clave de STAR-H, PHR, ISH, COE y Evacuación.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
+    <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
+  $('#fIng').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target, m = $('#msg');
+    try { const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r;
+      if (r.usuario.plan === false) throw { error: 'Tu acceso no incluye el Plan de Evacuación y Autoprotección. Consultá con Higiene y Seguridad Laboral.' };
+      S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Cargando…</div>'; cargar(false); }
+    catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+  });
+}
+function vistaAyuda() {
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Volver</button>${REGLA}<div class="tarjeta ayuda"><h2>Ayuda · Plan de Evacuación y Autoprotección</h2>
+    <h3>Para quien carga datos</h3>
+    <ol><li>Elegí el establecimiento. La primera pantalla muestra cada sección del plan con cuántas filas tiene y cuántos datos faltan («s/d»).</li>
+      <li>Entrá a una sección y tocá una fila para ver todos sus datos. Cargá lo que relevaste y tocá «Guardar»: se escribe en la planilla del plan.</li>
+      <li>Si un dato falta, escribí «s/d». Nunca dejes vacío un dato que ya buscaste y no está.</li>
+      <li>Las columnas que dicen «se calcula sola» (resistencia al fuego exigida, anchos de salida, etc.) las calcula la planilla con el Anexo VII del Dto. 351/79: no se escriben.</li>
+      <li>Evidencia: pegá el enlace de Drive a las fotos o al PDF (hasta 5 fotos o un PDF por fila).</li>
+      <li>Si no tenés la app a mano, todo se puede cargar también en la planilla del plan (botón «Abrir la planilla del plan»).</li></ol>
+    <h3>Para la administradora</h3>
+    <ul><li>Cada establecimiento con plan es una fila de la hoja PLANES del libro de la app (código, ID de su planilla «PLAN · …» y de la carpeta). Para que un referente cargue, agregá PLAN en la columna Módulos de su fila en ACCESOS STAR-H.</li>
+      <li>El texto común se corrige solo en «PLAN · Texto común» (hoja TEXTOS) y vale para todos los establecimientos.</li>
+      <li>El borrador en Google Docs se genera por ahora desde la planilla del plan: menú Plan HyS › Generar borrador. «Página X de Y» se agrega a mano.</li>
+      <li>Todo queda en versión 0 hasta el alta. Sin PDF hasta la aprobación final.</li></ul>
+    <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79 (cap. 18, Anexo VII y cap. 21). La app es una base orientadora para preparar el plan; no es un registro en tiempo real. Complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
+}
+
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+if (S.sesion.token()) cargar(false);
+})();
+</script>
+</body>
+</html>

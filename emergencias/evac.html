@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestión de contingencias</title>
+<meta name="description" content="Fichas por establecimiento y por dependencia para los planes de evacuación.">
+<meta name="theme-color" content="#8E1B1B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;
+  --texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--papel:#fff;--radio:12px;
+  --sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga';user-select:none}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;align-items:center;gap:6px}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{background:transparent;border:0;color:#fff;height:40px;min-width:40px;padding:0 8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:920px;margin:0 auto;padding:14px 16px 110px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+h2{font-size:18px;margin:4px 0 10px;color:var(--fuerte)}
+h3{font-size:15px;margin:16px 2px 8px;color:var(--fuerte)}
+.sub{color:var(--suave);font-size:13px}
+.redes{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px}
+.red-tab{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.red-tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--fuerte);color:#fff;min-height:44px;text-decoration:none}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--borde)}
+.btn.mini{min-height:32px;padding:5px 9px;font-size:12.5px}
+.btn.peligro{background:#fff;color:#172B4D;border-color:#F57C00}
+.btn:disabled{opacity:.5;cursor:default}
+.lista{display:grid;gap:10px}
+.est{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%}
+.est-cab{display:flex;gap:10px;align-items:flex-start}.est-cab b{flex:1;font-size:15px;color:#172B4D}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
+.chip.pend{background:#F5F7FB;color:var(--suave)}
+.chip.ok{background:#2F5BEA;color:#FFFFFF}
+.barra-prog{height:6px;border-radius:99px;background:#F5F7FB;overflow:hidden}.barra-prog i{display:block;height:100%;background:var(--medio)}
+.pie{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--suave)}
+.buscar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.buscar input,.buscar select{border:1px solid #C5D1F2;border-radius:10px;padding:9px 11px;background:#fff;min-height:42px}
+.buscar input{flex:1;min-width:170px}
+.volver{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--fuerte);font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:6px}
+.cab{padding:14px 16px;margin-bottom:12px;display:grid;gap:8px}
+.cab h2{margin:0}
+.acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+details.sec{margin-bottom:10px}
+details.sec>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 14px;font-weight:700;color:var(--fuerte)}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary small{font-weight:600;color:var(--suave);font-size:12px}
+details.sec[open]>summary{border-bottom:1px solid var(--linea)}
+.campos{padding:6px 14px 12px;display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.campo{display:block;margin:9px 0}
+.campo.ancho{grid-column:1/-1}
+.campo>span{display:block;font-size:12.5px;font-weight:700;color:#172B4D;margin-bottom:4px}
+.campo>small{display:block;font-size:11.5px;color:var(--tenue);margin-top:3px}
+.campo input,.campo select,.campo textarea{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:9px 11px;background:#fff}
+.campo textarea{min-height:62px;resize:vertical}
+.campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--medio);box-shadow:0 0 0 3px var(--claro)}
+.ops{display:flex;gap:6px;flex-wrap:wrap}
+.op{border:1.5px solid #C5D1F2;background:#fff;border-radius:9px;padding:7px 11px;cursor:pointer;font-weight:600;font-size:13.5px}
+.op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
+.cambiado{border-color:#2F5BEA!important}
+.flotante{position:fixed;left:0;right:0;bottom:0;z-index:25;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:10px;justify-content:center;align-items:center;box-shadow:0 -4px 14px rgba(27,42,65,.08)}
+.dep{padding:12px 14px;display:flex;gap:10px;align-items:center;cursor:pointer;width:100%;text-align:left}
+.dep b{flex:1;color:#172B4D}
+.dlg{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
+.dlg-in{background:var(--fondo);width:100%;max-width:760px;max-height:100%;height:100%;display:flex;flex-direction:column}
+@media (min-width:800px){.dlg{align-items:center;padding:24px}.dlg-in{height:auto;max-height:94vh;border-radius:16px;overflow:hidden}}
+.dlg-cab{background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;display:flex;align-items:center;gap:8px}
+.dlg-cab b{flex:1}
+.dlg-cuerpo{overflow-y:auto;padding:12px 14px;flex:1}
+.dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 80px);transform:translateX(-50%);background:#172B4D;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
+.vacio{padding:26px;text-align:center;color:var(--suave)}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:24px 22px}
+.msg{margin-top:10px;font-size:13.5px;padding:9px 11px;border-radius:10px;background:#FFE5CC;color:#172B4D}
+.ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+/* impresión */
+.imp{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body{background:#fff;font-size:9pt}
+  .barra,main,footer,.flotante,.dlg,.toast{display:none!important}
+  .imp{display:block}
+  .imp h1{font-size:13pt;color:var(--fuerte);margin:0 0 2px}.imp .kick{font-size:7.5pt;color:var(--medio);font-weight:700;letter-spacing:.06em}
+  .imp h2{font-size:10.5pt;margin:10px 0 4px;border-bottom:1.5px solid var(--fuerte)}
+  .imp table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  .imp td{border:1px solid #C5D1F2;padding:4px 6px;vertical-align:top}
+  .imp td.l{width:42%;background:var(--claro);font-weight:700;color:var(--fuerte)}
+  .imp td.v{height:20px}
+  .imp .hoja{break-after:page}.imp .hoja:last-child{break-after:auto}
+  .imp .pieimp{margin-top:6px;text-align:center;font-size:7.5pt;color:var(--suave)}
+  .imp .pieimp .pt{display:flex;justify-content:space-between;text-align:left;margin-bottom:4px}
+  .imp .pieimp img{width:66.67%;height:auto;max-height:10mm;object-fit:contain}
+}
+@media (max-width:640px){.campos{grid-template-columns:1fr}}
+/* ---------- Paleta de esta app (alerta de triaje): #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D ----------
+   Azul pálido de base, azul brillante para acciones, azul marino para texto; el coral solo para errores y acciones de alto riesgo. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--coral:#F57C00;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB}
+.barra,.dlg-cab{background:#172B4D;color:#F5F7FB;border-bottom:3px solid #2F5BEA}
+.btn{background:#2F5BEA;color:#FFFFFF}
+.btn:hover{filter:brightness(1.05)}
+.btn.sec{background:#fff;color:#172B4D;border-color:#2F5BEA}
+.btn.peligro{background:#fff;color:#172B4D;border-color:#F57C00;box-shadow:inset 4px 0 0 #F57C00}
+.red-tab{border-color:#E4EAFB}
+.red-tab[aria-pressed="true"]{background:#172B4D;color:#F5F7FB;border-color:#172B4D}
+.tarjeta{border-color:#E4EAFB;box-shadow:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
+.est:hover,.dep:hover{border-color:#2F5BEA}
+.chip{background:#E4EAFB;color:#172B4D}
+.chip.pend{background:#F5F7FB;color:#172B4D;border:1px dashed #2F5BEA}
+.chip.ok{background:#172B4D;color:#F5F7FB}
+.barra-prog{background:#E4EAFB}.barra-prog i{background:#2F5BEA}
+.op{border-color:#C5D1F2}
+.op[aria-pressed="true"]{border-color:#2F5BEA;background:#E4EAFB;color:#172B4D}
+.campo>span,.est-cab b,.dep b{color:#172B4D}
+.campo input,.campo select,.campo textarea,.buscar input,.buscar select{border-color:#C5D1F2}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:#2F5BEA;box-shadow:0 0 0 3px #E4EAFB}
+.cambiado{border-color:#2F5BEA!important;background:#F5F7FB}
+.flotante{border-top:3px solid #2F5BEA;background:#fff}
+.flotante .sub{color:#172B4D;font-weight:700}
+.toast{background:#172B4D;color:#F5F7FB;border-left:5px solid #2F5BEA}
+.toast.error{border-left-color:#F57C00}
+.msg{background:#fff;color:#172B4D;border:1.5px solid #F57C00;box-shadow:inset 5px 0 0 #F57C00}
+.critico{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;padding:3px 8px;border-radius:999px;background:#F57C00;color:#172B4D}
+.datos-donde{padding:12px 14px;margin-bottom:12px;font-size:13.5px;background:#fff}
+.datos-donde a{color:#172B4D;font-weight:700}
+footer p{color:#4B5B73}
+@media print{.imp td{border-color:#C5D1F2}.imp td.l{background:#E4EAFB;color:#172B4D}.imp h2{border-bottom-color:#2F5BEA}.imp .kick{color:#172B4D}}
+ /* Evacuación = respuesta a emergencias: tonos rojos */
+:root{--fuerte:#8E1B1B;--medio:#D32F2F;--claro:#FDECEA;--borde:#F5C2BE;--fondo:#FAF7F7}
+body{background:#FAF7F7}
+.barra,.dlg-cab{background:linear-gradient(135deg,#8E1B1B 0%,#C62828 100%);color:#fff;border-bottom:3px solid #FF8A80}
+.btn{background:#D32F2F;color:#fff}
+.btn.sec{background:#fff;color:#8E1B1B;border-color:#D32F2F}
+.btn.peligro{color:#8E1B1B;border-color:#F57C00;box-shadow:inset 4px 0 0 #F57C00}
+.red-tab[aria-pressed="true"]{background:#8E1B1B;color:#fff;border-color:#8E1B1B}
+.tarjeta{border-color:#F3DADA}
+.est:hover,.dep:hover{border-color:#D32F2F}
+.barra-prog{background:#FDECEA}.barra-prog i{background:#D32F2F}
+.op{border-color:#F5C2BE}
+.op[aria-pressed="true"]{border-color:#D32F2F;background:#FDECEA;color:#7F1D1D}
+.chip{background:#FDECEA;color:#7F1D1D}
+.chip.pend{background:#fff;color:#4B5B73;border:1px dashed #F5C2BE}
+.chip.ok{background:#C8E6C9;color:#1B5E20}
+.campo input,.campo select,.campo textarea,.buscar input,.buscar select{border-color:#E9C9C6}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:#D32F2F;box-shadow:0 0 0 3px #FDECEA}
+.cambiado{border-color:#D32F2F!important;background:#FFF7F6}
+.flotante{border-top-color:#D32F2F}
+.toast{border-left-color:#D32F2F}
+.critico{background:#D32F2F;color:#fff}
+.datos-donde a,.volver,h2,h3,details.sec>summary{color:#8E1B1B}
+@media print{.imp td{border-color:#E9C9C6}.imp td.l{background:#FDECEA;color:#7F1D1D}.imp h2{border-bottom-color:#D32F2F;color:#8E1B1B}.imp h1{color:#8E1B1B}.imp .kick{color:#C62828}}
+.secciones-tabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.stab{border:1px solid #F3DADA;background:#fff;border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center;color:#8E1B1B}
+.stab[aria-pressed="true"]{background:#8E1B1B;color:#fff;border-color:#8E1B1B}
+.sem{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.sem.v{background:#C8E6C9;color:#1B5E20}.sem.a{background:#FFF3C4;color:#5D4500}.sem.n{background:#FFD8B0;color:#7A3300}.sem.r{background:#D32F2F;color:#fff}.sem.g{background:#EEF2F7;color:#4B5B73}
+.inst{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%}
+.inst b{font-size:15px;color:#172B4D}
+.camas{display:flex;gap:6px;flex-wrap:wrap}
+.cama{font-size:12px;background:#F5F7FB;border:1px solid #DCE3EF;border-radius:8px;padding:3px 7px}
+.tabla-wrap{overflow-x:auto;border:1px solid #F3DADA;border-radius:12px;background:#fff}
+.tabla{width:100%;border-collapse:collapse;font-size:13px}
+.tabla th,.tabla td{padding:7px 8px;border-bottom:1px solid #F3DADA;text-align:left;vertical-align:middle}
+.tabla th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#4B5B73;background:#FDF5F5}
+.tabla td.num,.tabla th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tabla tr.clic{cursor:pointer}.tabla tr.clic:hover td{background:#FFF7F6}
+.grilla-camas{width:100%;border-collapse:collapse;font-size:13px}
+.grilla-camas td,.grilla-camas th{padding:5px 6px;border-bottom:1px solid #F3DADA;text-align:left}
+.grilla-camas input{width:84px;border:1px solid #E9C9C6;border-radius:8px;padding:6px 8px}
+.tj-mini{display:flex;gap:6px;flex-wrap:wrap}.tj-mini span{border-radius:8px;padding:5px 10px;font-size:12.5px}
+.tj{display:none}
+@media print{.imp .tj-hoja{display:block}.imp .tj{display:block;border:1.5px solid #172B4D;border-radius:6px;padding:7px 9px;height:132mm;box-sizing:border-box;break-inside:avoid;margin-bottom:2mm;overflow:hidden}
+  .imp .tj:nth-child(2n){break-after:page}.imp .tj-banda{padding:5px 10px;margin:3px 0 4px;border-radius:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .imp .tj-cab td{border:0;padding:0;font-size:9pt}.imp .tj-t td{font-size:7.4pt;padding:1.5px 5px;height:12px}.imp .tj-t td.l{width:24%}
+  .imp .tj-talon{border-top:1.5px dashed #4B5B73;margin-top:5px;padding-top:3px;font-size:7pt}.imp .tj-talon td{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+.aviso-datos{font-size:12.5px;color:#7F1D1D;background:#FDECEA;border-radius:10px;padding:8px 11px;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.kpi{padding:12px}.kpi b{display:block;font-size:22px;color:#172B4D}.kpi span{font-size:12px;color:#4B5B73}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media print{.imp .reg td{height:24px;font-size:8pt}.imp .reg td.l{width:auto;height:auto;font-size:7pt}.imp .hoja.apaisada{page:apaisada}@page apaisada{size:A4 landscape;margin:10mm}body{background:#fff!important}.imp .f260 td{height:22px}.imp .casilla{display:inline-block;width:10px;height:10px;border:1px solid #7F1D1D;margin:0 3px 0 8px;vertical-align:-1px}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1 id="titulo">Gestión de contingencias<small>Plan de Evacuación y Autoprotección · fichas por establecimiento y dependencia</small></h1>
+  <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
+  <button class="icono oculto" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
+  <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Gestión de contingencias</p></footer>
+<div id="flot" class="flotante oculto"><span class="sub" id="flotTxt">Hay cambios sin guardar</span><button class="btn" data-act="guardarEst"><span class="ms">save</span>Guardar ficha</button></div>
+<div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
+<div id="imp" class="imp"></div>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
+let cat = S.store.get('evac.cat', null), redActual = S.store.get('evac.red', ''), q = '', fTipo = '';
+let borrador = null, borradorDep = null, ocupado = false;
+if (cat && !cat.camas) cat = null; // datos guardados de una versión anterior: se vuelven a pedir
+
+function toast(t, error) { const d = document.createElement('div'); d.className = 'toast' + (error ? ' error' : ''); d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
+function tema() { /* esta app usa siempre su paleta propia (ver estilos) */ }
+const red = n => cat && cat.redes.find(r => r.nombre === n);
+const camposDe = (r, ficha) => r.campos.filter(c => c.ficha === ficha);
+const secciones = l => { const o = []; l.forEach(c => { let s = o.find(x => x.n === c.seccion); if (!s) o.push(s = { n: c.seccion, c: [] }); s.c.push(c); }); return o; };
+const lleno = v => v != null && String(v).trim() !== '';
+const avance = (obj, l) => l.length ? Math.round(l.filter(c => lleno(obj[c.clave])).length * 100 / l.length) : 0;
+const chipEstado = e => `<span class="chip ${/Completa|Validada/.test(e) ? 'ok' : /En curso/.test(e) ? '' : 'pend'}">${E(e || 'Pendiente')}</span>`;
+
+async function cargar(avisar) {
+  if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return render(); }
+  try {
+    const r = await S.api('evac_catalogo');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); cat = null; toast(r.error); return render(); } throw r; }
+    cat = r; S.store.set('evac.cat', r); if (avisar) toast('Datos actualizados.'); render();
+  } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudieron traer los datos.'; if (!cat) app.innerHTML = `<div class="tarjeta vacio">${E(m)}</div>`; else toast(m); }
+}
+
+/* ---------- campos ---------- */
+function campoHTML(c, v, dis, pref) {
+  const id = pref + c.clave, val = v == null ? '' : String(v), a = `data-k="${E(c.clave)}" id="${E(id)}" ${dis}`;
+  const ancho = c.tipo === 'largo' || c.tipo === 'multi' || c.campo.length > 60;
+  let ctl;
+  if (c.tipo === 'largo') ctl = `<textarea ${a}>${E(val)}</textarea>`;
+  else if (c.tipo === 'sino') ctl = `<div class="ops" data-op="${E(c.clave)}">${['Sí', 'No', 's/d'].map(o => `<button type="button" class="op" data-v="${o}" aria-pressed="${val === o}" ${dis}>${o}</button>`).join('')}</div>`;
+  else if (c.tipo === 'multi') { const sel = val.split(';').map(s => s.trim()); ctl = `<div class="ops" data-multi="${E(c.clave)}">${c.opciones.map(o => `<button type="button" class="op" data-v="${E(o)}" aria-pressed="${sel.indexOf(o) >= 0}" ${dis}>${E(o)}</button>`).join('')}</div>`; }
+  else if (c.tipo === 'lista') ctl = `<select ${a}><option value="">s/d</option>${c.opciones.map(o => `<option ${o === val ? 'selected' : ''}>${E(o)}</option>`).join('')}${val && c.opciones.indexOf(val) < 0 ? `<option selected>${E(val)}</option>` : ''}</select>`;
+  else if (c.tipo === 'numero' || c.tipo === 'porcentaje') ctl = `<input ${a} inputmode="decimal" value="${E(val)}" placeholder="${c.tipo === 'porcentaje' ? '0 a 100' : 's/d'}">`;
+  else if (c.tipo === 'fecha') ctl = `<input ${a} value="${E(val)}" placeholder="dd/mm/aaaa">`;
+  else if (c.tipo === 'telefono') ctl = `<input ${a} inputmode="tel" value="${E(val)}">`;
+  else if (c.tipo === 'correo') ctl = `<input ${a} type="email" value="${E(val)}">`;
+  else ctl = `<input ${a} value="${E(val)}">`;
+  return `<label class="campo ${ancho ? 'ancho' : ''}" ${c.tipo === 'sino' || c.tipo === 'multi' ? 'onclick="event.preventDefault()"' : ''}><span>${E(c.campo)}</span>${ctl}${c.ayuda ? `<small>${E(c.ayuda)}</small>` : ''}</label>`;
+}
+function seccionesHTML(l, obj, dis, pref, abrirPrimera) {
+  return secciones(l).map((s, i) => { const n = s.c.filter(c => lleno(obj[c.clave])).length;
+    return `<details class="tarjeta sec" ${abrirPrimera && i === 0 ? 'open' : ''}><summary>${E(s.n)}<small>${n} de ${s.c.length}</small></summary><div class="campos">${s.c.map(c => campoHTML(c, obj[c.clave], dis, pref)).join('')}</div></details>`; }).join('');
+}
+function atarCampos(cont, b) {
+  cont.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k) { b.datos[k] = ev.target.value; ev.target.classList.add('cambiado'); avisarCambios(); } });
+  cont.addEventListener('change', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k) { b.datos[k] = ev.target.value; ev.target.classList.add('cambiado'); avisarCambios(); } });
+  cont.addEventListener('click', ev => {
+    const o = ev.target.closest('.op'); if (!o || o.disabled) return;
+    const g = o.parentElement;
+    if (g.dataset.op) { g.querySelectorAll('.op').forEach(x => x.setAttribute('aria-pressed', x === o)); b.datos[g.dataset.op] = o.dataset.v; }
+    else if (g.dataset.multi) { o.setAttribute('aria-pressed', o.getAttribute('aria-pressed') !== 'true'); b.datos[g.dataset.multi] = [...g.querySelectorAll('.op[aria-pressed=true]')].map(x => x.dataset.v).join('; '); }
+    g.classList.add('cambiado'); avisarCambios();
+  });
+}
+function avisarCambios() { if (borrador && Object.keys(borrador.datos).length && !borradorDep) $('#flot').classList.remove('oculto'); }
+
+/* ---------- vistas ---------- */
+function render() {
+  $('#flot').classList.add('oculto');
+  const logueado = !!S.sesion.token();
+  ['btnAct', 'btnSalir', 'btnAyuda'].forEach(b => $('#' + b).classList.toggle('oculto', !logueado));
+  if (!logueado) return vistaIngreso();
+  if (!cat) { app.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
+  const p = (location.hash || '#/').slice(2).split('/').map(decodeURIComponent);
+  if (p[0] === 'ayuda') return vistaAyuda();
+  if (!esAdmin() && ['inst', 'albergues', 'criterios', 'modelos', 'evacuados', 'ayuda'].indexOf(p[0]) < 0) return ir('#/inst');
+  if (p[0] === 'est' && red(p[1])) return vistaEst(p[1], p[2]);
+  if (p[0] === 'inst') return vistaInst();
+  if (p[0] === 'albergues') return vistaAlb();
+  if (p[0] === 'criterios') return vistaCrit();
+  if (p[0] === 'modelos' || p[0] === 'evacuados') return vistaModelos();
+  return vistaInicio();
+}
+function vistaInicio() {
+  borrador = null;
+  if (!cat.redes.length) { app.innerHTML = '<div class="tarjeta vacio">No hay planillas de evacuación activas (hoja REDES EVAC del libro) o tu acceso no tiene establecimientos asignados.</div>'; return; }
+  if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual);
+  const r = red(redActual); tema(r.nombre);
+  $('#titulo').innerHTML = `Evacuación · ${E(r.nombre)}<small>Fichas por establecimiento y dependencia</small>`;
+  const lc = camposDe(r, 'Establecimiento'), tipos = [...new Set(r.establecimientos.map(e => e.tipo).filter(Boolean))];
+  const l = r.establecimientos.filter(e => (!fTipo || e.tipo === fTipo) && (!q || (e.nombre + ' ' + e.codigo).toLowerCase().indexOf(q.toLowerCase()) >= 0));
+  app.innerHTML = `${redesTabs(r)}${secTabs('fichas')}
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar establecimiento" value="${E(q)}"><select id="fTipo"><option value="">Todos los tipos</option>${tipos.map(t => `<option ${t === fTipo ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></div>
+    <div class="tarjeta datos-donde"><b>Base orientadora para planificar:</b> no es un registro en tiempo real. Las fichas reúnen valores habituales o estimados (ocupación, personal, pacientes por movilidad) que se revisan periódicamente.<br><b>Dónde se guardan los datos:</b> en la planilla EVAC de cada red (Google Sheets), a través del Apps Script del sistema. Lo que se carga acá queda en las hojas ESTABLECIMIENTOS y DEPENDENCIAS, y también se puede cargar o corregir directamente ahí.
+      ${cat.redes.filter(x => x.planilla).map(x => `<br><a href="${E(x.planilla)}" target="_blank" rel="noopener">Abrir planilla EVAC · ${E(x.nombre)}</a>`).join('')}</div>
+    <div class="lista">${l.map(e => { const av = avance(e, lc), nd = r.dependencias.filter(d => d.codigo === e.codigo).length;
+      return `<button class="tarjeta est" data-ir="#/est/${encodeURIComponent(r.nombre)}/${encodeURIComponent(e.codigo)}"><div class="est-cab"><b>${E(e.nombre)}</b>${chipEstado(e.estado)}</div>
+        <div class="barra-prog" aria-label="${av} % completo"><i style="width:${av}%"></i></div>
+        <div class="pie"><span>${E(e.codigo)} · ${E(e.tipo || 's/d')}</span><span>Ficha ${av} % completa</span><span>${nd} dependencia${nd === 1 ? '' : 's'}</span>${e.actualizado ? `<span>Actualizado ${E(e.actualizado)}</span>` : ''}</div></button>`; }).join('') || '<div class="tarjeta vacio">Sin resultados.</div>'}</div>`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaInicio(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+  $('#fTipo').addEventListener('change', ev => { fTipo = ev.target.value; vistaInicio(); });
+}
+function vistaEst(redN, cod) {
+  const r = red(redN), e = r.establecimientos.find(x => x.codigo === cod); if (!e) return ir('#/');
+  tema(r.nombre); redActual = redN;
+  $('#titulo').innerHTML = `${E(e.codigo)} · ${E(e.nombre)}<small>${E(r.nombre)} · Evacuación</small>`;
+  const puede = e.puedeCargar !== false, dis = puede ? '' : 'disabled', lc = camposDe(r, 'Establecimiento');
+  if (!borrador || borrador.codigo !== cod) borrador = { red: redN, codigo: cod, datos: {} };
+  const obj = Object.assign({}, e, borrador.datos);
+  const deps = r.dependencias.filter(d => d.codigo === cod), ld = camposDe(r, 'Dependencia');
+  app.innerHTML = `<button class="volver" data-act="volver"><span class="ms">arrow_back</span>Establecimientos</button>
+    <div class="tarjeta cab"><h2>${E(e.nombre)}</h2><div class="sub">${E(e.codigo)} · ${E(e.tipo || 's/d')} · ficha ${avance(obj, lc)} % completa${e.actualizado ? ' · actualizada ' + E(e.actualizado) + (e.por ? ' por ' + E(e.por) : '') : ''}</div>
+      <div class="acc"><label class="sub">Estado de la ficha <select id="selEstado" ${dis}>${cat.estados.map(s => `<option ${s === (e.estado || 'Pendiente') ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+        <button class="btn sec mini" data-act="imprimir" data-modo="cargado"><span class="ms" style="font-size:17px">print</span>Imprimir con lo cargado</button>
+        <button class="btn sec mini" data-act="imprimir" data-modo="blanco"><span class="ms" style="font-size:17px">print</span>Imprimir en blanco</button></div></div>
+    <h3>Ficha del establecimiento</h3><div id="fichaEst">${seccionesHTML(lc, obj, dis, 'e_', true)}</div>
+    <h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px">Dependencias (${deps.length})${puede ? '<button class="btn mini" data-act="nuevaDep"><span class="ms" style="font-size:17px">add</span>Agregar dependencia</button>' : ''}</h3>
+    <p class="sub" style="margin:0 2px 8px">Una ficha por servicio, sector o área: internación, terapia, quirófano, guardia, consultorios, administración… Las áreas críticas primero.</p>
+    <div class="lista">${deps.map(d => `<button class="tarjeta dep" data-dep="${E(d.id)}"><span class="ms">meeting_room</span><b>${E(d.nombre)}<span class="sub" style="display:block;font-weight:500">${E([d.uso, d.sector, d.piso ? 'piso ' + d.piso : ''].filter(Boolean).join(' · ') || 's/d')}</span></b>${Number(d.pac_soporte) > 0 ? `<span class="critico" title="Pacientes con soporte vital: requieren el doble de personal para evacuar">${E(d.pac_soporte)} con soporte vital</span>` : ''}${chipEstado(d.estado)}<span class="sub">${avance(d, ld)} %</span></button>`).join('') || '<div class="tarjeta vacio">Todavía no hay dependencias cargadas.</div>'}</div>`;
+  atarCampos($('#fichaEst'), borrador);
+  const se = $('#selEstado'); if (se) se.addEventListener('change', () => { borrador.estado = se.value; avisarCambios(); $('#flot').classList.remove('oculto'); });
+  if (Object.keys(borrador.datos).length || borrador.estado) $('#flot').classList.remove('oculto');
+}
+function ir(h) { if (location.hash !== h) location.hash = h; else render(); }
+
+async function guardar(req, ok) {
+  if (ocupado) return false;
+  if (!navigator.onLine) { toast('Para guardar se necesita conexión. Los cambios siguen en pantalla.'); return false; }
+  ocupado = true;
+  try { const r = await S.api('evac_guardar', req); if (!r.ok) throw r; toast(ok); await cargar(false); return r; }
+  catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.', true); return false; }
+  finally { ocupado = false; }
+}
+
+/* ---------- dependencias ---------- */
+/* ---------- traslados y derivación (base orientadora para planificar) ---------- */
+function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes">${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''; }
+// 01/11/2026 · Quien no es Administración ve solo la red de derivación (receptoras, albergues, criterios y planillas modelo), sin cargar.
+function esAdmin() { return !!(cat && cat.usuario && cat.usuario.rol === 'Administración'); }
+const SOLO_RED = ['inst', 'alb', 'crit', 'modelos'];
+function secTabs(act) {
+  return `<div class="secciones-tabs">${[['fichas', '#/', 'domain', 'Fichas de evacuación'], ['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['crit', '#/criterios', 'handshake', 'Criterios con el COE'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['plan', 'plan.html', 'assignment', 'Plan de Evacuación y Autoprotección']].filter(t => esAdmin() || SOLO_RED.indexOf(t[0]) >= 0)
+    .map(t => t[1].endsWith('.html') ? `<a class="stab" href="${t[1]}" style="text-decoration:none"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</a>` : `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>`;
+}
+function redVista() { if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual); return red(redActual); }
+const semAcuerdo = v => !v ? '<span class="sem g">Acuerdo s/d</span>' : /formal/i.test(v) ? `<span class="sem v">${E(v)}</span>` : /informal/i.test(v) ? `<span class="sem a">${E(v)}</span>` : /Sin/i.test(v) ? `<span class="sem n">${E(v)}</span>` : `<span class="sem g">${E(v)}</span>`;
+const semGuardia = v => !v ? '' : /^Sí/.test(v) ? '<span class="sem v">Guardia 24 h</span>' : /No tiene/.test(v) ? '<span class="sem n">Sin guardia</span>' : `<span class="sem g">${E(v)}</span>`;
+const num = v => { const n = Number(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
+const AVISO_EST = '<div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: las camas son una <b>estimación</b> de lo que cada institución podría recibir, no camas disponibles reales. En una emergencia la disponibilidad se confirma con cada institución.</div>';
+
+function vistaInst() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Instituciones receptoras · ${E(r.nombre)}<small>Derivación de pacientes · capacidad estimada</small>`;
+  const l = (r.instituciones || []).filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.recibe_de).toLowerCase().indexOf(q.toLowerCase()) >= 0);
+  const tot = k => (r.instituciones || []).reduce((a, x) => a + num(x[k]), 0);
+  const arm = (r.instituciones || []).filter(x => x.arm === 'Sí').length;
+  app.innerHTML = `${redesTabs(r)}${secTabs('inst')}${AVISO_EST}
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar institución o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaInst"><span class="ms">add</span>Agregar institución</button>' : ''}
+      <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
+    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Capacidad estimada de recepción de la red de derivación</b> <span class="sub">(suma de lo que podrían recibir todas las instituciones; categorías HAvBED)</span>
+      <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo de cama</th><th class="num">Camas estimadas</th><th class="num">Destinos</th></tr>
+      ${cat.camas.map(c => { const n = (r.instituciones || []).filter(x => num(x[c[0] + '_est']) > 0).length; return `<tr><td>${E(c[1])}</td><td class="num"><b>${tot(c[0] + '_est')}</b></td><td class="num">${n >= 2 ? `<span class="sem v">${n}</span>` : `<span class="sem ${n ? 'a' : 'n'}">${n}</span>`}</td></tr>`; }).join('')}
+      <tr><td>Instituciones que pueden recibir pacientes con asistencia respiratoria mecánica</td><td class="num"><b>${arm}</b></td><td></td></tr>
+      <tr><td>Instituciones a 50 km o más (para eventos regionales)</td><td class="num"><b>${(r.instituciones || []).filter(x => num(x.distancia) >= 50).length}</b></td><td></td></tr>
+      <tr><td>Con acuerdo formal firmado</td><td class="num"><b>${(r.instituciones || []).filter(x => /formal/i.test(x.acuerdo || '')).length}</b></td><td></td></tr></table></div>
+      <p class="sub" style="margin:6px 0 0">Recomendación (Vítolo, 2026): al menos <b>dos destinos alternativos por tipo de paciente</b>, uno a 50 km o más, con acuerdo firmado y revisado cada año. En verde, los tipos de cama que ya tienen dos destinos o más.</p></div>
+    <div class="lista">${l.map(x => { const ce = cat.camas.reduce((a, c) => a + num(x[c[0] + '_est']), 0);
+      return `<button class="tarjeta inst" data-inst="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${semGuardia(x.guardia)}</div>
+        <div class="sub">${E([x.tipo, x.localidad, x.distancia ? x.distancia + ' km' : '', x.tiempo ? x.tiempo + ' min' : ''].filter(Boolean).join(' · ') || 's/d')} · podría recibir de: ${E(x.recibe_de || 's/d')}</div>
+        <div class="pie">${semAcuerdo(x.acuerdo)}${x.tel ? `<span><span class="ms" style="font-size:16px">call</span> ${E(x.tel)}</span>` : ''}<span><b>${ce}</b> camas estimadas</span>${x.camas_origen ? `<span>${E(x.camas_origen)}</span>` : ''}${x.camas_fecha ? `<span>al ${E(x.camas_fecha)}</span>` : ''}</div>
+        <div class="camas">${cat.camas.filter(c => num(x[c[0] + '_est'])).map(c => `<span class="cama">${E(c[1])}: <b>${E(x[c[0] + '_est'])}</b></span>`).join('')}</div></button>`; }).join('')
+      || '<div class="tarjeta vacio">Todavía no hay instituciones receptoras cargadas.</div>'}</div>`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaInst(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+}
+let borradorFila = null;
+function cerrarFila() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; borradorFila = null; }
+
+/* ---------- albergues y criterios con el COE ---------- */
+const TIPOS_FILA = {
+  inst: { lista: 'instituciones', def: 'defInst', api: 'evac_institucion', nuevo: 'Nueva institución receptora', titulo: x => x.nombre },
+  alb: { lista: 'albergues', def: 'defAlb', api: 'evac_albergue', nuevo: 'Nuevo albergue', titulo: x => x.nombre },
+  crit: { lista: 'criterios', def: 'defCrit', api: 'evac_criterio', nuevo: 'Nuevo criterio de derivación', titulo: x => (x.id ? x.id + ' · ' : '') + (x.grupo || '') }
+};
+const ESFERA_M2 = 3.5, ESFERA_INODORO = 20;
+const capEsfera = x => { const m = num(x.superficie), i = num(x.inodoros); return { m2: m ? Math.floor(m / ESFERA_M2) : 0, ino: i ? i * ESFERA_INODORO : 0 }; };
+const semSN = (v, si, no) => !v || v === 's/d' ? '' : /^Sí/.test(v) ? `<span class="sem v">${E(si)}</span>` : /^(No|Sin)/.test(v) ? `<span class="sem n">${E(no)}</span>` : `<span class="sem a">${E(v)}</span>`;
+function vistaAlb() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Albergues · ${E(r.nombre)}<small>Escuelas, gimnasios y otros edificios · capacidad estimada</small>`;
+  const todos = r.albergues || [];
+  const l = todos.filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.tipo).toLowerCase().indexOf(q.toLowerCase()) >= 0);
+  const tot = todos.reduce((a, x) => a + num(x.capacidad), 0), conSalud = todos.filter(x => /^Sí/.test(x.necesidades || '')).length;
+  app.innerHTML = `${redesTabs(r)}${secTabs('alb')}
+    <div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: edificios que el municipio o Protección Civil <b>podría</b> habilitar como albergue, con capacidad estimada. La habilitación y la apertura las decide el COE.</div>
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar albergue, tipo o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="alb"><span class="ms">add</span>Agregar albergue</button>' : ''}
+      <button class="btn sec" data-act="impAlb"><span class="ms">print</span>Imprimir directorio</button></div>
+    <div class="kpis"><div class="tarjeta kpi"><b>${todos.length}</b><span>albergues cargados</span></div><div class="tarjeta kpi"><b>${tot}</b><span>personas (capacidad estimada)</span></div>
+      <div class="tarjeta kpi"><b>${conSalud}</b><span>pueden recibir personas con necesidades de salud</span></div><div class="tarjeta kpi"><b>${todos.filter(x => x.zona_riesgo === 'Sí').length}</b><span>en zona inundable o de riesgo</span></div></div>
+    <div class="lista">${l.map(x => { const c = capEsfera(x);
+      return `<button class="tarjeta inst" data-fila="alb" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${x.zona_riesgo === 'Sí' ? '<span class="sem r">Zona de riesgo</span>' : ''}${semSN(x.necesidades, 'Recibe necesidades de salud', 'Sin apoyos de salud')}</div>
+        <div class="sub">${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.caps_ref ? ' · centro de salud: ' + E(x.caps_ref) : ''}</div>
+        <div class="pie"><span><b>${E(x.capacidad || 's/d')}</b> personas (estimado)</span>${c.m2 ? `<span>por superficie (Esfera): ${c.m2}</span>` : ''}${c.ino ? `<span>por inodoros (Esfera): ${c.ino}</span>` : ''}${semSN(x.energia === 'Red y grupo electrógeno' ? 'Sí' : x.energia === 'Sin energía' ? 'No' : '', 'Grupo electrógeno', 'Sin energía')}${semSN(x.accesible, 'Accesible', 'No accesible')}${semSN(x.calefaccion, 'Calefacción', 'Sin calefacción')}</div></button>`; }).join('')
+      || '<div class="tarjeta vacio">Todavía no hay albergues cargados.</div>'}</div>`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaAlb(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+}
+const semEstadoCrit = v => ({ 'Validado por el COE': 'v', 'En discusión': 'a', 'Propuesto': 'g', 'Descartado': 'n' }[v] ? `<span class="sem ${{ 'Validado por el COE': 'v', 'En discusión': 'a', 'Propuesto': 'g', 'Descartado': 'n' }[v]}">${E(v)}</span>` : '');
+const SENTIDOS = ['Sale del hospital', 'Llega al hospital o centro de salud', 'Desde el albergue a salud', 'Información al COE'];
+function vistaCrit() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Criterios con el COE · ${E(r.nombre)}<small>Derivaciones para validar en la mesa conjunta</small>`;
+  const l = r.criterios || [];
+  const n = e => l.filter(x => x.estado === e).length;
+  app.innerHTML = `${redesTabs(r)}${secTabs('crit')}
+    <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Propuesta de criterios para acordar con el COE en la mesa conjunta: qué sale del hospital y a dónde, qué llega al hospital o al centro de salud, qué va o viene del albergue y cómo se informa. Vienen cargados como «Propuesto»; cuando el COE los valida, se cambia el estado y se anota la fecha y el acta.</div>
+    <div class="buscar">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="crit"><span class="ms">add</span>Agregar criterio</button>' : ''}
+      <button class="btn sec" data-act="impCrit"><span class="ms">print</span>Imprimir para la mesa</button><button class="btn sec" data-act="wordCrit"><span class="ms">download</span>Descargar en Word</button></div>
+    <div class="kpis"><div class="tarjeta kpi"><b>${l.length}</b><span>criterios</span></div><div class="tarjeta kpi"><b>${n('Validado por el COE')}</b><span>validados por el COE</span></div><div class="tarjeta kpi"><b>${n('En discusión')}</b><span>en discusión</span></div><div class="tarjeta kpi"><b>${n('Propuesto')}</b><span>propuestos</span></div></div>
+    ${SENTIDOS.concat(['']).map(s => { const g = l.filter(x => s ? x.sentido === s : SENTIDOS.indexOf(x.sentido) < 0); if (!g.length) return '';
+      return `<h3>${E(s || 'Otros')}</h3><div class="lista">${g.map(x => `<button class="tarjeta inst" data-fila="crit" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.grupo || 's/d')}</b>${semEstadoCrit(x.estado)}</div>
+        <div class="sub">${E(x.criterio || '')}</div><div class="pie"><span>Destino: <b>${E(x.destino || 's/d')}</b></span><span>Decide: ${E(x.decide || 's/d')}</span>${x.fecha_val ? `<span>Validado el ${E(x.fecha_val)}</span>` : ''}</div></button>`).join('')}</div>`; }).join('')
+      || '<div class="tarjeta vacio">Todavía no hay criterios cargados.</div>'}`;
+}
+function abrirFila(tipo, id) {
+  const T = TIPOS_FILA[tipo], r = redVista(), x = id ? (r[T.lista] || []).find(y => y.id === id) || {} : {};
+  const def = cat[T.def].filter(c => ['id', 'actualizado', 'por'].indexOf(c.clave) < 0);
+  const puede = r.puedeInst, dis = puede ? '' : 'disabled';
+  borradorFila = { tipo, id: id || '', datos: {} };
+  let cuerpo;
+  if (tipo === 'inst') {
+    const comunes = def.filter(c => !/_est$/.test(c.clave) && !/^camas_/.test(c.clave)), est = def.filter(c => /^camas_/.test(c.clave));
+    cuerpo = `<div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><div class="campos" style="padding:0">${comunes.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>
+    <div class="tarjeta" style="padding:10px 14px"><b style="color:#8E1B1B">Capacidad estimada de recepción</b><p class="sub" style="margin:2px 0 6px">Cuántos pacientes de cada tipo podría recibir la institución en una evacuación. Es un dato hipotético para planificar (categorías HAvBED), no la disponibilidad real del momento.</p>
+    <table class="grilla-camas"><tr><th>Tipo de cama</th><th>Camas estimadas</th></tr>${cat.camas.map(c => `<tr><td>${E(c[1])}</td>
+      <td><input data-k="${c[0]}_est" inputmode="numeric" value="${E(x[c[0] + '_est'] || '')}" ${dis}></td></tr>`).join('')}</table>
+    <div class="campos" style="padding:6px 0 0">${est.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>`;
+  } else {
+    const ayuda = tipo === 'alb' ? '<p class="sub" style="margin:4px 2px 8px">Referencia (Proyecto Esfera, 2018): 3,5 m² cubiertos por persona, 1 inodoro cada 20 personas y 15 litros de agua por persona y por día. Con la superficie y los inodoros la app calcula una capacidad orientativa.</p>'
+      : '<p class="sub" style="margin:4px 2px 8px">Cuando el COE valida el criterio, cambiá el estado a «Validado por el COE» y anotá la fecha y el acta o reunión.</p>';
+    cuerpo = `${ayuda}<div class="tarjeta" style="padding:6px 14px 10px"><div class="campos" style="padding:0">${def.map(c => campoHTML(c, x[c.clave] != null ? x[c.clave] : (c.clave === 'estado' ? 'Propuesto' : ''), dis, tipo + '_')).join('')}</div></div>`;
+  }
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${id ? E(T.titulo(x) || 's/d') : T.nuevo}</b><button class="icono" data-act="cerrarFila" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo" id="fichaFila">${cuerpo}</div>
+    <div class="dlg-pie">${id && puede ? '<button class="btn peligro" data-act="borrarFila"><span class="ms">delete</span>Quitar</button>' : ''}<button class="btn sec" data-act="cerrarFila">Cerrar</button>${puede ? '<button class="btn" data-act="guardarFila"><span class="ms">save</span>Guardar</button>' : ''}</div></div>`;
+  $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden';
+  atarCampos($('#fichaFila'), borradorFila);
+}
+function imprimirAlb() {
+  const r = redVista();
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">EVACUACIÓN HOSPITALARIA · ALBERGUES</div><h1>Directorio de albergues · ${E(r.nombre)}</h1>
+    <table><tr><td class="l">Albergue</td><td class="l">Contacto</td><td class="l">Capacidad estimada</td><td class="l">Servicios</td><td class="l">Salud</td></tr>
+    ${(r.albergues || []).map(x => { const c = capEsfera(x); return `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · '))}${x.zona_riesgo === 'Sí' ? '<br><b>En zona de riesgo</b>' : ''}</td><td>${E(x.habilita || '')}<br>${E(x.contacto || '')}<br>${E(x.tel || '')}</td>
+      <td>${E(x.capacidad || 's/d')} personas${c.m2 ? '<br>Superficie: ' + c.m2 : ''}${c.ino ? '<br>Inodoros: ' + c.ino : ''}</td><td>Agua: ${E(x.agua || 's/d')}<br>Energía: ${E(x.energia || 's/d')}<br>Calefacción: ${E(x.calefaccion || 's/d')} · Cocina: ${E(x.cocina || 's/d')}<br>Accesible: ${E(x.accesible || 's/d')}</td>
+      <td>${E(x.necesidades || 's/d')}<br>Espacio de salud: ${E(x.espacio_salud || 's/d')} · Aislamiento: ${E(x.aislamiento || 's/d')}<br>Centro de salud: ${E(x.caps_ref || 's/d')}</td></tr>`; }).join('') || '<tr><td colspan="5">Sin albergues cargados.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Base orientadora para planificar: la habilitación y apertura de cada albergue las decide el COE. Capacidad orientativa según Proyecto Esfera (2018): 3,5 m² cubiertos por persona y 1 inodoro cada 20 personas.</p>${pieImp(r)}</section>`;
+  setTimeout(() => window.print(), 300);
+}
+function critHTML(r, word) {
+  const l = r.criterios || [], enc = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${/trelew/i.test(r.nombre) ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const pie = word ? `<p style="font-size:7.5pt;color:#4B5B73">${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
+  return `<section class="hoja apaisada">${enc}<div class="kick">MESA CONJUNTA DEL COE · CRITERIOS DE DERIVACIÓN</div><h1>${E(r.nombre)} · Reunión del ___/___/______</h1>
+    <table class="reg"><tr><td class="l">Sentido</td><td class="l">Grupo de personas</td><td class="l">Criterio</td><td class="l">Destino sugerido</td><td class="l">Condiciones</td><td class="l">Decide</td><td class="l">Cómo se informa</td><td class="l">Estado</td><td class="l">Validación (fecha y firma)</td></tr>
+    ${l.map(x => `<tr><td>${E(x.sentido)}</td><td><b>${E(x.grupo)}</b></td><td>${E(x.criterio)}</td><td>${E(x.destino)}</td><td>${E(x.condiciones)}</td><td>${E(x.decide)}</td><td>${E(x.informa)}</td><td>${E(x.estado)}</td><td>${E([x.fecha_val, x.acta].filter(Boolean).join(' · '))}</td></tr>`).join('') || '<tr><td colspan="9">Sin criterios cargados.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Propuesta para discutir y validar en la mesa conjunta del COE. Fuentes: triaje inverso (Kelen, Johns Hopkins); lista EDAC (Feizolahzadeh y col., 2019); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Proyecto Esfera (2018). Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>${pie}</section>`;
+}
+function bajarWord(nombre, cuerpo, apaisada) {
+  const r = redVista();
+  const css = `@page Section1{size:${apaisada ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:36pt 32pt 60pt;mso-footer:f1;mso-footer-margin:18pt}div.Section1{page:Section1}
+    body{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:9pt;color:#172B4D}h1{font-size:12pt;color:#8E1B1B;margin:2pt 0}h2{font-size:10pt;color:#8E1B1B;border-bottom:1.5pt solid #D32F2F;margin:8pt 0 3pt}
+    .kick{font-size:7.5pt;color:#C62828;font-weight:bold;letter-spacing:1pt}table{width:100%;border-collapse:collapse}td{border:1pt solid #E9C9C6;padding:3pt 5pt;vertical-align:top;font-size:8.5pt}
+    td.l{background:#FDECEA;color:#7F1D1D;font-weight:bold}.f260 td.l{width:42%}.f260 td{height:18pt}.reg td{height:22pt}.reg td.l{height:auto;font-size:7.5pt}`;
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(nombre)}</title>
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${cuerpo.replace(/<img[^>]*__LOGOW__[^>]*>/g, '')}</div>
+    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p></div></body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nombre + ' - ' + r.nombre + '.doc';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast('Descargado. Se abre con Word; para editarlo, tocá «Habilitar edición».');
+}
+
+/* ---------- planillas modelo (no se registran pacientes en la app) ---------- */
+const OPC = {
+  prioridad: ['Inmediata', 'Diferida', 'Menor'],
+  movilidad: ['Autónomo', 'Con apoyo', 'Totalmente dependiente', 'Con soporte vital'],
+  traslado: ['Caminando', 'Silla de ruedas', 'Camilla', 'Cama', 'Incubadora', 'Otro'],
+  equipos: ['Oxígeno', 'Respirador', 'Monitor', 'Bombas de infusión', 'Incubadora o servocuna', 'Drenajes', 'Sonda vesical', 'Otro'],
+  aislamiento: ['No', 'Contacto', 'Gotas', 'Aéreo'],
+  movil: ['Alta complejidad', 'Avanzado', 'Básico', 'Utilitario o particular', 'Aéreo'],
+  sino: ['Sí', 'No']
+};
+const MODELOS = {
+  registro: { ico: 'list_alt', titulo: 'Registro de pacientes evacuados', apaisada: true, txt: 'Lo que sale del hospital. Una fila por paciente: servicio de origen, prioridad, movilidad, destino, móvil, horarios y llegada confirmada. Hoja apaisada. Adaptado de HICS 255.' },
+  ficha: { ico: 'assignment_ind', titulo: 'Ficha de traslado del paciente', txt: 'Una por paciente que va a otra institución; lo acompaña y la última parte la completa quien lo recibe. Adaptado de HICS 260 y OPS EVAC-H.' },
+  ingresos: { ico: 'login', titulo: 'Registro de ingresos por el evento', apaisada: true, txt: 'Lo que llega al hospital o al centro de salud: lesionados, evacuados en resguardo preventivo, embarazadas, personas derivadas desde albergues. Una fila por persona, con procedencia, clasificación y destino final. Adaptado de HICS 254.' },
+  albergue: { ico: 'night_shelter', titulo: 'Ficha de derivación a albergue', txt: 'Para la persona que sale del hospital o del centro de salud hacia un albergue: cuidados y apoyos que necesita, medicación entregada, centro de salud que hace el seguimiento, y contrarreferencia si tiene que volver.' },
+  censo: { ico: 'groups_3', titulo: 'Censo rápido para evacuar', apaisada: true, txt: 'Por servicio, cuántas personas hay en cada categoría de traslado (se autoevacúa, camina con ayuda, en silla, requiere atención durante el traslado, soporte vital) y qué transporte y personal hacen falta. Adaptado de Vítolo (2019) y OPS EVAC-H.' },
+  autoeval: { vit: true, ico: 'fact_check', titulo: 'Autoevaluación de la conducción', txt: 'Cinco preguntas para la Dirección y el comité: comando de incidentes, ejercicios, autonomía de 96 horas, acuerdos con receptores y compromiso directivo. Un «No sé» vale lo mismo que un «No» (Vítolo, 2026).' },
+  madurez: { vit: true, ico: 'speed', titulo: 'Autoevaluación de preparación por escenario', txt: 'Seis cuestionarios (incendio, corte de energía, inundación, ciberataque, pandemia y víctimas múltiples) con escala de 1 a 4: no existe, existe en papel, entrenado, verificado y vigente. Incluye tabla consolidada. Adaptado del anexo de Vítolo (2026).' },
+  aar: { vit: true, ico: 'assignment_turned_in', titulo: 'Informe posterior al ejercicio y plan de mejora', txt: 'Después de cada simulacro o emergencia: qué funcionó, qué no y por qué, brechas encontradas y un plan de mejora con acción, responsable, fecha y cómo se verifica (Vítolo, 2026).' },
+  parte: { ico: 'campaign', titulo: 'Informe de derivaciones al COE', txt: 'Parte periódico para la mesa conjunta: cuántos llegaron y de dónde, cuántos salieron y a dónde, capacidad estimada que queda, necesidades y próximos pasos. La frecuencia se acuerda con el COE.' }
+};
+function vistaModelos() {
+  borrador = null; const r = redVista();
+  $('#titulo').innerHTML = `Planillas modelo · ${E(r.nombre)}<small>Para imprimir o descargar en Word</small>`;
+  const tarjeta = (id, ico, tit, txt) => `<div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><div class="est-cab"><b><span class="ms" style="color:#C62828;margin-right:6px">${ico}</span>${tit}</b></div>
+    <p class="sub" style="margin:6px 0 10px">${txt}</p><div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn" data-act="modImp" data-mod="${id}"><span class="ms">print</span>Imprimir</button>
+    <button class="btn sec" data-act="modWord" data-mod="${id}"><span class="ms">download</span>Descargar en Word</button></div></div>`;
+  app.innerHTML = `${redesTabs(r)}${secTabs('modelos')}
+    <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Los pacientes no se registran en la app. Estas planillas se imprimen o se descargan en Word para completarlas a mano o en la computadora en un simulacro o en una emergencia, y quedan en el establecimiento.</div>
+    <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><div class="est-cab"><b><span class="ms" style="color:#C62828;margin-right:6px">badge</span>Tarjeta de prioridad de derivación</b></div>
+      <p class="sub" style="margin:6px 0 8px">Se ata a la muñeca o a la camilla y acompaña al paciente hasta el destino. El color indica la prioridad de derivación; tiene los datos del paciente, su estado, la atención que necesita, lo que lleva, el destino y un talón desprendible para el registro de evacuados. Dos tarjetas por hoja A4. Si la impresora es blanco y negro, el número y el nombre del color quedan escritos en grande.</p>
+      <div class="tj-mini">${PRIOR.map(p => `<span style="background:${p.c};color:${p.t}"><b>${p.n}</b> ${p.titulo.split(' · ')[1]}</span>`).join('')}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="tjImp" data-col=""><span class="ms">print</span>Imprimir las cuatro</button>
+        ${PRIOR.map(p => `<button class="btn sec" data-act="tjImp" data-col="${p.n}" style="border-color:${p.c}"><span class="ms" style="color:${p.c}">print</span>${p.nombre.charAt(0) + p.nombre.slice(1).toLowerCase()}</button>`).join('')}
+        <button class="btn sec" data-act="tjWord" data-col=""><span class="ms">download</span>Descargar en Word</button></div></div>
+    ${Object.keys(MODELOS).map(k => tarjeta(k, MODELOS[k].ico, MODELOS[k].titulo, MODELOS[k].txt)).join('')}
+    <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><b>Autoevaluación por escenario: imprimir uno solo</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${MADUREZ.map(e => `<button class="btn sec" data-act="madImp" data-esc="${e[0]}"><span class="ms">print</span>${e[0]} · ${E(e[1])}</button>`).join('')}</div></div>`;
+}
+function modeloHTML(id, r, word) {
+  if (MODELOS[id] && MODELOS[id].vit) return vitoloHTML(id, r, word);
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const ops = k => OPC[k].map(cas).join(' ');
+  const fila = (l, val) => `<tr><td class="l">${E(l)}</td><td class="v">${val || ''}</td></tr>`;
+  const enc = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${/trelew/i.test(r.nombre) ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const pie = word ? `<p style="font-size:7.5pt;color:#4B5B73">${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
+  const cols = (c, n) => `<table class="reg"><tr>${c.map(x => `<td class="l">${x}</td>`).join('')}</tr>${Array.from({ length: n }, (_, i) => `<tr>${c.map((x, j) => `<td>${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  const nota = t => `<p style="font-size:7.5pt;color:#4B5B73">${t}</p>`;
+  if (id === 'censo') {
+    return `<section class="hoja apaisada">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · CENSO RÁPIDO PARA EVACUAR</div>
+      <h1>Establecimiento: ____________________________ Fecha y hora: ___/___/______ ___:___ h · Responsable: ____________________</h1>
+      ${cols(['N.º', 'Servicio o sector · piso', 'Pacientes en total', 'Se autoevacúa', 'Camina con ayuda', 'Silla (no camina)', 'Requiere atención en el traslado', 'Soporte vital', 'Personal presente', 'Personal que falta', 'Transporte que hace falta', 'Observaciones'], 14)}
+      ${nota('Cada fila debe sumar el total de pacientes del servicio. Transporte orientativo: autoevacuados y ambulatorios en micro o vehículo común; en silla, camioneta adaptada; con atención en el traslado, ambulancia; con soporte vital, móvil de alta complejidad. Cama o camilla solo para pacientes que no pueden sentarse o con soporte vital: pueden requerir hasta 6 personas por paciente. Adaptado de Vítolo, Evacuación de hospitales (2019), y OPS, EVAC-H (2024). Base orientadora: se completa en el momento o en simulacros.')}${pie}</section>`;
+  }
+  if (id === 'ingresos') {
+    return `<section class="hoja apaisada">${enc}<div class="kick">EMERGENCIA · REGISTRO DE INGRESOS POR EL EVENTO</div>
+      <h1>Establecimiento: ____________________________ Evento: ____________________ Fecha: ___/___/______ Hoja ___ de ___</h1>
+      ${cols(['N.º', 'Hora de llegada', 'Apellido y nombre (o N.º de tarjeta de triage)', 'DNI o HC', 'Edad · sexo', 'Procedencia', 'Llegó por', 'Clasificación', 'Motivo', 'Destino final · hora', 'Avisado al COE'], 14)}
+      ${nota('Procedencia: lugar del evento · domicilio · albergue (nombre) · otra institución. Llegó por: ambulancia · medios propios · fuerzas de seguridad o bomberos · otro. Clasificación: rojo (inmediato) · amarillo (diferido) · verde (leve) · negro. Motivo: lesionado · resguardo preventivo (enfermedad crónica sin luz o agua) · embarazada · derivado desde albergue · otro. Destino final: alta · internación · quirófano · derivado (dónde) · albergue · morgue. Adaptado de HICS 254 (Disaster Victim/Patient Tracking, California EMSA, 2014). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Responsable del registro: ______________________ Firma: ____________')}${pie}</section>`;
+  }
+  if (id === 'albergue') {
+    return `<section class="hoja">${enc}<div class="kick">EMERGENCIA · FICHA DE DERIVACIÓN A ALBERGUE</div><h1>Persona: ______________________________</h1>
+      <div style="color:#4B5B73">Acompaña a la persona y queda en el albergue. Albergue: ______________________________</div>
+      <h2>1. Persona</h2><table class="f260">${fila('Apellido y nombre')}${fila('DNI o historia clínica · edad')}${fila('Grupo familiar o acompañante (nombre y teléfono)')}${fila('Establecimiento y servicio que deriva')}</table>
+      <h2>2. Motivo</h2><table class="f260">${fila('Motivo', ['Alta anticipada', 'Vivienda afectada', 'Sin luz o sin agua en la vivienda', 'Otro'].map(cas).join(' '))}${fila('Criterio del COE aplicado (código)')}${fila('Diagnóstico o problema de salud principal')}</table>
+      <h2>3. Cuidados y apoyos que necesita</h2><table class="f260">${fila('Movilidad', ['Autónomo', 'Con apoyo', 'Silla de ruedas', 'Postrado'].map(cas).join(' '))}${fila('Equipos', ['Oxígeno', 'Concentrador (necesita energía)', 'Nebulizador', 'Otro'].map(cas).join(' '))}${fila('Ayuda para la vida diaria (comer, higiene, vestirse)', ops('sino'))}${fila('Dieta especial')}${fila('Medicación entregada (nombre, dosis, para cuántos días)')}${fila('Signos de alarma por los que tiene que volver a consultar')}</table>
+      <h2>4. Seguimiento</h2><table class="f260">${fila('Centro de salud que hace el seguimiento')}${fila('Próximo control (fecha y lugar)')}${fila('Referente de salud del albergue avisado (nombre · hora)')}${fila('COE avisado (hora)')}</table>
+      <h2>5. Contrarreferencia (si vuelve a salud)</h2><table class="f260">${fila('Fecha y hora · motivo')}${fila('Derivado a')}${fila('Quién deriva (nombre y firma)')}</table>
+      ${nota('Las personas con necesidades funcionales (equipos, energía, ayuda para la vida diaria) no se derivan a un establecimiento de salud solo por esa razón: se ubican en albergues con apoyos (FEMA, Guía FNSS, 2010). Datos de salud: uso exclusivo para la gestión de la emergencia. Derivó: ______________________ Firma: ____________')}${pie}</section>`;
+  }
+  if (id === 'parte') {
+    const tabla = (t, filas) => `<h2>${t}</h2><table class="f260">${filas.map(f => fila(f)).join('')}</table>`;
+    return `<section class="hoja">${enc}<div class="kick">MESA CONJUNTA DEL COE · INFORME DE DERIVACIONES</div><h1>Establecimiento: ______________________________</h1>
+      <div style="color:#4B5B73">Evento: ____________________ Parte N.º ____ · Período: desde ___/___ ___:___ h hasta ___/___ ___:___ h</div>
+      ${tabla('1. Llegaron al establecimiento', ['Lesionados del evento (rojo · amarillo · verde · negro)', 'Resguardo preventivo (enfermedades crónicas, sin luz o agua)', 'Embarazadas', 'Derivados desde albergues', 'Derivados desde otras instituciones'])}
+      ${tabla('2. Salieron del establecimiento', ['Altas a domicilio', 'Altas anticipadas a albergue (cuál y cuántos)', 'Derivados a otra institución (cuál y cuántos)', 'Críticos trasladados con soporte vital', 'Fallecidos'])}
+      ${tabla('3. Capacidad estimada que queda', ['Camas de internación general · terapia intensiva · pediatría · neonatología', 'Guardia: funcionamiento y demora', 'Servicios afectados (agua, energía, gases, accesos)'])}
+      ${tabla('4. Necesidades y pedidos al COE', ['Traslados (móviles) que se necesitan', 'Insumos, medicación o personal', 'Albergues: personas que se necesita ubicar y con qué apoyos'])}
+      ${tabla('5. Próximos pasos y próximo parte', ['Acciones previstas', 'Próximo parte (fecha y hora)'])}
+      ${nota('Frecuencia a acordar con el COE (por ejemplo, cada 6 o 12 horas) y ante cada novedad importante. Basado en el sistema de comando de incidentes hospitalario (HICS) y en los registros de ingresos (HICS 254) y de evacuados (HICS 255). Informó: ______________________ Cargo: ______________ Firma: ____________')}${pie}</section>`;
+  }
+  if (id === 'registro') {
+    const cols = ['N.º', 'Paciente (apellido y nombre)', 'DNI o HC', 'Servicio de origen', 'Prioridad', 'Movilidad', 'Destino (zona segura o institución)', 'Hora de aviso', 'Móvil o patente', 'Hora de salida', 'HC · med. · familia', 'Llegada confirmada · hora'];
+    return `<section class="hoja apaisada">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · REGISTRO DE PACIENTES EVACUADOS</div>
+      <h1>Establecimiento: ____________________________ Evento: ____________________ Fecha: ___/___/______ Hoja ___ de ___</h1>
+      <table class="reg"><tr>${cols.map(c => `<td class="l">${c}</td>`).join('')}</tr>${Array.from({ length: 14 }, (_, i) => `<tr>${cols.map((c, j) => `<td>${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>
+      <p style="font-size:7.5pt;color:#4B5B73">Prioridad: Inmediata · Diferida · Menor. Movilidad (EVAC-H): Autónomo · Con apoyo · Totalmente dependiente · Con soporte vital. HC · med. · familia: marcar si se envió la historia clínica, si se envió la medicación y si se avisó a la familia. Adaptado de HICS 255 (Master Patient Evacuation Tracking, California EMSA, 2014). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Responsable del registro: ______________________ Firma: ____________</p>${pie}</section>`;
+  }
+  return `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DE TRASLADO DEL PACIENTE</div><h1>Paciente: ______________________________</h1>
+    <div style="color:#4B5B73">Acompaña al paciente. Establecimiento: ______________________________</div>
+    <h2>1. Paciente</h2><table class="f260">${fila('Apellido y nombre')}${fila('DNI o historia clínica')}${fila('Servicio o dependencia de origen')}${fila('Diagnóstico y médico a cargo')}${fila('Familia avisada (nombre y teléfono)', ops('sino'))}</table>
+    <h2>2. Evacuación</h2><table class="f260">${fila('Fecha y evento')}${fila('Prioridad', ops('prioridad'))}${fila('Movilidad (EVAC-H)', ops('movilidad'))}${fila('Se traslada en', ops('traslado'))}${fila('Equipos que lleva', ops('equipos'))}${fila('Aislamiento', ops('aislamiento'))}${fila('Necesidades especiales')}</table>
+    <h2>3. Salida del servicio</h2><table class="f260">${fila('Habitación o cama · hora')}${fila('Pulsera de identificación verificada por')}${fila('Historia clínica enviada', ops('sino'))}${fila('Medicación enviada', ops('sino'))}${fila('Pertenencias y valores')}</table>
+    <h2>4. Traslado a otra institución</h2><table class="f260">${fila('Institución de destino')}${fila('Hora en que se avisó al destino')}${fila('Tipo de móvil', ops('movil'))}${fila('Móvil, empresa o patente')}${fila('Hora de salida')}</table>
+    <h2>5. Llegada (completa quien recibe)</h2><table class="f260">${fila('Llegada confirmada · hora')}${fila('Sector donde quedó')}${fila('Recibió (nombre, cargo y firma)')}${fila('Historia clínica, medicación y pertenencias recibidas')}</table>
+    <h2>Observaciones</h2><table class="f260"><tr><td style="height:46px"></td></tr></table>
+    <p style="font-size:7.5pt;color:#4B5B73">Adaptado de HICS 260 (Patient Evacuation Tracking Form, California EMSA, 2014) y de OPS, EVAC-H (2024). Datos de pacientes: uso exclusivo para la gestión de la emergencia. Preparó: ______________________ Firma: ____________</p>${pie}</section>`;
+}
+/* ---------- Tarjeta de prioridad de derivación (se ata o pega al paciente) ----------
+ * Colores según la regla de la app: rojo emergencia, naranja urgencia, amarillo alerta, verde normal.
+ * Modelos: tarjetas de triage METTAG y SMART, tarjeta de seguimiento de pacientes de Nueva Jersey (talones desprendibles
+ * y número único), HICS 255 y 260, OPS EVAC-H (movilidad) y categorías de camas HAvBED. */
+const PRIOR = [
+  { n: 1, c: '#C62828', t: '#FFFFFF', nombre: 'ROJA', titulo: 'PRIORIDAD 1 · INMEDIATA', txt: 'Crítico o con soporte vital. Va a una institución con terapia intensiva, en móvil de alta complejidad y con confirmación previa de cama.' },
+  { n: 2, c: '#EF6C00', t: '#FFFFFF', nombre: 'NARANJA', titulo: 'PRIORIDAD 2 · URGENTE', txt: 'Necesita seguir internado y depende del personal. Va a otra institución con internación, con ficha de traslado.' },
+  { n: 3, c: '#F9A825', t: '#3A2A00', nombre: 'AMARILLA', titulo: 'PRIORIDAD 3 · DIFERIDA', txt: 'Estable, se moviliza con apoyo. Puede esperar; internación general o zona segura interna.' },
+  { n: 4, c: '#2E7D32', t: '#FFFFFF', nombre: 'VERDE', titulo: 'PRIORIDAD 4 · NO URGENTE', txt: 'Autónomo y estable. Alta anticipada a domicilio o albergue, con indicaciones y seguimiento.' }
+];
+function tarjetaHTML(p, r, word) {
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const ops = l => l.map(cas).join(' ');
+  const lin = (l, ancho) => `<tr><td class="l">${E(l)}</td><td class="v"${ancho ? ` colspan="${ancho}"` : ''}></td></tr>`;
+  const banda = (h, size) => `<div class="tj-banda" style="background:${p.c};color:${p.t};${size || ''}"><b style="font-size:${word ? '20pt' : '22px'}">${p.titulo}</b><br><span style="font-size:${word ? '8.5pt' : '11px'}">TARJETA ${p.nombre} · ${E(p.txt)}</span></div>`;
+  const tw = /trelew/i.test(r.nombre);
+  return `<section class="tj">
+    <table class="tj-cab"><tr><td style="border:0"><b>TARJETA DE PRIORIDAD DE DERIVACIÓN</b><br><span style="font-size:7.5pt">Atar a la muñeca o a la camilla · acompaña al paciente hasta el destino</span></td><td style="border:0;text-align:right;white-space:nowrap"><b style="font-size:13pt">N.º ________</b></td></tr></table>
+    ${banda()}
+    <table class="tj-t">${lin('Apellido y nombre', 3)}<tr><td class="l">DNI o historia clínica</td><td class="v"></td><td class="l">Edad · sexo</td><td class="v"></td></tr>
+      <tr><td class="l">Establecimiento · servicio · cama de origen</td><td class="v" colspan="3"></td></tr><tr><td class="l">Diagnóstico principal</td><td class="v" colspan="3"></td></tr>
+      <tr><td class="l">Alergias</td><td class="v"></td><td class="l">Aislamiento</td><td class="v">${ops(['No', 'Contacto', 'Gotas', 'Aéreo'])}</td></tr></table>
+    <table class="tj-t"><tr><td class="l" style="width:22%">Estado · hora ___:___</td><td class="v" colspan="3">${ops(['Consciente', 'Desorientado', 'No responde'])}&nbsp;&nbsp; TA ____/____ &nbsp;FC ____ &nbsp;FR ____ &nbsp;Sat O₂ ____ %</td></tr>
+      <tr><td class="l">Movilidad (EVAC-H)</td><td class="v" colspan="3">${ops(['Autónomo', 'Con apoyo', 'Totalmente dependiente', 'Con soporte vital'])}</td></tr>
+      <tr><td class="l">Atención que necesita</td><td class="v" colspan="3">${ops(['Terapia intensiva adultos', 'Terapia intensiva pediátrica', 'Neonatología', 'Internación general', 'Pediatría', 'Quirófano', 'Quemados', 'Salud mental', 'Maternidad', 'Diálisis', 'Aislamiento respiratorio'])}</td></tr>
+      <tr><td class="l">Lleva</td><td class="v" colspan="3">${ops(['Oxígeno', 'Respirador', 'Monitor', 'Bombas de infusión', 'Incubadora', 'Historia clínica', 'Medicación'])}</td></tr>
+      <tr><td class="l">Destino · móvil · hora de salida</td><td class="v" colspan="3"></td></tr>
+      <tr><td class="l">Si cambia el estado, nueva prioridad</td><td class="v" colspan="3">${ops(['1 Roja', '2 Naranja', '3 Amarilla', '4 Verde'])} · hora ___:___ · firma ________</td></tr>
+      <tr><td class="l">Clasificó (nombre y firma)</td><td class="v" colspan="3"></td></tr></table>
+    <div class="tj-talon"><span>✂ Talón para el registro de evacuados (queda en el establecimiento)</span>
+      <table class="tj-t" style="margin-top:3px"><tr><td style="background:${p.c};color:${p.t};width:18%;text-align:center"><b>${p.n} · ${p.nombre}</b></td><td>N.º ______</td><td>Paciente: ______________________</td><td>Destino: ________________</td><td>Hora ___:___</td></tr></table></div>
+    <div style="font-size:6pt;color:#4B5B73;margin-top:2px">${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)} · Adaptado de METTAG, SMART, HICS 255 y 260 y OPS EVAC-H · Uso exclusivo para la emergencia.</div>
+    <div class="tj-logo" style="text-align:center">${word ? '<p align="center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto;max-height:6.5mm;object-fit:contain">'}</div>
+  </section>`;
+}
+function tarjetasHTML(cual, r, word) { return PRIOR.filter(p => !cual || String(p.n) === String(cual)).map(p => tarjetaHTML(p, r, word)).join(word ? '<br style="page-break-before:always">' : ''); }
+function tarjetaImprimir(cual) { $('#imp').innerHTML = `<div class="tj-hoja">${tarjetasHTML(cual, redVista(), false)}</div>`; setTimeout(() => window.print(), 300); }
+function tarjetaWord(cual) {
+  const css = `.tj{border:1.5pt solid #172B4D;padding:6pt;margin-bottom:10pt}.tj-banda{padding:8pt 10pt;margin:4pt 0 6pt;-webkit-print-color-adjust:exact}.tj-t td.l{width:30%}.tj-t td{font-size:8pt;height:14pt}.tj-talon{border-top:1.5pt dashed #4B5B73;margin-top:6pt;padding-top:3pt;font-size:7pt}.tj-cab td{font-size:9pt}`;
+  bajarWord('Tarjetas de prioridad de derivación' + (cual ? ' ' + cual : ''), `<style>${css}</style>` + tarjetasHTML(cual, redVista(), true), false);
+}
+
+/* ---------- Material de Vítolo (NOBLE): autoevaluaciones e informe posterior al ejercicio ---------- */
+let madEsc = '';
+function vitEncPie(r, word) {
+  const tw = /trelew/i.test(r.nombre);
+  const encV = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${tw ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const pieV = word ? `<p style="font-size:7.5pt;color:#4B5B73">${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
+  return { encV, pieV };
+}
+function vitoloHTML(id, r, word) {
+  if (id === 'madurez') return madurezHTML(madEsc, r, word);
+  const { encV, pieV } = vitEncPie(r, word);
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const fila = (l, h) => `<tr><td class="l">${E(l)}</td><td style="height:${h || 18}px"></td></tr>`;
+  const h2 = t => `<h2>${t}</h2>`;
+  const grilla = (cols, n) => `<table class="reg"><tr>${cols.map(c => `<td class="l">${c}</td>`).join('')}</tr>${Array.from({ length: n }, (_, i) => `<tr>${cols.map((c, j) => `<td style="height:22px">${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  if (id === 'autoeval') {
+    const P = [['Comando de incidentes', '¿Tenemos un comando de incidentes con puestos designados, fichas de acción propias y al menos dos personas entrenadas por puesto clave, incluido quien comanda (y la cadena de sucesión para decidir una evacuación)?'],
+      ['Ejercicios y mejora', '¿Hicimos al menos un ejercicio (de mesa, funcional o a escala completa) en los últimos 12 meses, con informe posterior y plan de mejora implementado?'],
+      ['Recursos críticos', '¿Sabemos cuántas horas funciona el establecimiento si fallan a la vez energía, agua y sistemas, y tenemos acuerdos de reabastecimiento formalizados?'],
+      ['Acuerdos de derivación', '¿Tenemos acuerdos vigentes con al menos dos establecimientos receptores por tipo de paciente y con el sistema de emergencias, verificados en el último año?'],
+      ['Compromiso directivo', '¿La conducción, y no solo quien coordina emergencias, conoce el plan, participó de un ejercicio y asigna recursos reales?']];
+    return `<section class="hoja">${encV}<div class="kick">AUTOEVALUACIÓN DE LA CONDUCCIÓN · ¿ESTÁ PREPARADO EL ESTABLECIMIENTO?</div>
+      <table class="reg">${fila('Establecimiento')}${fila('Completaron (nombres y cargos)')}<tr><td class="l">Fecha</td><td>___/___/______</td></tr></table>
+      <table class="reg" style="margin-top:8px"><tr><td class="l">Tema</td><td class="l">Pregunta</td><td class="l">Sí</td><td class="l">No</td><td class="l">No sé</td><td class="l">Qué falta y quién se ocupa</td></tr>
+      ${P.map(p => `<tr><td style="width:18%"><b>${E(p[0])}</b></td><td>${E(p[1])}</td><td style="width:6%">${cas('')}</td><td style="width:6%">${cas('')}</td><td style="width:7%">${cas('')}</td><td style="width:26%;height:48px"></td></tr>`).join('')}</table>
+      <p style="font-size:8pt;color:#4B5B73;margin-top:6px"><b>Un «No sé» es tan grave como un «No»:</b> si la conducción no lo sabe, no está operativo. Cada «No» o «No sé» se pasa al registro de acuerdos y seguimiento de tareas con responsable y plazo. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026).</p>${pieV}</section>`;
+  }
+  if (id === 'aar') return `<section class="hoja">${encV}<div class="kick">INFORME POSTERIOR AL EJERCICIO O A LA EMERGENCIA Y PLAN DE MEJORA</div>
+    <table class="reg">${fila('Ejercicio o emergencia')}<tr><td class="l">Tipo</td><td>${['De discusión', 'De mesa', 'Funcional', 'Integrado o a escala completa', 'Emergencia real'].map(cas).join(' ')}</td></tr><tr><td class="l">Fecha · duración</td><td>___/___/______ · ______</td></tr>${fila('Escenario y amenaza')}${fila('Participantes y organismos externos')}${fila('Objetivos que se querían comprobar', 30)}</table>
+    ${h2('1. Qué funcionó bien')}<table class="reg"><tr><td style="height:50px"></td></tr></table>
+    ${h2('2. Qué no funcionó y por qué')}<table class="reg"><tr><td style="height:60px"></td></tr></table>
+    ${h2('3. Plan de mejora')}${grilla(['N.º', 'Brecha encontrada (plan, procedimiento, equipamiento, comunicaciones, personal o coordinación)', 'Acción correctiva', 'Responsable', 'Fecha compromiso', 'Cómo se verifica'], 7)}
+    <table class="reg" style="margin-top:6px">${fila('Debriefing inmediato realizado (fecha y hora)')}${fila('Informe terminado el (recomendado: dentro de las 72 horas)')}${fila('Se compartió con')}${fila('Elaboró (nombre, cargo y firma)', 26)}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">El informe y el plan de mejora son el punto de partida del próximo ejercicio; el personal tiene que ver que las mejoras se implementan. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026).</p>${pieV}</section>`;  return '';
+}
+const MADUREZ = [
+  ['A', 'Incendio', [
+    ['Planificación y documentación', [['Plan de respuesta ante incendios documentado y accesible', '¿Está en cada sector, no solo en la dirección?'], ['Protocolo RACE formalizado y señalizado en cada sector', '¿RACE y PASS exhibidos junto a los matafuegos?'], ['Plano actualizado de barreras pasivas, válvulas de gases y matafuegos', 'Plano por sector con puertas cortafuego, válvulas de zona y extintores.'], ['Responsables por sector para cada paso de RACE', '¿Cada trabajador sabe quién cierra las válvulas de gases?']]],
+    ['Sistemas de protección (activos y pasivos)', [['Detección y alarma operativas y probadas', 'Última prueba documentada y registros.'], ['Rociadores instalados y con mantenimiento al día', 'En las áreas requeridas, sin cabezales tapados, pintados o corroídos.'], ['Matafuegos correctos por área, accesibles y vigentes', 'Vencimiento, señalización, sin obstáculos.'], ['Puertas cortafuego que cierran y sellan', '¿Alguna está trabada habitualmente? ¿Hay registros de inspección?'], ['Barreras de fuego y humo sin perforaciones sin sellar', '¿Cada obra de cableado o plomería repara las barreras?']]],
+    ['Entrenamiento del personal', [['Todo el personal conoce y ejecuta RACE', 'Incluye administrativos, cocina, servicios generales y turno noche.'], ['Personal entrenado en el uso de matafuegos (PASS)', 'Práctica con extintores reales o simuladores en el último año.'], ['Personal de cocina entrenado en fuego de aceites', 'Protocolo específico y capacitación.'], ['Personal nuevo capacitado en incendio durante la inducción', 'Con registro de asistencia.']]],
+    ['Evacuación ante incendio', [['Evacuación horizontal definida por sector', 'Compartimento seguro conocido y señalizado.'], ['Procedimiento para pacientes de terapia intensiva y dependientes', 'Protocolo para pacientes ventilados o en cama.'], ['Simulacro de incendio en los últimos 12 meses', 'Al menos uno con todos los turnos y con informe.']]],
+    ['Coordinación externa y recuperación', [['Relación establecida con bomberos locales', '¿Conocen el plano, las válvulas y el acceso vehicular?'], ['Evaluación posterior al incendio antes de reocupar áreas', 'Lista de habilitación estructural y sanitaria.'], ['Debriefing con informe posterior y plan de mejora', 'Informe con lecciones aprendidas.']]]]],
+  ['B', 'Corte de energía eléctrica', [
+    ['Planificación y documentación', [['Plan ante corte eléctrico', 'Incluye falla de red, falla del grupo electrógeno y falla parcial por sector.'], ['Inventario de equipos críticos y su circuito', '¿Normal o de emergencia?'], ['Modo degradado para los sistemas de información', 'Formularios en papel, prescripción manual y registros disponibles físicamente.'], ['Orden de desconexión de cargas definido', 'Aprobado por dirección médica y mantenimiento.']]],
+    ['Infraestructura de respaldo', [['Transferencia automática al grupo electrógeno en 10 segundos o menos', 'Medida y documentada.'], ['Grupo electrógeno probado bajo carga (30 % de su capacidad)', 'Con registros de los últimos 12 meses.'], ['Autonomía de combustible verificada', '96 horas o más para áreas críticas.'], ['Centro de comando con energía de emergencia propia', ''], ['Subestación y tableros fuera de zonas inundables', '']]],
+    ['Cadena de frío y equipos críticos', [['Protocolo para medicamentos que requieren frío ante un corte', 'Tiempos de exposición aceptables por medicamento.'], ['Heladeras de medicamentos y hemoderivados en circuito de emergencia', 'Verificadas en 12 meses, con registro de temperatura.'], ['Equipos de soporte vital con baterías verificadas', 'Ventiladores, monitores, bombas.']]],
+    ['Entrenamiento y comunicación', [['Personal entrenado en modo degradado', 'Trabajo con formularios en papel.'], ['Personal que conoce qué equipos desconectar y en qué orden', ''], ['Simulacro de corte en los últimos 12 meses', 'Con activación del modo degradado y registro.']]],
+    ['Acuerdos externos y recuperación', [['Registro como infraestructura crítica ante la distribuidora', 'Con constancia y contacto directo de emergencias.'], ['Acuerdo con proveedor de combustible para reabastecimiento de emergencia', 'Con tiempo de respuesta.'], ['Verificación de equipos antes de reconectar', 'Lista de reinicio seguro.']]]]],
+  ['C', 'Inundación', [
+    ['Planificación y evaluación del riesgo', [['Análisis de amenazas con riesgo hídrico actualizado', 'Cursos de agua, cotas históricas.'], ['Plan ante inundación con fase preventiva y reactiva', '¿Distingue inundación pluvial (rápida) de fluvial (con preaviso)?'], ['Infraestructura vulnerable identificada', 'Subsuelos, tableros, equipos en planta baja; mapa de vulnerabilidad.'], ['Criterios escritos para evacuar o refugiarse en el lugar', '¿Quién tiene autoridad para decidir?']]],
+    ['Mitigación estructural', [['Sistemas eléctricos críticos por encima del nivel de riesgo', 'Grupo electrógeno, subestación, tableros.'], ['Bombas de achique operativas y probadas', 'Con registro.'], ['Barreras en accesos vulnerables', 'Compuertas, bolsas de arena.'], ['Desagües limpiados antes de la temporada de lluvias', 'Mantenimiento preventivo documentado.']]],
+    ['Preparación operativa preventiva', [['Protocolo para subir equipamiento a pisos altos', 'Qué se mueve, adónde y en qué plazo.'], ['Suscripción a alertas meteorológicas e hidrológicas', 'Servicio Meteorológico Nacional, autoridad del agua provincial.'], ['Procedimiento de altas anticipadas ante alerta', 'Criterio clínico y quién autoriza.'], ['Reserva de combustible verificada antes de la temporada de riesgo', '']]],
+    ['Evacuación y continuidad', [['Plan de evacuación de pacientes críticos con destinos y transporte definidos', ''], ['Acuerdos con instituciones receptoras vigentes', 'Confirmados en 12 meses, al menos uno fuera del área de riesgo compartida.'], ['Análisis microbiológico del agua antes de volver a usarla', ''], ['Simulacro o ejercicio de mesa de inundación en los últimos 24 meses', 'Que incluya la decisión de evacuar y la coordinación con Protección Civil.']]],
+    ['Coordinación externa y recuperación', [['Relación formal con Protección Civil municipal y provincial', 'Contactos actualizados y ejercicios conjuntos.'], ['Evaluación estructural certificada antes de readmitir pacientes', ''], ['Plan de recuperación económica', 'Seguro, documentación de daños, gestión de fondos.']]]]],
+  ['D', 'Ciberataque y falla de sistemas', [
+    ['Planificación y política', [['Plan de respuesta a incidentes informáticos', 'Incluye secuestro de datos, saturación y falla de proveedores.'], ['Responsable de seguridad informática con autoridad para aislar sistemas', 'En los primeros minutos.'], ['Inventario de sistemas críticos y sus dependencias', ''], ['Política de contraseñas y accesos privilegiados', 'Contraseñas únicas y verificación en dos pasos.']]],
+    ['Respaldo y continuidad', [['Copias de seguridad fuera de línea y fuera del edificio', 'Con restauración de prueba documentada.'], ['Modo degradado clínico en papel en cada sector', 'Prescripción, administración de medicación e identificación de pacientes.'], ['Red segmentada para contener un ataque sin apagar todo', ''], ['Equipos médicos críticos que funcionan sin la red', '']]],
+    ['Entrenamiento del personal', [['Capacitación en correos engañosos (phishing) en el último año', ''], ['Personal clínico entrenado en modo degradado', 'Prescribir, registrar y verificar medicación sin sistema.'], ['Coordinadores de modo degradado por turno', ''], ['Simulacro de ciberataque en los últimos 24 meses', 'Con activación del modo degradado.']]],
+    ['Comunicación y notificación', [['Comunicación interna alternativa', 'Radios portátiles operativas y personal entrenado.'], ['Contactos de la Dirección Nacional de Ciberseguridad y procedimiento de aviso', ''], ['Mensajes públicos preaprobados', 'Sin detalles técnicos ni montos de rescate.']]],
+    ['Recuperación y mejora', [['Preservar evidencia antes de apagar o restaurar', 'Contacto con especialistas forenses.'], ['Restauración progresiva con orden de prioridad', 'Lista de verificación antes de cada reactivación.'], ['Contrato con proveedor de ciberseguridad con tiempo de respuesta', ''], ['Debriefing con actualización del plan', '']]]]],
+  ['E', 'Pandemia o brote', [
+    ['Planificación y vigilancia', [['Plan pandémico por fases', 'Preparación, respuesta, meseta y recuperación.'], ['Suscripción a alertas del Ministerio de Salud y de OPS/OMS', ''], ['Vigilancia interna de brotes', 'Ausentismo por enfermedad y casos agrupados.'], ['Umbrales para activar el comando de incidentes por etapas', '']]],
+    ['Control de infecciones', [['Circuitos diferenciados con acceso y triage propios', 'Diseñados, señalizados y probados.'], ['Equipos de protección personal para al menos 30 días', 'Barbijos N95, guantes, camisolines, protección ocular.'], ['Al menos dos proveedores alternativos de equipos de protección', 'Con entrega de emergencia.'], ['Entrenamiento supervisado en colocación y retiro de equipos de protección', 'En el último año.'], ['Salas de presión negativa verificadas en los últimos 12 meses', '']]],
+    ['Expansión de capacidad', [['Espacios de expansión de camas y terapia identificados', 'Con sus requerimientos de gases e instalaciones.'], ['Plan de personal para la expansión', 'Reasignación y acreditación rápida.'], ['Criterios de uso de recursos escasos con comité de ética', ''], ['Plan para reactivar servicios suspendidos', '']]],
+    ['Comunicación', [['Actualización diaria al personal por canal oficial', ''], ['Comunicación pública de los servicios que siguen abiertos', ''], ['Reporte periódico de camas y equipos de protección al Ministerio', '']]],
+    ['Salud del personal y recuperación', [['Apoyo psicológico para el personal con mecanismo de derivación', ''], ['Testeo y seguimiento del personal', 'Criterios de regreso y rastreo de contactos.'], ['Debriefing posterior con cambios en el plan', '']]]]],
+  ['F', 'Incidente con múltiples víctimas', [
+    ['Planificación y umbral de activación', [['Plan con umbral de activación según la capacidad real', ''], ['Niveles de respuesta con recursos para cada uno', '¿Qué se activa ante 5, 20 o 50 víctimas?'], ['Fichas de acción del comando de incidentes para víctimas múltiples', 'Con contactos, sectores y circuitos propios.'], ['Llamado masivo de personal probado en el último año', 'Con datos actualizados.']]],
+    ['Triage y área de recepción', [['Triage START adoptado y entrenado en la guardia', 'Con tarjetas disponibles.'], ['Área de triage identificada y señalizada', 'Fuera del circuito habitual.'], ['Material de triage suficiente y accesible', 'Tarjetas de colores, etiquetas, formularios de registro.'], ['Reclasificación continua con frecuencia definida', '']]],
+    ['Expansión de capacidad', [['Liberación inmediata de la guardia', 'Altas y pase a sala; quién lo autoriza.'], ['Quirófanos activables en 30 minutos o menos', 'Con protocolo probado.'], ['Cirugía de control de daños adoptada y entrenada', ''], ['Áreas de expansión para víctimas leves identificadas', '']]],
+    ['Comunicación y familias', [['Canal directo con el sistema de emergencias para informar capacidad', ''], ['Centro de asistencia a familias fuera del área clínica', 'Con espacio, personal y protocolo.'], ['Identificación y seguimiento de víctimas', 'Etiqueta con identificación y destino interno.'], ['Área de prensa que no interfiera con las ambulancias', 'Con mensajes preaprobados.']]],
+    ['Entrenamiento y coordinación comunitaria', [['Simulacro de víctimas múltiples en los últimos 24 meses', 'Con comando, triage, expansión y asistencia a familias.'], ['Ejercicio conjunto con el sistema de emergencias y otros hospitales', ''], ['Debriefing con informe posterior y plan de mejora', ''], ['Registro de los incidentes con víctimas múltiples atendidos', 'Fechas, víctimas, lecciones.']]]]]
+];
+function madurezHTML(cual, r, word) {
+  const { encV, pieV } = vitEncPie(r, word);
+  const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
+  const esc = MADUREZ.filter(e => !cual || e[0] === cual);
+  const escala = `<table class="reg" style="margin:4px 0 6px"><tr><td class="l">1 · No existe</td><td class="l">2 · Existe en papel</td><td class="l">3 · Entrenado</td><td class="l">4 · Verificado y vigente</td></tr>
+    <tr><td style="font-size:7.3pt">No hay plan, protocolo ni recurso.</td><td style="font-size:7.3pt">Hay un documento, pero no se entrenó ni se verificó.</td><td style="font-size:7.3pt">Existe y se entrenó, pero no se verificó en los últimos 12 meses.</td><td style="font-size:7.3pt">Entrenado y verificado o ejercitado en los últimos 12 meses.</td></tr></table>`;
+  const bandas = `<p style="font-size:7.6pt;color:#4B5B73;margin:4px 0"><b>Resultado:</b> promedio = suma ÷ cantidad de ítems. <b>1,00 a 1,75</b> preparación inicial (brechas críticas: plan de acción inmediato con plazos) · <b>1,76 a 2,50</b> en desarrollo (predominan documentos no entrenados: priorizar ejercicios) · <b>2,51 a 3,25</b> consolidada (trabajar los ítems con 1 o 2) · <b>3,26 a 4,00</b> avanzada (revisión anual e integración comunitaria).</p>`;
+  const hojas = esc.map(e => { let n = 0; const items = e[2].reduce((a, d) => a + d[1].length, 0);
+    return `<section class="hoja">${encV}<div class="kick">AUTOEVALUACIÓN DE PREPARACIÓN · ESCENARIO ${e[0]} · ${E(e[1].toUpperCase())}</div>
+      <table class="reg"><tr><td class="l">Establecimiento · fecha</td><td>______________________________ · ___/___/______</td></tr><tr><td class="l">Equipo evaluador (dirección médica, enfermería, mantenimiento, emergencias)</td><td style="height:24px"></td></tr></table>
+      ${escala}
+      <table class="reg"><tr><td class="l" style="width:4%">N.º</td><td class="l">Aspecto y pregunta guía</td><td class="l" style="width:20%">Puntaje</td><td class="l" style="width:22%">Evidencia que se revisó</td></tr>
+      ${e[2].map(d => `<tr><td colspan="4" style="background:#F5F7FB;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact">${E(d[0])}</td></tr>` + d[1].map(it => `<tr><td>${++n}</td><td><b>${E(it[0])}</b>${it[1] ? `<br><span style="font-size:7.3pt;color:#4B5B73">${E(it[1])}</span>` : ''}</td><td style="white-space:nowrap">${['1', '2', '3', '4'].map(cas).join('')}</td><td></td></tr>`).join('')).join('')}
+      <tr><td></td><td style="text-align:right"><b>Suma · promedio (${items} ítems)</b></td><td colspan="2">______ / ${items * 4} · promedio ______</td></tr></table>
+      ${bandas}
+      <table class="reg"><tr><td class="l">Observaciones y acciones prioritarias (pasarlas al registro de tareas con responsable y plazo)</td><td style="height:52px"></td></tr></table>
+      <p style="font-size:7.3pt;color:#4B5B73">Evaluar en equipo y con evidencia (planes, registros de simulacros, contratos, inventarios): sin evidencia, el puntaje no puede ser 3 ni 4. Un plan no entrenado equivale a no tener plan. Adaptado de Vítolo, Planes de contingencia hospitalarios (NOBLE, 2026), Anexo; bandas recalculadas sobre el promedio.</p>${pieV}</section>`; }).join('');
+  if (cual) return hojas;
+  return hojas + `<section class="hoja">${encV}<div class="kick">AUTOEVALUACIÓN DE PREPARACIÓN · TABLA CONSOLIDADA</div>
+    <table class="reg"><tr><td class="l">Establecimiento · fecha</td><td>______________________________ · ___/___/______</td></tr></table>
+    <table class="reg" style="margin-top:6px"><tr><td class="l">Dimensión (por orden en cada cuestionario)</td>${MADUREZ.map(e => `<td class="l">${e[0]} · ${E(e[1])}</td>`).join('')}</tr>
+    ${[1, 2, 3, 4, 5].map(i => `<tr><td><b>Dimensión ${i}</b><br><span style="font-size:7pt;color:#4B5B73">${['Planificación', 'Sistemas e infraestructura', 'Entrenamiento', 'Comunicación o evacuación', 'Coordinación y recuperación'][i - 1]}</span></td>${MADUREZ.map(() => '<td style="height:30px">____ / ____</td>').join('')}</tr>`).join('')}
+    <tr><td><b>Total · promedio</b></td>${MADUREZ.map(() => '<td style="height:30px">____ / ____<br>prom. ____</td>').join('')}</tr></table>
+    <ul style="font-size:8pt;color:#4B5B73;margin-top:8px"><li>Una columna con mayoría de 1 y 2: brecha crítica en ese escenario; priorizarlo.</li><li>Una fila baja en todos los escenarios: debilidad transversal; mejorarla mejora todo.</li><li>Mayoría de 2: la brecha principal es el entrenamiento, no la documentación.</li><li>Mayoría de 3: falta verificación; fijar un ciclo anual de revisión y ejercicio.</li><li>El objetivo no es sacar un puntaje alto, sino saber dónde están las brechas.</li></ul>${pieV}</section>`;
+}
+
+
+function modeloImprimir(id) { $('#imp').innerHTML = modeloHTML(id, redVista(), false); setTimeout(() => window.print(), 300); }
+function modeloWord(id) { const m = MODELOS[id]; bajarWord(m.titulo, modeloHTML(id, redVista(), true), m.apaisada); }
+function encImp(r) { return /trelew/i.test(r.nombre) ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">'; }
+function pieImp(r) { return `<div class="pieimp"><div class="pt"><div><b>${/trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'}</b><br>Impreso el ${S.hoy()}</div><div>${E(r.nombre)}</div></div><img src="logo-hysl.png" alt="HySL"></div>`; }
+function imprimirInst() {
+  const r = redVista();
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">EVACUACIÓN HOSPITALARIA · INSTITUCIONES RECEPTORAS</div><h1>Directorio de derivación · ${E(r.nombre)}</h1>
+    <table><tr><td class="l">Institución</td><td class="l">Contacto 24 h</td><td class="l">Acuerdo · guardia · ARM</td><td class="l">Camas estimadas</td></tr>
+    ${(r.instituciones || []).map(x => `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.distancia ? x.distancia + ' km' : ''].filter(Boolean).join(' · '))}<br>Podría recibir de: ${E(x.recibe_de || 's/d')}</td><td>${E(x.contacto || '')}<br>${E(x.tel || '')}<br>${E(x.correo || '')}</td><td>${E(x.acuerdo || 's/d')}<br>${E(x.guardia || '')}<br>ARM: ${E(x.arm || 's/d')}</td>
+      <td>${cat.camas.filter(c => num(x[c[0] + '_est'])).map(c => E(c[1]) + ': ' + E(x[c[0] + '_est'])).join('<br>') || 's/d'}${x.camas_origen || x.camas_fecha ? '<br>' + E([x.camas_origen, x.camas_fecha ? 'al ' + x.camas_fecha : ''].filter(Boolean).join(' · ')) : ''}</td></tr>`).join('') || '<tr><td colspan="4">Sin instituciones cargadas.</td></tr>'}</table>
+    <p style="font-size:7.5pt;color:#4B5B73">Base orientadora para planificar: las camas son estimaciones de lo que cada institución podría recibir (categorías HAvBED), no camas disponibles reales. En una emergencia la disponibilidad se confirma con cada institución.</p>${pieImp(r)}</section>`;
+  setTimeout(() => window.print(), 300);
+}
+
+function abrirDep(id) {
+  const r = red(borrador.red), e = r.establecimientos.find(x => x.codigo === borrador.codigo), d = id ? r.dependencias.find(x => x.id === id) : {};
+  const puede = e.puedeCargar !== false, dis = puede ? '' : 'disabled';
+  borradorDep = { id: id || '', datos: {}, nombre: d.nombre || '', estado: d.estado || '' };
+  $('#flot').classList.add('oculto');
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${id ? E(d.nombre) : 'Nueva dependencia'}<small style="display:block;font-weight:500;opacity:.85">${E(e.nombre)}</small></b><button class="icono" data-act="cerrarDep" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo" id="fichaDep"><div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><label class="campo"><span>Nombre de la dependencia *</span><input id="depNombre" value="${E(d.nombre || '')}" ${dis} placeholder="Ej.: Terapia intensiva adultos"></label>
+      <label class="campo"><span>Estado de la ficha</span><select id="depEstado" ${dis}>${cat.estados.map(s => `<option ${s === (d.estado || 'En curso') ? 'selected' : ''}>${s}</option>`).join('')}</select></label></div>
+      ${seccionesHTML(camposDe(r, 'Dependencia'), d, dis, 'd_', true)}</div>
+    <div class="dlg-pie">${id && puede ? '<button class="btn peligro" data-act="borrarDep"><span class="ms">delete</span>Quitar</button>' : ''}<button class="btn sec" data-act="cerrarDep">Cerrar</button>${puede ? '<button class="btn" data-act="guardarDep"><span class="ms">save</span>Guardar</button>' : ''}</div></div>`;
+  $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden';
+  atarCampos($('#fichaDep'), borradorDep);
+}
+function cerrarDep() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; borradorDep = null; avisarCambios(); }
+
+/* ---------- impresión ---------- */
+function imprimir(modo) {
+  const r = red(borrador.red), e = r.establecimientos.find(x => x.codigo === borrador.codigo), cargado = modo === 'cargado';
+  const tw = /trelew/i.test(r.nombre);
+  const tabla = (l, obj) => secciones(l).map(s => `<h2>${E(s.n)}</h2><table>${s.c.map(c => `<tr><td class="l">${E(c.campo)}${c.tipo === 'lista' || c.tipo === 'multi' ? `<br><span style="font-weight:400;color:#4B5B73;font-size:7.5pt">${E(c.opciones.join(' · '))}</span>` : c.tipo === 'sino' ? '<br><span style="font-weight:400;color:#4B5B73;font-size:7.5pt">Sí · No</span>' : ''}</td><td class="v">${cargado ? E(obj[c.clave] || '') : ''}</td></tr>`).join('')}</table>`).join('');
+  const enc = tw ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">';
+  const pie = `<div class="pieimp"><div class="pt"><div><b>${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'}</b><br>Impreso el ${S.hoy()}</div><div>${E(r.nombre)}</div></div><img src="logo-hysl.png" alt="HySL"></div>`;
+  const deps = cargado ? r.dependencias.filter(d => d.codigo === e.codigo) : [{}];
+  $('#imp').innerHTML = `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DEL ESTABLECIMIENTO</div><h1>${E(e.nombre)}</h1><div style="color:#4B5B73">${E(e.codigo)} · ${E(e.tipo || '')} · ${E(r.nombre)}</div>
+      ${tabla(camposDe(r, 'Establecimiento'), e)}<p style="font-size:7.5pt;color:#4B5B73">Si falta un dato, anotar «s/d». Modelos: OPS, EVAC-H (2024); OPS/OMS, ISH Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII. Esta ficha complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p>${pie}</section>`
+    + deps.map(d => `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DE DEPENDENCIA</div><h1>${cargado ? E(d.nombre) : 'Dependencia: ______________________________'}</h1><div style="color:#4B5B73">${E(e.nombre)} · ${E(e.codigo)}</div>${tabla(camposDe(r, 'Dependencia'), d)}${pie}</section>`).join('');
+  setTimeout(() => window.print(), 300);
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep],[data-inst],[data-fila]'); if (!t) return;
+  if (t.dataset.ir) { ir(t.dataset.ir); window.scrollTo(0, 0); return; }
+  if (t.dataset.red) { redActual = t.dataset.red; render(); return; }
+  if (t.dataset.dep) return abrirDep(t.dataset.dep);
+  if (t.dataset.inst) return abrirFila('inst', t.dataset.inst);
+  if (t.dataset.fila) return abrirFila(t.dataset.fila, t.dataset.id);
+  const a = t.dataset.act;
+  if (a === 'tjImp') return tarjetaImprimir(t.dataset.col);
+  if (a === 'tjWord') return tarjetaWord(t.dataset.col);
+  if (a === 'madImp') { madEsc = t.dataset.esc; modeloImprimir('madurez'); madEsc = ''; return; }
+  if (a === 'modImp') return modeloImprimir(t.dataset.mod);
+  if (a === 'modWord') return modeloWord(t.dataset.mod);
+  if (a === 'impInst') return imprimirInst();
+  if (a === 'nuevaInst') return abrirFila('inst', '');
+  if (a === 'nuevaFila') return abrirFila(t.dataset.tipo, '');
+  if (a === 'impAlb') return imprimirAlb();
+  if (a === 'impCrit') { $('#imp').innerHTML = critHTML(redVista(), false); setTimeout(() => window.print(), 300); return; }
+  if (a === 'wordCrit') return bajarWord('Criterios de derivación para la mesa del COE', critHTML(redVista(), true), true);
+  if (a === 'cerrarFila') { if (borradorFila && Object.keys(borradorFila.datos).length && !confirm('Hay cambios sin guardar. ¿Cerrar igual?')) return; return cerrarFila(); }
+  if (a === 'guardarFila' || a === 'borrarFila') {
+    if (a === 'borrarFila' && !confirm('¿Quitar este registro? No se puede deshacer desde la app.')) return;
+    const b = borradorFila, r = redVista();
+    if (a === 'guardarFila' && !b.id && b.tipo !== 'crit' && !String(b.datos.nombre || '').trim()) { toast('Falta el nombre.', true); return; }
+    if (a === 'guardarFila' && !b.id && b.tipo === 'crit' && !String(b.datos.grupo || '').trim()) { toast('Falta el grupo de personas.', true); return; }
+    if (!navigator.onLine) { toast('Para guardar se necesita conexión.', true); return; }
+    t.disabled = true;
+    try { const res = await S.api(TIPOS_FILA[b.tipo].api, { red: r.nombre, id: b.id, borrar: a === 'borrarFila', datos: b.datos }); if (!res.ok) throw res; toast(a === 'borrarFila' ? 'Quitado.' : 'Guardado.'); borradorFila = null; cerrarFila(); await cargar(false); }
+    catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.', true); t.disabled = false; }
+    return;
+  }
+  if (a === 'volver') { if (borrador && (Object.keys(borrador.datos).length || borrador.estado) && !confirm('Hay cambios sin guardar en la ficha. ¿Salir igual?')) return; borrador = null; ir('#/'); return; }
+  if (a === 'imprimir') return imprimir(t.dataset.modo);
+  if (a === 'nuevaDep') return abrirDep('');
+  if (a === 'cerrarDep') { if (borradorDep && Object.keys(borradorDep.datos).length && !confirm('Hay cambios sin guardar. ¿Cerrar igual?')) return; return cerrarDep(); }
+  if (a === 'guardarEst') {
+    t.disabled = true;
+    const ok = await guardar({ ficha: 'Establecimiento', red: borrador.red, codigo: borrador.codigo, datos: borrador.datos, estado: borrador.estado }, 'Ficha guardada.');
+    t.disabled = false; if (ok) { borrador.datos = {}; borrador.estado = ''; render(); } return;
+  }
+  if (a === 'guardarDep') {
+    const nombre = $('#depNombre').value.trim(); if (!nombre) { toast('Falta el nombre de la dependencia.'); return; }
+    t.disabled = true;
+    const ok = await guardar({ ficha: 'Dependencia', red: borrador.red, codigo: borrador.codigo, id: borradorDep.id, nombre: nombre, estado: $('#depEstado').value, datos: borradorDep.datos }, 'Dependencia guardada.');
+    t.disabled = false; if (ok) { borradorDep = null; cerrarDep(); render(); } return;
+  }
+  if (a === 'borrarDep') {
+    if (!confirm('¿Quitar esta dependencia y sus datos? No se puede deshacer desde la app.')) return;
+    const ok = await guardar({ ficha: 'Dependencia', red: borrador.red, codigo: borrador.codigo, id: borradorDep.id, borrar: true }, 'Dependencia quitada.');
+    if (ok) { borradorDep = null; cerrarDep(); render(); }
+  }
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && borradorDep) cerrarDep(); else if (ev.key === 'Escape' && borradorFila) cerrarFila(); });
+window.addEventListener('beforeunload', ev => { if ((borrador && Object.keys(borrador.datos).length) || (borradorDep && Object.keys(borradorDep.datos).length)) { ev.preventDefault(); ev.returnValue = ''; } });
+window.addEventListener('hashchange', render);
+$('#btnAct').addEventListener('click', () => cargar(true));
+$('#btnAyuda').addEventListener('click', () => ir('#/ayuda'));
+$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('evac.cat'); render(); });
+
+function vistaIngreso() {
+  tema('');
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo DNI y clave de STAR-H, PHR, ISH y COE.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
+    <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
+  $('#fIng').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target, m = $('#msg');
+    try { const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r;
+      if (r.usuario.evac === false) throw { error: 'Tu acceso no incluye Evacuación hospitalaria. Consultá con Higiene y Seguridad Laboral.' };
+      S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Cargando…</div>'; cargar(false); }
+    catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+  });
+}
+function vistaAyuda() {
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Volver</button><div class="tarjeta ayuda"><h2>Ayuda · Evacuación hospitalaria</h2>
+    <p>Acá se reúne la información de cada establecimiento y de cada dependencia que necesita un plan de evacuación: contacto, población, edificio y salidas, gases medicinales, energía, protección contra incendios, organización y entorno.</p>
+    <ol><li>Elegí la red y el establecimiento. Completá la ficha por secciones; si falta un dato, dejalo vacío o poné «s/d». Tocá «Guardar ficha».</li>
+      <li>Agregá una ficha por dependencia (servicio, sector o área). Empezá por las áreas críticas: terapia, neonatología, quirófano, guardia.</li>
+      <li>En cada dependencia, contá a los pacientes según su movilidad (EVAC-H): autónomos, con apoyo, totalmente dependientes y con soporte vital. Con eso se calcula el personal y los elementos que hacen falta para evacuar.</li>
+      <li>Cuando la ficha esté completa, cambiá su estado a «Completa». «Validada» queda para cuando la revisa la Dirección o el Servicio de Higiene y Seguridad del lugar.</li>
+      <li>«Imprimir en blanco» da la ficha para completar a mano en el recorrido; «Imprimir con lo cargado», la ficha con los datos.</li></ol>
+    <h3>Traslados y derivación</h3><p>Es una base orientadora para planificar, no un registro en tiempo real. En <b>Instituciones receptoras</b> se cargan las instituciones que podrían recibir pacientes y la cantidad <b>estimada</b> de camas por tipo, con el origen y la fecha de la estimación; en una emergencia la disponibilidad se confirma con cada institución. Los pacientes no se registran en la app: en <b>Planillas modelo de traslado</b> se imprimen o se descargan en Word el registro de pacientes evacuados y la ficha de traslado.</p>
+    <h3>Albergues y criterios con el COE</h3><p>En <b>Albergues</b> se cargan las escuelas, gimnasios y otros edificios que el municipio o Protección Civil podría habilitar, con capacidad estimada, servicios (agua, energía, calefacción, cocina), accesibilidad, si pueden recibir personas con necesidades de salud y su centro de salud de referencia. La app calcula una capacidad orientativa según el Proyecto Esfera (3,5 m² por persona y 1 inodoro cada 20 personas). En <b>Criterios con el COE</b> está la propuesta de criterios de derivación para la mesa conjunta (qué sale del hospital, qué llega, qué va o viene del albergue y cómo se informa); se imprime o se baja en Word para la reunión y, cuando el COE valida un criterio, se cambia su estado y se anotan la fecha y el acta. En <b>Planillas modelo</b> están, además, el registro de ingresos por el evento, la ficha de derivación a albergue y el informe de derivaciones al COE.</p>
+    <h3>Desde la planilla</h3><p>Cada red tiene su planilla EVAC (hojas ESTABLECIMIENTOS, DEPENDENCIAS, CAMPOS, INSTITUCIONES, ALBERGUES y CRITERIOS). En la hoja CAMPOS se agregan, se cambian o se desactivan campos, y la app los toma sola.</p>
+    <p class="sub">Modelos: OPS, EVAC-H: Evacuación de hospitales y sus áreas críticas (2024); OPS/OMS, Índice de seguridad hospitalaria, Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII, capítulo 18; Res. SRT 905/2015, Anexo II. Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
+}
+
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+render();
+if (S.sesion.token()) cargar(false);
+})();
+</script>
+</body>
+</html>
