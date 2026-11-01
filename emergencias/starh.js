@@ -25,11 +25,11 @@
   };
 
   /* ---------- llamada al servidor ---------- */
-  async function api(accion, datos) {
+  async function api(accion, datos, ms) {
     const cuerpo = Object.assign({ accion: accion, token: store.get(DEMO ? 'demo.token' : 'token', '') }, datos || {});
     if (DEMO) return Demo.atender(cuerpo);
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 45000);
+    const t = setTimeout(() => ctrl.abort(), ms || 45000);
     try {
       const r = await fetch(API, {
         method: 'POST', body: JSON.stringify(cuerpo), redirect: 'follow',

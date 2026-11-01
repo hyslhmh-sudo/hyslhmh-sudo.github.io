@@ -148,7 +148,9 @@ async function vistaEstado(codigo) {
   const p = cat.planes.find(x => x.codigo === codigo); if (!p) return ir('#/');
   app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Establecimientos</button>${REGLA}
     <div class="tarjeta cab"><h2>${E(p.nombre)}</h2><div class="acc"><a class="btn sec mini" href="${E(p.planilla)}" target="_blank" rel="noopener"><span class="ms">table</span>Abrir la planilla del plan</a>${p.carpeta ? `<a class="btn sec mini" href="${E(p.carpeta)}" target="_blank" rel="noopener"><span class="ms">folder</span>Carpeta del plan</a>` : ''}</div></div>
+    ${cat.admin ? `<div class="tarjeta" id="borr"><b>Borrador en Google Docs</b><p class="sub">Leyendo el último borrador…</p></div>` : ''}
     <div id="est"><div class="vacio">Leyendo el estado del plan…</div></div>`;
+  if (cat.admin) cargarBorrador(codigo);
   try {
     const r = await S.api('plan_estado', { codigo: codigo }); if (!r.ok) throw r;
     const filas = r.hojas.reduce((a, h) => a + h.filas, 0), sd = r.hojas.reduce((a, h) => a + h.sd, 0);
@@ -177,6 +179,38 @@ async function vistaHoja(codigo, hoja, forzar) {
     '</tbody></table></div>';
   $('#hoja').dataset.codigo = codigo; $('#hoja').dataset.hoja = hoja;
   editando = { codigo: codigo, hoja: hoja, d: d };
+}
+
+/* ---------- Borrador en Google Docs (solo Administración) ---------- */
+async function cargarBorrador(codigo, aviso) {
+  const caja = $('#borr'); if (!caja) return;
+  let html = '<b>Borrador en Google Docs</b>';
+  try {
+    const r = await S.api('plan_borrador', { codigo: codigo }); if (!r.ok) throw r;
+    html += r.url ? `<p class="sub">Último borrador: ${E(r.fecha || 'fecha s/d')}.</p><div class="acc"><a class="btn sec mini" href="${E(r.url)}" target="_blank" rel="noopener"><span class="ms">description</span>Abrir el último borrador</a>`
+                  : '<p class="sub">Todavía no se generó ningún borrador desde la app.</p><div class="acc">';
+  } catch (e) { html += `<p class="sub">${E((e && (e.error || e.message)) || 'No se pudo leer el último borrador.')}</p><div class="acc">`; }
+  html += `<button class="btn mini" data-act="generar" data-cod="${E(codigo)}"><span class="ms">auto_awesome</span>Generar borrador</button></div>`;
+  if (aviso) html += `<p class="sub">${aviso}</p>`;
+  caja.innerHTML = html;
+}
+function confirmarGenerar(codigo) {
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>Generar borrador</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo">${REGLA}<p class="sub">Se arma el Doc completo con el texto común, los datos de este establecimiento y las tablas de los anexos XI y XII. Tarda entre uno y tres minutos. El borrador anterior va a la papelera de Drive y queda uno solo. No se genera PDF.</p></div>
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="generarOk" data-cod="${E(codigo)}"><span class="ms">auto_awesome</span>Generar ahora</button></div></div>`;
+  $('#dlg').classList.remove('oculto');
+}
+async function generar(codigo) {
+  cerrarDlg();
+  const caja = $('#borr'); if (caja) caja.innerHTML = '<b>Borrador en Google Docs</b><p class="sub">Generando el borrador… puede tardar hasta tres minutos. No cierres esta pantalla.</p>';
+  try {
+    const r = await S.api('plan_generar', { codigo: codigo }, 330000); if (!r.ok) throw r;
+    toast('Borrador generado.');
+    cargarBorrador(codigo, `Listo: ${r.bloques} bloques, ${r.notas} notas al pie y ${r.tablas} tablas de anexos.${r.anteriorAPapelera ? ' El borrador anterior fue a la papelera.' : ''} Falta a mano: «Página X de Y» (Insertar › Números de página).`);
+  } catch (e) {
+    const msg = (e && (e.error || e.message)) || '';
+    cargarBorrador(codigo, /abort/i.test(msg) || !msg ? 'La respuesta tardó demasiado. Puede que el borrador se siga generando: en un par de minutos tocá «Actualizar».' : E(msg));
+  }
 }
 
 function abrirFila(i) {
@@ -218,6 +252,8 @@ document.addEventListener('click', ev => {
   if (a === 'nueva') return abrirFila(null);
   if (a === 'cerrar') return cerrarDlg();
   if (a === 'guardar') return guardar(t);
+  if (a === 'generar') return confirmarGenerar(t.dataset.cod);
+  if (a === 'generarOk') return generar(t.dataset.cod);
 });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarDlg(); });
 window.addEventListener('hashchange', render);
@@ -250,7 +286,7 @@ function vistaAyuda() {
     <h3>Para la administradora</h3>
     <ul><li>Cada establecimiento con plan es una fila de la hoja PLANES del libro de la app (código, ID de su planilla «PLAN · …» y de la carpeta). Para que un referente cargue, agregá PLAN en la columna Módulos de su fila en ACCESOS STAR-H.</li>
       <li>El texto común se corrige solo en «PLAN · Texto común» (hoja TEXTOS) y vale para todos los establecimientos.</li>
-      <li>El borrador en Google Docs se genera por ahora desde la planilla del plan: menú Plan HyS › Generar borrador. «Página X de Y» se agrega a mano.</li>
+      <li>El borrador en Google Docs se genera desde acá: entrá al establecimiento y tocá «Generar borrador» (solo Administración). Incluye las tablas de los anexos XI y XII. El borrador anterior va a la papelera. «Página X de Y» se agrega a mano. El menú Plan HyS de la planilla queda como respaldo.</li>
       <li>Todo queda en versión 0 hasta el alta. Sin PDF hasta la aprobación final.</li></ul>
     <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79 (cap. 18, Anexo VII y cap. 21). La app es una base orientadora para preparar el plan; no es un registro en tiempo real. Complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
 }
