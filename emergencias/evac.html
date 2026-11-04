@@ -826,8 +826,8 @@ $('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; 
 
 function vistaIngreso() {
   tema('');
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo DNI y clave de STAR-H, PHR, ISH y COE.</p>
-    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo usuario y clave de STAR-H, PHR, ISH y COE.</p>
+    <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
   $('#fIng').addEventListener('submit', async ev => {

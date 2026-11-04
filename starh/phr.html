@@ -310,11 +310,11 @@ function vistaIngreso() {
   $('#titulo').innerHTML = 'PHR · Relevamiento inicial<small>Plan hospitalario de respuesta a emergencias y desastres</small>';
   app.innerHTML = `<form class="tarjeta ingreso" id="fIngreso"><h2>Ingresar</h2>
     <p class="sub">Relevamiento inicial del plan hospitalario de respuesta, según el instructivo de la OPS (2023).</p>
-    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn ancho" type="submit"><span class="ms">login</span>Ingresar</button>
     <div id="msgIngreso" class="msg oculto"></div>
-    <p class="sub" style="margin-top:14px">Es el mismo DNI y clave de la app STAR-H. La clave la entrega Higiene y Seguridad Laboral.</p></form>`;
+    <p class="sub" style="margin-top:14px">Es el mismo usuario y clave de la app STAR-H. La clave la entrega Higiene y Seguridad Laboral.</p></form>`;
   $('#fIngreso').addEventListener('submit', async ev => {
     ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msgIngreso'); b.disabled = true; m.classList.add('oculto');
     try {

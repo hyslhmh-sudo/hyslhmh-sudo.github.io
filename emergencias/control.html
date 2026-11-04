@@ -279,8 +279,8 @@ async function cargar() {
 
 function vistaIngreso() {
   ['#bAct', '#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2 style="color:var(--fuerte);margin:0 0 4px">Tablero de control</h2><p style="color:var(--suave);font-size:13px">Ingresá con el mismo DNI y clave de las apps.</p>
-    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2 style="color:var(--fuerte);margin:0 0 4px">Tablero de control</h2><p style="color:var(--suave);font-size:13px">Ingresá con el mismo usuario y clave de las apps.</p>
+    <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" type="submit" style="width:100%"><span class="ms">login</span>Ingresar</button><div class="msg oculto" id="msg" style="margin-top:10px"></div></form>`;
   $('#fIng').addEventListener('submit', async ev => {

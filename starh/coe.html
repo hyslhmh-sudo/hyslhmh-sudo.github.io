@@ -426,7 +426,7 @@ function dlgUsuario(dni) {
   const chk = (n, v, on, txt) => `<label class="sub" style="display:flex;gap:6px;align-items:center;padding:3px 0"><input type="checkbox" name="${n}" value="${E(v)}" ${on ? 'checked' : ''}>${txt}</label>`;
   abrir(`<div class="dlg-cab"><b>${dni ? 'Qué ve ' + E(x.nombre) : 'Nuevo usuario'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <form class="dlg-cuerpo" id="fUsr"><datalist id="dlPer">${cat.personas.map(p => `<option value="${E(p.nombre)}">`).join('')}</datalist>
-      <div class="rejilla"><label class="campo"><span>DNI (será su usuario) *</span><input name="dni" inputmode="numeric" maxlength="10" value="${E(x.dni || '')}" ${dni ? 'readonly' : ''}></label>
+      <div class="rejilla"><label class="campo"><span>DNI (optativo; no se usa para ingresar)</span><input name="dni" inputmode="numeric" maxlength="10" value="${E(x.dni || '')}" ${dni ? 'readonly' : ''}></label>
       <label class="campo"><span>Apellido y nombre *</span><input name="nombre" list="dlPer" value="${E(x.nombre || '')}" placeholder="Podés elegir un participante del COE"></label>
       <label class="campo"><span>Rol</span><select name="rol">${opts(acc.roles, x.rol)}</select></label>
       <label class="campo"><span>Estado</span><select name="estado">${opts(['Activo', 'Inactivo'], x.estado || 'Activo')}</select></label></div>
@@ -448,9 +448,9 @@ function dlgUsuario(dni) {
 }
 function dlgClave(r) {
   abrir(`<div class="dlg-cab"><b>Clave de ${E(r.nombre)}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
-    <div class="dlg-cuerpo"><p>Usuario (DNI): <b style="font-size:20px">${E(r.dni)}</b></p><p>Clave: <b id="claveTxt" style="font-size:26px;letter-spacing:.12em;color:#2E7D32">${E(r.clave)}</b></p>
+    <div class="dlg-cuerpo"><p>Usuario: <b style="font-size:20px">${E(r.nombre)}</b></p><p>Clave: <b id="claveTxt" style="font-size:26px;letter-spacing:.12em;color:#2E7D32">${E(r.clave)}</b></p>
       <div class="aviso" style="background:#FFF3C4;color:#5A4500;border-radius:10px;padding:8px 11px;font-size:13px">Anotala o copiala ahora y pasásela a la persona: no se vuelve a mostrar. Si la pierde, generá una nueva (la anterior deja de funcionar).</div></div>
-    <div class="dlg-pie"><button class="btn sec" data-act="copiarClave" data-txt="${E('Ingreso a la app Emergencias y desastres (https://hyslhmh-sudo.github.io/starh/) · Usuario: ' + r.dni + ' · Clave: ' + r.clave)}"><span class="ms">content_copy</span>Copiar usuario y clave</button><button class="btn" data-act="cerrar">Listo</button></div>`);
+    <div class="dlg-pie"><button class="btn sec" data-act="copiarClave" data-txt="${E('Ingreso a la app Emergencias y desastres (https://hyslhmh-sudo.github.io/starh/) · Usuario: ' + r.nombre + ' · Clave: ' + r.clave)}"><span class="ms">content_copy</span>Copiar usuario y clave</button><button class="btn" data-act="cerrar">Listo</button></div>`);
 }
 
 /* ---------- diálogos ---------- */
@@ -506,12 +506,12 @@ document.addEventListener('click', async ev => {
   if (a === 'copiarClave') { try { await navigator.clipboard.writeText(t.dataset.txt); toast('Copiado.'); } catch (e) { toast('No se pudo copiar: anotala a mano.'); } return; }
   if (a === 'guardarUsr') {
     const f = $('#fUsr'), val = n => [...f.querySelectorAll(`[name=${n}]:checked`)].map(c => c.value);
-    const d = { dni: f.dni.value, nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; '),
+    const d = { dni: t.dataset.dni || f.dni.value.trim(), nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; '),
       redes: f.redTodas.checked ? 'Todas' : val('red').join('; '), estab: f.estTodos.checked ? 'Todos' : val('est').join('; ') };
     if (!navigator.onLine) { toast('Para guardar se necesita conexión.'); return; }
     t.disabled = true;
     try { const r = await S.api('coe_usuario', { usuario: d }); if (!r.ok) throw r; cerrar(); toast('Usuario guardado.'); acc = null; await cargarUsuarios();
-      if (r.nuevo && confirm('¿Generar ahora la clave de ' + d.nombre + '?')) { const c = await S.api('coe_clave', { dni: d.dni }); if (!c.ok) throw c; dlgClave(c); await cargarUsuarios(); } }
+      if (r.nuevo && confirm('¿Generar ahora la clave de ' + d.nombre + '?')) { const c = await S.api('coe_clave', { dni: r.dni || d.dni }); if (!c.ok) throw c; dlgClave(c); await cargarUsuarios(); } }
     catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); t.disabled = false; }
     return;
   }
@@ -551,8 +551,8 @@ $('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; 
 window.addEventListener('hashchange', render);
 
 function vistaIngreso() {
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo DNI y clave de STAR-H, PHR e ISH.</p>
-    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo usuario y clave de STAR-H, PHR e ISH.</p>
+    <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
   $('#fIng').addEventListener('submit', async ev => {
