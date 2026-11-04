@@ -74,6 +74,10 @@ tr.nueva td{background:#F5F7FB}
 .campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:4px}
 .campo input,.campo select,.campo textarea{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:10px 11px;background:#fff}
 .campo textarea{min-height:64px;resize:vertical}
+/* 04/11/2026 · casillas dentro de un campo (Módulos, Redes, Localidades…): la casilla chica y el texto pegado a ella */
+.campo input[type=checkbox],.campo input[type=radio]{width:18px;height:18px;min-width:0;min-height:0;padding:0;margin:0;flex:none}
+.campo label{justify-content:flex-start;text-align:left}
+.campo label span{display:inline;margin:0;font-weight:400}
 .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
 .sec-t{margin:14px 0 4px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--medio);border-bottom:1px solid var(--linea);padding-bottom:4px}
 .opciones{display:grid;grid-template-columns:1fr 1fr;gap:6px}
