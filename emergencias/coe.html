@@ -178,6 +178,8 @@ function render() {
   if (location.hash === '#ayuda') return vistaAyuda();
   const activos = cat.personas.filter(p => p.estado !== 'Inactivo');
   if (vista === 'usuarios' && !cat.puedeCargar) vista = 'personas';
+  { const TIT = { personas: 'Participantes', grilla: 'Proyectos y funciones', proyectos: 'Por proyecto', reuniones: 'Reuniones y actas', matriz: 'Matriz operativa', usuarios: 'Usuarios y accesos' };
+    $('#titulo').innerHTML = `COE · ${TIT[vista] || 'Participantes'}<small>Comité y centro de operaciones de emergencia</small>`; document.title = 'COE · ' + (TIT[vista] || 'Participantes'); }
   const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas'], ['matriz', 'table_chart', 'Matriz operativa']].concat(cat.puedeCargar ? [['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
     .map(t => `<button class="tab" data-vista="${t[0]}" aria-pressed="${vista === t[0]}"><span class="ms" style="font-size:18px">${t[1]}</span>${t[2]}</button>`).join('');
   const kpis = `<div class="kpis">
@@ -187,6 +189,7 @@ function render() {
     <div class="tarjeta kpi"><b>${new Set(cat.participaciones.map(x => x.proyecto)).size}</b><span>proyectos con participantes</span></div></div>`;
   app.innerHTML = `<div class="tabs">${tabs}</div>${vista === 'usuarios' || vista === 'reuniones' || vista === 'matriz' ? '' : kpis}<div id="vista"></div>
     <p class="sub">Datos al ${new Date(cat.generado).toLocaleString('es-AR')}. Se guardan en las hojas COE PARTICIPANTES y COE PROYECTOS del libro${cat.puedeCargar ? '' : ' · Tu acceso es de consulta'}.</p>`;
+  { const at = document.querySelector('.tab[aria-pressed="true"]'); if (at) at.scrollIntoView({ inline: 'center', block: 'nearest' }); }
   if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'matriz') cargarMatriz(false); else if (vista === 'reuniones') vistaReuniones(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
 }
 

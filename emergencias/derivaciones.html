@@ -39,6 +39,8 @@ h3{font-size:15px;margin:16px 2px 8px;color:var(--fuerte)}
 .btn.mini{min-height:32px;padding:5px 9px;font-size:12.5px}
 .btn.peligro{background:#fff;color:#172B4D;border-color:#F57C00}
 .btn:disabled{opacity:.5;cursor:default}
+.solo-ver input:disabled,.solo-ver select:disabled,.solo-ver textarea:disabled{background:#F1F3F7;color:#3A4A5E;border-color:#DCE3EF;opacity:1;-webkit-text-fill-color:#3A4A5E;cursor:default}
+.solo-ver select:disabled{appearance:none;-webkit-appearance:none}
 .lista{display:grid;gap:10px}
 .est{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%}
 .est-cab{display:flex;gap:10px;align-items:flex-start}.est-cab b{flex:1;font-size:15px;color:#172B4D}
@@ -453,11 +455,11 @@ function abrirFila(tipo, id) {
     <div class="campos" style="padding:6px 0 0">${est.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>`;
   } else {
     const ayuda = tipo === 'alb' ? '<p class="sub" style="margin:4px 2px 8px">Referencia (Proyecto Esfera, 2018): 3,5 m² cubiertos por persona, 1 inodoro cada 20 personas y 15 litros de agua por persona y por día. Con la superficie y los inodoros la app calcula una capacidad orientativa.</p>'
-      : '<p class="sub" style="margin:4px 2px 8px">Cuando el COE valida el criterio, cambiá el estado a «Validado por el COE» y anotá la fecha y el acta o reunión.</p>';
+      : (puede ? '<p class="sub" style="margin:4px 2px 8px">Cuando el COE valida el criterio, cambiá el estado a «Validado por el COE» y anotá la fecha y el acta o reunión.</p>' : '');
     cuerpo = `${ayuda}<div class="tarjeta" style="padding:6px 14px 10px"><div class="campos" style="padding:0">${def.map(c => campoHTML(c, x[c.clave] != null ? x[c.clave] : (c.clave === 'estado' ? 'Propuesto' : ''), dis, tipo + '_')).join('')}</div></div>`;
   }
   $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${id ? E(T.titulo(x) || 's/d') : T.nuevo}</b><button class="icono" data-act="cerrarFila" aria-label="Cerrar"><span class="ms">close</span></button></div>
-    <div class="dlg-cuerpo" id="fichaFila">${cuerpo}</div>
+    <div class="dlg-cuerpo ${puede ? '' : 'solo-ver'}" id="fichaFila">${puede ? '' : `<div class="aviso-datos" style="background:#EEF2F7;color:#3A4A5E"><span class="ms" style="font-size:17px">visibility</span> Solo ver: tu usuario no carga en ${E(x.localidad || r.nombre)}. Los datos no se pueden modificar.</div>`}${cuerpo}</div>
     <div class="dlg-pie">${id && puede ? '<button class="btn peligro" data-act="borrarFila"><span class="ms">delete</span>Quitar</button>' : ''}<button class="btn sec" data-act="cerrarFila">Cerrar</button>${puede ? '<button class="btn" data-act="guardarFila"><span class="ms">save</span>Guardar</button>' : ''}</div></div>`;
   $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden';
   atarCampos($('#fichaFila'), borradorFila);
@@ -834,6 +836,8 @@ document.addEventListener('click', async ev => {
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && borradorDep) cerrarDep(); else if (ev.key === 'Escape' && borradorFila) cerrarFila(); });
 window.addEventListener('beforeunload', ev => { if ((borrador && Object.keys(borrador.datos).length) || (borradorDep && Object.keys(borradorDep.datos).length)) { ev.preventDefault(); ev.returnValue = ''; } });
 window.addEventListener('hashchange', render);
+// La pestaña y la localidad elegidas quedan a la vista aunque la fila se desplace (pantallas angostas)
+new MutationObserver(() => document.querySelectorAll('.stab[aria-pressed="true"],.red-tab[aria-pressed="true"]').forEach(b => { const p = b.parentElement; p.scrollLeft = b.offsetLeft - (p.clientWidth - b.offsetWidth) / 2; })).observe(app, { childList: true });
 $('#btnAct').addEventListener('click', () => cargar(true));
 $('#btnAyuda').addEventListener('click', () => ir('#/ayuda'));
 $('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('deriv.cat'); render(); });
