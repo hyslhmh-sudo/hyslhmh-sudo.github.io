@@ -152,9 +152,9 @@ function pintar() {
       <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' ? '</span>' : ''}</div>`;
   const chica = m => `<div class="chica" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--c:${m.c};--cc:${m.cc}">
       <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}</b><span class="d">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
-  // 01/11/2026: por ahora la app solo comparte PHR. Quien no es Administración (o no ingresó) ve solo PHR.
+  // 01/11/2026: quien no es Administración ve solo PHR. 03/11/2026 (Belén): sin ingresar no se ve ninguna sección.
   const admin = !!(u && u.rol === 'Administración');
-  const g = k => MODS.filter(m => m.grupo === k && (admin || m.k === 'phr'));
+  const g = k => MODS.filter(m => m.grupo === k && (admin || (u && m.k === 'phr')));
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
   $('#rejilla').innerHTML = fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
 }

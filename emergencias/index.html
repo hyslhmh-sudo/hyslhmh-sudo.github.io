@@ -152,11 +152,11 @@ function pintar() {
       <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' ? '</span>' : ''}</div>`;
   const chica = m => `<div class="chica" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--c:${m.c};--cc:${m.cc}">
       <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}</b><span class="d">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
-  // 01/11/2026: por ahora la app solo comparte PHR. Quien no es Administración (o no ingresó) ve solo PHR.
+  // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
-  // Sin ingresar: solo PHR. Con usuario que no es Administración: PHR, la red de derivación (Gestión de contingencias),
+  // Sin ingresar: nada. Con usuario que no es Administración: PHR, la red de derivación (Gestión de contingencias),
   // COE, Fuentes y Formularios, sin nada de los planes ni de STAR-H o ISH. Administración: todo.
-  const VIS = !u ? ['phr'] : ['phr', 'evac', 'coe', 'fuentes', 'imp'];
+  const VIS = !u ? [] : ['phr', 'evac', 'coe', 'fuentes', 'imp'];
   const OTRO_TXT = { evac: 'Red de derivación: instituciones receptoras, albergues, criterios con el COE y planillas modelo para imprimir.', imp: 'Formularios PHR, en blanco o con lo cargado.' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k] }) : m);
   const g = k => MV.filter(m => m.grupo === k && (admin || VIS.indexOf(m.k) >= 0));
