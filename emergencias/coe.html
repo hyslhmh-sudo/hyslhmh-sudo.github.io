@@ -178,16 +178,16 @@ function render() {
   if (location.hash === '#ayuda') return vistaAyuda();
   const activos = cat.personas.filter(p => p.estado !== 'Inactivo');
   if (vista === 'usuarios' && !cat.puedeCargar) vista = 'personas';
-  const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas']].concat(cat.puedeCargar ? [['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
+  const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas'], ['matriz', 'table_chart', 'Matriz operativa']].concat(cat.puedeCargar ? [['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
     .map(t => `<button class="tab" data-vista="${t[0]}" aria-pressed="${vista === t[0]}"><span class="ms" style="font-size:18px">${t[1]}</span>${t[2]}</button>`).join('');
   const kpis = `<div class="kpis">
     <div class="tarjeta kpi"><b>${activos.length}</b><span>participantes activos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo !== 'Externo').length}</b><span>actores internos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo === 'Externo').length}</b><span>actores externos</span></div>
     <div class="tarjeta kpi"><b>${new Set(cat.participaciones.map(x => x.proyecto)).size}</b><span>proyectos con participantes</span></div></div>`;
-  app.innerHTML = `<div class="tabs">${tabs}</div>${vista === 'usuarios' || vista === 'reuniones' ? '' : kpis}<div id="vista"></div>
+  app.innerHTML = `<div class="tabs">${tabs}</div>${vista === 'usuarios' || vista === 'reuniones' || vista === 'matriz' ? '' : kpis}<div id="vista"></div>
     <p class="sub">Datos al ${new Date(cat.generado).toLocaleString('es-AR')}. Se guardan en las hojas COE PARTICIPANTES y COE PROYECTOS del libro${cat.puedeCargar ? '' : ' · Tu acceso es de consulta'}.</p>`;
-  if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'reuniones') vistaReuniones(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
+  if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'matriz') cargarMatriz(false); else if (vista === 'reuniones') vistaReuniones(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
 }
 
 function filtrosHTML(conProy) {
@@ -410,7 +410,7 @@ function minAsistentes() {
     .map(p => [p.nombre || 's/d (revisar)', [p.institucion, p.cargo].filter(Boolean).join(' · '), funcDe(p.id)]);
   return sel.concat(minuta.extras.filter(x => (x.n || '').trim()).map(x => [x.n, x.i || '', x.f || '']));
 }
-const minAusentes = () => minuta.proyecto ? cat.personas.filter(p => delProy(p.id) && p.estado !== 'Inactivo' && !minuta.asist[p.id]).map(p => p.nombre).sort((a, b) => (a || '').localeCompare(b || '', 'es')) : [];
+const minAusentes = () => minuta.proyecto && minuta.verAus !== false ? cat.personas.filter(p => delProy(p.id) && p.estado !== 'Inactivo' && !minuta.asist[p.id]).map(p => p.nombre).sort((a, b) => (a || '').localeCompare(b || '', 'es')) : [];
 function vistaMinuta() {
   const m = minuta, v = (k, ph, t) => `<input data-m="${k}" value="${E(m[k] || '')}"${ph ? ` placeholder="${E(ph)}"` : ''}${t ? ` type="${t}"` : ''}>`;
   const ta = (k, ph, h) => `<textarea data-m="${k}" placeholder="${E(ph || '')}" style="min-height:${h || 70}px">${E(m[k] || '')}</textarea>`;
@@ -434,6 +434,7 @@ function vistaMinuta() {
       ${lab('Convocó · coordinó', v('coordino'))}${lab('Redactó el acta', v('redacto'))}</div></div>
     <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px"><h2>1. Asistentes <small class="sub">(${nSel} marcados)</small></h2>
       <p class="sub" style="margin:0 0 8px">Tildá quién estuvo. ${m.proyecto ? `Arriba van los integrantes de «${E(m.proyecto)}»; los no tildados salen en el acta como ausentes.` : 'Elegí el proyecto arriba para ver primero a sus integrantes.'} La función se puede cambiar solo para esta acta.</p>
+      ${m.proyecto ? `<label class="sub" style="display:flex;gap:6px;align-items:center;margin:0 0 8px"><input type="checkbox" data-m="verAus" ${m.verAus !== false ? 'checked' : ''} style="width:18px;height:18px">Listar en el acta como ausentes a los integrantes no tildados</label>` : ''}
       ${delP.length ? `<div class="acc" style="margin-bottom:6px"><button class="btn sec mini" data-act="minTodos"><span class="ms" style="font-size:17px">done_all</span>Marcar todos los integrantes</button></div>
         <div class="tabla-wrap"><table><tr><th></th><th>Integrante del proyecto</th><th>Función</th></tr>${delP.map(filaP).join('')}</table></div>` : (m.proyecto ? '<p class="sub">Este proyecto no tiene integrantes cargados en «Proyectos y funciones».</p>' : '')}
       ${otros.length ? `<div class="acc" style="margin:10px 0 6px"><button class="btn sec mini" data-act="minOtros"><span class="ms" style="font-size:17px">${verOtros || !delP.length ? 'expand_less' : 'expand_more'}</span>${delP.length ? 'Otras personas cargadas en el COE' : 'Personas cargadas en el COE'} (${otros.length})</button></div>
@@ -472,7 +473,7 @@ function vistaMinuta() {
     if (el.dataset.asist) { if (el.checked) minuta.asist[el.dataset.asist] = true; else delete minuta.asist[el.dataset.asist]; minGuardar(); if (ev.type === 'change') vistaMinuta(); return; }
     if (el.dataset.func) { minuta.func[el.dataset.func] = el.value; minGuardar(); return; }
     const k = el.dataset.m; if (!k) return;
-    const p = k.split('.'); if (p.length === 3) minuta[p[0]][+p[1]][p[2]] = el.value; else minuta[k] = el.value;
+    const p = k.split('.'); if (p.length === 3) minuta[p[0]][+p[1]][p[2]] = el.value; else minuta[k] = el.type === 'checkbox' ? el.checked : el.value;
     minGuardar(); if (k === 'proyecto' && ev.type === 'change') { minuta.func = {}; vistaMinuta(); }
   };
 }
@@ -532,6 +533,66 @@ async function minListaSrv() {
 }
 let minActas = [];
 const minTitulo = () => 'Acta de reunión' + (minuta.num ? ' N.º ' + minuta.num : '') + (minuta.fecha ? ' - ' + minuta.fecha.replace(/\//g, '-') : '') + (minuta.proyecto ? ' - ' + minuta.proyecto : '');
+
+
+/* ---------- 6. Matriz operativa del COE (hoja COE MATRIZ) ----------
+ * La ven todos los usuarios con acceso al COE; solo Administración la modifica. Sale impresa o en Word (apaisada). */
+let mat = S.store.get('coe.matriz', null), mq = '', mEst = '';
+const M_CAMPOS = [['num', 'N.º'], ['eje', 'Eje'], ['tarea', 'Actividad / tarea'], ['respProp', 'Responsable institucional propuesto'], ['areas', 'Áreas que aportan información'],
+  ['plazo', 'Plazo sugerido'], ['producto', 'Producto / entregable'], ['indicador', 'Indicador de cumplimiento'], ['estado', 'Estado'], ['respDesig', 'Responsable designado'],
+  ['fecha', 'Fecha comprometida'], ['brecha', 'Brecha / observaciones'], ['proyecto', 'Proyecto']];
+const M_COLOR = { 'Pendiente': '#F57C00', 'En curso': '#2F5BEA', 'Completada': '#1E7B4B', 'Reprogramada': '#6B7A90' };
+const sdv = x => !x || /^s\/d/i.test(String(x).trim());
+async function cargarMatriz(avisar) {
+  if (!navigator.onLine) { if (!mat) $('#vista').innerHTML = '<div class="tarjeta vacio">Sin conexión y sin una copia guardada de la matriz.</div>'; else vistaMatriz(); return; }
+  if (!mat) $('#vista').innerHTML = '<div class="tarjeta vacio">Cargando la matriz…</div>';
+  try { const r = await S.api('coe_matriz'); if (!r.ok) throw r; mat = r; S.store.set('coe.matriz', r); if (avisar) toast('Matriz actualizada.'); vistaMatriz(); }
+  catch (e) { const t = (e && (e.error || e.message)) || 'No se pudo traer la matriz.'; if (!mat) $('#vista').innerHTML = `<div class="tarjeta vacio">${E(/desconocida/i.test(t) ? 'La matriz todavía no está disponible: falta publicar la versión nueva del servidor (Apps Script).' : t)}</div>`; else toast(t); }
+}
+function vistaMatriz() {
+  if (!mat) return cargarMatriz(false);
+  const F = mat.filas, cnt = e => F.filter(x => x.estado === e).length;
+  const l = F.filter(x => (!mEst || x.estado === mEst) && (!mq || M_CAMPOS.map(c => x[c[0]]).join(' ').toLowerCase().indexOf(mq.toLowerCase()) >= 0));
+  const v = (t, x) => `<div><span class="sub" style="font-weight:700">${t}:</span> <span class="${sdv(x) ? 'sub' : ''}">${E(x || 's/d (revisar)')}</span></div>`;
+  $('#vista').innerHTML = `<div class="kpis">${mat.estados.map(e => `<button class="tarjeta kpi" data-act="mEst" data-e="${E(e)}" style="text-align:left;cursor:pointer;border:${mEst === e ? '2px solid ' + M_COLOR[e] : '1px solid #E4EAFB'}"><b style="color:${M_COLOR[e]}">${cnt(e)}</b><span>${E(e)}</span></button>`).join('')}</div>
+    <div class="herr"><input id="mq" type="search" placeholder="Buscar eje, tarea, responsable…" value="${E(mq)}">
+      ${mEst ? `<button class="btn sec" data-act="mEst" data-e=""><span class="ms">filter_alt_off</span>${E(mEst)}</button>` : ''}
+      <button class="btn sec" data-act="mImp"><span class="ms">print</span>Imprimir</button><button class="btn sec" data-act="mWord"><span class="ms">download</span>Word</button>
+      ${mat.puedeCargar ? '<button class="btn" data-act="mNueva"><span class="ms">add</span>Agregar tarea</button>' : ''}</div>
+    <p class="sub" style="margin:0 2px 10px">Matriz operativa del COE de Trelew y Área Programática: ${F.length} tareas, ${cnt('Completada')} completadas. ${mat.puedeCargar ? 'Tocá «Editar» para actualizar estado, responsable, fecha o brechas.' : 'Solo consulta.'} Se revisa en cada reunión del COE.</p>
+    <div class="lista">${l.map(x => `<div class="tarjeta per" style="box-shadow:inset 5px 0 0 ${M_COLOR[x.estado] || '#C5D1F2'}">
+      <div class="per-cab"><b>${E(x.num)}. ${E(x.eje)}</b><span class="chip" style="background:${M_COLOR[x.estado] || '#F5F7FB'};color:${M_COLOR[x.estado] ? '#fff' : '#4B5B73'}">${E(x.estado || 's/d')}</span></div>
+      <div>${E(x.tarea)}</div>${v('Responsable propuesto', x.respProp)}${v('Responsable designado', x.respDesig)}${v('Fecha comprometida', x.fecha)}${v('Plazo sugerido', x.plazo)}
+      ${sdv(x.brecha) ? '' : `<div class="msg" style="margin-top:4px">${E(x.brecha)}</div>`}
+      <details><summary class="sub" style="cursor:pointer">Más datos</summary>${v('Áreas que aportan información', x.areas)}${v('Producto / entregable', x.producto)}${v('Indicador de cumplimiento', x.indicador)}<div class="sub">Actualizado ${E(x.actualizado || '')}</div></details>
+      ${mat.puedeCargar ? `<div class="acc"><button class="btn sec mini" data-act="mEditar" data-id="${E(x.id)}"><span class="ms" style="font-size:17px">edit</span>Editar</button></div>` : ''}</div>`).join('') || '<div class="tarjeta vacio">No hay tareas con ese filtro.</div>'}</div>`;
+  const f = $('#mq'); f.addEventListener('input', () => { mq = f.value; const p = f.selectionStart; vistaMatriz(); const n = $('#mq'); n.focus(); n.setSelectionRange(p, p); });
+}
+function dlgMatriz(id) {
+  const x = id ? mat.filas.find(y => y.id === id) : { num: String(mat.filas.length + 1), estado: 'Pendiente', proyecto: 'Comité de crisis El Niño 2026-2027' };
+  const largo = { tarea: 1, respProp: 1, areas: 1, producto: 1, indicador: 1, brecha: 1 };
+  abrir(`<div class="dlg-cab"><b>${id ? 'Editar tarea ' + E(x.num) : 'Nueva tarea'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <form class="dlg-cuerpo" id="fMat">${M_CAMPOS.map(([k, t]) => `<label class="campo"><span>${t}</span>${k === 'estado' ? `<select name="estado">${opts(mat.estados, x.estado)}</select>`
+      : largo[k] ? `<textarea name="${k}">${E(sdv(x[k]) ? '' : x[k] || '')}</textarea>` : `<input name="${k}" value="${E(sdv(x[k]) ? '' : x[k] || '')}"${k === 'fecha' ? ' placeholder="dd/mm/aaaa"' : ''}>`}</label>`).join('')}
+      <p class="sub">Lo que quede vacío se guarda como «s/d (revisar)».</p></form>
+    <div class="dlg-pie">${id ? `<button class="btn peligro" data-act="mQuitar" data-id="${E(id)}"><span class="ms">delete</span>Quitar</button>` : ''}<button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="mGuardar" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button></div>`);
+}
+async function guardarMatriz(id, borrar) {
+  if (!navigator.onLine) return toast('Para guardar se necesita conexión.');
+  const fila = { id: id };
+  if (borrar) { if (!confirm('¿Quitar esta tarea de la matriz? Se borra la fila de la hoja COE MATRIZ.')) return; fila.borrar = true; fila.tarea = 'x'; }
+  else { const f = $('#fMat'); M_CAMPOS.forEach(([k]) => fila[k] = f[k].value); }
+  try { const r = await S.api('coe_matriz_fila', { fila: fila }); if (!r.ok) throw r; cerrar(); toast(borrar ? 'Tarea quitada.' : 'Guardado en la hoja COE MATRIZ.'); await cargarMatriz(false); }
+  catch (e) { const t = (e && (e.error || e.message)) || 'No se pudo guardar.'; toast(/desconocida/i.test(t) ? 'Falta publicar la versión nueva del servidor (Apps Script).' : t); }
+}
+function matrizHTML(word) {
+  const F = mat.filas.filter(x => !mEst || x.estado === mEst);
+  const c = ['N.º', 'Eje', 'Actividad / tarea', 'Responsable propuesto', 'Áreas que aportan', 'Plazo', 'Producto', 'Indicador', 'Estado', 'Responsable designado', 'Fecha', 'Brecha / observaciones'];
+  return `<section class="r-hoja apaisada">${encReu(word)}<div class="r-kick">MATRIZ OPERATIVA · COE DE TRELEW Y ÁREA PROGRAMÁTICA</div>
+    <div style="font-size:8.5pt;margin:2px 0 6px">Fecha de corte: ${new Date().toLocaleDateString('es-AR')} · ${F.length} tareas${mEst ? ' (estado: ' + E(mEst) + ')' : ''} · Estados: Pendiente, En curso, Completada, Reprogramada.</div>
+    <table class="r-t"><tr>${c.map(h => `<td class="h">${h}</td>`).join('')}</tr>${F.map(x => `<tr>${['num', 'eje', 'tarea', 'respProp', 'areas', 'plazo', 'producto', 'indicador', 'estado', 'respDesig', 'fecha', 'brecha'].map(k => `<td style="font-size:7pt">${E(x[k] || 's/d (revisar)')}</td>`).join('')}</tr>`).join('')}</table>
+    <p style="font-size:7pt;color:#4B5B73">Si un dato no está disponible se consigna «s/d (revisar)» y se asigna responsable y fecha para obtenerlo; no se completa con estimaciones no verificadas. Se revisa en cada reunión del COE.</p>${pieReu(word)}</section>`;
+}
 
 /* ---------- 4. Usuarios y accesos (solo Administración) ---------- */
 let acc = null;
@@ -649,6 +710,13 @@ document.addEventListener('click', async ev => {
   if (a === 'minQuitar') { const l = t.dataset.l; minuta[l].splice(+t.dataset.i, 1); if (!minuta[l].length) minuta[l].push(l === 'extras' ? { n: '', i: '', f: '' } : l === 'decisiones' ? { d: '', f: '' } : { t: '', r: '', p: '', e: 'Pendiente' }); minGuardar(); return vistaMinuta(); }
   if (a === 'minImp') { const d = $('#imp'); d.innerHTML = actaLlena(false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); return; }
   if (a === 'minSrv') return minGuardarSrv();
+  if (a === 'mEst') { mEst = t.dataset.e === mEst ? '' : t.dataset.e; return vistaMatriz(); }
+  if (a === 'mNueva') return dlgMatriz('');
+  if (a === 'mEditar') return dlgMatriz(t.dataset.id);
+  if (a === 'mGuardar') return guardarMatriz(t.dataset.id, false);
+  if (a === 'mQuitar') return guardarMatriz(t.dataset.id, true);
+  if (a === 'mImp') { const d = $('#imp'); d.innerHTML = matrizHTML(false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); return; }
+  if (a === 'mWord') return docWord('Matriz operativa COE Trelew', 'Matriz operativa COE Trelew', matrizHTML(true), true);
   if (a === 'minLista') return minListaSrv();
   if (a === 'minAbrirSrv') { const x = minActas[+t.dataset.i]; let d = null; try { d = JSON.parse(x.datos); } catch (e) {}
     if (!d) return toast('No se pudo abrir: la columna Datos de esa fila está vacía o modificada.');
@@ -726,6 +794,7 @@ function vistaAyuda() {
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
       <li>Si una persona deja de participar, cambiá su estado a «Inactivo»: no se borra y queda el historial.</li></ul>
     <h3>Reuniones y actas</h3><p><b>Completar acta</b>: cargás el acta de una reunión en pantalla (datos, asistentes, orden del día, situación, temas, decisiones, tareas y próxima reunión) y la imprimís o la bajás en Word ya completa. Los asistentes se tildan entre los participantes del COE: primero los integrantes del proyecto elegido (los no tildados salen como ausentes) y después el resto; quien no esté cargado se agrega a mano. El acta empezada queda guardada en ese dispositivo; con «Guardar en la planilla» (solo Administración) se guarda en la hoja COE ACTAS del libro, con número correlativo por proyecto y año si el N.º queda vacío, y se puede reabrir desde «Actas guardadas». No se envía a nadie. «Acta nueva» limpia la pantalla. Además, Modelos para imprimir o bajar en Word, con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de HySL: acta de reunión, registro de acuerdos y seguimiento de tareas, planilla de asistencia, informe de situación y bitácora de actividades. Si elegís un proyecto, el acta y la asistencia salen con los participantes y sus funciones. Siguen las recomendaciones de la OMS para centros de operaciones de emergencia (acta compartida dentro de las 24 horas, tareas con responsable y plazo, informe de situación y archivo central) y los formularios del sistema de comando de incidentes.</p>
+    <h3>Matriz operativa</h3><p>La matriz de tareas del COE de Trelew y Área Programática (eje, actividad, responsables, plazo, producto, indicador, estado, fecha comprometida y brechas). La ven todos los usuarios con acceso al COE; solo Administración la modifica con «Editar» o «Agregar tarea». Tocá un estado arriba para filtrar. Se imprime o se baja en Word (apaisada) para llevar a la reunión. Está en la hoja COE MATRIZ del libro: también se puede corregir ahí.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COE PARTICIPANTES (personas), COE PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COE LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
     <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su DNI). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo».</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COE» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
