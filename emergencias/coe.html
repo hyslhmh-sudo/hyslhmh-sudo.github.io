@@ -310,7 +310,10 @@ function vistaReuniones() {
   const t = (id, m) => `<div class="tarjeta" style="padding:14px 16px"><b><span class="ms" style="color:#2F5BEA;margin-right:6px">${m.ico}</span>${m.titulo}</b>
     <p class="sub" style="margin:6px 0 10px">${m.txt}</p><div class="acc" style="border:0;padding:0;margin:0"><button class="btn mini" data-act="reuImp" data-mod="${id}"><span class="ms" style="font-size:17px">print</span>Imprimir</button>
     <button class="btn sec mini" data-act="reuWord" data-mod="${id}"><span class="ms" style="font-size:17px">download</span>Descargar en Word</button></div></div>`;
-  $('#vista').innerHTML = `<div class="tarjeta" style="padding:12px 16px;margin-bottom:12px">
+  $('#vista').innerHTML = `<div class="tarjeta" style="padding:14px 16px;margin-bottom:12px;border:1.5px solid #2F5BEA"><b><span class="ms" style="color:#2F5BEA;margin-right:6px">edit_note</span>Completar el acta (minuta) de una reunión</b>
+      <p class="sub" style="margin:6px 0 10px">Cargás en pantalla los datos, marcás los asistentes entre los participantes del COE (o sumás otros), y anotás temas, decisiones y tareas. Sale impresa o en Word ya completa.${minuta.fecha || minuta.temas ? ' Tenés un acta empezada: se retoma donde la dejaste.' : ''}</p>
+      <button class="btn" data-act="minAbrir"><span class="ms">edit_note</span>Completar acta</button></div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px">
       <p class="sub" style="margin:0 0 8px">Modelos con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de Higiene y Seguridad Laboral. Se imprimen para completar a mano o se bajan en Word para completar en la computadora.</p>
       <label class="campo" style="max-width:420px"><span>Proyecto (opcional: precarga participantes y funciones)</span><select id="reuProy">${opts(proyectos(), reuProy, 'Sin precargar')}</select></label></div>
     <div class="lista">${Object.keys(REU).map(k => t(k, REU[k])).join('')}</div>
@@ -375,20 +378,124 @@ function reuHTML(id, word) {
 }
 function reuImprimir(id) { const d = $('#imp'); d.innerHTML = reuHTML(id, false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); }
 window.addEventListener('afterprint', () => document.body.classList.remove('conimp'));
-function reuWord(id) {
-  const m = REU[id], ap = !!m.apaisada;
+function reuWord(id) { const m = REU[id]; docWord(m.titulo + (reuProy ? ' - ' + reuProy : ''), m.titulo, reuHTML(id, true), !!m.apaisada); }
+function docWord(archivo, titulo, cuerpo, ap) {
   const css = `@page Section1{size:${ap ? '841.9pt 595.3pt;mso-page-orientation:landscape' : '595.3pt 841.9pt'};margin:34pt 32pt 60pt;mso-footer:f1;mso-footer-margin:18pt}div.Section1{page:Section1}
     body{font-family:'Plus Jakarta Sans',Arial,sans-serif;font-size:9pt;color:#172B4D}.r-kick{font-size:11pt;font-weight:bold;color:#2F5BEA;margin:4pt 0}
     .r-h2{font-size:10pt;color:#172B4D;border-bottom:1.5pt solid #2F5BEA;margin:8pt 0 3pt}table.r-t{width:100%;border-collapse:collapse}.r-t td{border:1pt solid #C5D1F2;padding:3pt 5pt;font-size:8.5pt;vertical-align:top}
     .r-t td.l{background:#E4EAFB;font-weight:bold;width:32%}.r-t td.h{background:#E4EAFB;font-weight:bold;font-size:7.5pt}`;
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(m.titulo)}</title>
-    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${reuHTML(id, true).replace(/<img[^>]*__LOGOW__[^>]*>/g, '')}</div>
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${E(titulo)}</title>
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${cuerpo.replace(/<img[^>]*__LOGOW__[^>]*>/g, '')}</div>
     <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p></div></body></html>`;
-  const blob = new Blob(['﻿', html], { type: 'application/msword' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = m.titulo + (reuProy ? ' - ' + reuProy : '') + '.doc';
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = archivo.replace(/[\\/:*?"<>|]/g, '-') + '.doc';
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   toast('Descargado. Se abre con Word; para editarlo, tocá «Habilitar edición».');
 }
+
+/* ---------- 5b. Completar el acta (minuta) de una reunión en la app ----------
+ * Se completa en pantalla y sale impresa o en Word ya llena. El borrador queda guardado solo en este dispositivo
+ * (no se envía al servidor). Asistentes: se marcan entre los participantes cargados en el COE (primero los del
+ * proyecto elegido) y se pueden sumar personas que no están cargadas. */
+const MIN0 = () => ({ num: '', fecha: S.hoy(), hIni: '', hFin: '', lugar: '', tipo: 'Ordinaria', comite: '', coordino: '', redacto: '',
+  proyecto: reuProy || '', asist: {}, func: {}, extras: [{ n: '', i: '', f: '' }], orden: '', situacion: '', temas: '',
+  decisiones: [{ d: '', f: '' }], tareas: [{ t: '', r: '', p: '', e: 'Pendiente' }], pendientes: '', proxima: '', compartida: '' });
+let minuta = S.store.get('coe.minuta', null) || MIN0(), verOtros = false;
+const minGuardar = () => S.store.set('coe.minuta', minuta);
+const funcProy = id => { const x = cat.participaciones.find(y => y.persona === id && y.proyecto === minuta.proyecto); return x ? x.funcion || '' : ''; };
+const delProy = id => !!minuta.proyecto && cat.participaciones.some(y => y.persona === id && y.proyecto === minuta.proyecto);
+const funcDe = id => minuta.func[id] != null ? minuta.func[id] : funcProy(id);
+function minAsistentes() {
+  const sel = cat.personas.filter(p => minuta.asist[p.id]).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es'))
+    .map(p => [p.nombre || 's/d (revisar)', [p.institucion, p.cargo].filter(Boolean).join(' · '), funcDe(p.id)]);
+  return sel.concat(minuta.extras.filter(x => (x.n || '').trim()).map(x => [x.n, x.i || '', x.f || '']));
+}
+const minAusentes = () => minuta.proyecto ? cat.personas.filter(p => delProy(p.id) && p.estado !== 'Inactivo' && !minuta.asist[p.id]).map(p => p.nombre).sort((a, b) => (a || '').localeCompare(b || '', 'es')) : [];
+function vistaMinuta() {
+  const m = minuta, v = (k, ph, t) => `<input data-m="${k}" value="${E(m[k] || '')}"${ph ? ` placeholder="${E(ph)}"` : ''}${t ? ` type="${t}"` : ''}>`;
+  const ta = (k, ph, h) => `<textarea data-m="${k}" placeholder="${E(ph || '')}" style="min-height:${h || 70}px">${E(m[k] || '')}</textarea>`;
+  const lab = (t, inner) => `<label class="campo"><span>${t}</span>${inner}</label>`;
+  const todos = cat.personas.filter(p => p.estado !== 'Inactivo' || m.asist[p.id]).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+  const delP = todos.filter(p => delProy(p.id)), otros = todos.filter(p => !delProy(p.id));
+  const filaP = p => `<tr><td style="width:36px"><input type="checkbox" data-asist="${E(p.id)}" ${m.asist[p.id] ? 'checked' : ''} style="width:20px;height:20px;min-width:0"></td>
+    <td class="nom">${E(p.nombre || 's/d')}<div class="sub" style="font-weight:500">${E([p.institucion, p.cargo].filter(Boolean).join(' · ') || '')}</div></td>
+    <td><input data-func="${E(p.id)}" value="${E(funcDe(p.id))}" placeholder="Función en la reunión"></td></tr>`;
+  const nSel = Object.keys(m.asist).filter(k => m.asist[k]).length + m.extras.filter(x => (x.n || '').trim()).length;
+  $('#vista').innerHTML = `<div class="herr"><button class="btn sec" data-act="minVolver"><span class="ms">arrow_back</span>Modelos</button>
+      <span class="sub" style="flex:1">Se guarda solo en este dispositivo mientras escribís. No se envía a nadie.</span>
+      <button class="btn sec" data-act="minVaciar"><span class="ms">restart_alt</span>Acta nueva</button></div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px"><h2>Datos de la reunión</h2><div class="rejilla">
+      ${lab('Acta N.º', v('num', 's/d (revisar)'))}${lab('Proyecto', `<select data-m="proyecto">${opts(proyectos(), m.proyecto, 'Sin proyecto')}</select>`)}
+      ${lab('Comité, COE o mesa', v('comite', 'Comité de crisis, COE hospitalario…'))}${lab('Fecha', v('fecha', 'dd/mm/aaaa'))}
+      ${lab('Hora de inicio', v('hIni', '00:00'))}${lab('Hora de cierre', v('hFin', '00:00'))}
+      ${lab('Lugar o modalidad', v('lugar', 'Presencial, virtual…'))}${lab('Tipo de reunión', `<select data-m="tipo">${opts(['Ordinaria', 'Extraordinaria', 'Activación por emergencia', 'Simulacro o ejercicio'], m.tipo)}</select>`)}
+      ${lab('Convocó · coordinó', v('coordino'))}${lab('Redactó el acta', v('redacto'))}</div></div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px"><h2>1. Asistentes <small class="sub">(${nSel} marcados)</small></h2>
+      <p class="sub" style="margin:0 0 8px">Tildá quién estuvo. ${m.proyecto ? `Arriba van los integrantes de «${E(m.proyecto)}»; los no tildados salen en el acta como ausentes.` : 'Elegí el proyecto arriba para ver primero a sus integrantes.'} La función se puede cambiar solo para esta acta.</p>
+      ${delP.length ? `<div class="acc" style="margin-bottom:6px"><button class="btn sec mini" data-act="minTodos"><span class="ms" style="font-size:17px">done_all</span>Marcar todos los integrantes</button></div>
+        <div class="tabla-wrap"><table><tr><th></th><th>Integrante del proyecto</th><th>Función</th></tr>${delP.map(filaP).join('')}</table></div>` : (m.proyecto ? '<p class="sub">Este proyecto no tiene integrantes cargados en «Proyectos y funciones».</p>' : '')}
+      ${otros.length ? `<div class="acc" style="margin:10px 0 6px"><button class="btn sec mini" data-act="minOtros"><span class="ms" style="font-size:17px">${verOtros || !delP.length ? 'expand_less' : 'expand_more'}</span>${delP.length ? 'Otras personas cargadas en el COE' : 'Personas cargadas en el COE'} (${otros.length})</button></div>
+        ${verOtros || !delP.length ? `<div class="tabla-wrap"><table><tr><th></th><th>Persona</th><th>Función</th></tr>${otros.map(filaP).join('')}</table></div>` : ''}` : ''}
+      <h3 style="font-size:14px;margin:14px 0 6px">Asistentes que no están cargados en el COE</h3>
+      <div class="tabla-wrap"><table><tr><th>Apellido y nombre</th><th>Institución · cargo</th><th>Función</th><th></th></tr>
+        ${m.extras.map((x, i) => `<tr><td><input data-m="extras.${i}.n" value="${E(x.n)}"></td><td><input data-m="extras.${i}.i" value="${E(x.i)}"></td><td><input data-m="extras.${i}.f" value="${E(x.f)}"></td>
+          <td style="width:44px"><button class="btn peligro mini" data-act="minQuitar" data-l="extras" data-i="${i}" title="Quitar"><span class="ms" style="font-size:17px">delete</span></button></td></tr>`).join('')}</table></div>
+      <div class="acc" style="margin-top:6px"><button class="btn sec mini" data-act="minFila" data-l="extras"><span class="ms" style="font-size:17px">add</span>Agregar asistente</button></div></div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px">
+      ${lab('2. Orden del día (un tema por renglón)', ta('orden', '', 80))}
+      ${lab('3. Situación al inicio de la reunión', ta('situacion', 'Qué pasó, qué está afectado, qué se hizo desde la reunión anterior, revisión de tareas pendientes'))}
+      ${lab('4. Temas tratados', ta('temas', '', 140))}</div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px"><h2>5. Decisiones y acuerdos</h2>
+      <div class="tabla-wrap"><table><tr><th>Decisión o acuerdo</th><th>Fundamento o criterio</th><th></th></tr>
+        ${m.decisiones.map((x, i) => `<tr><td><input data-m="decisiones.${i}.d" value="${E(x.d)}"></td><td><input data-m="decisiones.${i}.f" value="${E(x.f)}"></td>
+          <td style="width:44px"><button class="btn peligro mini" data-act="minQuitar" data-l="decisiones" data-i="${i}" title="Quitar"><span class="ms" style="font-size:17px">delete</span></button></td></tr>`).join('')}</table></div>
+      <div class="acc" style="margin-top:6px"><button class="btn sec mini" data-act="minFila" data-l="decisiones"><span class="ms" style="font-size:17px">add</span>Agregar decisión</button></div>
+      <h2 style="margin-top:16px">6. Tareas y compromisos</h2>
+      <div class="tabla-wrap"><table><tr><th>Tarea</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th></th></tr>
+        ${m.tareas.map((x, i) => `<tr><td><input data-m="tareas.${i}.t" value="${E(x.t)}"></td><td><input data-m="tareas.${i}.r" value="${E(x.r)}"></td><td><input data-m="tareas.${i}.p" value="${E(x.p)}" placeholder="dd/mm/aaaa"></td>
+          <td><select data-m="tareas.${i}.e">${opts(['Pendiente', 'En curso', 'Cumplida', 'Vencida', 'Reprogramada'], x.e)}</select></td>
+          <td style="width:44px"><button class="btn peligro mini" data-act="minQuitar" data-l="tareas" data-i="${i}" title="Quitar"><span class="ms" style="font-size:17px">delete</span></button></td></tr>`).join('')}</table></div>
+      <div class="acc" style="margin-top:6px"><button class="btn sec mini" data-act="minFila" data-l="tareas"><span class="ms" style="font-size:17px">add</span>Agregar tarea</button></div></div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px">
+      ${lab('7. Temas pendientes', ta('pendientes', '', 50))}
+      <div class="rejilla">${lab('Próxima reunión (fecha, hora y lugar)', v('proxima'))}${lab('Se compartió el acta con los participantes el', v('compartida', 'dd/mm/aaaa'))}</div></div>
+    <div class="tarjeta" style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <span class="sub" style="flex:1;align-self:center">Lo que quede vacío sale como «s/d (revisar)» en los datos y en blanco en las tablas para completar a mano.</span>
+      <button class="btn sec" data-act="minImp"><span class="ms">print</span>Imprimir el acta</button>
+      <button class="btn" data-act="minWord"><span class="ms">download</span>Descargar el acta en Word</button></div>`;
+  const vista_ = $('#vista');
+  vista_.oninput = vista_.onchange = ev => {
+    const el = ev.target;
+    if (el.dataset.asist) { if (el.checked) minuta.asist[el.dataset.asist] = true; else delete minuta.asist[el.dataset.asist]; minGuardar(); if (ev.type === 'change') vistaMinuta(); return; }
+    if (el.dataset.func) { minuta.func[el.dataset.func] = el.value; minGuardar(); return; }
+    const k = el.dataset.m; if (!k) return;
+    const p = k.split('.'); if (p.length === 3) minuta[p[0]][+p[1]][p[2]] = el.value; else minuta[k] = el.value;
+    minGuardar(); if (k === 'proyecto' && ev.type === 'change') { minuta.func = {}; vistaMinuta(); }
+  };
+}
+function actaLlena(word) {
+  const m = minuta, sd = x => (x && String(x).trim()) ? E(x) : 's/d (revisar)', br = x => E(x || '').replace(/\n/g, '<br>');
+  const fila = (l, val) => `<tr><td class="l">${E(l)}</td><td>${val}</td></tr>`;
+  const grilla = (cols, filas, min) => `<table class="r-t"><tr>${cols.map(c => `<td class="h">${c}</td>`).join('')}</tr>${filas.concat(Array.from({ length: Math.max((min || 0) - filas.length, 0) }, () => cols.slice(1).map(() => ''))).map((x, i) => `<tr><td style="height:20px">${i + 1}</td>${x.map(c => `<td>${E(c)}</td>`).join('')}</tr>`).join('')}</table>`;
+  const h2 = t => `<h2 class="r-h2">${t}</h2>`;
+  const as = minAsistentes(), aus = minAusentes();
+  const orden = String(m.orden || '').split('\n').map(x => x.trim()).filter(Boolean);
+  const dec = m.decisiones.filter(x => (x.d || '').trim()).map(x => [x.d, x.f || '']);
+  const tar = m.tareas.filter(x => (x.t || '').trim()).map(x => [x.t, x.r || '', x.p || '', x.e || '']);
+  return `<section class="r-hoja">${encReu(word)}<div class="r-kick">ACTA DE REUNIÓN N.º ${sd(m.num)}</div>
+    <table class="r-t">${fila('Comité, COE o mesa · proyecto', sd([m.comite, m.proyecto].filter(Boolean).join(' · ')))}${fila('Fecha · hora de inicio y de cierre', `${sd(m.fecha)} · ${m.hIni ? E(m.hIni) : '___:___'} a ${m.hFin ? E(m.hFin) : '___:___'} h`)}
+      ${fila('Lugar o modalidad', sd(m.lugar))}${fila('Tipo de reunión', sd(m.tipo))}${fila('Convocó · coordinó', sd(m.coordino))}${fila('Redactó el acta', sd(m.redacto))}</table>
+    ${h2('1. Asistentes')}${grilla(['N.º', 'Apellido y nombre', 'Institución · cargo', 'Función', 'Firma'], as.map(x => x.concat([''])), 3)}
+    ${aus.length ? `<p style="font-size:8.5pt;margin:4px 0">Ausentes (integrantes del proyecto): ${aus.map(E).join('; ')}.</p>` : ''}
+    ${h2('2. Orden del día')}<table class="r-t">${(orden.length ? orden : ['']).map((x, i) => `<tr><td style="width:24px">${i + 1}</td><td style="height:18px">${E(x)}</td></tr>`).join('')}</table>
+    ${h2('3. Situación al inicio de la reunión')}<table class="r-t"><tr><td style="min-height:40px">${br(m.situacion) || '&nbsp;'}</td></tr></table>
+    ${h2('4. Temas tratados')}<table class="r-t"><tr><td style="min-height:60px">${br(m.temas) || '&nbsp;'}</td></tr></table>
+    ${h2('5. Decisiones y acuerdos')}${grilla(['N.º', 'Decisión o acuerdo', 'Fundamento o criterio (si corresponde)'], dec, 1)}
+    ${h2('6. Tareas y compromisos')}${grilla(['N.º', 'Tarea', 'Responsable', 'Plazo', 'Estado'], tar, 1)}
+    ${h2('7. Temas pendientes · próxima reunión')}<table class="r-t">${fila('Temas pendientes', br(m.pendientes) || '&nbsp;')}${fila('Próxima reunión (fecha, hora y lugar)', sd(m.proxima))}${fila('Se compartió el acta con los participantes el (fecha)', m.compartida ? E(m.compartida) : '___/___/______')}</table>
+    ${h2('8. Firmas')}<table class="r-t"><tr><td style="height:46px;width:50%;vertical-align:bottom;text-align:center;font-size:7.5pt">Coordinó (firma y aclaración)${m.coordino ? '<br>' + E(m.coordino) : ''}</td><td style="vertical-align:bottom;text-align:center;font-size:7.5pt">Redactó (firma y aclaración)${m.redacto ? '<br>' + E(m.redacto) : ''}</td></tr></table>${pieReu(word)}</section>`;
+}
+const minTitulo = () => 'Acta de reunión' + (minuta.num ? ' N.º ' + minuta.num : '') + (minuta.fecha ? ' - ' + minuta.fecha.replace(/\//g, '-') : '') + (minuta.proyecto ? ' - ' + minuta.proyecto : '');
 
 /* ---------- 4. Usuarios y accesos (solo Administración) ---------- */
 let acc = null;
@@ -497,6 +604,15 @@ document.addEventListener('click', async ev => {
   if (a === 'asignar') return dlgAsignar(t.dataset.id);
   if (a === 'reuImp') return reuImprimir(t.dataset.mod);
   if (a === 'reuWord') return reuWord(t.dataset.mod);
+  if (a === 'minAbrir') { if (!minuta.proyecto && reuProy) minuta.proyecto = reuProy; return vistaMinuta(); }
+  if (a === 'minVolver') return vistaReuniones();
+  if (a === 'minVaciar') { if (confirm('¿Empezar un acta nueva? Se borra la que está en pantalla (si no la descargaste, se pierde).')) { minuta = MIN0(); minGuardar(); vistaMinuta(); } return; }
+  if (a === 'minTodos') { cat.personas.filter(p => delProy(p.id) && p.estado !== 'Inactivo').forEach(p => { minuta.asist[p.id] = true; }); minGuardar(); return vistaMinuta(); }
+  if (a === 'minOtros') { verOtros = !verOtros; return vistaMinuta(); }
+  if (a === 'minFila') { const l = t.dataset.l; minuta[l].push(l === 'extras' ? { n: '', i: '', f: '' } : l === 'decisiones' ? { d: '', f: '' } : { t: '', r: '', p: '', e: 'Pendiente' }); minGuardar(); return vistaMinuta(); }
+  if (a === 'minQuitar') { const l = t.dataset.l; minuta[l].splice(+t.dataset.i, 1); if (!minuta[l].length) minuta[l].push(l === 'extras' ? { n: '', i: '', f: '' } : l === 'decisiones' ? { d: '', f: '' } : { t: '', r: '', p: '', e: 'Pendiente' }); minGuardar(); return vistaMinuta(); }
+  if (a === 'minImp') { const d = $('#imp'); d.innerHTML = actaLlena(false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); return; }
+  if (a === 'minWord') return docWord(minTitulo(), minTitulo(), actaLlena(true), false);
   if (a === 'nuevoUsr') return dlgUsuario('');
   if (a === 'editarUsr') return dlgUsuario(t.dataset.dni);
   if (a === 'copiarClave') { try { await navigator.clipboard.writeText(t.dataset.txt); toast('Copiado.'); } catch (e) { toast('No se pudo copiar: anotala a mano.'); } return; }
@@ -567,7 +683,7 @@ function vistaAyuda() {
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
       <li>Si una persona deja de participar, cambiá su estado a «Inactivo»: no se borra y queda el historial.</li></ul>
-    <h3>Reuniones y actas</h3><p>Modelos para imprimir o bajar en Word, con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de HySL: acta de reunión, registro de acuerdos y seguimiento de tareas, planilla de asistencia, informe de situación y bitácora de actividades. Si elegís un proyecto, el acta y la asistencia salen con los participantes y sus funciones. Siguen las recomendaciones de la OMS para centros de operaciones de emergencia (acta compartida dentro de las 24 horas, tareas con responsable y plazo, informe de situación y archivo central) y los formularios del sistema de comando de incidentes.</p>
+    <h3>Reuniones y actas</h3><p><b>Completar acta</b>: cargás el acta de una reunión en pantalla (datos, asistentes, orden del día, situación, temas, decisiones, tareas y próxima reunión) y la imprimís o la bajás en Word ya completa. Los asistentes se tildan entre los participantes del COE: primero los integrantes del proyecto elegido (los no tildados salen como ausentes) y después el resto; quien no esté cargado se agrega a mano. El acta empezada queda guardada solo en ese dispositivo y no se envía a nadie; «Acta nueva» la borra. Además, Modelos para imprimir o bajar en Word, con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de HySL: acta de reunión, registro de acuerdos y seguimiento de tareas, planilla de asistencia, informe de situación y bitácora de actividades. Si elegís un proyecto, el acta y la asistencia salen con los participantes y sus funciones. Siguen las recomendaciones de la OMS para centros de operaciones de emergencia (acta compartida dentro de las 24 horas, tareas con responsable y plazo, informe de situación y archivo central) y los formularios del sistema de comando de incidentes.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COE PARTICIPANTES (personas), COE PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COE LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
     <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su DNI). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo».</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COE» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
