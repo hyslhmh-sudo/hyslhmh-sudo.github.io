@@ -397,7 +397,7 @@ function docWord(archivo, titulo, cuerpo, ap) {
  * Se completa en pantalla y sale impresa o en Word ya llena. El borrador queda guardado solo en este dispositivo
  * (no se envía al servidor). Asistentes: se marcan entre los participantes cargados en el COE (primero los del
  * proyecto elegido) y se pueden sumar personas que no están cargadas. */
-const MIN0 = () => ({ num: '', fecha: S.hoy(), hIni: '', hFin: '', lugar: '', tipo: 'Ordinaria', comite: '', coordino: '', redacto: '',
+const MIN0 = () => ({ id: '', num: '', fecha: S.hoy(), hIni: '', hFin: '', lugar: '', tipo: 'Ordinaria', comite: '', coordino: '', redacto: '',
   proyecto: reuProy || '', asist: {}, func: {}, extras: [{ n: '', i: '', f: '' }], orden: '', situacion: '', temas: '',
   decisiones: [{ d: '', f: '' }], tareas: [{ t: '', r: '', p: '', e: 'Pendiente' }], pendientes: '', proxima: '', compartida: '' });
 let minuta = S.store.get('coe.minuta', null) || MIN0(), verOtros = false;
@@ -423,7 +423,9 @@ function vistaMinuta() {
   const nSel = Object.keys(m.asist).filter(k => m.asist[k]).length + m.extras.filter(x => (x.n || '').trim()).length;
   $('#vista').innerHTML = `<div class="herr"><button class="btn sec" data-act="minVolver"><span class="ms">arrow_back</span>Modelos</button>
       <span class="sub" style="flex:1">Se guarda solo en este dispositivo mientras escribís. No se envía a nadie.</span>
+      ${cat.puedeCargar ? '<button class="btn sec" data-act="minLista"><span class="ms">folder_open</span>Actas guardadas</button>' : ''}
       <button class="btn sec" data-act="minVaciar"><span class="ms">restart_alt</span>Acta nueva</button></div>
+    ${m.id ? `<div class="tarjeta" style="padding:10px 16px;margin-bottom:12px"><span class="sub">Editando el acta ${E(m.id)} (N.º ${E(m.num || 's/d')}) guardada en la hoja COE ACTAS. «Guardar en la planilla» la actualiza.</span></div>` : ''}
     <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px"><h2>Datos de la reunión</h2><div class="rejilla">
       ${lab('Acta N.º', v('num', 's/d (revisar)'))}${lab('Proyecto', `<select data-m="proyecto">${opts(proyectos(), m.proyecto, 'Sin proyecto')}</select>`)}
       ${lab('Comité, COE o mesa', v('comite', 'Comité de crisis, COE hospitalario…'))}${lab('Fecha', v('fecha', 'dd/mm/aaaa'))}
@@ -461,6 +463,7 @@ function vistaMinuta() {
       <div class="rejilla">${lab('Próxima reunión (fecha, hora y lugar)', v('proxima'))}${lab('Se compartió el acta con los participantes el', v('compartida', 'dd/mm/aaaa'))}</div></div>
     <div class="tarjeta" style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
       <span class="sub" style="flex:1;align-self:center">Lo que quede vacío sale como «s/d (revisar)» en los datos y en blanco en las tablas para completar a mano.</span>
+      ${cat.puedeCargar ? '<button class="btn sec" data-act="minSrv"><span class="ms">cloud_upload</span>Guardar en la planilla</button>' : ''}
       <button class="btn sec" data-act="minImp"><span class="ms">print</span>Imprimir el acta</button>
       <button class="btn" data-act="minWord"><span class="ms">download</span>Descargar el acta en Word</button></div>`;
   const vista_ = $('#vista');
@@ -495,6 +498,39 @@ function actaLlena(word) {
     ${h2('7. Temas pendientes · próxima reunión')}<table class="r-t">${fila('Temas pendientes', br(m.pendientes) || '&nbsp;')}${fila('Próxima reunión (fecha, hora y lugar)', sd(m.proxima))}${fila('Se compartió el acta con los participantes el (fecha)', m.compartida ? E(m.compartida) : '___/___/______')}</table>
     ${h2('8. Firmas')}<table class="r-t"><tr><td style="height:46px;width:50%;vertical-align:bottom;text-align:center;font-size:7.5pt">Coordinó (firma y aclaración)${m.coordino ? '<br>' + E(m.coordino) : ''}</td><td style="vertical-align:bottom;text-align:center;font-size:7.5pt">Redactó (firma y aclaración)${m.redacto ? '<br>' + E(m.redacto) : ''}</td></tr></table>${pieReu(word)}</section>`;
 }
+async function minGuardarSrv() {
+  if (!navigator.onLine) return toast('Para guardar en la planilla se necesita conexión. El acta sigue guardada en este dispositivo.');
+  const m = minuta;
+  const acta = { id: m.id, num: m.num, fecha: m.fecha, proyecto: m.proyecto, comite: m.comite, tipo: m.tipo, lugar: m.lugar,
+    horario: (m.hIni || m.hFin) ? (m.hIni || '__:__') + ' a ' + (m.hFin || '__:__') + ' h' : '', coordino: m.coordino, redacto: m.redacto,
+    asistentes: minAsistentes().map(x => x.filter(Boolean).join(' · ')), ausentes: minAusentes(),
+    orden: String(m.orden || '').split('\n').map(x => x.trim()).filter(Boolean).map((x, i) => (i + 1) + '. ' + x),
+    situacion: m.situacion, temas: m.temas,
+    decisiones: m.decisiones.filter(x => (x.d || '').trim()).map((x, i) => (i + 1) + '. ' + x.d + (x.f ? ' (' + x.f + ')' : '')),
+    tareas: m.tareas.filter(x => (x.t || '').trim()).map((x, i) => (i + 1) + '. ' + [x.t, x.r && 'Responsable: ' + x.r, x.p && 'Plazo: ' + x.p, x.e].filter(Boolean).join(' · ')),
+    pendientes: m.pendientes, proxima: m.proxima, compartida: m.compartida, datos: m };
+  try {
+    const r = await S.api('coe_acta', { acta: acta });
+    if (!r.ok) throw r;
+    minuta.id = r.id; minuta.num = r.num; minGuardar(); vistaMinuta();
+    toast('Acta N.º ' + r.num + ' guardada en la hoja COE ACTAS.');
+  } catch (e) {
+    const t = (e && (e.error || e.message)) || 'No se pudo guardar.';
+    toast(/desconocida/i.test(t) ? 'Falta publicar la versión nueva del servidor (Apps Script). El acta sigue guardada en este dispositivo.' : t);
+  }
+}
+async function minListaSrv() {
+  if (!navigator.onLine) return toast('Para ver las actas guardadas se necesita conexión.');
+  let r; try { r = await S.api('coe_actas'); if (!r.ok) throw r; }
+  catch (e) { const t = (e && (e.error || e.message)) || 'No se pudieron traer las actas.'; return toast(/desconocida/i.test(t) ? 'Falta publicar la versión nueva del servidor (Apps Script).' : t); }
+  minActas = r.actas;
+  abrir(`<div class="dlg-cab"><b>Actas guardadas</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo">${r.actas.length ? r.actas.map((x, i) => `<div class="tarjeta" style="padding:10px 12px;margin-bottom:8px"><b>N.º ${E(x.num)} · ${E(x.fecha)}</b>
+      <div class="sub">${E([x.proyecto, x.comite].filter(Boolean).join(' · ') || 's/d')} · actualizada ${E(x.actualizado)}</div>
+      <div class="acc"><button class="btn sec mini" data-act="minAbrirSrv" data-i="${i}"><span class="ms" style="font-size:17px">edit</span>Abrir</button></div></div>`).join('') : '<p class="sub">Todavía no hay actas guardadas.</p>'}
+      <p class="sub">Al abrir una, reemplaza a la que está en pantalla.</p></div>`);
+}
+let minActas = [];
 const minTitulo = () => 'Acta de reunión' + (minuta.num ? ' N.º ' + minuta.num : '') + (minuta.fecha ? ' - ' + minuta.fecha.replace(/\//g, '-') : '') + (minuta.proyecto ? ' - ' + minuta.proyecto : '');
 
 /* ---------- 4. Usuarios y accesos (solo Administración) ---------- */
@@ -612,6 +648,12 @@ document.addEventListener('click', async ev => {
   if (a === 'minFila') { const l = t.dataset.l; minuta[l].push(l === 'extras' ? { n: '', i: '', f: '' } : l === 'decisiones' ? { d: '', f: '' } : { t: '', r: '', p: '', e: 'Pendiente' }); minGuardar(); return vistaMinuta(); }
   if (a === 'minQuitar') { const l = t.dataset.l; minuta[l].splice(+t.dataset.i, 1); if (!minuta[l].length) minuta[l].push(l === 'extras' ? { n: '', i: '', f: '' } : l === 'decisiones' ? { d: '', f: '' } : { t: '', r: '', p: '', e: 'Pendiente' }); minGuardar(); return vistaMinuta(); }
   if (a === 'minImp') { const d = $('#imp'); d.innerHTML = actaLlena(false); document.body.classList.add('conimp'); setTimeout(() => window.print(), 300); return; }
+  if (a === 'minSrv') return minGuardarSrv();
+  if (a === 'minLista') return minListaSrv();
+  if (a === 'minAbrirSrv') { const x = minActas[+t.dataset.i]; let d = null; try { d = JSON.parse(x.datos); } catch (e) {}
+    if (!d) return toast('No se pudo abrir: la columna Datos de esa fila está vacía o modificada.');
+    if (!confirm('¿Abrir el acta N.º ' + x.num + '? Reemplaza a la que está en pantalla.')) return;
+    minuta = Object.assign(MIN0(), d, { id: x.id, num: x.num }); minGuardar(); cerrar(); return vistaMinuta(); }
   if (a === 'minWord') return docWord(minTitulo(), minTitulo(), actaLlena(true), false);
   if (a === 'nuevoUsr') return dlgUsuario('');
   if (a === 'editarUsr') return dlgUsuario(t.dataset.dni);
@@ -683,7 +725,7 @@ function vistaAyuda() {
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
       <li>Si una persona deja de participar, cambiá su estado a «Inactivo»: no se borra y queda el historial.</li></ul>
-    <h3>Reuniones y actas</h3><p><b>Completar acta</b>: cargás el acta de una reunión en pantalla (datos, asistentes, orden del día, situación, temas, decisiones, tareas y próxima reunión) y la imprimís o la bajás en Word ya completa. Los asistentes se tildan entre los participantes del COE: primero los integrantes del proyecto elegido (los no tildados salen como ausentes) y después el resto; quien no esté cargado se agrega a mano. El acta empezada queda guardada solo en ese dispositivo y no se envía a nadie; «Acta nueva» la borra. Además, Modelos para imprimir o bajar en Word, con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de HySL: acta de reunión, registro de acuerdos y seguimiento de tareas, planilla de asistencia, informe de situación y bitácora de actividades. Si elegís un proyecto, el acta y la asistencia salen con los participantes y sus funciones. Siguen las recomendaciones de la OMS para centros de operaciones de emergencia (acta compartida dentro de las 24 horas, tareas con responsable y plazo, informe de situación y archivo central) y los formularios del sistema de comando de incidentes.</p>
+    <h3>Reuniones y actas</h3><p><b>Completar acta</b>: cargás el acta de una reunión en pantalla (datos, asistentes, orden del día, situación, temas, decisiones, tareas y próxima reunión) y la imprimís o la bajás en Word ya completa. Los asistentes se tildan entre los participantes del COE: primero los integrantes del proyecto elegido (los no tildados salen como ausentes) y después el resto; quien no esté cargado se agrega a mano. El acta empezada queda guardada en ese dispositivo; con «Guardar en la planilla» (solo Administración) se guarda en la hoja COE ACTAS del libro, con número correlativo por proyecto y año si el N.º queda vacío, y se puede reabrir desde «Actas guardadas». No se envía a nadie. «Acta nueva» limpia la pantalla. Además, Modelos para imprimir o bajar en Word, con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de HySL: acta de reunión, registro de acuerdos y seguimiento de tareas, planilla de asistencia, informe de situación y bitácora de actividades. Si elegís un proyecto, el acta y la asistencia salen con los participantes y sus funciones. Siguen las recomendaciones de la OMS para centros de operaciones de emergencia (acta compartida dentro de las 24 horas, tareas con responsable y plazo, informe de situación y archivo central) y los formularios del sistema de comando de incidentes.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COE PARTICIPANTES (personas), COE PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COE LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
     <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su DNI). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo».</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COE» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
