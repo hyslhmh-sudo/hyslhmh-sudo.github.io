@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tablero de control · Emergencias y desastres</title>
+<meta name="description" content="Tablero de control por proyecto, solo lectura: tareas, reuniones y acuerdos, integrantes y funciones.">
+<meta name="theme-color" content="#172B4D">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* Tablero de control por proyecto · versión 0 (04/11/2026) · solo lectura */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--papel:#fff;--radio:12px;--sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06);
+  --rojo:#C62828;--amar:#F57C00;--verde:#1E7B4B}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:6px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{background:transparent;border:0;color:inherit;height:40px;padding:0 10px;border-radius:10px;display:inline-flex;gap:6px;align-items:center;cursor:pointer;font-weight:600;font-size:13px;text-decoration:none}
+.icono:hover{background:rgba(255,255,255,.14)}
+.icono .t{display:inline}
+main{max-width:1180px;margin:0 auto;padding:16px 16px 40px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+.panel{padding:16px;margin-bottom:14px}
+.panel h2{font-size:15.5px;margin:0 0 4px;color:var(--fuerte);display:flex;align-items:center;gap:8px}
+.panel .nota{font-size:12.5px;color:var(--suave);margin:0 0 12px}
+.proys{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.tab{border:1px solid var(--borde);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap;min-height:40px}
+.tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.cab{display:flex;gap:16px;align-items:center;padding:16px 18px;margin-bottom:14px;border-left:8px solid var(--c)}
+.cab .luz{width:46px;height:46px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 18%,transparent)}
+.cab b{font-size:18px;display:block}
+.cab span{font-size:13px;color:var(--suave)}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi{padding:12px 14px}
+.kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{font-size:12.5px;color:var(--suave)}
+.kpi.alerta b{color:var(--rojo)}.kpi.aviso b{color:var(--amar)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fila-b{display:grid;grid-template-columns:minmax(110px,230px) 1fr 70px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
+.fila-b .nom{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra-p{height:14px;background:#F5F7FB;border-radius:4px;overflow:hidden;display:flex;gap:2px}
+.barra-p i{display:block;height:100%}
+.fila-b .n{color:var(--suave);text-align:right;font-variant-numeric:tabular-nums}
+.leyenda{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--suave);margin:0 0 8px}
+.leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{border-top:1px solid var(--linea)}
+.lista button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;padding:9px 4px;cursor:pointer;font-size:13px}
+.lista button:hover{background:#F5F7FB}.lista button:focus-visible{outline:2px solid var(--medio)}
+.lista .id{font-size:11.5px;font-weight:800;color:var(--tenue)}
+.lista .f{font-size:12px;font-weight:700;white-space:nowrap}
+.chip{display:inline-flex;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
+.sub{font-size:12.5px;color:var(--suave)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--suave);font-weight:700;background:#F5F7FB}
+.vacio{padding:28px;text-align:center;color:var(--suave)}
+.aviso-of{background:#fff;border:1.5px solid var(--amar);box-shadow:inset 5px 0 0 var(--amar);border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:26px 22px}
+.campo{display:block;margin:14px 0}.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:5px}
+.campo input{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:11px 12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--medio);color:#fff;min-height:44px;text-decoration:none}
+.btn.sec{background:#fff;color:var(--fuerte);border:1.5px solid var(--medio)}
+.msg{font-size:13px;padding:8px 10px;border-radius:8px;background:#fff;border:1.5px solid var(--amar);box-shadow:inset 5px 0 0 var(--amar)}
+dialog{border:0;border-radius:16px;padding:0;max-width:560px;width:calc(100% - 24px);box-shadow:0 20px 60px rgba(23,43,77,.3)}
+dialog::backdrop{background:rgba(23,43,77,.45)}
+.dlg-cab{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--linea)}.dlg-cab b{flex:1}
+.dlg-cuerpo{padding:12px 16px 18px}
+.dlg-cuerpo dl{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;margin:0;font-size:13.5px}
+.dlg-cuerpo dt{color:var(--suave);font-weight:600}.dlg-cuerpo dd{margin:0}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+.solo-imp{display:none}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.dos{grid-template-columns:1fr}}
+@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.icono .t{display:none}.fila-b{grid-template-columns:100px 1fr 56px}.dlg-cuerpo dl{grid-template-columns:1fr}}
+@media print{
+  @page{size:A4;margin:12mm 12mm 22mm}
+  .barra,.proys,footer,dialog,.aviso-of{display:none!important}
+  body{background:#fff;font-size:10.5pt}main{padding:0;max-width:none}
+  .tarjeta{box-shadow:none;break-inside:avoid}
+  .solo-imp{display:block}
+  .pie-imp{position:fixed;bottom:0;left:0;right:0;text-align:center}
+  .pie-imp img{width:66.67%;max-height:12mm;object-fit:contain}
+  .lista button{padding:4px}
+}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Volver al inicio"><span class="ms">arrow_back</span></a>
+  <h1>Tablero de control<small id="subt">Seguimiento por proyecto · solo lectura · versión 0</small></h1>
+  <button class="icono oculto" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span><span class="t">Actualizar</span></button>
+  <button class="icono oculto" id="bImp" aria-label="Imprimir"><span class="ms">print</span><span class="t">Imprimir</span></button>
+  <button class="icono oculto" id="bWord" aria-label="Descargar en Word"><span class="ms">download</span><span class="t">Word</span></button>
+</header>
+<main id="app"><div class="vacio">Cargando…</div></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Tablero de control</p></footer>
+<dialog id="dlg"></dialog>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
+const COL = { 'Completada': '#1E7B4B', 'En curso': '#2F5BEA', 'Pendiente': '#F57C00', 'Reprogramada': '#6B7A90' };
+const SD = 's/d (revisar)';
+const sd = v => String(v == null ? '' : v).trim() || SD;
+let datos = null, proyecto = S.store.get('control.proyecto', ''), offline = false;
+
+/* ---------- fechas (dd/mm/aaaa) ---------- */
+const fecha = t => { const m = String(t || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+const hoy0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const dias = d => Math.round((d - hoy0()) / 864e5);
+const hoyTxt = () => new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+/* ---------- cálculo del tablero ---------- */
+function calcular(r) {
+  const T = r.tareas || [];
+  const abierta = t => t.estado !== 'Completada';
+  const venc = T.filter(t => abierta(t) && fecha(t.fecha) && dias(fecha(t.fecha)) < 0).sort((a, b) => fecha(a.fecha) - fecha(b.fecha));
+  const prox = T.filter(t => abierta(t) && fecha(t.fecha) && dias(fecha(t.fecha)) >= 0 && dias(fecha(t.fecha)) <= 15).sort((a, b) => fecha(a.fecha) - fecha(b.fecha));
+  const sinFecha = T.filter(t => abierta(t) && !fecha(t.fecha));
+  const sinResp = T.filter(t => abierta(t) && !String(t.respDesig || '').trim());
+  const en7 = prox.filter(t => dias(fecha(t.fecha)) <= 7);
+  const n = e => T.filter(t => t.estado === e).length;
+  const comp = n('Completada');
+  const ejes = {}; T.forEach(t => { const k = String(t.eje || '').trim() || SD; (ejes[k] = ejes[k] || []).push(t); });
+  let luz = 'verde';
+  if (!T.length) luz = 'gris'; else if (venc.length) luz = 'rojo'; else if (sinResp.length || en7.length) luz = 'amarillo';
+  const motivo = luz === 'rojo' ? `${venc.length} tarea${venc.length > 1 ? 's' : ''} vencida${venc.length > 1 ? 's' : ''}`
+    : luz === 'amarillo' ? [sinResp.length ? `${sinResp.length} sin responsable designado` : '', en7.length ? `${en7.length} vence${en7.length > 1 ? 'n' : ''} en 7 días o menos` : ''].filter(Boolean).join(' · ')
+    : T.length ? 'Sin tareas vencidas, todas con responsable y sin vencimientos en los próximos 7 días' : 'Todavía no hay tareas cargadas para este proyecto';
+  return { T, venc, prox, sinFecha, sinResp, comp, enCurso: n('En curso'), pend: n('Pendiente'), reprog: n('Reprogramada'), ejes, luz, motivo,
+    pct: T.length ? Math.round(comp * 100 / T.length) : 0 };
+}
+const LUZ = { rojo: ['#C62828', 'Requiere atención'], amarillo: ['#F57C00', 'Con alertas'], verde: ['#1E7B4B', 'En marcha'], gris: ['#6B7A90', 'Sin tareas cargadas'] };
+
+/* ---------- vistas ---------- */
+function render() {
+  if (!S.sesion.token()) return vistaIngreso();
+  if (!datos) return;
+  const vis = datos.proyectos || [];
+  $('#bAct').classList.remove('oculto');
+  if (!vis.length) {
+    ['#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
+    app.innerHTML = `<div class="tarjeta vacio"><span class="ms" style="font-size:40px;color:var(--tenue)">dashboard</span><p><b>Tu usuario todavía no tiene proyectos habilitados en el tablero de control.</b></p><p class="sub">Consultá con Higiene y Seguridad Laboral.</p><a class="btn sec" href="index.html">Volver al inicio</a></div>`;
+    return;
+  }
+  const sel = `<div class="proys" role="group" aria-label="Proyecto">${vis.map(p => `<button class="tab" data-proy="${E(p)}" aria-pressed="${p === proyecto}">${E(p)}</button>`).join('')}</div>`;
+  const av = offline ? `<div class="aviso-of">Sin conexión: se muestra la última copia guardada en este dispositivo (${E(datos.cache || 's/d')}).</div>` : '';
+  if (!datos.proyecto) { app.innerHTML = av + sel + '<div class="tarjeta vacio">Cargando el proyecto…</div>'; return; }
+  ['#bImp', '#bWord'].forEach(s => $(s).classList.remove('oculto'));
+  app.innerHTML = av + sel + cuerpo(false);
+}
+
+function cuerpo(word) {
+  const r = datos, c = calcular(r), L = LUZ[c.luz];
+  const fila = (t, tipo) => {
+    const d = fecha(t.fecha), n = d ? dias(d) : null;
+    const f = tipo === 'venc' ? `<span class="f" style="color:var(--rojo)">${E(t.fecha)} · hace ${-n} día${-n === 1 ? '' : 's'}</span>` : `<span class="f" style="color:${n <= 7 ? 'var(--amar)' : 'var(--suave)'}">${E(t.fecha)} · ${n === 0 ? 'hoy' : 'en ' + n + ' día' + (n === 1 ? '' : 's')}</span>`;
+    return `<li><button data-tarea="${E(t.id)}"><span class="id">${E(t.num || t.id)}</span><span>${E(t.tarea || SD)}<br><span class="sub">${E(t.respDesig ? 'Responsable: ' + t.respDesig : 'Sin responsable designado')}</span></span>${f}</button></li>`;
+  };
+  const kpi = (v, t, cls) => `<div class="tarjeta kpi ${cls || ''}"><b>${v}</b><span>${t}</span></div>`;
+  const leyenda = `<div class="leyenda">${Object.keys(COL).map(k => `<span><i style="background:${COL[k]}"></i>${k}</span>`).join('')}</div>`;
+  const ejes = Object.keys(c.ejes).map(k => {
+    const l = c.ejes[k], tot = l.length, comp = l.filter(t => t.estado === 'Completada').length;
+    const seg = Object.keys(COL).map(e => { const n = l.filter(t => t.estado === e).length; return n ? `<i style="width:${n * 100 / tot}%;background:${COL[e]}" title="${e}: ${n}"></i>` : ''; }).join('');
+    return `<div class="fila-b"><span class="nom" title="${E(k)}">${E(k)}</span><span class="barra-p">${seg}</span><span class="n">${comp}/${tot}</span></div>`;
+  }).join('');
+
+  // Reuniones
+  const R = r.reuniones || [], ult = R[0];
+  const proxReu = R.map(x => x.proxima).find(x => String(x || '').trim());
+  const tareasActa = R.flatMap(x => (x.tareas || []).filter(y => !/complet|cumplid|hech/i.test(y.e || '')).map(y => Object.assign({ acta: x.num || x.id, fechaActa: x.fecha }, y)));
+  const reu = !R.length ? '<p class="sub">Todavía no hay actas guardadas para este proyecto.</p>' : `
+    <dl style="display:grid;grid-template-columns:140px 1fr;gap:4px 12px;margin:0 0 10px;font-size:13.5px">
+      <dt class="sub">Última reunión</dt><dd style="margin:0"><b>${E(sd(ult.fecha))}</b> · ${E(sd(ult.comite))}${ult.tipo ? ' · ' + E(ult.tipo) : ''}</dd>
+      <dt class="sub">Asistentes</dt><dd style="margin:0">${ult.asistentes || SD}</dd>
+      <dt class="sub">Próxima reunión</dt><dd style="margin:0">${E(sd(proxReu))}</dd>
+      <dt class="sub">Reuniones registradas</dt><dd style="margin:0">${R.length}</dd></dl>
+    <b style="font-size:13px">Decisiones y acuerdos de la última reunión</b>
+    ${(ult.decisiones || []).length ? `<ul style="margin:4px 0 10px;padding-left:20px;font-size:13px">${ult.decisiones.map(d => `<li>${E(d)}</li>`).join('')}</ul>` : '<p class="sub">Sin decisiones registradas.</p>'}
+    <b style="font-size:13px">Compromisos de las actas sin cumplir (${tareasActa.length})</b>
+    ${tareasActa.length ? `<table style="margin-top:4px"><thead><tr><th>Compromiso</th><th>Responsable</th><th>Plazo</th><th>Acta</th></tr></thead><tbody>${tareasActa.slice(0, word ? 999 : 12).map(y => `<tr><td>${E(y.t)}</td><td>${E(sd(y.r))}</td><td>${E(sd(y.p))}</td><td>${E(y.acta)}</td></tr>`).join('')}</tbody></table>${!word && tareasActa.length > 12 ? `<p class="sub">Y ${tareasActa.length - 12} más (salen todos en el informe).</p>` : ''}` : '<p class="sub">No hay compromisos pendientes en las actas.</p>'}`;
+
+  // Integrantes
+  const I = r.integrantes || [];
+  const porInst = {}; I.forEach(x => { const k = String(x.institucion || '').trim() || SD; porInst[k] = (porInst[k] || 0) + 1; });
+  const nInt = I.filter(x => /intern/i.test(x.tipo)).length, nExt = I.filter(x => /extern/i.test(x.tipo)).length;
+  const integ = !I.length ? '<p class="sub">Todavía no hay integrantes asignados a este proyecto.</p>' : `
+    <p class="sub" style="margin:0 0 8px">${I.length} integrante${I.length > 1 ? 's' : ''} · ${nInt} interno${nInt === 1 ? '' : 's'} · ${nExt} externo${nExt === 1 ? '' : 's'}${I.length - nInt - nExt ? ' · ' + (I.length - nInt - nExt) + ' sin tipo' : ''}</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${Object.keys(porInst).sort((a, b) => porInst[b] - porInst[a]).map(k => `<span class="chip">${E(k)} · ${porInst[k]}</span>`).join('')}</div>
+    <table><thead><tr><th>Función en el proyecto</th><th>Integrante</th><th>Institución</th></tr></thead><tbody>${I.slice().sort((a, b) => String(a.funcion).localeCompare(String(b.funcion), 'es')).map(x => `<tr><td>${E(sd(x.funcion))}</td><td>${E(sd(x.nombre))}</td><td>${E(sd(x.institucion))}</td></tr>`).join('')}</tbody></table>`;
+
+  // Solicitudes (solo Administración)
+  const so = r.solicitudes;
+  const sol = !so ? '' : `<section class="tarjeta panel"><h2><span class="ms">outgoing_mail</span>Solicitudes a organismos <span class="chip">Solo Administración</span></h2>
+    <p class="sub" style="margin:0 0 6px">Total ${so.total} · Borrador ${so['Borrador'] || 0} · Enviadas ${so['Enviada'] || 0} · Respondidas ${so['Respondida'] || 0} · Sin respuesta ${so['Sin respuesta'] || 0}${so.vencidas ? ` · <b style="color:var(--rojo)">${so.vencidas} con plazo vencido</b>` : ''}</p>
+    ${word ? '' : '<a class="btn sec" href="coe.html" data-ir-sol style="min-height:36px;padding:6px 12px"><span class="ms" style="font-size:18px">open_in_new</span>Ver en COE › Solicitudes</a>'}</section>`;
+
+  const cabImp = `<div class="solo-imp" ${word ? 'style="display:block"' : ''}><p style="font-size:9pt;color:#4B5B73;margin:0">Preparación y Respuesta a Emergencias y desastres · Higiene y Seguridad Laboral</p>
+    <h1 style="font-size:15pt;margin:4px 0 2px">Informe de avance · ${E(r.proyecto)}</h1><p style="font-size:9.5pt;margin:0 0 10px">Fecha de corte: ${hoyTxt()} · Versión 0 · Base orientadora: los datos surgen de la matriz, las actas y la nómina del COE cargadas a esa fecha.</p></div>`;
+  const pieImp = word ? '' : '<div class="solo-imp pie-imp"><img src="logo-hysl.png" alt="HySL"></div>';
+
+  return `${cabImp}
+  <section class="tarjeta cab" style="--c:${L[0]}"><span class="luz" aria-hidden="true"></span><div><b>${E(r.proyecto)} · ${L[1]}</b><span>${E(c.motivo)}</span></div></section>
+  <div class="kpis">${kpi(c.T.length, 'Tareas')}${kpi(c.pct + '%', 'Completadas (' + c.comp + ')')}${kpi(c.enCurso, 'En curso')}${kpi(c.pend + c.reprog, 'Pendientes' + (c.reprog ? ' (' + c.reprog + ' reprog.)' : ''))}${kpi(c.venc.length, 'Vencidas', c.venc.length ? 'alerta' : '')}${kpi(c.sinResp.length, 'Sin responsable', c.sinResp.length ? 'aviso' : '')}</div>
+  <section class="tarjeta panel"><h2><span class="ms">stacked_bar_chart</span>Avance por eje</h2><p class="nota">Tareas completadas sobre el total de cada eje de la matriz operativa.</p>${leyenda}${ejes || '<p class="sub">Sin tareas.</p>'}</section>
+  <div class="dos">
+    <section class="tarjeta panel"><h2><span class="ms" style="color:var(--rojo)">event_busy</span>Vencidas (${c.venc.length})</h2><p class="nota">Fecha comprometida ya pasada y la tarea no está completada.</p>${c.venc.length ? `<ul class="lista">${c.venc.map(t => fila(t, 'venc')).join('')}</ul>` : '<p class="sub">No hay tareas vencidas.</p>'}</section>
+    <section class="tarjeta panel"><h2><span class="ms" style="color:var(--amar)">event_upcoming</span>Vencen en 15 días (${c.prox.length})</h2><p class="nota">${c.sinFecha.length} tarea${c.sinFecha.length === 1 ? '' : 's'} abierta${c.sinFecha.length === 1 ? '' : 's'} sin fecha comprometida (no se cuentan acá).</p>${c.prox.length ? `<ul class="lista">${c.prox.map(t => fila(t, 'prox')).join('')}</ul>` : '<p class="sub">No hay vencimientos en los próximos 15 días.</p>'}</section>
+  </div>
+  <div class="dos">
+    <section class="tarjeta panel"><h2><span class="ms">groups</span>Reuniones y acuerdos</h2>${reu}</section>
+    <section class="tarjeta panel"><h2><span class="ms">badge</span>Integrantes y funciones</h2><p class="nota">Sin teléfonos ni correos: los contactos están en el módulo COE.</p>${integ}</section>
+  </div>
+  ${sol}
+  <p class="sub" style="margin:4px 2px 0">Tablero de solo lectura y base orientadora, no es un registro en tiempo real. Datos al ${E(new Date(r.generado || Date.now()).toLocaleString('es-AR'))}. Las correcciones se hacen en el módulo COE (Administración).</p>
+  ${pieImp}`;
+}
+
+function ficha(id) {
+  const t = (datos.tareas || []).find(x => x.id === id); if (!t) return;
+  const d = $('#dlg');
+  const row = (k, v) => `<dt>${k}</dt><dd>${E(sd(v))}</dd>`;
+  d.innerHTML = `<div class="dlg-cab"><b>${E(t.num || t.id)} · Tarea de la matriz</b><button class="icono" style="color:var(--fuerte)" data-cerrar aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo"><p style="margin:0 0 12px;font-weight:700">${E(sd(t.tarea))}</p><dl>${row('Eje', t.eje)}${row('Estado', t.estado)}${row('Responsable designado', t.respDesig)}${row('Responsable propuesto', t.respProp)}${row('Fecha comprometida', t.fecha)}${row('Plazo sugerido', t.plazo)}${row('Producto', t.producto)}${row('Brecha', t.brecha)}</dl>
+    <p class="sub" style="margin:12px 0 0">Solo lectura. Las modificaciones las hace Administración en COE › Matriz operativa.</p></div>`;
+  d.showModal();
+}
+
+function word() {
+  const r = datos;
+  const css = `@page Section1{size:595.3pt 841.9pt;margin:34pt 32pt 60pt;mso-footer:f1;mso-footer-margin:18pt}div.Section1{page:Section1}
+    body{font-family:Arial,sans-serif;font-size:9.5pt;color:#172B4D}h2{font-size:11pt;border-bottom:1.5pt solid #2F5BEA;margin:10pt 0 4pt}
+    table{width:100%;border-collapse:collapse}td,th{border:1pt solid #C5D1F2;padding:3pt 5pt;font-size:8.5pt;vertical-align:top;text-align:left}th{background:#E4EAFB}
+    .kpis div{display:inline-block;margin-right:14pt}.sub{color:#4B5B73;font-size:8.5pt}.chip{background:#E4EAFB;padding:1pt 4pt}.ms,.luz,.barra-p,.leyenda,.btn{display:none}
+    .lista{margin:0;padding-left:14pt}.lista button{display:block}`;
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Informe de avance</title>
+    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${cuerpo(true)}</div>
+    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p></div></body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = ('Informe de avance - ' + r.proyecto + ' - ' + hoyTxt().replace(/\//g, '-')).replace(/[\\/:*?"<>|]/g, '-') + '.doc';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+/* ---------- datos (con copia en el dispositivo para usar sin conexión) ---------- */
+async function cargar() {
+  offline = false;
+  const cacheKey = 'control.cache.' + proyecto;
+  try {
+    if (!navigator.onLine) throw { offline: true };
+    let r = await S.api('tablero_proyecto', { proyecto: proyecto });
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); return render(); } throw r; }
+    if (!proyecto || (r.proyectos || []).indexOf(proyecto) < 0) {
+      proyecto = (r.proyectos || [])[0] || '';
+      S.store.set('control.proyecto', proyecto);
+      if (proyecto) { datos = r; render(); r = await S.api('tablero_proyecto', { proyecto: proyecto }); if (!r.ok) throw r; }
+    }
+    datos = r; datos.cache = new Date().toLocaleString('es-AR');
+    if (proyecto) S.store.set('control.cache.' + proyecto, datos);
+    render();
+  } catch (e) {
+    const c = S.store.get(cacheKey, null);
+    if (c) { datos = c; offline = true; render(); return; }
+    app.innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || (e && e.offline ? 'Sin conexión y sin copia guardada en este dispositivo.' : 'No se pudo cargar el tablero.'))}</div>`;
+  }
+}
+
+function vistaIngreso() {
+  ['#bAct', '#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2 style="color:var(--fuerte);margin:0 0 4px">Tablero de control</h2><p style="color:var(--suave);font-size:13px">Ingresá con el mismo DNI y clave de las apps.</p>
+    <label class="campo"><span>DNI (sin puntos)</span><input name="dni" inputmode="numeric" autocomplete="username" required maxlength="10"></label>
+    <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
+    <button class="btn" type="submit" style="width:100%"><span class="ms">login</span>Ingresar</button><div class="msg oculto" id="msg" style="margin-top:10px"></div></form>`;
+  $('#fIng').addEventListener('submit', async ev => {
+    ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
+    try { const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r; S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Cargando…</div>'; cargar(); }
+    catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
+    finally { b.disabled = false; }
+  });
+}
+
+app.addEventListener('click', ev => {
+  const p = ev.target.closest('[data-proy]');
+  if (p) { proyecto = p.dataset.proy; S.store.set('control.proyecto', proyecto); datos = Object.assign({}, datos, { proyecto: '' }); render(); cargar(); return; }
+  if (ev.target.closest('[data-ir-sol]')) S.store.set('coe.vista', 'solicitudes');
+  const t = ev.target.closest('[data-tarea]'); if (t) ficha(t.dataset.tarea);
+});
+$('#dlg').addEventListener('click', ev => { if (ev.target.closest('[data-cerrar]') || ev.target === $('#dlg')) $('#dlg').close(); });
+$('#bAct').addEventListener('click', () => cargar());
+$('#bImp').addEventListener('click', () => window.print());
+$('#bWord').addEventListener('click', word);
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (S.sesion.token()) cargar(); else vistaIngreso();
+})();
+</script>
+</body>
+</html>

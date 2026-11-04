@@ -685,6 +685,7 @@ function vistaUsuarios() {
       <div class="sub">DNI ${E(x.dni)} · Redes: ${E(x.redes || 's/d')} · Establecimientos: ${E(x.estab || 's/d')}</div>
       <div class="proys">${modsDe(x).map(m => `<span class="chip proy">${E(MOD_TXT[m] || m)}</span>`).join('')}</div>
       ${x.deriv ? `<div class="sub">Carga derivaciones y albergues en: ${E(x.deriv)}</div>` : ''}
+      <div class="sub">Tablero de control: ${x.rol === 'Administración' ? 'todos los proyectos' : E(x.proyectos || 'ninguno')}</div>
       <div class="sub">${x.claveFecha ? 'Clave generada el ' + E(x.claveFecha) : 'Todavía no tiene clave'}${x.ultimoIngreso ? ' · último ingreso ' + E(x.ultimoIngreso) : ''}</div>
       <div class="acc"><button class="btn sec mini" data-act="editarUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">tune</span>Qué ve</button>
         <button class="btn sec mini" data-act="claveUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">key</span>${x.tieneClave ? 'Generar clave nueva' : 'Generar clave'}</button></div></div>`).join('') || '<div class="tarjeta vacio">No hay usuarios con esa búsqueda.</div>'}</div>`;
@@ -708,6 +709,7 @@ function dlgUsuario(dni) {
       <div class="campo"><span>Establecimientos en que carga o que ve</span>${chk('estTodos', 'Todos', todosE, '<b>Todos los de sus redes</b>')}
         <div id="listaEst" style="max-height:220px;overflow:auto;border:1px solid var(--linea);border-radius:10px;padding:4px 10px">${acc.redes.map(r => `<div data-red-est="${E(r)}"><b class="sub">${E(r)}</b>${acc.establecimientos.filter(e => e.red === r).map(e => chk('est', e.codigo, !todosE && es.indexOf(e.codigo.toUpperCase()) >= 0, E(e.codigo + ' · ' + e.nombre))).join('')}</div>`).join('')}</div></div>
       <div class="campo"><span>Derivaciones y albergues · COE: localidades en que carga</span><p class="sub" style="margin:0 0 4px">Todos los usuarios ven Derivaciones y albergues; acá se elige dónde carga. Sin tildar = solo ve. Administración carga en todas.</p>${chk('locTodas', 'Todas', /^todas$/i.test(String(x.deriv || '').trim()), '<b>Todas las localidades</b>')}${(acc.localidades || []).map(l => chk('loc', l, lista(x.deriv).indexOf(l) >= 0, E(l))).join('')}</div>
+      <div class="campo"><span>Tablero de control: proyectos que ve</span><p class="sub" style="margin:0 0 4px">Solo lectura: tareas de la matriz, reuniones y acuerdos, integrantes y funciones (sin teléfonos ni correos). Sin tildar = no ve ningún tablero. Administración ve todos.</p>${chk('proyTodos', 'Todos', /^todos$/i.test(String(x.proyectos || '').trim()), '<b>Todos los proyectos</b>')}${(acc.proyectos || []).map(p => chk('proyT', p, lista(x.proyectos).map(y => y.toLowerCase()).indexOf(p.toLowerCase()) >= 0, E(p))).join('')}</div>
       <label class="campo"><span>Observaciones</span><input name="obs" value="${E(x.obs || '')}"></label></form>
     <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarUsr" data-dni="${E(dni || '')}"><span class="ms">save</span>Guardar</button></div>`);
   const f = $('#fUsr');
@@ -811,7 +813,8 @@ document.addEventListener('click', async ev => {
     const f = $('#fUsr'), val = n => [...f.querySelectorAll(`[name=${n}]:checked`)].map(c => c.value);
     const d = { dni: f.dni.value, nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; '),
       redes: f.redTodas.checked ? 'Todas' : val('red').join('; '), estab: f.estTodos.checked ? 'Todos' : val('est').join('; '),
-      deriv: f.locTodas.checked ? 'Todas' : val('loc').join('; ') };
+      deriv: f.locTodas.checked ? 'Todas' : val('loc').join('; '),
+      proyectos: f.proyTodos.checked ? 'Todos' : val('proyT').join('; ') };
     if (!navigator.onLine) { toast('Para guardar se necesita conexión.'); return; }
     t.disabled = true;
     try { const r = await S.api('coe_usuario', { usuario: d }); if (!r.ok) throw r; cerrar(); toast('Usuario guardado.'); acc = null; await cargarUsuarios();
@@ -879,7 +882,7 @@ function vistaAyuda() {
     <h3>Matriz operativa</h3><p>La matriz de tareas del COE de Trelew y Área Programática (eje, actividad, responsables, plazo, producto, indicador, estado, fecha comprometida y brechas). La ven todos los usuarios con acceso al COE; solo Administración la modifica con «Editar» o «Agregar tarea». Tocá un estado arriba para filtrar. Se imprime o se baja en Word (apaisada) para llevar a la reunión. Está en la hoja COE MATRIZ del libro: también se puede corregir ahí.</p>
     <h3>Solicitudes a organismos</h3><p>Solo para Administración. Una ficha por cada nota que se manda a un organismo (municipio, Provincia, IPA, cooperativas, universidad, etc.): qué se pide, para qué tareas de la matriz, enlace a la nota en Drive, fecha de envío, plazo, estado y respuesta. La app no envía nada: cuando mandás la nota, cargás la fecha de envío y el estado «Enviada». Si se cumple el plazo sin respuesta, la ficha aparece como «Vencida». Tocá un estado arriba para filtrar; se imprime o se baja en Word. Está en la hoja COE SOLICITUDES del libro: también se puede cargar ahí.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COE PARTICIPANTES (personas), COE PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COE LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
-    <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su DNI). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo».</p>
+    <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su DNI). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo». En «Tablero de control: proyectos que ve» tildás de qué proyectos ve el tablero de seguimiento (en la pantalla de inicio); sin tildar no ve ninguno.</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COE» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
     <button class="btn sec" onclick="location.hash=''"><span class="ms">arrow_back</span>Volver</button></div>`;
 }

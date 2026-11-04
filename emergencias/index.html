@@ -130,6 +130,7 @@ const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 // clave: flag del usuario que habilita la sección (null = abierta a todos)
 const BLANCO = '#FFFFFF';
 const MODS = [
+  { k: 'control', grupo: 'ctrl', t: 'Tablero de control', d: 'Seguimiento por proyecto, solo lectura: avance de las tareas, vencimientos, reuniones y acuerdos, integrantes y funciones. Ves los proyectos que tenés habilitados.', ico: 'dashboard', href: 'control.html', flag: 'tablero', bg: 'linear-gradient(120deg,#0D313F 0%,#1B7A8C 100%)' },
   { k: 'starh', grupo: 'relev', t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
   { k: 'ish', grupo: 'relev', t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
   { k: 'phr', grupo: 'relev', t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
@@ -146,11 +147,11 @@ function pintar() {
   if (u) $('#quien').textContent = (u.nombre || '') + (u.rol ? ' · ' + u.rol : '');
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
-  const grande = m => `<div class="mod ${m.grupo === 'resp' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">
-      <span class="ms fantasma" aria-hidden="true">${m.ico}</span>${m.grupo === 'resp' ? '<span class="etq">Respuesta</span>' : ''}
+  const grande = m => `<div class="mod ${m.grupo === 'resp' || m.grupo === 'ctrl' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">
+      <span class="ms fantasma" aria-hidden="true">${m.ico}</span>${m.grupo === 'resp' ? '<span class="etq">Respuesta</span>' : m.grupo === 'ctrl' ? '<span class="etq">Solo lectura</span>' : ''}
       <span class="ico"><span class="ms">${m.ico}</span></span>
-      ${m.grupo === 'resp' ? '<span class="txt">' : ''}<b>${E(m.t)}</b><p>${E(m.d)}</p>
-      <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' ? '</span>' : ''}</div>`;
+      ${m.grupo === 'resp' || m.grupo === 'ctrl' ? '<span class="txt">' : ''}<b>${E(m.t)}</b><p>${E(m.d)}</p>
+      <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' || m.grupo === 'ctrl' ? '</span>' : ''}</div>`;
   const chica = m => `<div class="chica" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--c:${m.c};--cc:${m.cc}">
       <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}</b><span class="d">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
@@ -160,9 +161,10 @@ function pintar() {
   const VIS = !u ? [] : ['phr', 'deriv', 'coe', 'fuentes', 'imp'];
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k] }) : m);
-  const g = k => MV.filter(m => m.grupo === k && (admin || VIS.indexOf(m.k) >= 0));
+  // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
+  const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || u.tablero)) : (admin || VIS.indexOf(m.k) >= 0)));
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
-  $('#rejilla').innerHTML = fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
+  $('#rejilla').innerHTML = fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');

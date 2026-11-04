@@ -1,7 +1,7 @@
 /* Emergencias HySL (migrada desde /starh) · trabajo sin señal: guarda la app en el dispositivo.
  * Al publicar una versión nueva, cambiar el número de VERSION para que todos la reciban. */
-const VERSION = 'emergencias-v0.16';
-const ARCHIVOS = ['./', 'index.html', 'starh.html', 'coe.html', 'fuentes.html', 'evac.html', 'derivaciones.html', 'plan.html', 'tablero.html', 'phr.html', 'phr-tablero.html', 'imprimir.html', 'ish.html', 'ish-tablero.html', 'guias.js', 'starh.js', 'config.js',
+const VERSION = 'emergencias-v0.17';
+const ARCHIVOS = ['./', 'index.html', 'starh.html', 'coe.html', 'control.html', 'fuentes.html', 'evac.html', 'derivaciones.html', 'plan.html', 'tablero.html', 'phr.html', 'phr-tablero.html', 'imprimir.html', 'ish.html', 'ish-tablero.html', 'guias.js', 'starh.js', 'config.js',
   'logo-hysl.png', 'enc-trelew.png', 'enc-secretaria.png', 'enc-hsst.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
