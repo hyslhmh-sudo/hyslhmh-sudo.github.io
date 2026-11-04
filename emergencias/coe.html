@@ -75,6 +75,7 @@ tr.nueva td{background:#F5F7FB}
 .campo input,.campo select,.campo textarea{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:10px 11px;background:#fff}
 .campo textarea{min-height:64px;resize:vertical}
 .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.sec-t{margin:14px 0 4px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--medio);border-bottom:1px solid var(--linea);padding-bottom:4px}
 .opciones{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .op{border:1.5px solid #C5D1F2;background:#fff;border-radius:10px;padding:9px;cursor:pointer;font-weight:700}
 .op[aria-pressed="true"]{border-color:var(--fuerte);background:var(--claro);color:var(--fuerte)}
@@ -151,6 +152,12 @@ const per = id => cat.personas.find(p => p.id === id) || {};
 const partsDe = id => cat.participaciones.filter(x => x.persona === id);
 const chipTipo = t => t ? `<span class="chip ${t === 'Externo' ? 'ext' : 'int'}">${E(t)}</span>` : '';
 const telLink = t => 'tel:' + String(t).replace(/[^\d+]/g, '');
+// 04/11/2026 · Ficha ampliada: contactos con etiqueta. DNI, teléfono particular y correo personal llegan solo para Administración.
+const conTel = (v, et) => v ? `<a href="${telLink(v)}" title="${E(et)}"><span class="ms" style="font-size:17px">call</span><small style="opacity:.75">${E(et)}:</small> ${E(v)}</a>` : '';
+const conMail = (v, et) => v ? `<a href="mailto:${E(v)}" title="${E(et)}"><span class="ms" style="font-size:17px">mail</span><small style="opacity:.75">${E(et)}:</small> ${E(v)}</a>` : '';
+const contactosHTML = p => { const h = conTel(p.tel2, 'Institución') + conTel(p.telEm, 'Emergencia') + conTel(p.tel, 'Particular') + conMail(p.mailInst, 'Institucional') + conMail(p.mail, 'Personal'); return h || '<span class="sub">Sin contactos cargados (s/d (revisar))</span>'; };
+const telPpal = p => p.tel2 || p.telEm || p.tel || '';
+const mailPpal = p => p.mailInst || p.mail || '';
 const opts = (lista, val, vacio) => (vacio != null ? `<option value="">${E(vacio)}</option>` : '') + lista.map(x => `<option ${x === val ? 'selected' : ''}>${E(x)}</option>`).join('') + (val && lista.indexOf(val) < 0 ? `<option selected>${E(val)}</option>` : '');
 const proyectos = () => { const l = (cat.listas.proyectos || []).slice(); cat.participaciones.forEach(x => { if (x.proyecto && l.indexOf(x.proyecto) < 0) l.push(x.proyecto); }); return l; };
 
@@ -211,7 +218,7 @@ function pasa(p) {
   if (fTipo && p.tipo !== fTipo) return false;
   if (fRed && p.red !== fRed && p.red !== 'Ambas redes') return false;
   if (fProy && !partsDe(p.id).some(x => x.proyecto === fProy)) return false;
-  const t = [p.nombre, p.institucion, p.servicio, p.cargo, p.mail, p.tel].join(' ').toLowerCase();
+  const t = [p.nombre, p.institucion, p.servicio, p.cargo, p.titulo, p.mail, p.mailInst, p.tel, p.tel2, p.telEm, p.dni].join(' ').toLowerCase();
   return !q || t.indexOf(q.toLowerCase()) >= 0;
 }
 
@@ -221,7 +228,9 @@ function vistaPersonas() {
   $('#vista').innerHTML = filtrosHTML(true) + (l.length ? `<div class="lista">${l.map(p => `<div class="tarjeta per">
     <div class="per-cab"><b>${E(p.nombre)}</b>${chipTipo(p.tipo)}${p.estado === 'Inactivo' ? '<span class="chip inac">Inactivo</span>' : ''}</div>
     <div class="sub">${E([p.cargo, p.servicio, p.institucion].filter(Boolean).join(' · ') || 's/d')}${p.red ? ' · ' + E(p.red) : ''}</div>
-    <div class="contactos">${p.tel ? `<a href="${telLink(p.tel)}"><span class="ms" style="font-size:17px">call</span>${E(p.tel)}</a>` : ''}${p.tel2 ? `<a href="${telLink(p.tel2)}"><span class="ms" style="font-size:17px">call</span>${E(p.tel2)}</a>` : ''}${p.mail ? `<a href="mailto:${E(p.mail)}"><span class="ms" style="font-size:17px">mail</span>${E(p.mail)}</a>` : ''}${!p.tel && !p.tel2 && !p.mail ? '<span class="sub">Sin contactos cargados (s/d)</span>' : ''}</div>
+    ${p.titulo ? `<div class="sub">Título: ${E(p.titulo)}</div>` : ''}${p.dni ? `<div class="sub">DNI ${E(p.dni)}</div>` : ''}
+    <div class="contactos">${contactosHTML(p)}</div>
+    ${p.reemplazo ? `<div class="sub"><span class="ms" style="font-size:16px">swap_horiz</span> Reemplazante: <b>${E(per(p.reemplazo).nombre || p.reemplazo)}</b></div>` : ''}${cat.personas.filter(x => x.reemplazo === p.id).map(x => `<div class="sub"><span class="ms" style="font-size:16px">swap_horiz</span> Reemplaza a: <b>${E(x.nombre)}</b></div>`).join('')}
     <div class="proys">${partsDe(p.id).map(x => `<span class="chip proy">${E(x.proyecto)}${x.funcion ? ' · ' + E(x.funcion) : ''}</span>`).join('') || '<span class="sub">Todavía no está en ningún proyecto</span>'}</div>
     ${p.obs ? `<div class="sub">${E(p.obs)}</div>` : ''}
     ${cat.puedeCargar ? `<div class="acc"><button class="btn sec mini" data-act="editar" data-id="${E(p.id)}"><span class="ms" style="font-size:17px">edit</span>Editar</button>
@@ -291,7 +300,7 @@ function vistaProyectos() {
     return `<div class="tarjeta proy-blq"><h3>${E(pr)}<small>${l.length} participantes · ${ni} internos · ${l.length - ni} externos</small></h3>
       ${l.length ? `<div style="overflow-x:auto"><table><thead><tr><th>Función</th><th>Participante</th><th>Tipo</th><th>Institución · cargo</th><th>Teléfono</th><th>Correo</th></tr></thead><tbody>
       ${l.map(x => { const p = per(x.persona); return `<tr><td><b>${E(x.funcion || 's/d')}</b></td><td>${E(p.nombre)}</td><td>${chipTipo(p.tipo)}</td><td>${E([p.institucion, p.cargo].filter(Boolean).join(' · ') || 's/d')}</td>
-        <td>${p.tel ? `<a href="${telLink(p.tel)}">${E(p.tel)}</a>` : 's/d'}</td><td>${p.mail ? `<a href="mailto:${E(p.mail)}">${E(p.mail)}</a>` : 's/d'}</td></tr>`; }).join('')}</tbody></table></div>`
+        <td>${telPpal(p) ? `<a href="${telLink(telPpal(p))}">${E(telPpal(p))}</a>` : 's/d (revisar)'}</td><td>${mailPpal(p) ? `<a href="mailto:${E(mailPpal(p))}">${E(mailPpal(p))}</a>` : 's/d (revisar)'}</td></tr>`; }).join('')}</tbody></table></div>`
       : '<div class="vacio">Sin participantes cargados en este proyecto.</div>'}</div>`;
   }).join('');
   atarFiltros(vistaProyectos);
@@ -732,26 +741,58 @@ function dlgClave(r) {
 /* ---------- diálogos ---------- */
 function abrir(html) { $('#dlg').innerHTML = `<div class="dlg-in">${html}</div>`; $('#dlg').classList.remove('oculto'); document.body.style.overflow = 'hidden'; }
 function cerrar() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; document.body.style.overflow = ''; }
+function camposPer(p, x) {
+  // x = prefijo de los campos ('' titular, 'r_' reemplazante). Mismos datos para los dos.
+  const n = k => x + k, v = k => E(p[k] || '');
+  return `<div class="rejilla">
+      <label class="campo"><span>Apellidos *</span><input name="${n('apellidos')}" value="${v('apellidos') || (!p.apellidos && p.nombre ? E(p.nombre) : '')}" autocomplete="off"></label>
+      <label class="campo"><span>Nombres *</span><input name="${n('nombres')}" value="${v('nombres')}" autocomplete="off"></label>
+      <label class="campo"><span>DNI (solo números)</span><input name="${n('dni')}" inputmode="numeric" maxlength="10" value="${v('dni')}"></label>
+      <label class="campo"><span>Título</span><input name="${n('titulo')}" value="${v('titulo')}" placeholder="Lic. en Enfermería, Médico, Ingeniero…"></label>
+      <label class="campo"><span>Función / cargo</span><input name="${n('cargo')}" value="${v('cargo')}" placeholder="Jefe de Mantenimiento, Directora…"></label>
+      <label class="campo"><span>Interna o externa</span><select name="${n('tipo')}">${(cat.listas.tipos || ['Interno', 'Externo']).map(t => `<option value="${E(t)}" ${(p.tipo || 'Interno') === t ? 'selected' : ''}>${t === 'Interno' ? 'Interna (del hospital o la red)' : t === 'Externo' ? 'Externa (otro organismo)' : E(t)}</option>`).join('')}</select></label>
+      <label class="campo"><span>Institución u organismo</span><input name="${n('institucion')}" value="${v('institucion')}" placeholder="HMH, Protección Civil, Bomberos…"></label>
+      <label class="campo"><span>Servicio o área</span><input name="${n('servicio')}" value="${v('servicio')}"></label>
+      <label class="campo"><span>Teléfono particular</span><input name="${n('tel')}" inputmode="tel" value="${v('tel')}"></label>
+      <label class="campo"><span>Teléfono de la institución</span><input name="${n('tel2')}" inputmode="tel" value="${v('tel2')}" placeholder="Con interno, si tiene"></label>
+      <label class="campo"><span>Teléfono de emergencia</span><input name="${n('telEm')}" inputmode="tel" value="${v('telEm')}"></label>
+      <label class="campo"><span>Red</span><select name="${n('red')}">${opts(cat.listas.redes, p.red, 's/d')}</select></label>
+      <label class="campo"><span>Correo personal</span><input name="${n('mail')}" type="email" value="${v('mail')}"></label>
+      <label class="campo"><span>Correo institucional</span><input name="${n('mailInst')}" type="email" value="${v('mailInst')}"></label>
+    </div>`;
+}
 function dlgPersona(id) {
   const p = id ? per(id) : { tipo: 'Interno', estado: 'Activo', red: '' };
+  const otros = cat.personas.filter(x => x.id !== id).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const pr = id ? partsDe(id) : [];
   abrir(`<div class="dlg-cab"><b>${id ? 'Editar participante' : 'Nuevo participante'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
-    <form class="dlg-cuerpo" id="fPer">
-      <label class="campo"><span>Apellido y nombre *</span><input name="nombre" required value="${E(p.nombre || '')}"></label>
-      <div class="campo"><span>Tipo de actor</span><div class="opciones">${cat.listas.tipos.map(t => `<button type="button" class="op" data-tipo="${E(t)}" aria-pressed="${p.tipo === t}">${E(t)}${t === 'Interno' ? ' (del hospital o la red)' : ' (otro organismo)'}</button>`).join('')}</div><input type="hidden" name="tipo" value="${E(p.tipo || 'Interno')}"></div>
+    <form class="dlg-cuerpo" id="fPer"><datalist id="dlFunP">${(cat.listas.funciones || []).map(f => `<option value="${E(f)}">`).join('')}</datalist>
+      <h4 class="sec-t">Datos del participante</h4>
+      ${camposPer(p, '')}
+      <div class="rejilla"><label class="campo"><span>Estado</span><select name="estado">${opts(['Activo', 'Inactivo'], p.estado || 'Activo')}</select></label></div>
+      <p class="sub" style="margin:-4px 0 6px">El DNI, el teléfono particular y el correo personal los ve solo Administración. Los demás usuarios del COE ven los datos institucionales y el teléfono de emergencia.</p>
+      <h4 class="sec-t">Rol dentro del COE</h4>
+      ${pr.length ? `<p class="sub" style="margin:0 0 6px">Ya tiene: ${pr.map(x => E(x.proyecto + ' · ' + (x.funcion || 's/d (revisar)'))).join(' — ')}. Para cambiarlos, «Proyectos y funciones».</p>` : ''}
       <div class="rejilla">
-        <label class="campo"><span>Institución u organismo</span><input name="institucion" value="${E(p.institucion || '')}" placeholder="HZT, Protección Civil, Bomberos…"></label>
-        <label class="campo"><span>Servicio o área</span><input name="servicio" value="${E(p.servicio || '')}"></label>
-        <label class="campo"><span>Cargo</span><input name="cargo" value="${E(p.cargo || '')}"></label>
-        <label class="campo"><span>Red</span><select name="red">${opts(cat.listas.redes, p.red, 's/d')}</select></label>
-        <label class="campo"><span>Teléfono</span><input name="tel" inputmode="tel" value="${E(p.tel || '')}"></label>
-        <label class="campo"><span>Otro teléfono</span><input name="tel2" inputmode="tel" value="${E(p.tel2 || '')}"></label>
-        <label class="campo"><span>Correo</span><input name="mail" type="email" value="${E(p.mail || '')}"></label>
-        <label class="campo"><span>Estado</span><select name="estado">${opts(['Activo', 'Inactivo'], p.estado || 'Activo')}</select></label>
+        <label class="campo"><span>Proyecto</span><select name="rolProy">${opts(proyectos().filter(x => !pr.some(y => y.proyecto === x)), '', pr.length ? 'Sumar otro proyecto (opcional)…' : 'Elegí proyecto…')}</select></label>
+        <label class="campo"><span>Rol en ese proyecto</span><input name="rolFun" list="dlFunP" placeholder="Enlace, Vocero, Jefe de operaciones…"></label>
       </div>
+      <h4 class="sec-t">Reemplazante</h4>
+      <div class="opciones" role="group" aria-label="Reemplazante">
+        <button type="button" class="op" data-reem="no" aria-pressed="${!p.reemplazo}">Sin reemplazante</button>
+        <button type="button" class="op" data-reem="ya" aria-pressed="${!!p.reemplazo}">Elegir un participante cargado</button>
+        <button type="button" class="op" data-reem="nuevo" aria-pressed="false">Cargar uno nuevo</button></div>
+      <input type="hidden" name="reemModo" value="${p.reemplazo ? 'ya' : 'no'}">
+      <div id="reemYa" class="${p.reemplazo ? '' : 'oculto'}"><label class="campo"><span>Reemplazante</span><select name="reemplazo"><option value="">Elegí…</option>${otros.map(x => `<option value="${E(x.id)}" ${x.id === p.reemplazo ? 'selected' : ''}>${E(x.nombre)}${x.institucion ? ' · ' + E(x.institucion) : ''}</option>`).join('')}</select></label></div>
+      <div id="reemNuevo" class="oculto"><p class="sub" style="margin:0 0 4px">Se guarda como un participante más, enlazado a este.</p>${camposPer({ tipo: p.tipo || 'Interno', red: p.red }, 'r_')}</div>
+      <label class="campo" id="reemAlt"><input type="checkbox" name="reemAlterno" checked style="width:auto"> Sumar al reemplazante al mismo proyecto con el rol «Alterno»</label>
       <label class="campo"><span>Observaciones</span><textarea name="obs">${E(p.obs || '')}</textarea></label>
-      ${id ? `<p class="sub">Proyectos y funciones: ${partsDe(id).map(x => E(x.proyecto + (x.funcion ? ' · ' + x.funcion : ''))).join(' — ') || 'ninguno'}. Se editan en «Proyectos y funciones».</p>` : '<p class="sub">Después de guardarlo, agregalo a uno o más proyectos con su función.</p>'}
     </form>
     <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarPer" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button></div>`);
+  const f = $('#fPer');
+  const sync = () => { const m = f.reemModo.value; $('#reemYa').classList.toggle('oculto', m !== 'ya'); $('#reemNuevo').classList.toggle('oculto', m !== 'nuevo'); $('#reemAlt').classList.toggle('oculto', m === 'no'); };
+  f.addEventListener('click', ev => { const b = ev.target.closest('[data-reem]'); if (!b) return; f.querySelectorAll('[data-reem]').forEach(x => x.setAttribute('aria-pressed', x === b)); f.reemModo.value = b.dataset.reem; sync(); });
+  sync();
 }
 function dlgAsignar(id) {
   const p = per(id);
@@ -769,7 +810,7 @@ function dlgAsignar(id) {
 document.addEventListener('click', async ev => {
   const t = ev.target.closest('[data-act],[data-vista],[data-tipo]'); if (!t) return;
   if (t.dataset.vista) { vista = t.dataset.vista; S.store.set('coe.vista', vista); location.hash = ''; render(); return; }
-  if (t.dataset.tipo) { document.querySelectorAll('[data-tipo]').forEach(b => b.setAttribute('aria-pressed', b === t)); $('#fPer').tipo.value = t.dataset.tipo; return; }
+  if (t.dataset.tipo && $('#fPer') && $('#fPer').tipo && $('#fPer').tipo.type === 'hidden') { document.querySelectorAll('[data-tipo]').forEach(b => b.setAttribute('aria-pressed', b === t)); $('#fPer').tipo.value = t.dataset.tipo; return; }
   const a = t.dataset.act;
   if (a === 'cerrar') return cerrar();
   if (a === 'nueva') return dlgPersona('');
@@ -832,10 +873,32 @@ document.addEventListener('click', async ev => {
     return;
   }
   if (a === 'guardarPer') {
-    const f = $('#fPer'); if (!f.nombre.value.trim()) { toast('Falta el apellido y nombre.'); return; }
-    const p = { id: t.dataset.id || '' }; ['nombre', 'tipo', 'institucion', 'servicio', 'cargo', 'red', 'tel', 'tel2', 'mail', 'estado', 'obs'].forEach(k => p[k] = f[k].value);
-    t.disabled = true; const r = await enviar('coe_persona', { persona: p }, 'Participante guardado.'); t.disabled = false;
-    if (r) { cerrar(); if (!p.id && r.id) dlgAsignar(r.id); }
+    const f = $('#fPer');
+    const leer = x => { const o = {}; ['apellidos', 'nombres', 'dni', 'titulo', 'cargo', 'tipo', 'institucion', 'servicio', 'tel', 'tel2', 'telEm', 'red', 'mail', 'mailInst'].forEach(k => o[k] = f[x + k].value.trim()); return o; };
+    const p = Object.assign({ id: t.dataset.id || '', estado: f.estado.value, obs: f.obs.value }, leer(''));
+    if (!p.apellidos || !p.nombres) { toast('Faltan apellidos y nombres.'); return; }
+    const modo = f.reemModo.value; let r2 = null;
+    if (modo === 'nuevo') { r2 = Object.assign({ id: '', estado: 'Activo', obs: 'Reemplazante de ' + p.apellidos + ' ' + p.nombres }, leer('r_')); if (!r2.apellidos || !r2.nombres) { toast('Faltan apellidos y nombres del reemplazante.'); return; } }
+    if (modo === 'ya' && !f.reemplazo.value) { toast('Elegí el reemplazante.'); return; }
+    if (!navigator.onLine) { toast('Para guardar en el COE se necesita conexión.'); return; }
+    t.disabled = true;
+    try {
+      // 1. reemplazante nuevo (queda como participante propio)
+      if (r2) { const a1 = await S.api('coe_persona', { persona: r2 }); if (!a1.ok) throw a1; p.reemplazo = a1.id; }
+      else p.reemplazo = modo === 'ya' ? f.reemplazo.value : '';
+      // 2. titular
+      const a2 = await S.api('coe_persona', { persona: p }); if (!a2.ok) throw a2; const idT = a2.id;
+      // 3. rol dentro del COE (por proyecto) y, si se pidió, el reemplazante como «Alterno» en ese proyecto
+      const proy = f.rolProy.value;
+      if (proy) {
+        const a3 = await S.api('coe_participacion', { participacion: { persona: idT, proyecto: proy, funcion: f.rolFun.value.trim(), desde: S.hoy ? S.hoy() : '', obs: '' } }); if (!a3.ok) throw a3;
+        if (p.reemplazo && f.reemAlterno.checked && !cat.participaciones.some(x => x.persona === p.reemplazo && x.proyecto === proy)) {
+          const a4 = await S.api('coe_participacion', { participacion: { persona: p.reemplazo, proyecto: proy, funcion: 'Alterno' + (f.rolFun.value.trim() ? ' (' + f.rolFun.value.trim() + ')' : ''), desde: S.hoy ? S.hoy() : '', obs: 'Reemplazante de ' + p.apellidos + ' ' + p.nombres } });
+          if (!a4.ok) throw a4;
+        }
+      }
+      toast('Participante guardado.'); cerrar(); await cargar(false);
+    } catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); t.disabled = false; await cargar(false); }
     return;
   }
   if (a === 'guardarAsig') {
@@ -873,7 +936,7 @@ function vistaIngreso() {
 function vistaAyuda() {
   app.innerHTML = `<div class="tarjeta ayuda"><h2>Ayuda · COE</h2>
     <p>Acá se registran las personas que integran el comité de crisis y el centro de operaciones de emergencia (COE), con sus datos y contactos, y en qué proyectos participan y con qué función.</p>
-    <ul><li><b>Participantes</b>: una ficha por persona, con teléfono y correo para llamar o escribir con un toque. «Agregar participante» crea la ficha; después «Agregar a un proyecto».</li>
+    <ul><li><b>Participantes</b>: una ficha por persona con apellidos, nombres, DNI, título, función o cargo, institución (interna o externa), teléfonos (particular, de la institución y de emergencia), correos (personal e institucional), su rol dentro del COE en cada proyecto y su reemplazante. El reemplazante se elige entre los ya cargados o se carga ahí mismo con los mismos datos, y queda como un participante más, enlazado; si se pide, se suma al mismo proyecto como «Alterno». El DNI, el teléfono particular y el correo personal los ve solo Administración; el resto de los usuarios del COE ve los datos institucionales y el teléfono de emergencia. Lo que falta se muestra «s/d (revisar)».</li>
       <li><b>Proyectos y funciones</b>: la grilla para cargar rápido. Cada fila es una persona en un proyecto: tipo de actor, proyecto, función, desde cuándo y observaciones. La misma persona puede tener funciones distintas en cada proyecto. Los cambios se guardan al salir de cada casillero.</li>
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
