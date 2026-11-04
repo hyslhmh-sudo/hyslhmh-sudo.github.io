@@ -618,6 +618,7 @@ function vistaUsuarios() {
       <div class="per-cab"><b>${E(x.nombre || 's/d')}</b><span class="chip ${x.rol === 'Administración' ? 'ext' : 'int'}">${E(x.rol || 's/d')}</span>${x.estado !== 'Activo' ? '<span class="chip inac">Inactivo</span>' : ''}${x.tieneClave ? '' : '<span class="chip inac">Sin clave</span>'}</div>
       <div class="sub">DNI ${E(x.dni)} · Redes: ${E(x.redes || 's/d')} · Establecimientos: ${E(x.estab || 's/d')}</div>
       <div class="proys">${modsDe(x).map(m => `<span class="chip proy">${E(MOD_TXT[m] || m)}</span>`).join('')}</div>
+      ${x.deriv ? `<div class="sub">Carga derivaciones y albergues en: ${E(x.deriv)}</div>` : ''}
       <div class="sub">${x.claveFecha ? 'Clave generada el ' + E(x.claveFecha) : 'Todavía no tiene clave'}${x.ultimoIngreso ? ' · último ingreso ' + E(x.ultimoIngreso) : ''}</div>
       <div class="acc"><button class="btn sec mini" data-act="editarUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">tune</span>Qué ve</button>
         <button class="btn sec mini" data-act="claveUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">key</span>${x.tieneClave ? 'Generar clave nueva' : 'Generar clave'}</button></div></div>`).join('') || '<div class="tarjeta vacio">No hay usuarios con esa búsqueda.</div>'}</div>`;
@@ -640,6 +641,7 @@ function dlgUsuario(dni) {
       <div class="campo"><span>Redes</span>${chk('redTodas', 'Todas', todasR, '<b>Todas las redes</b>')}${acc.redes.map(r => chk('red', r, !todasR && rs.indexOf(r) >= 0, E(r))).join('')}</div>
       <div class="campo"><span>Establecimientos en que carga o que ve</span>${chk('estTodos', 'Todos', todosE, '<b>Todos los de sus redes</b>')}
         <div id="listaEst" style="max-height:220px;overflow:auto;border:1px solid var(--linea);border-radius:10px;padding:4px 10px">${acc.redes.map(r => `<div data-red-est="${E(r)}"><b class="sub">${E(r)}</b>${acc.establecimientos.filter(e => e.red === r).map(e => chk('est', e.codigo, !todosE && es.indexOf(e.codigo.toUpperCase()) >= 0, E(e.codigo + ' · ' + e.nombre))).join('')}</div>`).join('')}</div></div>
+      <div class="campo"><span>Derivaciones y albergues · COE: localidades en que carga</span><p class="sub" style="margin:0 0 4px">Todos los usuarios ven Derivaciones y albergues; acá se elige dónde carga. Sin tildar = solo ve. Administración carga en todas.</p>${chk('locTodas', 'Todas', /^todas$/i.test(String(x.deriv || '').trim()), '<b>Todas las localidades</b>')}${(acc.localidades || []).map(l => chk('loc', l, lista(x.deriv).indexOf(l) >= 0, E(l))).join('')}</div>
       <label class="campo"><span>Observaciones</span><input name="obs" value="${E(x.obs || '')}"></label></form>
     <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarUsr" data-dni="${E(dni || '')}"><span class="ms">save</span>Guardar</button></div>`);
   const f = $('#fUsr');
@@ -648,6 +650,7 @@ function dlgUsuario(dni) {
     const sel = todas ? acc.redes : [...f.querySelectorAll('[name=red]:checked')].map(c => c.value);
     f.querySelectorAll('[data-red-est]').forEach(d => d.style.display = sel.indexOf(d.dataset.redEst) >= 0 ? '' : 'none');
     const tE = f.estTodos.checked; $('#listaEst').style.opacity = tE ? .45 : 1; f.querySelectorAll('[name=est]').forEach(c => { c.disabled = tE; if (tE) c.checked = false; });
+    const tL = f.locTodas.checked; f.querySelectorAll('[name=loc]').forEach(c => { c.disabled = tL; if (tL) c.checked = false; });
   };
   f.addEventListener('change', sync); sync();
 }
@@ -734,7 +737,8 @@ document.addEventListener('click', async ev => {
   if (a === 'guardarUsr') {
     const f = $('#fUsr'), val = n => [...f.querySelectorAll(`[name=${n}]:checked`)].map(c => c.value);
     const d = { dni: f.dni.value, nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; '),
-      redes: f.redTodas.checked ? 'Todas' : val('red').join('; '), estab: f.estTodos.checked ? 'Todos' : val('est').join('; ') };
+      redes: f.redTodas.checked ? 'Todas' : val('red').join('; '), estab: f.estTodos.checked ? 'Todos' : val('est').join('; '),
+      deriv: f.locTodas.checked ? 'Todas' : val('loc').join('; ') };
     if (!navigator.onLine) { toast('Para guardar se necesita conexión.'); return; }
     t.disabled = true;
     try { const r = await S.api('coe_usuario', { usuario: d }); if (!r.ok) throw r; cerrar(); toast('Usuario guardado.'); acc = null; await cargarUsuarios();

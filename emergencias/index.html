@@ -133,7 +133,8 @@ const MODS = [
   { k: 'starh', grupo: 'relev', t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
   { k: 'ish', grupo: 'relev', t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
   { k: 'phr', grupo: 'relev', t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
-  { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles, instituciones receptoras, albergues y criterios con el COE.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
+  { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
+  { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COE', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación y planillas modelo.', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
   { k: 'coe', grupo: 'gest', t: 'COE', d: 'Participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
   { k: 'fuentes', grupo: 'gest', t: 'Fuentes', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
   { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#E4EAFB' }
@@ -154,10 +155,10 @@ function pintar() {
       <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}</b><span class="d">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
-  // Sin ingresar: nada. Con usuario que no es Administración: PHR, la red de derivación (Gestión de contingencias),
+  // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COE (04/11/2026),
   // COE, Fuentes y Formularios, sin nada de los planes ni de STAR-H o ISH. Administración: todo.
-  const VIS = !u ? [] : ['phr', 'evac', 'coe', 'fuentes', 'imp'];
-  const OTRO_TXT = { evac: 'Red de derivación: instituciones receptoras, albergues, criterios con el COE y planillas modelo para imprimir.', imp: 'Formularios PHR, en blanco o con lo cargado.' };
+  const VIS = !u ? [] : ['phr', 'deriv', 'coe', 'fuentes', 'imp'];
+  const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k] }) : m);
   const g = k => MV.filter(m => m.grupo === k && (admin || VIS.indexOf(m.k) >= 0));
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
