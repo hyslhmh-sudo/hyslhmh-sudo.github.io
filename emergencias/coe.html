@@ -422,9 +422,14 @@ function vistaMinuta() {
     <td><input data-func="${E(p.id)}" value="${E(funcDe(p.id))}" placeholder="Función en la reunión"></td></tr>`;
   const nSel = Object.keys(m.asist).filter(k => m.asist[k]).length + m.extras.filter(x => (x.n || '').trim()).length;
   $('#vista').innerHTML = `<div class="herr"><button class="btn sec" data-act="minVolver"><span class="ms">arrow_back</span>Modelos</button>
-      <span class="sub" style="flex:1">Se guarda solo en este dispositivo mientras escribís. No se envía a nadie.</span>
+      <span class="sub" style="flex:1">Mientras escribís, el acta queda en este dispositivo.${cat.puedeCargar ? ' Para guardarla en la planilla, tocá «Guardar».' : ''} No se envía a nadie.</span>
       ${cat.puedeCargar ? '<button class="btn sec" data-act="minLista"><span class="ms">folder_open</span>Actas guardadas</button>' : ''}
       <button class="btn sec" data-act="minVaciar"><span class="ms">restart_alt</span>Acta nueva</button></div>
+    <div class="tarjeta" style="position:sticky;top:64px;z-index:15;padding:8px 12px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border:1.5px solid #2F5BEA">
+      <b style="flex:1;min-width:150px">Acta ${E(m.num || 'sin N.º')} · ${E(m.fecha || '')}</b>
+      ${cat.puedeCargar ? '<button class="btn" data-act="minSrv"><span class="ms">save</span>Guardar</button>' : ''}
+      <button class="btn sec" data-act="minImp"><span class="ms">print</span>Imprimir</button>
+      <button class="btn sec" data-act="minWord"><span class="ms">download</span>Word</button></div>
     ${m.id ? `<div class="tarjeta" style="padding:10px 16px;margin-bottom:12px"><span class="sub">Editando el acta ${E(m.id)} (N.º ${E(m.num || 's/d')}) guardada en la hoja COE ACTAS. «Guardar en la planilla» la actualiza.</span></div>` : ''}
     <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px"><h2>Datos de la reunión</h2><div class="rejilla">
       ${lab('Acta N.º', v('num', 's/d (revisar)'))}${lab('Proyecto', `<select data-m="proyecto">${opts(proyectos(), m.proyecto, 'Sin proyecto')}</select>`)}
@@ -464,7 +469,7 @@ function vistaMinuta() {
       <div class="rejilla">${lab('Próxima reunión (fecha, hora y lugar)', v('proxima'))}${lab('Se compartió el acta con los participantes el', v('compartida', 'dd/mm/aaaa'))}</div></div>
     <div class="tarjeta" style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
       <span class="sub" style="flex:1;align-self:center">Lo que quede vacío sale como «s/d (revisar)» en los datos y en blanco en las tablas para completar a mano.</span>
-      ${cat.puedeCargar ? '<button class="btn sec" data-act="minSrv"><span class="ms">cloud_upload</span>Guardar en la planilla</button>' : ''}
+      ${cat.puedeCargar ? '<button class="btn" data-act="minSrv"><span class="ms">save</span>Guardar en la planilla</button>' : ''}
       <button class="btn sec" data-act="minImp"><span class="ms">print</span>Imprimir el acta</button>
       <button class="btn" data-act="minWord"><span class="ms">download</span>Descargar el acta en Word</button></div>`;
   const vista_ = $('#vista');
@@ -517,7 +522,7 @@ async function minGuardarSrv() {
     toast('Acta N.º ' + r.num + ' guardada en la hoja COE ACTAS.');
   } catch (e) {
     const t = (e && (e.error || e.message)) || 'No se pudo guardar.';
-    toast(/desconocida/i.test(t) ? 'Falta publicar la versión nueva del servidor (Apps Script). El acta sigue guardada en este dispositivo.' : t);
+    toast(/desconocida/i.test(t) ? 'No se pudo guardar en la planilla: falta publicar la versión nueva del servidor (Apps Script). El acta no se pierde: sigue en este dispositivo.' : t);
   }
 }
 async function minListaSrv() {
