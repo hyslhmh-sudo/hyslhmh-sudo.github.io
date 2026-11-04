@@ -272,6 +272,7 @@ async function cargar() {
   } catch (e) {
     const c = S.store.get(cacheKey, null);
     if (c) { datos = c; offline = true; render(); return; }
+    if (e && /acci[oó]n desconocida/i.test(e.error || '')) { app.innerHTML = `<div class="tarjeta vacio"><span class="ms" style="font-size:40px;color:var(--amar)">cloud_off</span><p><b>El tablero todavía no está habilitado en el servidor.</b></p><p class="sub">Falta publicar la versión nueva del Apps Script de la app (Implementar › Administrar implementaciones › Editar › Nueva versión › Implementar). Después, tocá «Actualizar».</p></div>`; return; }
     app.innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || (e && e.offline ? 'Sin conexión y sin copia guardada en este dispositivo.' : 'No se pudo cargar el tablero.'))}</div>`;
   }
 }
