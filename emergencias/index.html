@@ -179,7 +179,8 @@ const MIS_DOCS = [
   { g: 'Carpetas y planillas', t: 'Carpeta 06 · COE', d: 'Todos los documentos del COE.', u: 'https://drive.google.com/drive/folders/1WIBARSWYU6dF5JWWJGfTXDRPdP15DLk4', i: 'folder' },
   { g: 'Carpetas y planillas', t: 'Carpeta 06.1 · Solicitudes a organismos', d: 'Notas SOL-001 a SOL-008.', u: 'https://drive.google.com/drive/folders/19znqutQADTgmmsZY2pItTtWjdVvpywjs', i: 'folder' },
   { g: 'Carpetas y planillas', t: 'Libro de la app', d: 'Participantes, proyectos, actas, matriz operativa y solicitudes del COE.', u: 'https://docs.google.com/spreadsheets/d/1vFnOJe8Ke5WrKGw2yhcA4B4vRN7Z7MBjHIMu_c8WqRk/edit', i: 'table_view' },
-  { g: 'Carpetas y planillas', t: 'COE · Derivaciones y albergues', d: 'Localidades, receptoras, albergues y criterios.', u: 'https://docs.google.com/spreadsheets/d/1oHMYZf_FLdpMN0ZcTqn8pRpUKZPvN9OphzHIaNh4wLU/edit', i: 'table_view' }
+  { g: 'Carpetas y planillas', t: 'COE · Derivaciones y albergues', d: 'Localidades, receptoras, albergues y criterios.', u: 'https://docs.google.com/spreadsheets/d/1oHMYZf_FLdpMN0ZcTqn8pRpUKZPvN9OphzHIaNh4wLU/edit', i: 'table_view' },
+  { g: 'Carpetas y planillas', t: 'CONFIDENCIAL · Usuarios y claves de la app', d: 'Usuario, clave, red, permiso y mensaje para pasar a cada integrante. No compartir.', u: 'https://docs.google.com/spreadsheets/d/1x13TtT3uV5XsloT49Z93f41AwX74ylRyQaj7YFXvJec/edit', i: 'key' }
 ];
 const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const esBelen = u => !!(u && u.rol === 'Administración' && /pellegrini/.test(sinTilde(u.nombre)));
