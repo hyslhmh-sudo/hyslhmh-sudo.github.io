@@ -323,7 +323,7 @@ function hojaSTARH(r, e, cargado) {
     <li><b>C</b> (vulnerabilidad) y <b>D</b> (capacidad de afrontamiento): <b>A</b> alta, <b>M</b> media o <b>B</b> baja. El riesgo lo calcula la planilla.</li></ul>`;
   h += '<h3>4. Evaluación de amenazas</h3>';
   ['Externa', 'Interna', 'Externa e interna'].forEach(o => {
-    const am = r.amenazas.filter(a => a.origen === o);
+    const am = r.amenazas.filter(a => a.origen === o && !/^HySL-/i.test(a.id) && a.grupo !== 'Complementarias HySL');
     if (!am.length) return;
     h += `<h4>Amenazas ${o === 'Externa' ? 'externas' : o === 'Interna' ? 'internas' : 'externas e internas'}</h4><table><thead><tr><th style="width:5%">ID</th><th>Amenaza</th><th style="width:7%" class="c">Aplica</th>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<th style="width:4.5%" class="c">${k}</th>`).join('')}<th style="width:8%" class="c">Riesgo</th><th style="width:20%">Fuente u observación</th></tr></thead><tbody>`;
     am.forEach(a => {
@@ -335,6 +335,18 @@ function hojaSTARH(r, e, cargado) {
     });
     h += '</tbody></table>';
   });
+  const compl = r.amenazas.filter(a => /^HySL-/i.test(a.id) || a.grupo === 'Complementarias HySL');
+  if (compl.length) {
+    h += `<h4>Amenazas complementarias HySL (fuera del catálogo oficial de la OPS)</h4><table><thead><tr><th style="width:7%">ID</th><th>Amenaza</th><th style="width:7%" class="c">Aplica</th>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<th style="width:4.5%" class="c">${k}</th>`).join('')}<th style="width:8%" class="c">Riesgo</th><th style="width:20%">Fuente u observación</th></tr></thead><tbody>`;
+    compl.forEach(a => {
+      const x = evId[a.id] || {}, na = x.aplica === 'No aplica';
+      if (e && !evId[a.id]) return;
+      const val = k => cargado && !na ? esc(x[k] || '') : '';
+      const ries = cargado && !na && x.riesgo ? `<span class="nivel" style="background:${COLOR_NIVEL[x.nivel] || '#EEE'}">${esc(S.fmt(x.riesgo))}</span>` : '';
+      h += `<tr class="${na ? 'na' : ''}"><td class="c"><b>${esc(a.id)}</b></td><td>${esc(a.amenaza)}</td><td class="c">${na ? 'No' : (cargado && x.aplica ? 'Sí' : '')}</td>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<td class="c">${val(k)}</td>`).join('')}<td class="c ${cargado ? '' : 'calc'}">${ries}</td><td>${cargado && !na ? esc(x.fuente || '') : ''}</td></tr>`;
+    });
+    h += '</tbody></table>';
+  }
   h += `<h4>Amenazas agregadas por el equipo</h4><table><thead><tr><th>Amenaza</th>${['A', 'B1', 'B2', 'B3', 'C', 'D'].map(k => `<th style="width:5%" class="c">${k}</th>`).join('')}<th style="width:28%">Fuente u observación</th></tr></thead><tbody>${'<tr class="vacia"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'.repeat(4)}</tbody></table>`;
   const altas = cargado ? ev.filter(x => x.aplica !== 'No aplica' && (x.nivel === 'Alto' || x.nivel === 'Muy alto')) : [];
   h += `<h3>5. Acciones prioritarias propuestas por el equipo</h3><table><thead><tr><th style="width:26%">Amenaza</th><th>Acción propuesta</th><th style="width:18%">Área responsable</th><th style="width:12%">Plazo sugerido</th></tr></thead><tbody>

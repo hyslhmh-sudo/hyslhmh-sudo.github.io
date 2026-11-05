@@ -189,6 +189,9 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), app = $('#app');
 const ELNINO = S.ELNINO.map(x => x[0]); /* códigos oficiales OPS v1.25 vinculados a El Niño */
+/* Amenazas complementarias HySL (HySL-01…, y las agregadas en la reunión): van aparte, sin mezclarse con el catálogo oficial de la OPS */
+const COMPL = 'Complementarias HySL';
+function esCompl(x) { const id = String(x.id || ''); return /^HySL-/i.test(id) || /^N[0-9A-Z]{3,}$/.test(id) || x.grupo === COMPL || x.grupo === 'Agregada en la reunión'; }
 let cat = S.store.get(S.DEMO ? 'demo.cat' : 'cat', null);
 let cola = S.store.get(S.DEMO ? 'demo.cola' : 'cola', []);
 let redActual = S.store.get('red', '');
@@ -302,7 +305,7 @@ function aplicarLocal(it) {
   let e = r.evaluaciones.find(x => x.codigo === it.codigo && x.id === it.id);
   if (!e) {
     const est = r.establecimientos.find(x => x.codigo === it.codigo);
-    e = { codigo: it.codigo, id: it.id, estab: est ? est.nombre : '', red: it.red, origen: it.origen || 's/d', grupo: it.grupo || 'Agregada en la reunión', amenaza: it.amenaza || 's/d' };
+    e = { codigo: it.codigo, id: it.id, estab: est ? est.nombre : '', red: it.red, origen: it.origen || 's/d', grupo: it.grupo || COMPL, amenaza: it.amenaza || 's/d' };
     r.evaluaciones.push(e);
   }
   e.aplica = it.aplica;
@@ -417,7 +420,7 @@ function vistaEstablecimiento(redN, codigo) {
   tema(r.nombre); redActual = redN;
   $('#titulo').innerHTML = `${S.esc(e.codigo)} · ${S.esc(e.nombre)}<small>${S.esc(r.nombre)}</small>`;
   const lista = evs(r, codigo), puede = e.puedeCargar !== false;
-  const cuenta = { pend: 0, eval: 0, na: 0, todas: lista.length, nino: 0, altos: 0 };
+  const cuenta = { pend: 0, eval: 0, na: 0, todas: lista.length, nino: 0, altos: 0, compl: lista.filter(esCompl).length };
   lista.forEach(x => {
     if (x.aplica === 'No aplica') cuenta.na++; else if (cargada(x)) cuenta.eval++; else cuenta.pend++;
     if (ELNINO.indexOf(x.id) >= 0) cuenta.nino++;
@@ -430,11 +433,13 @@ function vistaEstablecimiento(redN, codigo) {
     if (filtro === 'na' && x.aplica !== 'No aplica') return false;
     if (filtro === 'nino' && ELNINO.indexOf(x.id) < 0) return false;
     if (filtro === 'altos' && !(x.nivel === 'Alto' || x.nivel === 'Muy alto')) return false;
+    if (filtro === 'compl' && !esCompl(x)) return false;
     return !q || (x.amenaza + ' ' + x.id + ' ' + x.grupo).toLowerCase().indexOf(q) >= 0;
   });
   listaHoja = vis.map(x => x.id);
   const grupos = {};
-  vis.forEach(x => { const g = (x.origen || '') + ' · ' + (x.grupo || ''); (grupos[g] = grupos[g] || []).push(x); });
+  vis.filter(x => !esCompl(x)).forEach(x => { const g = (x.origen || '') + ' · ' + (x.grupo || ''); (grupos[g] = grupos[g] || []).push(x); });
+  vis.filter(esCompl).forEach(x => { const g = 'Complementarias HySL (fuera del catálogo OPS) · ' + (x.origen || ''); (grupos[g] = grupos[g] || []).push(x); });
   const enCola = new Set(cola.filter(c => c.red === redN && c.codigo === codigo).map(c => c.id));
   const html = Object.keys(grupos).map(g => `<div class="grupo-tit">${S.esc(g)}</div><div class="tarjeta bloque">${grupos[g].map(x => `
       <button class="amen" data-ev="${S.esc(x.id)}"><span class="id">${S.esc(x.id)}</span><span class="nom">${S.esc(x.amenaza)}</span>
@@ -467,7 +472,7 @@ function vistaEstablecimiento(redN, codigo) {
       </details>` : ''}
     </div>
     <div class="buscar"><span class="ms">search</span><input id="busq" type="search" placeholder="Buscar amenaza" value="${S.esc(busqueda)}"></div>
-    <div class="filtros">${F('pend', 'Pendientes')}${F('eval', 'Evaluadas')}${F('na', 'No aplica')}${F('altos', 'Altas y muy altas')}${F('nino', 'El Niño')}${F('todas', 'Todas')}</div>
+    <div class="filtros">${F('pend', 'Pendientes')}${F('eval', 'Evaluadas')}${F('na', 'No aplica')}${F('altos', 'Altas y muy altas')}${F('nino', 'El Niño')}${F('compl', 'Complementarias HySL')}${F('todas', 'Todas')}</div>
     ${html || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan amenazas pendientes en este establecimiento!' : 'No hay amenazas con este filtro.'}</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
       <a class="btn sec" style="text-decoration:none" href="imprimir.html?m=starh&red=${encodeURIComponent(redN)}&est=${encodeURIComponent(codigo)}"><span class="ms">print</span>Imprimir formulario</a>
@@ -519,10 +524,12 @@ function vistaInforme(redN, codigo) {
   tema(r.nombre);
   $('#titulo').innerHTML = `Informe STAR-H<small>${S.esc(e.nombre)}</small>`;
   const lista = evs(r, codigo), am = id => r.amenazas.find(a => a.id === id) || {};
-  const ev = lista.filter(x => x.aplica !== 'No aplica' && S.num(x.riesgo) !== '')
+  const evTodas = lista.filter(x => x.aplica !== 'No aplica' && S.num(x.riesgo) !== '')
     .map(x => Object.assign({}, x, { _r: S.num(x.riesgo), _i: S.num(x.imp), _g: S.num(x.grav), _a: am(x.id) }))
     .sort((a, b) => b._r - a._r);
-  const na = lista.filter(x => x.aplica === 'No aplica').length, pend = lista.length - ev.length - na;
+  const ev = evTodas.filter(x => !esCompl(x)), evC = evTodas.filter(esCompl);
+  const listaO = lista.filter(x => !esCompl(x)), listaC = lista.filter(esCompl);
+  const na = listaO.filter(x => x.aplica === 'No aplica').length, pend = listaO.length - ev.length - na;
   const cuenta = {}; S.NIVELES.forEach(n => cuenta[n] = 0); ev.forEach(x => { if (x.nivel) cuenta[x.nivel] = (cuenta[x.nivel] || 0) + 1; });
   const info = e.info || {}, v = k => S.esc(info[k] || 's/d (revisar)');
   const ant = antiguedad(e);
@@ -546,7 +553,7 @@ function vistaInforme(redN, codigo) {
     : '<p class="sub">Sin amenazas evaluadas en este grupo.</p>';
   const ori = x => String(x.origen || x._a.origen || '');
   const grupos = [['Amenazas externas', ev.filter(x => ori(x) === 'Externa')], ['Amenazas internas', ev.filter(x => ori(x) === 'Interna')],
-    ['Amenazas externas e internas', ev.filter(x => ori(x) === 'Externa e interna')], ['Amenazas agregadas por el comité', ev.filter(x => ['Externa', 'Interna', 'Externa e interna'].indexOf(ori(x)) < 0)]].filter(g => g[1].length || g[0] !== 'Amenazas agregadas por el comité');
+    ['Amenazas externas e internas', ev.filter(x => ori(x) === 'Externa e interna')]];
   const celdas = {};
   ev.forEach(x => { const a = Number(String(x.A || '').charAt(0)), i = Math.min(5, Math.max(1, Math.round(x._i))); if (a) (celdas[a + '|' + i] = celdas[a + '|' + i] || []).push(x.id); });
   const matriz = `<table class="inf-mat"><tr><th rowspan="6" class="eje">Probabilidad</th><th></th>${[1, 2, 3, 4, 5].map(i => `<th class="c">${i}</th>`).join('')}</tr>
@@ -570,14 +577,18 @@ function vistaInforme(redN, codigo) {
     <p class="sub">${S.esc(e.nombre)} · ${S.esc(r.nombre)} · generado el ${S.hoy()} con los datos de la app</p>
     <h3>1. Datos generales del establecimiento</h3>${ficha}
     <h3>2. Resumen</h3>
-    <p>${ev.length} amenazas evaluadas, ${na} que no aplican y ${pend} pendientes, sobre ${lista.length} del catálogo.</p>
+    <p>Catálogo oficial de la OPS: ${ev.length} amenazas evaluadas, ${na} que no aplican y ${pend} pendientes, sobre ${listaO.length}.</p>
     <div class="inf-res">${S.NIVELES.map(n => `<span class="niv" style="background:${S.COLOR_NIVEL[n]};color:${S.TINTA_NIVEL[n]}">${n}: ${cuenta[n] || 0}</span>`).join('')}</div>
     <h3>3. Amenazas evaluadas, ordenadas por nivel de riesgo</h3>
     ${grupos.map(g => `<h4>${g[0]} (${g[1].length})</h4>${tabla(g[1])}`).join('')}
-    <h3>4. Matriz de riesgo</h3>${matriz}
+    <h3>4. Matriz de riesgo (catálogo oficial de la OPS)</h3>${matriz}
     <h3>5. Recomendaciones generales para la gestión del riesgo (OPS)</h3>
     ${recs ? `<table class="inf-tab"><tr><th style="width:30%">Amenaza</th><th style="width:12%">Nivel</th><th>Recomendación general de la OPS</th></tr>${recs}</table>` : '<p class="sub">Todavía no hay amenazas evaluadas.</p>'}
-    <h3>6. Método</h3>
+    <h3>6. Amenazas complementarias HySL (fuera del catálogo oficial de la OPS)</h3>
+    <p class="sub">No figuran en la planilla oficial STAR-H v1.25. Se evalúan con las mismas escalas y fórmulas, pero se informan aparte y no entran en la matriz ni en el resumen anteriores. ${evC.length} evaluadas de ${listaC.length}.</p>
+    ${tabla(evC)}
+    ${evC.length ? `<table class="inf-tab" style="margin-top:8px"><tr><th style="width:30%">Amenaza</th><th style="width:12%">Nivel</th><th>Nota y acción sugerida por el comité</th></tr>${evC.map(x => `<tr><td><b>${S.esc(x.id)}</b> ${S.esc(x.amenaza)}</td><td>${chipNivel(x.nivel)}</td><td>${S.esc(x._a.rec || '')}${x.accion ? `<br><b>Acción sugerida por el comité:</b> ${S.esc(x.accion)}${x.area ? ' · ' + S.esc(x.area) : ''}` : ''}</td></tr>`).join('')}</table>` : ''}
+    <h3>7. Método</h3>
     <p>Metodología STAR-H de la OPS con el catálogo y las fórmulas de la planilla oficial (versión 1.25): gravedad = 0,4 × B1 + 0,3 × B2 + 0,3 × B3; impacto = (gravedad + vulnerabilidad + capacidad de afrontamiento) ÷ 3; riesgo = probabilidad × impacto. Las amenazas de riesgo alto o muy alto requieren un plan específico de respuesta dentro del plan hospitalario de respuesta a emergencias y desastres.</p>
     <p class="sub">MEJORA / buena práctica · Organización Panamericana de la Salud. STAR-H: Evaluación estratégica del riesgo de emergencias y desastres en establecimientos de salud. Washington, D.C.: OPS; 2022. https://doi.org/10.37774/9789275325582. Esta es una adaptación de una obra original de la OPS; las opiniones expresadas en esta adaptación son responsabilidad exclusiva de sus autores y no representan necesariamente los criterios de la OPS. Complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>
     <div class="inf-pie"><img src="logo-hysl.png" alt="Higiene y Seguridad Laboral"></div>
@@ -591,7 +602,7 @@ function abrirHoja(redN, codigo, id, nueva) {
   const a = r.amenazas.find(x => x.id === id) || {};
   borrador = Object.assign({ aplica: 'Sí', A: '', B1: '', B2: '', B3: '', C: '', D: '', fuente: '', antec: '', medidas: '', accion: '', area: '', fecha: '', evaluador: '' }, e || {},
     { red: redN, codigo: codigo, id: nueva ? 'N' + Date.now().toString(36).slice(-4).toUpperCase() : id, nueva: !!nueva, puede: est.puedeCargar !== false });
-  if (nueva) Object.assign(borrador, { origen: 'Externa', grupo: 'Agregada en la reunión', amenaza: '' });
+  if (nueva) Object.assign(borrador, { origen: 'Externa', grupo: COMPL, amenaza: '' });
   if (!borrador.fecha) borrador.fecha = S.hoy();
   if (!borrador.evaluador) borrador.evaluador = (S.sesion.usuario() || {}).nombre || '';
   pintarHoja(r, est, a);
@@ -621,12 +632,12 @@ function pintarHoja(r, est, a) {
     <div class="hoja-cab"><b>${b.nueva ? 'Amenaza no listada' : S.esc(b.id + ' · ' + (b.amenaza || a.amenaza || ''))}<small>${S.esc(est.nombre)}</small></b>
       <button class="icono" data-act="cerrarHoja" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="hoja-cuerpo">
-      ${b.nueva ? `<div class="tarjeta dim"><h3>Amenaza identificada por el equipo</h3>
+      ${b.nueva ? `<div class="tarjeta dim"><h3>Amenaza identificada por el equipo</h3><p class="sub">Queda en el bloque «Complementarias HySL», aparte del catálogo oficial de la OPS, y se evalúa con las mismas escalas.</p>
         <label class="campo"><span>Nombre de la amenaza</span><input data-texto="amenaza" value="${S.esc(b.amenaza)}" placeholder="Ej.: anegamiento del estacionamiento"></label>
         <div class="rejilla"><label class="campo"><span>Origen</span><select data-texto="origen"><option ${b.origen === 'Externa' ? 'selected' : ''}>Externa</option><option ${b.origen === 'Interna' ? 'selected' : ''}>Interna</option></select></label>
         <label class="campo"><span>Grupo</span><input data-texto="grupo" value="${S.esc(b.grupo)}"></label></div></div>`
       : `<div class="tarjeta contexto"><p class="sub">${S.esc([a.origen, a.grupo, a.subgrupo].filter(Boolean).join(' · '))}</p>
-        ${a.rec ? `<p><b>Recomendación general de la OPS:</b> ${S.esc(a.rec)}</p>` : ''}
+        ${a.rec ? (esCompl(a) ? `<p><b>Amenaza complementaria HySL (fuera del catálogo OPS):</b> ${S.esc(a.rec)}</p>` : `<p><b>Recomendación general de la OPS:</b> ${S.esc(a.rec)}</p>`) : ''}
         ${a.escenario || a.fuentes || a.aplicaA ? `<p class="sub" style="margin-top:8px"><b>Orientación HySL para el VIRCH</b>${a.equivalencia ? ' (del catálogo anterior: ' + S.esc(a.equivalencia) + ')' : ''}</p>` : ''}
         ${a.escenario ? `<p><b>Escenario:</b> ${S.esc(a.escenario)}</p>` : ''}${a.fuentes ? `<p><b>Dónde buscar antecedentes:</b> ${S.esc(a.fuentes)}</p>` : ''}${a.aplicaA ? `<p class="sub">Aplica a: ${S.esc(a.aplicaA)}</p>` : ''}</div>`}
       <div class="tarjeta dim"><h3>¿La amenaza aplica a este establecimiento?</h3>
@@ -753,6 +764,8 @@ function vistaAyuda() {
     <p>Gravedad = ${String(e.pesos[0]).replace('.', ',')} × B1 + ${String(e.pesos[1]).replace('.', ',')} × B2 + ${String(e.pesos[2]).replace('.', ',')} × B3. Vulnerabilidad: alta 5, media 3, baja 1. Capacidad de afrontamiento: alta 1, media 3, baja 5. Impacto = (gravedad + vulnerabilidad + capacidad) ÷ 3, sin redondear. Riesgo = probabilidad × impacto (de 1 a 25, con decimales).</p>
     <p>Niveles, como en la planilla oficial: muy bajo hasta 4; bajo, más de 4 hasta 7; moderado, más de 7 hasta 12; alto, más de 12 hasta 17; muy alto, más de 17. El valor justo en el límite queda en el nivel de abajo (un riesgo de 17 es alto). El manual de la OPS escribe los rangos como 1-3, 4-6, 7-11, 12-16 y 17-25.</p>
     <p class="sub">En la matriz del informe, el impacto se redondea al entero más cercano solo para ubicar cada amenaza en su celda.</p>` : ''}
+    <h3>Amenazas complementarias HySL</h3>
+    <p>Van aparte del catálogo oficial, en el bloque «Complementarias HySL» (filtro propio). Son las 8 del catálogo anterior sin equivalente en la planilla de la OPS (HySL-01 a HySL-08: telecomunicaciones, contaminación ambiental, oxígeno y gases medicinales, climatización, ascensores, equipo biomédico, comunicaciones internas y sistemas informáticos) y las que el comité agregue con «Agregar amenaza no listada». Se evalúan con las mismas escalas y fórmulas, pero en el informe salen en una sección propia, fuera de la matriz y del resumen oficial.</p>
     <h3>Catálogo de amenazas</h3>
     <p>Son las 80 amenazas de la planilla oficial de la OPS (códigos G1 a A7), con su origen (externa, interna o las dos) y la <b>recomendación general de la OPS</b>, que aparece en cada amenaza y en el informe. El escenario en el VIRCH, a qué establecimientos aplica y dónde buscar antecedentes son <b>orientación propia de HySL</b>, tomada del catálogo anterior. El filtro «El Niño» muestra ${S.ELNINO.map(x => x[0] + ' ' + x[1].toLowerCase()).join(', ')}.</p>
     <h3>Fuente</h3>
