@@ -102,6 +102,23 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 @media (max-width:560px){.fila.tres{grid-template-columns:1fr}.mod.ancho{flex-direction:column;align-items:flex-start}.mod{min-height:0}}
 .sesion button{background:#2F5BEA;color:#FFFFFF}
 .ingreso h2{color:#172B4D}
+/* 05/11/2026 · Mi perfil (solo Belén): accesos a los documentos de trabajo */
+#quien.perfil{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
+#quien.perfil:hover{background:rgba(255,255,255,.22)}
+#quien.perfil .ms{font-size:18px}
+dialog#dlgPerfil{border:0;border-radius:18px;padding:0;width:min(640px,94vw);max-height:88vh;box-shadow:0 20px 60px rgba(23,43,77,.35)}
+dialog#dlgPerfil::backdrop{background:rgba(23,43,77,.45)}
+.pf-cab{background:#172B4D;color:#fff;padding:18px 20px;display:flex;gap:12px;align-items:center}
+.pf-cab b{display:block;font-size:17px}.pf-cab small{opacity:.85;font-size:12.5px}
+.pf-cab .ms{font-size:34px}
+.pf-cab button{margin-left:auto;background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:999px;width:36px;height:36px;cursor:pointer}
+.pf-cuerpo{padding:6px 20px 20px;overflow:auto;max-height:calc(88vh - 80px)}
+.pf-cuerpo h3{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#4B5B73;margin:16px 0 8px}
+.pf-link{display:flex;gap:12px;align-items:center;text-decoration:none;color:#172B4D;border:1px solid #E4EAFB;border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.pf-link:hover{border-color:#2F5BEA;background:#F5F7FB}
+.pf-link .ms{color:#2F5BEA}
+.pf-link b{display:block;font-size:14px}.pf-link span.d{display:block;font-size:12px;color:#4B5B73}
+.pf-nota{font-size:12px;color:#6B7A90;margin:14px 0 0}
 </style>
 </head>
 <body>
@@ -109,6 +126,10 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
   <h1>Preparación y Respuesta a Emergencias y desastres<small>Higiene y Seguridad Laboral</small></h1>
   <div class="sesion oculto" id="sesion"><span id="quien"></span><button id="btnSalir">Salir</button></div>
 </div></header>
+<dialog id="dlgPerfil" aria-label="Mi perfil">
+  <div class="pf-cab"><span class="ms">account_circle</span><span><b id="pfNombre"></b><small id="pfRol"></small></span><button type="button" id="pfCerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+  <div class="pf-cuerpo" id="pfCuerpo"></div>
+</dialog>
 <main>
   <form class="tarjeta ingreso oculto" id="fIng">
     <h2>Ingresá una vez y entrás a todas las secciones habilitadas</h2>
@@ -140,11 +161,52 @@ const MODS = [
   { k: 'fuentes', grupo: 'gest', t: 'Fuentes', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
   { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#E4EAFB' }
 ];
+// 05/11/2026 · Mi perfil, solo Belén (Administración): accesos directos a los documentos de trabajo.
+// Los documentos son privados en su Drive: aunque alguien viera el enlace, Google no le deja abrirlos sin permiso.
+// Para agregar o quitar uno, editar esta lista (grupo, título, detalle, enlace, ícono).
+const MIS_DOCS = [
+  { g: 'COE · Para la reunión (v0)', t: 'Acta de constitución del COE', d: 'Para imprimir y firmar: acta, firmas y anexos I a III.', u: 'https://docs.google.com/document/d/1lvmlvqxqbXtvumP5bmySAjjQrms3F8LjzEzIW6LiZrY/edit', i: 'draw' },
+  { g: 'COE · Para la reunión (v0)', t: 'Formalización, cadena de mando y organigrama', d: 'Tarea 1 de la matriz. Propuesta con marco normativo.', u: 'https://docs.google.com/document/d/1u2CoSNGRWrQnudkkOcypte4kVM4ys-meZ1hkUJTPdOw/edit', i: 'account_tree' },
+  { g: 'COE · Para la reunión (v0)', t: 'Circuito de alerta y activación sanitaria', d: 'Tarea 2 de la matriz. Borrador de apoyo para Protección Civil.', u: 'https://docs.google.com/document/d/182cpXM-QfL5t5WYpMxt4W_VRLS50h36pjrT-oZvLhTc/edit', i: 'notifications_active' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-001 · IGEOPAT (UNPSJB)', d: 'Información geográfica e inundaciones.', u: 'https://docs.google.com/document/d/16mK884N1GGnadxS0fDsJmc8vNjXvkK34901HRZqUYkQ/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-002 · Municipalidad de Trelew', d: 'Planos de inundaciones, cuencas, plan municipal y albergues.', u: 'https://docs.google.com/document/d/1eUqt-LLM4CFF5guzRwAv9FywSgze_6nH4Zu-Gb7Tq-k/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-003 · Protección Civil Trelew', d: 'Alertas, aviso a salud, traslado y evacuación.', u: 'https://docs.google.com/document/d/1zWzEWgYHqZ019TzGTMuRLvCnOJD2fDHW4zl5pSG0jWY/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-004 · Subsecretaría de Protección Ciudadana', d: 'Escenarios ENOS, río, presas y alertas provinciales.', u: 'https://docs.google.com/document/d/1WvpxSK0XuWUYfX9QqiYCOeHhzm3sri6iseK02s5N1Qs/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-005 · Instituto Provincial del Agua', d: 'Cota, erogaciones y umbrales de desborde.', u: 'https://docs.google.com/document/d/1v7f-jey23WWWOunTZKn8adp_soZRo8bmKL5BDEBjH0k/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-006 · Cooperativa Eléctrica de Trelew', d: 'Turbiedad, cortes y prioridad de salud.', u: 'https://docs.google.com/document/d/1-MVL9AZRnZVxQDmiLQK04Hf1vs7y3qkzbQtEjOxfBKA/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-007 · Área Programática Trelew', d: 'Población prioritaria (datos agregados) y centros de salud.', u: 'https://docs.google.com/document/d/1lszUJApys2NxB3nFsz1y7988xe_6bhbEPX_vsrxHDmg/edit', i: 'mail' },
+  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-008 · Dirección Una Salud', d: 'Resultados STAR-H, alerta temprana, simulacros y zoonosis.', u: 'https://docs.google.com/document/d/1WK1805JvN2jAwAhuEjqaOJwCTa43JpQ99REOpuikeJk/edit', i: 'mail' },
+  { g: 'Carpetas y planillas', t: 'Carpeta 06 · COE', d: 'Todos los documentos del COE.', u: 'https://drive.google.com/drive/folders/1WIBARSWYU6dF5JWWJGfTXDRPdP15DLk4', i: 'folder' },
+  { g: 'Carpetas y planillas', t: 'Carpeta 06.1 · Solicitudes a organismos', d: 'Notas SOL-001 a SOL-008.', u: 'https://drive.google.com/drive/folders/19znqutQADTgmmsZY2pItTtWjdVvpywjs', i: 'folder' },
+  { g: 'Carpetas y planillas', t: 'Libro de la app', d: 'Participantes, proyectos, actas, matriz operativa y solicitudes del COE.', u: 'https://docs.google.com/spreadsheets/d/1vFnOJe8Ke5WrKGw2yhcA4B4vRN7Z7MBjHIMu_c8WqRk/edit', i: 'table_view' },
+  { g: 'Carpetas y planillas', t: 'COE · Derivaciones y albergues', d: 'Localidades, receptoras, albergues y criterios.', u: 'https://docs.google.com/spreadsheets/d/1oHMYZf_FLdpMN0ZcTqn8pRpUKZPvN9OphzHIaNh4wLU/edit', i: 'table_view' }
+];
+const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const esBelen = u => !!(u && u.rol === 'Administración' && /pellegrini/.test(sinTilde(u.nombre)));
+function abrirPerfil() {
+  const u = S.sesion.usuario() || {};
+  if (!esBelen(u)) return;
+  $('#pfNombre').textContent = u.nombre || '';
+  $('#pfRol').textContent = 'Mi perfil · ' + (u.rol || '');
+  const grupos = [];
+  MIS_DOCS.forEach(d => { if (grupos.indexOf(d.g) < 0) grupos.push(d.g); });
+  $('#pfCuerpo').innerHTML = grupos.map(g => `<h3>${E(g)}</h3>` + MIS_DOCS.filter(d => d.g === g).map(d =>
+    `<a class="pf-link" href="${E(d.u)}" target="_blank" rel="noopener"><span class="ms">${E(d.i)}</span><span><b>${E(d.t)}</b><span class="d">${E(d.d)}</span></span></a>`).join('')).join('') +
+    '<p class="pf-nota">Solo vos ves esta lista. Los documentos están en tu Drive y siguen siendo privados. Todos en versión 0 hasta el alta.</p>';
+  const dl = $('#dlgPerfil'); if (dl.showModal) dl.showModal(); else dl.setAttribute('open', '');
+}
+$('#pfCerrar').addEventListener('click', () => $('#dlgPerfil').close());
+$('#dlgPerfil').addEventListener('click', ev => { if (ev.target.id === 'dlgPerfil') $('#dlgPerfil').close(); });
+$('#quien').addEventListener('click', abrirPerfil);
+$('#quien').addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrirPerfil(); } });
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
   $('#sesion').classList.toggle('oculto', !u);
-  if (u) $('#quien').textContent = (u.nombre || '') + (u.rol ? ' · ' + u.rol : '');
+  const q = $('#quien'), yo = esBelen(u);
+  q.classList.toggle('perfil', yo);
+  if (yo) { q.setAttribute('role', 'button'); q.tabIndex = 0; q.title = 'Mi perfil: mis documentos'; } else { q.removeAttribute('role'); q.removeAttribute('tabindex'); q.removeAttribute('title'); }
+  if (u) q.innerHTML = (yo ? '<span class="ms">account_circle</span>' : '') + E((u.nombre || '') + (u.rol ? ' · ' + u.rol : ''));
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
   const grande = m => `<div class="mod ${m.grupo === 'resp' || m.grupo === 'ctrl' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">
