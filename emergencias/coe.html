@@ -188,17 +188,18 @@ function render() {
   if (!cat) { app.innerHTML = '<div class="vacio">Cargando…</div>'; return; }
   if (location.hash === '#ayuda') return vistaAyuda();
   const activos = cat.personas.filter(p => p.estado !== 'Inactivo');
-  if ((vista === 'usuarios' || vista === 'solicitudes') && !cat.puedeCargar) vista = 'personas';
+  // 05/11/2026 · Quien no es Administración ve solo «Participantes» (quiénes integran el COE); ninguna otra pestaña.
+  if (!cat.puedeCargar) vista = 'personas';
   { const TIT = { personas: 'Participantes', grilla: 'Proyectos y funciones', proyectos: 'Por proyecto', reuniones: 'Reuniones y actas', matriz: 'Matriz operativa', solicitudes: 'Solicitudes a organismos', usuarios: 'Usuarios y accesos' };
     $('#titulo').innerHTML = `COE · ${TIT[vista] || 'Participantes'}<small>Comité y centro de operaciones de emergencia</small>`; document.title = 'COE · ' + (TIT[vista] || 'Participantes'); }
-  const tabs = [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas'], ['matriz', 'table_chart', 'Matriz operativa']].concat(cat.puedeCargar ? [['solicitudes', 'outgoing_mail', 'Solicitudes'], ['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
+  const tabs = (cat.puedeCargar ? [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas'], ['matriz', 'table_chart', 'Matriz operativa'], ['solicitudes', 'outgoing_mail', 'Solicitudes'], ['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
     .map(t => `<button class="tab" data-vista="${t[0]}" aria-pressed="${vista === t[0]}"><span class="ms" style="font-size:18px">${t[1]}</span>${t[2]}</button>`).join('');
   const kpis = `<div class="kpis">
     <div class="tarjeta kpi"><b>${activos.length}</b><span>participantes activos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo !== 'Externo').length}</b><span>actores internos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo === 'Externo').length}</b><span>actores externos</span></div>
     <div class="tarjeta kpi"><b>${new Set(cat.participaciones.map(x => x.proyecto)).size}</b><span>proyectos con participantes</span></div></div>`;
-  app.innerHTML = `<div class="tabs">${tabs}</div>${vista === 'usuarios' || vista === 'reuniones' || vista === 'matriz' || vista === 'solicitudes' ? '' : kpis}<div id="vista"></div>
+  app.innerHTML = `${tabs ? `<div class="tabs">${tabs}</div>` : ''}${vista === 'usuarios' || vista === 'reuniones' || vista === 'matriz' || vista === 'solicitudes' ? '' : kpis}<div id="vista"></div>
     <p class="sub">Datos al ${new Date(cat.generado).toLocaleString('es-AR')}. Se guardan en las hojas COE PARTICIPANTES y COE PROYECTOS del libro${cat.puedeCargar ? '' : ' · Tu acceso es de consulta'}.</p>`;
   { const at = document.querySelector('.tab[aria-pressed="true"]'); if (at) at.scrollIntoView({ inline: 'center', block: 'nearest' }); }
   if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'solicitudes') cargarSol(false); else if (vista === 'matriz') cargarMatriz(false); else if (vista === 'reuniones') vistaReuniones(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
@@ -942,6 +943,7 @@ function vistaIngreso() {
 function vistaAyuda() {
   app.innerHTML = `<div class="tarjeta ayuda"><h2>Ayuda · COE</h2>
     <p>Acá se registran las personas que integran el comité de crisis y el centro de operaciones de emergencia (COE), con sus datos y contactos, y en qué proyectos participan y con qué función.</p>
+    <p><b>Si tu acceso no es de Administración</b>: ves solo la pestaña <b>Participantes</b>, con quiénes integran el COE de tu red, su función y sus contactos institucionales y de emergencia. El avance de las tareas, las reuniones y los acuerdos los ves en el <b>Tablero de control</b> del inicio, si lo tenés habilitado.</p>
     <ul><li><b>Participantes</b>: una ficha por persona con apellidos, nombres, DNI, título, función o cargo, institución (interna o externa), teléfonos (particular, de la institución y de emergencia), correos (personal e institucional), su rol dentro del COE en cada proyecto y su reemplazante. El reemplazante se elige entre los ya cargados o se carga ahí mismo con los mismos datos, y queda como un participante más, enlazado; si se pide, se suma al mismo proyecto como «Alterno». El DNI, el teléfono particular y el correo personal los ve solo Administración; el resto de los usuarios del COE ve los datos institucionales y el teléfono de emergencia. Lo que falta se muestra «s/d (revisar)».</li>
       <li><b>Proyectos y funciones</b>: la grilla para cargar rápido. Cada fila es una persona en un proyecto: tipo de actor, proyecto, función, desde cuándo y observaciones. La misma persona puede tener funciones distintas en cada proyecto. Los cambios se guardan al salir de cada casillero.</li>
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
