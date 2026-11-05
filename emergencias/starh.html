@@ -110,7 +110,7 @@ details.datos summary{cursor:pointer;font-weight:700;color:var(--fuerte);font-si
 /* hoja de evaluación */
 .hoja{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
 .hoja-in{background:var(--fondo);width:100%;max-width:760px;max-height:100%;height:100%;display:flex;flex-direction:column;border-radius:0}
-@media (min-width:800px){.hoja{align-items:center;padding:24px}.hoja-in{height:auto;max-height:94vh;border-radius:16px;overflow:hidden}}
+@media (min-width:800px){.hoja{align-items:center;padding:24px}.hoja-in{height:94vh;max-height:94vh;border-radius:16px;overflow:hidden}}
 .hoja-cab{background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;display:flex;align-items:center;gap:8px}
 .hoja-cab b{flex:1;font-size:15px;line-height:1.3}
 .hoja-cab small{display:block;font-weight:500;opacity:.85;font-size:12px}
@@ -272,7 +272,7 @@ async function sincronizar(manual) {
   } catch (e) {
     if (e && e.sesion) { ultimoError = e.error; toast(e.error); sincronizando = false; pintarSync(); S.sesion.cerrar(); return ir('#/ingreso'); }
     ultimoError = (e && (e.error || e.message)) || 'No se pudo conectar.';
-  } finally { sincronizando = false; pintarSync(); render(); }
+  } finally { sincronizando = false; pintarSync(); repintarFondo(); }
 }
 function reemplazarFila(redN, fila) {
   const r = red(redN); if (!r) return;
@@ -292,7 +292,7 @@ async function actualizarCatalogo(avisar) {
     cola.filter(c => c.tipo === 'estado').forEach(aplicarEstadoLocal);
     guardarCat();
     if (avisar) toast('Datos actualizados.');
-    render();
+    repintarFondo();
   } catch (e) {
     const m = (e && (e.error || e.message)) || 'No se pudo actualizar.';
     if (!cat) app.innerHTML = `<div class="tarjeta vacio">${S.esc(m)}<br><br><a class="btn" href="phr.html">Ir al relevamiento PHR</a></div>`; else if (avisar) toast(m);
@@ -332,8 +332,28 @@ window.addEventListener('online', () => { pintarSync(); programarSync(300); });
 window.addEventListener('offline', pintarSync);
 setInterval(() => { if (cola.length && !sincronizando) sincronizar(); }, 60000);
 
+/* Redibujar sin que la pantalla salte: si es la misma vista, se conservan la posición
+   y los apartados abiertos. Si la persona está escribiendo, el redibujo de fondo
+   (al terminar de enviar a la planilla) espera a que termine. */
+let ultimaVista = '', formSucio = false, repintarPendiente = false;
 function render() {
   const h = location.hash || '#/';
+  const misma = h === ultimaVista;
+  const prev = misma ? { y: window.scrollY, abiertos: Array.from(app.querySelectorAll('details')).map(d => d.open) } : null;
+  ultimaVista = h; formSucio = false; repintarPendiente = false;
+  dibujar(h);
+  if (prev) {
+    app.querySelectorAll('details').forEach((d, i) => { if (prev.abiertos[i]) d.open = true; });
+    window.scrollTo(0, prev.y);
+  }
+}
+function ocupado() {
+  const a = document.activeElement;
+  return formSucio || !!(a && app.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.id !== 'busq');
+}
+function repintarFondo() { if (ocupado()) { repintarPendiente = true; pintarSync(); return; } render(); }
+app.addEventListener('focusout', () => setTimeout(() => { if (repintarPendiente && !ocupado()) render(); }, 0));
+function dibujar(h) {
   $('#menu').classList.add('oculto');
   if (!S.sesion.token()) { $('#btnMenu').classList.add('oculto'); pintarSync(); return vistaIngreso(); }
   $('#btnMenu').classList.remove('oculto'); pintarSync();
@@ -727,6 +747,7 @@ document.addEventListener('click', ev => {
 document.addEventListener('input', ev => {
   const t = ev.target;
   if (t.dataset && t.dataset.texto && borrador) borrador[t.dataset.texto] = t.value;
+  if (app.contains(t) && t.closest('form')) formSucio = true;
 });
 document.addEventListener('change', ev => {
   const t = ev.target;
@@ -765,7 +786,7 @@ function vistaAyuda() {
     <p>Niveles, como en la planilla oficial: muy bajo hasta 4; bajo, más de 4 hasta 7; moderado, más de 7 hasta 12; alto, más de 12 hasta 17; muy alto, más de 17. El valor justo en el límite queda en el nivel de abajo (un riesgo de 17 es alto). El manual de la OPS escribe los rangos como 1-3, 4-6, 7-11, 12-16 y 17-25.</p>
     <p class="sub">En la matriz del informe, el impacto se redondea al entero más cercano solo para ubicar cada amenaza en su celda.</p>` : ''}
     <h3>Amenazas complementarias HySL</h3>
-    <p>Van aparte del catálogo oficial, en el bloque «Complementarias HySL» (filtro propio). Son las 8 del catálogo anterior sin equivalente en la planilla de la OPS (HySL-01 a HySL-08: telecomunicaciones, contaminación ambiental, oxígeno y gases medicinales, climatización, ascensores, equipo biomédico, comunicaciones internas y sistemas informáticos) y las que el comité agregue con «Agregar amenaza no listada». Se evalúan con las mismas escalas y fórmulas, pero en el informe salen en una sección propia, fuera de la matriz y del resumen oficial.</p>
+    <p>Van aparte del catálogo oficial, en el bloque «Complementarias HySL» (filtro propio). Son las 8 del catálogo anterior sin equivalente en la planilla de la OPS (HySL-01 a HySL-08: telecomunicaciones, contaminación ambiental, oxígeno y gases medicinales, climatización, ascensores, equipo biomédico, comunicaciones internas y sistemas informáticos), las 6 que surgen de los antecedentes climáticos del VIRCH (HySL-09 a HySL-14: turbiedad del agua de red, falla de obras de control hidráulico, pérdida de accesos y aislamiento, llegada de población evacuada, personal afectado en sus viviendas y humedad y hongos después de anegamientos) y las que el comité agregue con «Agregar amenaza no listada». Se evalúan con las mismas escalas y fórmulas, pero en el informe salen en una sección propia, fuera de la matriz y del resumen oficial.</p>
     <h3>Catálogo de amenazas</h3>
     <p>Son las 80 amenazas de la planilla oficial de la OPS (códigos G1 a A7), con su origen (externa, interna o las dos) y la <b>recomendación general de la OPS</b>, que aparece en cada amenaza y en el informe. El escenario en el VIRCH, a qué establecimientos aplica y dónde buscar antecedentes son <b>orientación propia de HySL</b>, tomada del catálogo anterior. El filtro «El Niño» muestra ${S.ELNINO.map(x => x[0] + ' ' + x[1].toLowerCase()).join(', ')}.</p>
     <h3>Fuente</h3>
