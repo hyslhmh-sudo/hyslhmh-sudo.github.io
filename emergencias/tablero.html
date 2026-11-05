@@ -107,7 +107,7 @@ const qs = new URLSearchParams(location.search);
 if (qs.get('embebido') === '1') document.body.classList.add('embebido');
 if (S.DEMO) $('#demo').classList.remove('oculto');
 const NIV = S.NIVELES;                     // de mayor a menor
-const ELNINO = [['E01', 'Inundación por lluvias'], ['E02', 'Crecida del río'], ['E03', 'Tormenta severa'], ['E04', 'Viento fuerte'], ['E17', 'Corte de energía'], ['E19', 'Corte de agua'], ['E14', 'Brote hídrico o alimentario'], ['E15', 'Vectores o roedores']];
+const ELNINO = S.ELNINO; /* códigos oficiales OPS v1.25 */
 let datos = S.store.get(S.DEMO ? 'demo.tab' : 'tab', null);
 let vista = S.store.get('tab.vista', ''), estSel = '', verTodas = false;
 
@@ -116,10 +116,12 @@ const E = S.esc;
 const chip = n => n ? `<span class="niv" style="background:${S.COLOR_NIVEL[n]};color:${S.TINTA_NIVEL[n]}">${E(n)}</span>` : '<span class="pie">–</span>';
 const chipTxt = (n, t) => `<span class="niv" style="background:${S.COLOR_NIVEL[n]};color:${S.TINTA_NIVEL[n]}">${E(t)}</span>`;
 const celda = (n, txt, tip) => `<td class="cel ${n ? '' : 'vacia'}" ${n ? `style="background:${S.COLOR_NIVEL[n]};color:${S.TINTA_NIVEL[n]}"` : ''} data-tip="${E(tip || '')}">${txt}</td>`;
-function nivelDe(r) { return r >= 17 ? 'Muy alto' : r >= 12 ? 'Alto' : r >= 7 ? 'Moderado' : r >= 4 ? 'Bajo' : r >= 1 ? 'Muy bajo' : ''; }
+/* niveles de la planilla oficial OPS STAR-H v1.25: por encima de 0, 4, 7, 12 y 17 */
+function nivelDe(r) { return S.nivelDe(null, r); }
+const F2 = n => S.fmt(n);
 function tema(n) { const t = S.temaRed(n), r = document.documentElement.style; r.setProperty('--fuerte', t.fuerte); r.setProperty('--medio', t.medio); r.setProperty('--claro', t.claro); r.setProperty('--borde', t.borde); }
 function leyenda() { return `<div class="leyenda">${NIV.map(n => `<span><i style="background:${S.COLOR_NIVEL[n]};outline:1px solid ${S.TINTA_NIVEL[n]}33"></i>${n}</span>`).join('')}</div>`; }
-const obj = f => ({ codigo: f[0], id: f[1], origen: f[2], grupo: f[3], amenaza: f[4], aplica: f[5], A: f[6], grav: f[7], imp: Number(f[8]) || '', riesgo: f[9] === '' ? '' : Number(f[9]), nivel: f[10], cargada: f[11] === 1 });
+const obj = f => ({ codigo: f[0], id: f[1], origen: f[2], grupo: f[3], amenaza: f[4], aplica: f[5], A: f[6], grav: f[7], imp: S.num(f[8]) === '' ? '' : Math.min(5, Math.max(1, Math.round(S.num(f[8])))), riesgo: S.num(f[9]), nivel: f[10], cargada: f[11] === 1 });
 
 /* ---------- datos ---------- */
 async function cargar(avisar) {
@@ -212,7 +214,7 @@ function vistaRed(r) {
   const vis = verTodas ? lista : lista.slice(0, 12);
   h += `<div class="tarjeta panel"><h2>Amenazas prioritarias</h2><p class="nota">Ordenadas por riesgo máximo${estSel ? '' : ' en la red'}. El criterio de respuesta del procedimiento: muy alto, prioridad inmediata y revisión a los 3 meses; alto, incluir en el plan de respuesta y revisar a los 6 meses.</p>
     ${lista.length ? `<div class="tabla-wrap"><table><tr><th>ID</th><th>Amenaza</th><th class="num">Riesgo máx.</th><th>Nivel</th>${estSel ? '' : '<th class="num">Promedio</th><th>Establecimientos con riesgo alto o muy alto</th>'}</tr>
-    ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.amenaza)}</td><td class="num"><b>${a.max}</b></td><td>${chip(nivelDe(a.max))}</td>${estSel ? '' : `<td class="num">${(a.suma / a.n).toFixed(1).replace('.', ',')}</td><td>${a.altos.length ? `<b>${a.altos.length}</b> · ${E(a.altos.join('; '))}` : '<span class="pie">ninguno</span>'}</td>`}</tr>`).join('')}</table></div>
+    ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.amenaza)}</td><td class="num"><b>${F2(a.max)}</b></td><td>${chip(nivelDe(a.max))}</td>${estSel ? '' : `<td class="num">${(a.suma / a.n).toFixed(1).replace('.', ',')}</td><td>${a.altos.length ? `<b>${a.altos.length}</b> · ${E(a.altos.join('; '))}` : '<span class="pie">ninguno</span>'}</td>`}</tr>`).join('')}</table></div>
     ${lista.length > 12 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 12 primeras' : 'Ver las ' + lista.length + ' amenazas evaluadas'}</button>` : ''}` : '<div class="vacio">Todavía no hay amenazas evaluadas.</div>'}</div>`;
 
   // El Niño
@@ -221,7 +223,7 @@ function vistaRed(r) {
     ${est.map(e => `<tr><td>${E(e.nombre)}</td>${ELNINO.map(x => { const f = r.filas.find(y => y.codigo === e.codigo && y.id === x[0]);
       if (!f) return celda('', '·', 'No figura en el catálogo');
       if (f.aplica === 'No aplica') return celda('', 'NA', x[1] + ': no aplica');
-      return f.riesgo === '' ? celda('', '–', x[1] + ': sin evaluar') : celda(f.nivel, f.riesgo, `${e.nombre} · ${x[1]}: riesgo ${f.riesgo} (${f.nivel})`); }).join('')}</tr>`).join('')}</table></div></div>`;
+      return f.riesgo === '' ? celda('', '–', x[1] + ': sin evaluar') : celda(f.nivel, F2(f.riesgo), `${e.nombre} · ${x[1]}: riesgo ${F2(f.riesgo)} (${f.nivel})`); }).join('')}</tr>`).join('')}</table></div></div>`;
 
   // avance
   if (!estSel) h += `<div class="tarjeta panel"><h2>Avance del relevamiento</h2><div class="tabla-wrap"><table><tr><th>Código</th><th>Establecimiento</th><th>Estado</th><th>Referente</th><th>Reunión</th><th class="num">Resueltas</th><th class="num">Muy alto</th><th class="num">Alto</th></tr>
@@ -256,12 +258,12 @@ function vistaComparativo(R) {
   const vis = verTodas ? lista : lista.slice(0, 15);
   h += `<div class="tarjeta panel"><h2>Amenazas comunes</h2><p class="nota">Riesgo máximo de cada amenaza en cada red, con la cantidad de establecimientos en nivel alto o muy alto. Primero, las que son altas en más de una red.</p>
     ${lista.length ? `<div class="tabla-wrap"><table class="calor"><tr><th>ID</th><th>Amenaza</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
-    ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.amenaza)}</td>${R.map(r => { const p = a.por[r.nombre]; return p ? celda(nivelDe(p.max), p.max + (p.altos ? ` <span style="font-weight:600">· ${p.altos} est.</span>` : ''), `${r.nombre} · ${a.amenaza}: máximo ${p.max} (${nivelDe(p.max)}); ${p.altos} establecimiento(s) en alto o muy alto`) : celda('', '–', r.nombre + ': sin evaluar'); }).join('')}</tr>`).join('')}</table></div>
+    ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.amenaza)}</td>${R.map(r => { const p = a.por[r.nombre]; return p ? celda(nivelDe(p.max), F2(p.max) + (p.altos ? ` <span style="font-weight:600">· ${p.altos} est.</span>` : ''), `${r.nombre} · ${a.amenaza}: máximo ${F2(p.max)} (${nivelDe(p.max)}); ${p.altos} establecimiento(s) en alto o muy alto`) : celda('', '–', r.nombre + ': sin evaluar'); }).join('')}</tr>`).join('')}</table></div>
     ${lista.length > 15 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 15 primeras' : 'Ver las ' + lista.length + ' amenazas'}</button>` : ''}` : '<div class="vacio">Todavía no hay amenazas evaluadas.</div>'}</div>`;
 
   // El Niño
   h += `<div class="tarjeta panel"><h2>El Niño 2026-2027 en cada red</h2><p class="nota">Riesgo máximo y cantidad de establecimientos en nivel alto o muy alto.</p><div class="tabla-wrap"><table class="calor"><tr><th>Amenaza</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
-    ${ELNINO.map(x => `<tr><td>${x[0]} · ${x[1]}</td>${R.map(r => { const l = r.filas.filter(f => f.id === x[0] && f.riesgo !== ''); if (!l.length) return celda('', '–', 'Sin evaluar'); const mx = Math.max(...l.map(f => f.riesgo)), al = l.filter(f => f.nivel === 'Alto' || f.nivel === 'Muy alto').length; return celda(nivelDe(mx), mx + ` <span style="font-weight:600">· ${al}/${r.establecimientos.length}</span>`, `${r.nombre}: máximo ${mx}; ${al} de ${r.establecimientos.length} establecimientos en alto o muy alto`); }).join('')}</tr>`).join('')}</table></div></div>`;
+    ${ELNINO.map(x => `<tr><td>${x[0]} · ${x[1]}</td>${R.map(r => { const l = r.filas.filter(f => f.id === x[0] && f.riesgo !== ''); if (!l.length) return celda('', '–', 'Sin evaluar'); const mx = Math.max(...l.map(f => f.riesgo)), al = l.filter(f => f.nivel === 'Alto' || f.nivel === 'Muy alto').length; return celda(nivelDe(mx), F2(mx) + ` <span style="font-weight:600">· ${al}/${r.establecimientos.length}</span>`, `${r.nombre}: máximo ${F2(mx)}; ${al} de ${r.establecimientos.length} establecimientos en alto o muy alto`); }).join('')}</tr>`).join('')}</table></div></div>`;
 
   // ranking de establecimientos
   const rk = [];

@@ -54,26 +54,46 @@
     return x ? Number(x.valor) : null;
   }
   function redondear(n, d) { const f = Math.pow(10, d || 0); return Math.sign(n) * Math.round(Math.abs(n) * f) / f; }
+  /* Cálculo de la planilla oficial OPS STAR-H v1.25 (05/11/2026):
+   *  gravedad = 0,4·B1 + 0,3·B2 + 0,3·B3 · impacto = (gravedad + C + D) / 3 sin redondear · riesgo = A × impacto
+   *  nivel: riesgo por encima de 0, 4, 7, 12 o 17 (el valor justo en el límite queda en el nivel de abajo) */
+  function num(v) {
+    if (v === '' || v == null) return '';
+    if (typeof v === 'number') return v;
+    let s = String(v).trim(); if (!s) return '';
+    if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+    const n = Number(s); return isNaN(n) ? '' : n;
+  }
+  function fmt(v, d) {
+    const n = num(v); if (n === '') return '';
+    return n.toFixed(d == null ? 2 : d).replace('.', ',');
+  }
   function calcular(esc, ev) {
     const vacio = { grav: '', imp: '', riesgo: '', nivel: '' };
     if (!esc || !ev || ev.aplica === 'No aplica') return vacio;
     const b1 = valorDe(esc.B, ev.B1), b2 = valorDe(esc.B, ev.B2), b3 = valorDe(esc.B, ev.B3);
     if (b1 == null || b2 == null || b3 == null) return vacio;
-    const p = esc.pesos && esc.pesos.length === 3 ? esc.pesos : [2, 1, 1];
-    const grav = redondear((p[0] * b1 + p[1] * b2 + p[2] * b3) / (p[0] + p[1] + p[2]), 2);
+    const p = esc.pesos && esc.pesos.length === 3 && esc.pesos.every(x => typeof x === 'number' && !isNaN(x)) ? esc.pesos : [0.4, 0.3, 0.3];
+    const grav = b1 * p[0] + b2 * p[1] + b3 * p[2];
     const c = valorDe(esc.C, ev.C), d = valorDe(esc.D, ev.D);
-    if (c == null || d == null) return Object.assign({}, vacio, { grav: grav });
-    const imp = redondear((grav + c + d) / 3, 0);
+    if (c == null || d == null) return Object.assign({}, vacio, { grav: redondear(grav, 2) });
+    const imp = (grav + c + d) / 3;
     const a = valorDe(esc.A, ev.A);
-    if (a == null) return Object.assign({}, vacio, { grav: grav, imp: imp });
-    const riesgo = imp * a;
-    return { grav: grav, imp: imp, riesgo: riesgo, nivel: nivelDe(esc, riesgo) };
+    if (a == null) return Object.assign({}, vacio, { grav: redondear(grav, 2), imp: redondear(imp, 2) });
+    const riesgo = a * imp;
+    return { grav: redondear(grav, 2), imp: redondear(imp, 2), riesgo: redondear(riesgo, 2), nivel: nivelDe(esc, riesgo) };
   }
   function nivelDe(esc, riesgo) {
+    const r = num(riesgo); if (r === '') return '';
+    const v = redondear(r, 9);
+    const nv = (esc && esc.niveles && esc.niveles.length ? esc.niveles : NIVELES_OPS).slice().sort((x, y) => x.desde - y.desde);
     let n = '';
-    (esc.niveles || []).forEach(x => { if (riesgo >= x.desde) n = x.nivel; });
+    nv.forEach(x => { if (v > Number(x.desde)) n = x.nivel; });
     return n;
   }
+  const NIVELES_OPS = [{ desde: 0, nivel: 'Muy bajo', rango: 'más de 0 hasta 4' }, { desde: 4, nivel: 'Bajo', rango: 'más de 4 hasta 7' }, { desde: 7, nivel: 'Moderado', rango: 'más de 7 hasta 12' }, { desde: 12, nivel: 'Alto', rango: 'más de 12 hasta 17' }, { desde: 17, nivel: 'Muy alto', rango: 'más de 17 hasta 25' }];
+  /* amenazas oficiales vinculadas a El Niño en el VIRCH (lluvias, crecidas, tormentas, viento, cortes de energía y agua, brotes hídricos y por vectores) */
+  const ELNINO = [['H2', 'Inundación repentina'], ['H1', 'Inundación fluvial'], ['M3', 'Tormentas (depresión tropical)'], ['M6', 'Viento fuerte'], ['T1', 'Falla eléctrica'], ['T6', 'Corte de agua'], ['B2', 'Enfermedades por agua'], ['B4', 'Brotes por alimentos'], ['B3', 'Enfermedades por vectores']];
   const NIVELES = ['Muy alto', 'Alto', 'Moderado', 'Bajo', 'Muy bajo'];
   const COLOR_NIVEL = { 'Muy alto': '#D32F2F', 'Alto': '#FB8C00', 'Moderado': '#FDD835', 'Bajo': '#A5D6A7', 'Muy bajo': '#2E7D32' };
   const TINTA_NIVEL = { 'Muy alto': '#FFFFFF', 'Alto': '#1F2937', 'Moderado': '#1F2937', 'Bajo': '#1F2937', 'Muy bajo': '#FFFFFF' };
@@ -118,8 +138,8 @@
         { etiqueta: 'Alta', valor: 1, desc: 'Están disponibles todas las capacidades necesarias para manejar la amenaza y son sostenibles.' },
         { etiqueta: 'Media', valor: 3, desc: 'Hay algunas capacidades, pero nunca se pusieron a prueba en una respuesta real ni en un simulacro; su funcionamiento y sostenibilidad no están asegurados.' },
         { etiqueta: 'Baja', valor: 5, desc: 'Faltan, en su mayoría o por completo, las capacidades básicas (humanas, materiales, estratégicas y financieras).' }],
-      niveles: [{ desde: 1, nivel: 'Muy bajo', rango: '1 a 3' }, { desde: 4, nivel: 'Bajo', rango: '4 a 6' }, { desde: 7, nivel: 'Moderado', rango: '7 a 11' }, { desde: 12, nivel: 'Alto', rango: '12 a 16' }, { desde: 17, nivel: 'Muy alto', rango: '17 a 25' }],
-      pesos: [2, 1, 1]
+      niveles: NIVELES_OPS,
+      pesos: [0.4, 0.3, 0.3]
     };
     const ESTAB = {
       'Red Trelew': [
@@ -241,7 +261,7 @@
     return { atender: atender, reiniciar() { store.del('demo.db'); } };
   })();
 
-  global.STARH = { DEMO, API, api, store, sesion, calcular, nivelDe, NIVELES, COLOR_NIVEL, TINTA_NIVEL, temaRed, hoy, uid, esc, Demo };
+  global.STARH = { DEMO, API, api, store, sesion, calcular, nivelDe, num, fmt, ELNINO, NIVELES_OPS, NIVELES, COLOR_NIVEL, TINTA_NIVEL, temaRed, hoy, uid, esc, Demo };
 })(window);
 
 /* ---------- Navegación visible en todas las pantallas ----------

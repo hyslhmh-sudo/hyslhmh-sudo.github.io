@@ -188,7 +188,7 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
 (function () {
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), app = $('#app');
-const ELNINO = ['E01', 'E02', 'E03', 'E04', 'E17', 'E19', 'E14', 'E15'];
+const ELNINO = S.ELNINO.map(x => x[0]); /* códigos oficiales OPS v1.25 vinculados a El Niño */
 let cat = S.store.get(S.DEMO ? 'demo.cat' : 'cat', null);
 let cola = S.store.get(S.DEMO ? 'demo.cola' : 'cola', []);
 let redActual = S.store.get('red', '');
@@ -313,10 +313,11 @@ function aplicarLocal(it) {
 function aplicarEstadoLocal(it) {
   const r = red(it.red); const e = r && r.establecimientos.find(x => x.codigo === it.codigo);
   if (e) ['referente', 'fechaReunion', 'estado', 'ish'].forEach(k => { if (it[k] != null) e[k] = it[k]; });
+  if (e && it.info) e.info = Object.assign({}, e.info || {}, it.info);
 }
 function encolar(it) {
   const clave = c => c.tipo + '|' + c.red + '|' + c.codigo + '|' + (c.id || '');
-  if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { it = Object.assign({}, v, it); delete it.error; } } 
+  if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { const info = Object.assign({}, v.info || {}, it.info || {}); it = Object.assign({}, v, it); if (Object.keys(info).length) it.info = info; delete it.error; } } 
   cola = cola.filter(c => clave(c) !== clave(it));
   cola.push(it); guardarCola(); programarSync();
 }
@@ -338,6 +339,7 @@ function render() {
   const p = h.slice(2).split('/').map(decodeURIComponent);
   if (p[0] === 'ayuda') return vistaAyuda();
   if (p[0] === 'est' && red(p[1])) return vistaEstablecimiento(p[1], p[2]);
+  if (p[0] === 'informe' && red(p[1])) return vistaInforme(p[1], p[2]);
   return vistaInicio();
 }
 
@@ -437,7 +439,7 @@ function vistaEstablecimiento(redN, codigo) {
   const html = Object.keys(grupos).map(g => `<div class="grupo-tit">${S.esc(g)}</div><div class="tarjeta bloque">${grupos[g].map(x => `
       <button class="amen" data-ev="${S.esc(x.id)}"><span class="id">${S.esc(x.id)}</span><span class="nom">${S.esc(x.amenaza)}</span>
       ${enCola.has(x.id) ? '<span class="ms" title="Sin enviar" style="color:#2F5BEA;font-size:18px">cloud_upload</span>' : ''}
-      ${x.aplica === 'No aplica' ? '<span class="chip pend">No aplica</span>' : cargada(x) ? chipNivel(x.nivel) + `<b style="font-size:13px;width:22px;text-align:right">${S.esc(x.riesgo)}</b>` : '<span class="chip pend">Pendiente</span>'}
+      ${x.aplica === 'No aplica' ? '<span class="chip pend">No aplica</span>' : cargada(x) ? chipNivel(x.nivel) + `<b style="font-size:13px;min-width:38px;text-align:right">${S.esc(S.fmt(x.riesgo))}</b>` : '<span class="chip pend">Pendiente</span>'}
       </button>`).join('')}</div>`).join('');
   const F = (k, t) => `<button class="filtro" data-filtro="${k}" aria-pressed="${filtro === k}">${t} (${cuenta[k]})</button>`;
   app.innerHTML = `
@@ -457,24 +459,129 @@ function vistaEstablecimiento(redN, codigo) {
         ${puede ? '<button class="btn sec" type="submit"><span class="ms">save</span>Guardar datos</button>' : ''}
         </form>
       </details>
+      ${camposInfo(r, e).length ? `<details class="datos">
+        <summary>Datos generales del establecimiento <span class="sub" style="font-weight:500">· planilla oficial OPS · ${camposInfo(r, e).filter(k => /^s\/d/.test((e.info || {})[k] || 's/d')).length} en s/d</span></summary>
+        <form id="fInfo"><div class="rejilla">${camposInfo(r, e).map(k => { const v = (e.info || {})[k] || ''; return `<label class="campo"><span>${S.esc(k)}</span><input data-info="${S.esc(k)}" value="${S.esc(/^s\/d/.test(v) ? '' : v)}" placeholder="s/d (revisar)" ${puede ? '' : 'disabled'}></label>`; }).join('')}</div>
+        ${antiguedad(e) ? `<p class="sub">Antigüedad: ${antiguedad(e)} años (se calcula con la fecha de construcción).</p>` : ''}
+        ${puede ? '<button class="btn sec" type="submit"><span class="ms">save</span>Guardar datos generales</button>' : ''}</form>
+      </details>` : ''}
     </div>
     <div class="buscar"><span class="ms">search</span><input id="busq" type="search" placeholder="Buscar amenaza" value="${S.esc(busqueda)}"></div>
     <div class="filtros">${F('pend', 'Pendientes')}${F('eval', 'Evaluadas')}${F('na', 'No aplica')}${F('altos', 'Altas y muy altas')}${F('nino', 'El Niño')}${F('todas', 'Todas')}</div>
     ${html || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan amenazas pendientes en este establecimiento!' : 'No hay amenazas con este filtro.'}</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
       <a class="btn sec" style="text-decoration:none" href="imprimir.html?m=starh&red=${encodeURIComponent(redN)}&est=${encodeURIComponent(codigo)}"><span class="ms">print</span>Imprimir formulario</a>
+      <button class="btn sec" data-ir="#/informe/${encodeURIComponent(redN)}/${encodeURIComponent(codigo)}"><span class="ms">summarize</span>Informe STAR-H</button>
     ${puede ? `
       <button class="btn sec" data-act="nueva"><span class="ms">add</span>Agregar amenaza no listada</button>
       ${cuenta.pend === 0 && e.estado !== 'Evaluado' && e.estado !== 'Validado por la Dirección' ? '<button class="btn" data-act="marcarEvaluado"><span class="ms">task_alt</span>Marcar como evaluado</button>' : ''}
     ` : ''}</div>`;
   const b = $('#busq');
   b.addEventListener('input', () => { busqueda = b.value; const pos = b.selectionStart; vistaEstablecimiento(redN, codigo); const nb = $('#busq'); nb.focus(); nb.setSelectionRange(pos, pos); });
+  const fi = $('#fInfo');
+  if (fi) fi.addEventListener('submit', ev => {
+    ev.preventDefault();
+    const info = {};
+    fi.querySelectorAll('[data-info]').forEach(i => { info[i.dataset.info] = i.value.trim() || 's/d (revisar)'; });
+    const it = { tipo: 'estado', uid: S.uid(), red: redN, codigo: codigo, info: info };
+    aplicarEstadoLocal(it); guardarCat(); encolar(it); toast('Datos generales guardados.'); render();
+  });
   const fd = $('#fDatos');
   if (fd) fd.addEventListener('submit', ev => {
     ev.preventDefault();
     const it = { tipo: 'estado', uid: S.uid(), red: redN, codigo: codigo, referente: fd.referente.value.trim() || 's/d', fechaReunion: fd.fechaReunion.value.trim() || 's/d', estado: fd.estado.value, ish: fd.ish.value.trim() || 's/d' };
     aplicarEstadoLocal(it); guardarCat(); encolar(it); toast('Datos guardados.'); render();
   });
+}
+
+
+/* ---------- datos generales (hoja INFO de la planilla oficial) ---------- */
+const INFO_BASE = ['País', 'Institución', 'Nivel de operación', 'Seguro de siniestros', 'Fecha de construcción', 'Teléfono móvil o WhatsApp', 'Teléfono directo', 'Conmutador', 'Extensiones', 'Correo', 'Correo alternativo', 'Web', 'Ciudad', 'Provincia', 'Localidad o municipio', 'Latitud', 'Longitud', 'Altura (m s. n. m.)', 'Subregión', 'Responsable de la evaluación', 'Responsable · móvil o WhatsApp', 'Responsable · teléfono directo', 'Responsable · conmutador', 'Responsable · extensiones', 'Responsable · correo', 'Responsable · correo alternativo', 'Responsable · dirección completa', 'Fecha de evaluación'];
+function camposInfo(r, e) {
+  if (r.infoCampos && r.infoCampos.length) return r.infoCampos;
+  if (e && e.info && Object.keys(e.info).length) return Object.keys(e.info);
+  return INFO_BASE;
+}
+function antiguedad(e) {
+  const f = String(((e && e.info) || {})['Fecha de construcción'] || '');
+  const m = f.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/) || f.match(/^(\d{4})$/);
+  if (!m) return '';
+  const d = m.length === 4 ? new Date(+m[3], +m[2] - 1, +m[1]) : new Date(+m[1], 0, 1);
+  const hoy = new Date(); let a = hoy.getFullYear() - d.getFullYear();
+  if (hoy < new Date(hoy.getFullYear(), d.getMonth(), d.getDate())) a--;
+  return a >= 0 ? a : '';
+}
+
+/* ---------- informe STAR-H por establecimiento (como el INFORME de la planilla oficial) ---------- */
+function vistaInforme(redN, codigo) {
+  const r = red(redN), e = r && r.establecimientos.find(x => x.codigo === codigo);
+  if (!e) return ir('#/');
+  tema(r.nombre);
+  $('#titulo').innerHTML = `Informe STAR-H<small>${S.esc(e.nombre)}</small>`;
+  const lista = evs(r, codigo), am = id => r.amenazas.find(a => a.id === id) || {};
+  const ev = lista.filter(x => x.aplica !== 'No aplica' && S.num(x.riesgo) !== '')
+    .map(x => Object.assign({}, x, { _r: S.num(x.riesgo), _i: S.num(x.imp), _g: S.num(x.grav), _a: am(x.id) }))
+    .sort((a, b) => b._r - a._r);
+  const na = lista.filter(x => x.aplica === 'No aplica').length, pend = lista.length - ev.length - na;
+  const cuenta = {}; S.NIVELES.forEach(n => cuenta[n] = 0); ev.forEach(x => { if (x.nivel) cuenta[x.nivel] = (cuenta[x.nivel] || 0) + 1; });
+  const info = e.info || {}, v = k => S.esc(info[k] || 's/d (revisar)');
+  const ant = antiguedad(e);
+  const fila = (k, val) => `<tr><th>${S.esc(k)}</th><td>${val}</td></tr>`;
+  const ficha = `<table class="inf-tab ficha">
+    ${fila('Establecimiento', S.esc(e.nombre) + ' (' + S.esc(e.codigo) + ' · ' + S.esc(e.tipo) + ')')}
+    ${fila('Red', S.esc(r.nombre))}
+    ${fila('Institución', v('Institución'))}${fila('Nivel de operación', v('Nivel de operación'))}${fila('Seguro de siniestros', v('Seguro de siniestros'))}
+    ${fila('Fecha de construcción', v('Fecha de construcción') + (ant !== '' ? ' · antigüedad: ' + ant + ' años' : ''))}
+    ${fila('Dirección', S.esc(e.direccion || 's/d (revisar)'))}${fila('Ciudad · localidad · provincia · país', [v('Ciudad'), v('Localidad o municipio'), v('Provincia'), v('País')].join(' · '))}
+    ${fila('Latitud · longitud · altura', [v('Latitud'), v('Longitud'), v('Altura (m s. n. m.)')].join(' · '))}
+    ${fila('Teléfonos', ['Móvil o WhatsApp: ' + v('Teléfono móvil o WhatsApp'), 'directo: ' + v('Teléfono directo'), 'conmutador: ' + v('Conmutador'), 'extensiones: ' + v('Extensiones')].join(' · '))}
+    ${fila('Correo · web', [v('Correo'), v('Correo alternativo'), v('Web')].join(' · '))}
+    ${fila('Responsable de la evaluación', v('Responsable de la evaluación') + ' · ' + [v('Responsable · móvil o WhatsApp'), v('Responsable · correo')].join(' · '))}
+    ${fila('Fecha de evaluación', v('Fecha de evaluación'))}
+    ${fila('Referente del relevamiento · reunión del comité', S.esc(e.referente || 's/d') + ' · ' + S.esc(e.fechaReunion || 's/d'))}
+    ${fila('Índice de Seguridad Hospitalaria', S.esc(e.ish || 's/d'))}
+  </table>`;
+  const tabla = arr => arr.length ? `<table class="inf-tab"><tr><th>N.º</th><th>ID</th><th>Amenaza</th><th class="c">A</th><th class="c">Gravedad</th><th class="c">C</th><th class="c">D</th><th class="c">Impacto</th><th class="c">Riesgo</th><th>Nivel</th></tr>
+    ${arr.map((x, i) => `<tr><td class="c">${i + 1}</td><td><b>${S.esc(x.id)}</b></td><td>${S.esc(x.amenaza)}</td><td class="c">${S.esc(String(x.A || '').charAt(0))}</td><td class="c">${S.fmt(x._g)}</td><td class="c">${S.esc(x.C || '')}</td><td class="c">${S.esc(x.D || '')}</td><td class="c">${S.fmt(x._i)}</td><td class="c"><b>${S.fmt(x._r)}</b></td><td>${chipNivel(x.nivel)}</td></tr>`).join('')}</table>`
+    : '<p class="sub">Sin amenazas evaluadas en este grupo.</p>';
+  const ori = x => String(x.origen || x._a.origen || '');
+  const grupos = [['Amenazas externas', ev.filter(x => ori(x) === 'Externa')], ['Amenazas internas', ev.filter(x => ori(x) === 'Interna')],
+    ['Amenazas externas e internas', ev.filter(x => ori(x) === 'Externa e interna')], ['Amenazas agregadas por el comité', ev.filter(x => ['Externa', 'Interna', 'Externa e interna'].indexOf(ori(x)) < 0)]].filter(g => g[1].length || g[0] !== 'Amenazas agregadas por el comité');
+  const celdas = {};
+  ev.forEach(x => { const a = Number(String(x.A || '').charAt(0)), i = Math.min(5, Math.max(1, Math.round(x._i))); if (a) (celdas[a + '|' + i] = celdas[a + '|' + i] || []).push(x.id); });
+  const matriz = `<table class="inf-mat"><tr><th rowspan="6" class="eje">Probabilidad</th><th></th>${[1, 2, 3, 4, 5].map(i => `<th class="c">${i}</th>`).join('')}</tr>
+    ${[5, 4, 3, 2, 1].map(p => `<tr><th class="c">${p}</th>${[1, 2, 3, 4, 5].map(i => { const n = S.nivelDe(r.escalas, p * i), l = celdas[p + '|' + i] || []; return `<td style="background:${S.COLOR_NIVEL[n] || '#EEE'};color:${S.TINTA_NIVEL[n] || '#1F2937'}">${S.esc(l.join(' · '))}</td>`; }).join('')}</tr>`).join('')}
+    <tr><th></th><th></th><th colspan="5" class="c eje">Impacto (redondeado para ubicar la amenaza)</th></tr></table>`;
+  const recs = ev.map(x => `<tr><td><b>${S.esc(x.id)}</b> ${S.esc(x.amenaza)}</td><td>${chipNivel(x.nivel)}</td><td>${S.esc(x._a.rec || 's/d (revisar)')}${x.accion ? `<br><span class="sub"><b>Acción sugerida por el comité:</b> ${S.esc(x.accion)}${x.area ? ' · ' + S.esc(x.area) : ''}</span>` : ''}</td></tr>`).join('');
+  app.innerHTML = `<style>
+    .informe{padding:18px}.informe h2{margin:0 0 4px}.informe h3{margin:18px 0 8px;color:var(--fuerte)}
+    .inf-tab{width:100%;border-collapse:collapse;font-size:12.5px}.inf-tab th,.inf-tab td{border:1px solid var(--linea);padding:5px 6px;text-align:left;vertical-align:top}.inf-tab th{background:var(--claro)}.inf-tab .c{text-align:center}
+    .ficha th{width:32%}
+    .inf-mat{border-collapse:collapse;font-size:11.5px;margin:6px 0}.inf-mat td{width:96px;height:42px;border:2px solid #fff;text-align:center;font-weight:700;padding:3px}.inf-mat th{padding:3px 6px}.inf-mat .eje{font-weight:600;color:#5E6C84}
+    .inf-res{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+    .inf-pie{margin-top:22px;text-align:center}.inf-pie img{width:66%;max-height:56px;object-fit:contain}
+    @media print{.barra,.volver,.no-print,#btnSync{display:none!important}.informe{box-shadow:none;border:0;padding:0}body{background:#fff}}
+  </style>
+  <button class="volver no-print" data-ir="#/est/${encodeURIComponent(redN)}/${encodeURIComponent(codigo)}"><span class="ms">arrow_back</span>${S.esc(e.nombre)}</button>
+  <div class="no-print" style="margin-bottom:10px"><button class="btn" onclick="window.print()"><span class="ms">print</span>Imprimir o guardar</button></div>
+  <div class="tarjeta informe">
+    <p class="sub">Preparación y Respuesta a Emergencias y desastres · Higiene y Seguridad Laboral · versión 0</p>
+    <h2>Evaluación estratégica del riesgo de emergencias y desastres (STAR-H)</h2>
+    <p class="sub">${S.esc(e.nombre)} · ${S.esc(r.nombre)} · generado el ${S.hoy()} con los datos de la app</p>
+    <h3>1. Datos generales del establecimiento</h3>${ficha}
+    <h3>2. Resumen</h3>
+    <p>${ev.length} amenazas evaluadas, ${na} que no aplican y ${pend} pendientes, sobre ${lista.length} del catálogo.</p>
+    <div class="inf-res">${S.NIVELES.map(n => `<span class="niv" style="background:${S.COLOR_NIVEL[n]};color:${S.TINTA_NIVEL[n]}">${n}: ${cuenta[n] || 0}</span>`).join('')}</div>
+    <h3>3. Amenazas evaluadas, ordenadas por nivel de riesgo</h3>
+    ${grupos.map(g => `<h4>${g[0]} (${g[1].length})</h4>${tabla(g[1])}`).join('')}
+    <h3>4. Matriz de riesgo</h3>${matriz}
+    <h3>5. Recomendaciones generales para la gestión del riesgo (OPS)</h3>
+    ${recs ? `<table class="inf-tab"><tr><th style="width:30%">Amenaza</th><th style="width:12%">Nivel</th><th>Recomendación general de la OPS</th></tr>${recs}</table>` : '<p class="sub">Todavía no hay amenazas evaluadas.</p>'}
+    <h3>6. Método</h3>
+    <p>Metodología STAR-H de la OPS con el catálogo y las fórmulas de la planilla oficial (versión 1.25): gravedad = 0,4 × B1 + 0,3 × B2 + 0,3 × B3; impacto = (gravedad + vulnerabilidad + capacidad de afrontamiento) ÷ 3; riesgo = probabilidad × impacto. Las amenazas de riesgo alto o muy alto requieren un plan específico de respuesta dentro del plan hospitalario de respuesta a emergencias y desastres.</p>
+    <p class="sub">MEJORA / buena práctica · Organización Panamericana de la Salud. STAR-H: Evaluación estratégica del riesgo de emergencias y desastres en establecimientos de salud. Washington, D.C.: OPS; 2022. https://doi.org/10.37774/9789275325582. Esta es una adaptación de una obra original de la OPS; las opiniones expresadas en esta adaptación son responsabilidad exclusiva de sus autores y no representan necesariamente los criterios de la OPS. Complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>
+    <div class="inf-pie"><img src="logo-hysl.png" alt="Higiene y Seguridad Laboral"></div>
+  </div>`;
 }
 
 /* ---------- hoja de evaluación ---------- */
@@ -505,9 +612,9 @@ function pintarHoja(r, est, a) {
   const incompleto = b.aplica !== 'No aplica' && ['A', 'B1', 'B2', 'B3', 'C', 'D'].some(k => !b[k]);
   const valores = b.aplica === 'No aplica' ? '' : `
     <div class="tarjeta dim"><h3>A · Probabilidad <small>próximos 12 meses</small></h3>${op('A', esc.A)}${desc('A', esc.A)}</div>
-    <div class="tarjeta dim"><h3>B1 · Vida de los ocupantes <small>peso ${esc.pesos[0]}</small></h3>${op('B1', esc.B)}${desc('B1', esc.B, 'b1')}</div>
-    <div class="tarjeta dim"><h3>B2 · Establecimiento <small>peso ${esc.pesos[1]}</small></h3>${op('B2', esc.B)}${desc('B2', esc.B, 'b2')}</div>
-    <div class="tarjeta dim"><h3>B3 · Funcionamiento de los servicios <small>peso ${esc.pesos[2]}</small></h3>${op('B3', esc.B)}${desc('B3', esc.B, 'b3')}</div>
+    <div class="tarjeta dim"><h3>B1 · Vida de los ocupantes <small>peso ${String(esc.pesos[0]).replace('.', ',')}</small></h3>${op('B1', esc.B)}${desc('B1', esc.B, 'b1')}</div>
+    <div class="tarjeta dim"><h3>B2 · Establecimiento <small>peso ${String(esc.pesos[1]).replace('.', ',')}</small></h3>${op('B2', esc.B)}${desc('B2', esc.B, 'b2')}</div>
+    <div class="tarjeta dim"><h3>B3 · Funcionamiento de los servicios <small>peso ${String(esc.pesos[2]).replace('.', ',')}</small></h3>${op('B3', esc.B)}${desc('B3', esc.B, 'b3')}</div>
     <div class="tarjeta dim"><h3>C · Vulnerabilidad frente a esta amenaza</h3>${op('C', esc.C, 'tres')}${desc('C', esc.C)}</div>
     <div class="tarjeta dim"><h3>D · Capacidad de afrontamiento</h3>${op('D', esc.D, 'tres')}${desc('D', esc.D)}</div>`;
   $('#hoja').innerHTML = `<div class="hoja-in">
@@ -518,7 +625,10 @@ function pintarHoja(r, est, a) {
         <label class="campo"><span>Nombre de la amenaza</span><input data-texto="amenaza" value="${S.esc(b.amenaza)}" placeholder="Ej.: anegamiento del estacionamiento"></label>
         <div class="rejilla"><label class="campo"><span>Origen</span><select data-texto="origen"><option ${b.origen === 'Externa' ? 'selected' : ''}>Externa</option><option ${b.origen === 'Interna' ? 'selected' : ''}>Interna</option></select></label>
         <label class="campo"><span>Grupo</span><input data-texto="grupo" value="${S.esc(b.grupo)}"></label></div></div>`
-      : `<div class="tarjeta contexto">${a.escenario ? `<p><b>Escenario en el VIRCH:</b> ${S.esc(a.escenario)}</p>` : ''}${a.fuentes ? `<p><b>Dónde buscar antecedentes:</b> ${S.esc(a.fuentes)}</p>` : ''}${a.aplicaA ? `<p class="sub">Aplica a: ${S.esc(a.aplicaA)}</p>` : ''}</div>`}
+      : `<div class="tarjeta contexto"><p class="sub">${S.esc([a.origen, a.grupo, a.subgrupo].filter(Boolean).join(' · '))}</p>
+        ${a.rec ? `<p><b>Recomendación general de la OPS:</b> ${S.esc(a.rec)}</p>` : ''}
+        ${a.escenario || a.fuentes || a.aplicaA ? `<p class="sub" style="margin-top:8px"><b>Orientación HySL para el VIRCH</b>${a.equivalencia ? ' (del catálogo anterior: ' + S.esc(a.equivalencia) + ')' : ''}</p>` : ''}
+        ${a.escenario ? `<p><b>Escenario:</b> ${S.esc(a.escenario)}</p>` : ''}${a.fuentes ? `<p><b>Dónde buscar antecedentes:</b> ${S.esc(a.fuentes)}</p>` : ''}${a.aplicaA ? `<p class="sub">Aplica a: ${S.esc(a.aplicaA)}</p>` : ''}</div>`}
       <div class="tarjeta dim"><h3>¿La amenaza aplica a este establecimiento?</h3>
         <div class="opciones dos"><button type="button" class="op" data-campo="aplica" data-valor="Sí" aria-pressed="${b.aplica !== 'No aplica'}" ${dis}>Sí, aplica</button>
         <button type="button" class="op" data-campo="aplica" data-valor="No aplica" aria-pressed="${b.aplica === 'No aplica'}" ${dis}>No aplica</button></div></div>
@@ -535,7 +645,7 @@ function pintarHoja(r, est, a) {
     </div>
     <div class="resultado">
       <div class="calc">${b.aplica === 'No aplica' ? '<span>No se calcula el riesgo: la amenaza no aplica.</span>' :
-        `<span>Gravedad <b>${c.grav === '' ? '–' : String(c.grav).replace('.', ',')}</b></span><span>Impacto <b>${c.imp === '' ? '–' : c.imp}</b></span><span>Riesgo <b>${c.riesgo === '' ? '–' : c.riesgo}</b></span>${chipNivel(c.nivel)}`}
+        `<span>Gravedad <b>${c.grav === '' ? '–' : S.fmt(c.grav)}</b></span><span>Impacto <b>${c.imp === '' ? '–' : S.fmt(c.imp)}</b></span><span>Riesgo <b>${c.riesgo === '' ? '–' : S.fmt(c.riesgo)}</b></span>${chipNivel(c.nivel)}`}
         ${incompleto ? '<span class="aviso">Faltan valores: se puede guardar y completar después.</span>' : ''}</div>
       ${b.puede ? `<div class="acciones">
         ${!b.nueva && idx > 0 ? '<button class="btn sec" data-act="anterior" aria-label="Anterior"><span class="ms">chevron_left</span></button>' : ''}
@@ -623,11 +733,12 @@ function vistaAyuda() {
     <h3>Cómo se trabaja</h3>
     <ol>
       <li>Elegí la red y el establecimiento.</li>
-      <li>Completá los <b>datos del relevamiento</b>: referente, fecha de la reunión e Índice de Seguridad Hospitalaria si existe (si no, queda «s/d»).</li>
+      <li>Completá los <b>datos del relevamiento</b>: referente, fecha de la reunión e Índice de Seguridad Hospitalaria si existe (si no, queda «s/d»), y los <b>datos generales del establecimiento</b> que pide la planilla oficial (institución, nivel de operación, fecha de construcción, ubicación, responsable de la evaluación…).</li>
       <li>Recorré las amenazas <b>pendientes</b>. Para cada una indicá si aplica y valorá A, B1, B2, B3, C y D. El riesgo se calcula solo, con las mismas fórmulas que la planilla.</li>
       <li>Usá <b>Guardar y siguiente</b> para avanzar sin volver a la lista.</li>
       <li>Si el equipo identifica una amenaza que no está en el catálogo, usá <b>Agregar amenaza no listada</b>.</li>
       <li>Cuando no quedan pendientes, <b>marcá el establecimiento como evaluado</b>.</li>
+      <li>El <b>informe STAR-H</b> de cada establecimiento ordena las amenazas por riesgo (externas e internas), muestra la matriz y las recomendaciones generales de la OPS. Se imprime desde el navegador.</li>
     </ol>
     <h3>Sin señal</h3>
     <p>Lo que cargás queda guardado en este dispositivo y se envía solo cuando vuelve la conexión. El indicador de arriba muestra cuántos cambios faltan enviar. No cierres la sesión con cambios sin enviar.</p>
@@ -638,7 +749,14 @@ function vistaAyuda() {
     <li>Una capacidad que nunca se probó en un simulacro ni en un evento real se valora, como máximo, «Media».</li>
     <li>Para El Niño, considerar los pronósticos estacionales vigentes del Servicio Meteorológico Nacional.</li></ul>
     ${e ? `<h3>Escalas</h3>${tabla('A · Probabilidad', e.A, [['Descripción', 'desc']])}${tabla('B · Gravedad', e.B, [['B1 · Vida', 'b1'], ['B2 · Establecimiento', 'b2'], ['B3 · Funcionamiento', 'b3']])}${tabla('C · Vulnerabilidad', e.C, [['Descripción', 'desc']])}${tabla('D · Capacidad', e.D, [['Descripción', 'desc']])}
-    <p class="sub">Gravedad = (${e.pesos[0]}×B1 + ${e.pesos[1]}×B2 + ${e.pesos[2]}×B3) / ${e.pesos[0] + e.pesos[1] + e.pesos[2]}. Impacto = promedio redondeado de gravedad, vulnerabilidad y capacidad (convertidas a 1-5). Riesgo = probabilidad × impacto: muy bajo 1 a 3, bajo 4 a 6, moderado 7 a 11, alto 12 a 16 y muy alto 17 a 25.</p>` : ''}
+    <h3>Cálculo (planilla oficial de la OPS, STAR-H v1.25)</h3>
+    <p>Gravedad = ${String(e.pesos[0]).replace('.', ',')} × B1 + ${String(e.pesos[1]).replace('.', ',')} × B2 + ${String(e.pesos[2]).replace('.', ',')} × B3. Vulnerabilidad: alta 5, media 3, baja 1. Capacidad de afrontamiento: alta 1, media 3, baja 5. Impacto = (gravedad + vulnerabilidad + capacidad) ÷ 3, sin redondear. Riesgo = probabilidad × impacto (de 1 a 25, con decimales).</p>
+    <p>Niveles, como en la planilla oficial: muy bajo hasta 4; bajo, más de 4 hasta 7; moderado, más de 7 hasta 12; alto, más de 12 hasta 17; muy alto, más de 17. El valor justo en el límite queda en el nivel de abajo (un riesgo de 17 es alto). El manual de la OPS escribe los rangos como 1-3, 4-6, 7-11, 12-16 y 17-25.</p>
+    <p class="sub">En la matriz del informe, el impacto se redondea al entero más cercano solo para ubicar cada amenaza en su celda.</p>` : ''}
+    <h3>Catálogo de amenazas</h3>
+    <p>Son las 80 amenazas de la planilla oficial de la OPS (códigos G1 a A7), con su origen (externa, interna o las dos) y la <b>recomendación general de la OPS</b>, que aparece en cada amenaza y en el informe. El escenario en el VIRCH, a qué establecimientos aplica y dónde buscar antecedentes son <b>orientación propia de HySL</b>, tomada del catálogo anterior. El filtro «El Niño» muestra ${S.ELNINO.map(x => x[0] + ' ' + x[1].toLowerCase()).join(', ')}.</p>
+    <h3>Fuente</h3>
+    <p class="sub">MEJORA / buena práctica · Organización Panamericana de la Salud. STAR-H: Evaluación estratégica del riesgo de emergencias y desastres en establecimientos de salud. Washington, D.C.: OPS; 2022. https://doi.org/10.37774/9789275325582 · Planilla oficial STAR-H v1.25 (OPS). Esta es una adaptación de una obra original de la OPS; las opiniones expresadas en esta adaptación son responsabilidad exclusiva de sus autores y no representan necesariamente los criterios de la OPS.</p>
     <h3>Dónde quedan los datos</h3>
     <p>Todo se guarda en la planilla STAR-H de cada red, que sigue siendo el respaldo: si la app no está disponible, se puede cargar directo ahí. También existe el formulario de campo en papel.</p>
     <p class="sub">Este relevamiento complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento: las medidas correctivas las propone el servicio de cada lugar.</p>
