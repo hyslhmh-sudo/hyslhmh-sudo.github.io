@@ -29,6 +29,19 @@ li:last-child{border-bottom:0}
 li a{color:var(--fuerte);font-weight:700;font-size:13px;word-break:break-word}
 li small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
 .pie{font-size:12px;color:var(--tenue)}
+/* 05/11/2026 · Bibliografía: carpeta y subida (solo Administración) */
+.adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.adm b{flex:1;min-width:200px;font-size:14px}.adm b small{display:block;font-weight:500;color:var(--suave);font-size:12px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid transparent;border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:none;min-height:42px}
+.chip-a{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;font-weight:700;color:#172B4D;background:#E4EAFB;border-radius:999px;padding:3px 9px;text-decoration:none}
+dialog{border:0;border-radius:16px;padding:0;max-width:560px;width:calc(100% - 24px);box-shadow:0 20px 60px rgba(23,43,77,.3)}dialog::backdrop{background:rgba(23,43,77,.45)}
+.dlg-cab{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--linea)}.dlg-cab b{flex:1}
+.dlg-c{padding:6px 16px 4px}.dlg-p{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--linea)}
+.campo{display:block;margin:10px 0}.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:4px}
+.campo input,.campo textarea,.campo select{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:9px 11px;font:inherit;font-size:14px}.campo textarea{min-height:70px}
+.cerrar{background:none;border:0;cursor:pointer;color:var(--fuerte)}
+.msg-s{font-size:13px;color:var(--suave);margin:4px 0 8px}
+@media print{.adm{display:none}}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
 @media print{.barra .icono{display:none}}
 /* Paleta del sitio (alerta de triaje): #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Coral solo para errores y alta prioridad. */
@@ -52,6 +65,7 @@ li a{color:#172B4D;text-decoration:underline;text-decoration-color:#2F5BEA}
   <a class="icono" href="#" onclick="window.print();return false"><span class="ms">print</span></a>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
+<dialog id="dlg"></dialog>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -78,16 +92,72 @@ const BASE = [
 ].map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
 const ORDEN = ['STAR-H', 'ISH', 'PHR', 'COE', 'Evacuación', 'General', 'Normativa'];
 const ICO = { 'STAR-H': 'crisis_alert', ISH: 'local_hospital', PHR: 'fact_check', COE: 'groups', 'Evacuación': 'directions_run', General: 'public', Normativa: 'gavel' };
+// 05/11/2026 · Carpeta de bibliografía (Drive › 07 · REFERENCIAS, privada) y subida: solo Administración.
+const CARPETA = 'https://drive.google.com/drive/folders/1pkRXc2M_pIdv0kFY8CA8DoIkf_Ilcb3N';
+const MAX_MB = 20;
+const esAdm = () => { const u = S.sesion.token() ? (S.sesion.usuario() || {}) : {}; return u.rol === 'Administración'; };
+let actual = [];
+function barraAdm() {
+  if (!esAdm()) return '';
+  return `<div class="adm"><b>Bibliografía en Drive<small>Carpeta 07 · REFERENCIAS. Es privada: solo la abrís vos. Lo que subas queda ahí y en esta lista.</small></b>
+    <a class="btn sec" href="${CARPETA}" target="_blank" rel="noopener"><span class="ms">folder_open</span>Abrir la carpeta</a>
+    <button class="btn" type="button" id="bSubir"><span class="ms">upload_file</span>Subir a la bibliografía</button></div>`;
+}
+function dlgSubir() {
+  const mods = ORDEN.concat(actual.map(f => f.modulo)).filter((x, i, a) => x && a.indexOf(x) === i);
+  const d = document.getElementById('dlg');
+  d.innerHTML = `<div class="dlg-cab"><b>Subir a la bibliografía</b><button class="cerrar" data-c aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <form class="dlg-c" id="fSub">
+      <label class="campo"><span>Archivo (PDF, Word, Excel, imagen · hasta ${MAX_MB} MB) · optativo</span><input type="file" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,image/*"></label>
+      <label class="campo"><span>Cita *</span><textarea name="cita" placeholder="Autor. Título. Ciudad: Editorial o institución; año."></textarea></label>
+      <label class="campo"><span>Módulo o tema</span><input name="modulo" list="dlMod" value="General"><datalist id="dlMod">${mods.map(m => `<option value="${E(m)}">`).join('')}</datalist></label>
+      <label class="campo"><span>Enlace público (si existe en internet) · optativo</span><input name="enlace" type="url" placeholder="https://…"></label>
+      <label class="campo"><span>Nota (para qué sirve, qué parte usar) · optativo</span><textarea name="nota"></textarea></label>
+      <p class="msg-s">El archivo queda en la carpeta privada 07 · REFERENCIAS. Los demás usuarios ven la cita y el enlace público solo en los módulos PHR, General, Normativa y Evacuación; el archivo de Drive lo ves solo vos.</p>
+      <p class="msg-s" id="estSub"></p>
+    </form>
+    <div class="dlg-p"><button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" id="bGuardarSub"><span class="ms">save</span>Guardar</button></div>`;
+  d.showModal();
+  const f = document.getElementById('fSub');
+  f.archivo.addEventListener('change', () => { const a = f.archivo.files[0]; if (a && !f.cita.value.trim()) f.cita.value = a.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ') + ' (s/d (revisar): completar autor, título, año)'; });
+  document.getElementById('bGuardarSub').addEventListener('click', guardarSub);
+}
+const base64 = a => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(a); });
+async function guardarSub() {
+  const f = document.getElementById('fSub'), b = document.getElementById('bGuardarSub'), est = document.getElementById('estSub');
+  const a = f.archivo.files[0];
+  if (!f.cita.value.trim()) { est.textContent = 'Falta la cita.'; return; }
+  if (a && a.size > MAX_MB * 1048576) { est.textContent = 'El archivo supera ' + MAX_MB + ' MB.'; return; }
+  if (!navigator.onLine) { est.textContent = 'Para subir se necesita conexión.'; return; }
+  b.disabled = true; est.textContent = a ? 'Subiendo ' + a.name + '… (puede tardar un poco)' : 'Guardando…';
+  try {
+    const datos = { cita: f.cita.value, modulo: f.modulo.value, enlace: f.enlace.value, nota: f.nota.value };
+    if (a) datos.archivo = { nombre: a.name, tipo: a.type || '', datos: await base64(a) };
+    const r = await S.api('fuente_subir', datos, 180000);
+    if (!r.ok) throw r;
+    document.getElementById('dlg').close(); actualizar('Guardado en la bibliografía.');
+  } catch (e) {
+    const m = (e && (e.error || e.message)) || 'No se pudo guardar.';
+    est.textContent = /acci[oó]n desconocida/i.test(m) ? 'Falta publicar la versión nueva del Apps Script de la app (Implementar › Administrar implementaciones › Editar › Nueva versión).' : m;
+    b.disabled = false;
+  }
+}
+document.addEventListener('click', ev => { if (ev.target.closest('#bSubir')) dlgSubir(); if (ev.target.closest('[data-c]')) document.getElementById('dlg').close(); });
+function actualizar(nota) {
+  if (S.DEMO || !navigator.onLine) return;
+  S.api('fuentes').then(r => { if (r && r.ok && r.fuentes.length) { S.store.set('fuentes', r.fuentes); pintar(r.fuentes, nota || 'Actualizado.'); } }).catch(() => {});
+}
 function pintar(lista, nota) {
+  actual = lista;
   const g = {}; lista.forEach(f => (g[f.modulo || 'General'] = g[f.modulo || 'General'] || []).push(f));
   const claves = Object.keys(g).sort((a, b) => (ORDEN.indexOf(a) + 99) % 99 - (ORDEN.indexOf(b) + 99) % 99);
-  app.innerHTML = claves.map(k => `<section class="grupo"><h2><span class="ms">${ICO[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${E(f.cita)}
-    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
+  app.innerHTML = barraAdm() + claves.map(k => `<section class="grupo"><h2><span class="ms">${ICO[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${E(f.cita)}
+    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivo && esAdm() ? `<br><a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }
 const guardadas = S.store.get('fuentes', null);
 pintar(guardadas || BASE, guardadas ? 'Últimos datos guardados.' : 'Lista base.');
-if (!S.DEMO && navigator.onLine) S.api('fuentes').then(r => { if (r && r.ok && r.fuentes.length) { S.store.set('fuentes', r.fuentes); pintar(r.fuentes, 'Actualizado.'); } }).catch(() => {});
+actualizar();
 })();
 </script>
 </body>
