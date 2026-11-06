@@ -153,7 +153,7 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 <dialog id="dlgDatos" aria-label="Mis datos">
   <div class="pf-cab"><span class="ms">badge</span><span><b>Mis datos</b><small id="mdSub">Completá tu ficha para seguir</small></span></div>
   <form class="pf-cuerpo" id="fDatos" novalidate></form>
-  <div class="md-pie"><span class="est" id="mdEst"></span><button type="button" class="sec oculto" id="mdCerrar">Cerrar</button><button type="button" class="pri" id="mdGuardar">Guardar</button></div>
+  <div class="md-pie"><span class="est" id="mdEst"></span><button type="button" class="sec" id="mdSalir" title="Cerrar sesión sin guardar">Salir</button><button type="button" class="sec oculto" id="mdCerrar">Cerrar</button><button type="button" class="pri" id="mdGuardar">Guardar</button></div>
 </dialog>
 <main>
   <form class="tarjeta ingreso oculto" id="fIng">
@@ -215,12 +215,17 @@ $('#quien').addEventListener('click', clicQuien);
 $('#quien').addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); clicQuien(); } });
 /* ---------- 05/11/2026 · Mis datos (ficha obligatoria, menos Administración) ---------- */
 const kOk = u => 'datosOk.' + sinTilde(u && u.nombre);
-let MD = null, MD_OBLIG = false;
+let MD = null, MD_OBLIG = false, MD_TK = null;
+// 06/11/2026 · Cierra la ficha y la borra de la pantalla (al salir o si cambió el usuario).
+function cerrarDatos() { MD = null; MD_OBLIG = false; MD_TK = null; $('#fDatos').innerHTML = ''; $('#mdEst').textContent = ''; const dl = $('#dlgDatos'); if (dl.open) dl.close(); }
 async function revisarDatos(abrirSiempre) {
   const u = S.sesion.token() ? S.sesion.usuario() : null;
   if (!u || u.rol === 'Administración' || S.DEMO) return;
   if (!abrirSiempre && S.store.get(kOk(u), false)) return;
-  let r; try { r = await S.api('mis_datos'); } catch (e) { if (abrirSiempre) alert('Para ver tus datos se necesita conexión.'); return; }
+  const tk = S.sesion.token();
+  let r; try { r = await S.api('mis_datos'); } catch (e) { if (abrirSiempre && S.sesion.token() === tk) alert('Para ver tus datos se necesita conexión.'); return; }
+  // 06/11/2026 · Si mientras tanto se cerró la sesión o entró otra persona, la respuesta se descarta.
+  if (S.sesion.token() !== tk) return;
   if (!r || !r.ok) { if (abrirSiempre) alert((r && r.error) || 'No se pudieron traer tus datos.'); return; }
   S.store.set(kOk(u), !!r.completo);
   S.store.set('datosPend.' + sinTilde(u.nombre), !r.completo);
@@ -228,7 +233,7 @@ async function revisarDatos(abrirSiempre) {
   abrirDatos(r, !r.completo);
 }
 function abrirDatos(r, obligatorio) {
-  MD = r; MD_OBLIG = obligatorio;
+  MD = r; MD_OBLIG = obligatorio; MD_TK = S.sesion.token();
   const p = r.persona || {}, v = k => E(/^s\/d/i.test(p[k] || '') ? '' : (p[k] || ''));
   const no = k => /^no tiene$/i.test(p[k] || '');
   const campo = (k, et, oblig, extra) => `<label class="md-c"><span>${et}${oblig ? ' <i>*</i>' : ''}</span><input name="${k}" value="${no(k) ? '' : v(k)}" ${no(k) ? 'disabled' : ''} ${extra || ''}>${(r.noTiene || []).indexOf(k) >= 0 ? `<label class="md-no"><input type="checkbox" data-no="${k}" ${no(k) ? 'checked' : ''}> No tengo</label>` : ''}</label>`;
@@ -267,6 +272,7 @@ $('#dlgDatos').addEventListener('cancel', ev => { if (MD_OBLIG) ev.preventDefaul
 $('#mdCerrar').addEventListener('click', () => $('#dlgDatos').close());
 $('#mdGuardar').addEventListener('click', async () => {
   const f = $('#fDatos'), est = $('#mdEst'), b = $('#mdGuardar'), d = {};
+  if (!MD || MD_TK !== S.sesion.token()) { cerrarDatos(); return; }
   ['dni', 'tel', 'mail', 'telEm', 'titulo', 'tipo', 'institucion', 'servicio', 'cargo', 'tel2', 'mailInst', 'rol', 'reemplazo'].forEach(k => { const i = f.querySelector(`[name="${k}"]`); d[k] = i ? i.value.trim() : ''; });
   f.querySelectorAll('[data-no]').forEach(c => { d[c.dataset.no + '_no'] = c.checked; });
   const ETQ = { dni: 'DNI', tel: 'teléfono particular', mail: 'correo personal', telEm: 'teléfono de emergencia', tipo: 'interna o externa', institucion: 'institución', servicio: 'servicio o área', cargo: 'función o cargo', tel2: 'teléfono de la institución', mailInst: 'correo institucional' };
@@ -288,6 +294,7 @@ function pintar() {
   q.classList.toggle('perfil', yo); q.classList.toggle('misd', otro);
   if (yo || otro) { q.setAttribute('role', 'button'); q.tabIndex = 0; q.title = yo ? 'Mi perfil: mis documentos' : 'Mis datos: actualizar mi ficha'; } else { q.removeAttribute('role'); q.removeAttribute('tabindex'); q.removeAttribute('title'); }
   if (u) q.innerHTML = (yo ? '<span class="ms">account_circle</span>' : otro ? '<span class="ms">badge</span>' : '') + E((u.nombre || '') + (u.rol ? ' · ' + u.rol : ''));
+  if (MD_TK && MD_TK !== S.sesion.token()) cerrarDatos();
   if (otro) revisarDatos(false);
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
@@ -319,7 +326,8 @@ $('#fIng').addEventListener('submit', async ev => {
 });
 $('#rejilla').addEventListener('click', ev => { if (ev.target.closest('a')) return; const t = ev.target.closest('[data-href]'); if (t) location.href = t.dataset.href; });
 $('#rejilla').addEventListener('keydown', ev => { const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); location.href = t.dataset.href; } });
-$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); pintar(); });
+$('#btnSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
+$('#mdSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 pintar();
 })();
