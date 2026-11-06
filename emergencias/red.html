@@ -73,6 +73,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-widt
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
   <h1>COE · Reuniones, acuerdos y documentos<small id="sub">COE de Trelew y Área Programática · versión 0</small></h1>
   <button class="icono" id="bComentar" hidden title="Comentar STAR-H o PHR"><span class="ms">rate_review</span><span>Comentar</span></button>
+  <button class="icono" id="bAyuda" aria-label="Ayuda"><span class="ms">help</span></button>
   <button class="icono" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span></button>
 </header>
 <nav class="pest" id="pest" role="tablist"></nav>
@@ -131,11 +132,13 @@ function vReuniones() {
     return `<div class="tarj"><h3>${E(r.Fecha)} · ${E(nomOrg(r['Órgano']))} ${parteChip(r.Parte)}<span class="chip">${E(r['N.º'] ? 'N.º ' + r['N.º'] : r.ID)}</span></h3>
       <div class="meta">${E([r.Tipo, r.Horario, r['Lugar o modalidad'], r['Convocó · coordinó'] ? 'Coordinó: ' + r['Convocó · coordinó'] : '', r['Redactó'] ? 'Redactó: ' + r['Redactó'] : ''].filter(x => x && !/^s\/d/.test(x)).join(' · '))}</div>
       ${r['Orden del día'] ? `<p style="margin:6px 0;font-size:14px">${E(r['Orden del día'])}</p>` : ''}
+      ${r['Temas tratados'] ? `<details><summary>Temas tratados</summary><p style="white-space:pre-line;font-size:13.5px;margin:6px 0">${E(r['Temas tratados'])}</p></details>` : ''}
+      ${r['Próxima reunión'] ? `<p class="meta" style="margin:4px 0">Próxima reunión: ${E(r['Próxima reunión'])}</p>` : ''}
       <div class="herr" style="margin:6px 0 0">
         ${r['Acta (Doc)'] ? `<a class="btn sec chico" href="${E(r['Acta (Doc)'])}" target="_blank" rel="noopener"><span class="ms">article</span>Acta</a>` : '<span class="chip val">Acta: s/d</span>'}
         ${r['Asistencia firmada (escaneo)'] ? `<a class="btn sec chico" href="${E(r['Asistencia firmada (escaneo)'])}" target="_blank" rel="noopener"><span class="ms">draw</span>Asistencia firmada</a>` : '<span class="chip val">Asistencia firmada: pendiente</span>'}
         <button class="btn sec chico" data-a="imprimir" data-id="${E(r.ID)}"><span class="ms">print</span>Planilla de asistencia</button>
-        ${adm() ? `<button class="btn sec chico" data-a="reuEditar" data-id="${E(r.ID)}"><span class="ms">edit</span>Editar</button>` : ''}
+        ${adm() ? `<button class="btn sec chico" data-a="reuEditar" data-id="${E(r.ID)}"><span class="ms">edit</span>Editar</button><button class="btn sec chico" data-a="acta" data-id="${E(r.ID)}"><span class="ms">description</span>${r['Acta (Doc)'] ? 'Volver a generar el acta' : 'Generar el acta (Doc)'}</button>` : ''}
       </div>
       <details><summary>Asistentes (${as.length})</summary><ul class="lst">${as.map(a => `<li>${E(a.Persona)}${a['Institución / función'] ? ' · ' + E(a['Institución / función']) : ''}${a.Presente === 'No' ? ' <span class="chip val">ausente</span>' : ''}</li>`).join('') || '<li class="vacio">Sin datos.</li>'}</ul></details>
       <details><summary>Acuerdos y tareas (${ac.length})</summary><ul class="lst">${ac.map(a => `<li><b>${E(a.ID)}</b> · ${E(a.Tipo)} · ${E(a.Texto)}${a.Responsable ? ` <span class="meta">· Responsable: ${E(a.Responsable)}</span>` : ''}${a.Plazo ? ` <span class="meta">· Plazo: ${E(a.Plazo)}</span>` : ''} <span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></li>`).join('') || '<li class="vacio">Sin acuerdos.</li>'}</ul></details>
@@ -234,6 +237,8 @@ function dlgReunion(id) {
      <div class="dos">${campo('lugar', 'Lugar o modalidad', r && r['Lugar o modalidad'])}${campo('coordino', 'Convocó · coordinó', r && r['Convocó · coordinó'])}</div>
      <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', r ? r.Estado : 'Realizada', ['Convocada', 'Realizada', 'Suspendida'])}</div>
      ${campo('orden', 'Orden del día', r && r['Orden del día'], 'area')}
+     ${campo('temas', 'Temas tratados (separá los párrafos con una línea en blanco)', r && r['Temas tratados'], 'area')}
+     ${campo('proxima', 'Próxima reunión', r && r['Próxima reunión'])}
      <p class="meta" style="margin:12px 0 2px"><b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)</p>
      <div id="asisL" class="asis"></div>
      ${campo('extras', 'Otros asistentes (uno por línea: Apellido y nombre · institución o función)', asis.filter(a => !a['ID persona']).map(a => a.Persona + (a['Institución / función'] ? ' · ' + a['Institución / función'] : '')).join('\n'), 'area')}
@@ -266,7 +271,7 @@ function leerReunion(f) {
     .concat(f.extras.value.split('\n').map(x => x.trim()).filter(Boolean).map(x => { const p = x.split(/\s+·\s+|\s+-\s+/); return { persona: '', nombre: p[0], funcion: p.slice(1).join(' · '), presente: true }; }));
   const acuerdos = [...document.querySelectorAll('.acu-fila')].map(d => ({ id: d.dataset.id, tipo: d.querySelector('[name=aTipo]').value, texto: d.querySelector('[name=aTexto]').value.trim(), resp: d.querySelector('[name=aResp]').value, plazo: d.querySelector('[name=aPlazo]').value, estado: d.querySelector('[name=aEst]').value })).filter(a => a.texto);
   return { organo: f.organo.value, parte: f.parte.value, fecha: f.fecha.value.trim(), horario: f.horario.value, num: f.num.value, tipo: f.tipo.value, lugar: f.lugar.value, coordino: f.coordino.value,
-    redacto: f.redacto.value, estado: f.estado.value, orden: f.orden.value, acta: f.acta.value, escaneo: f.escaneo.value, obs: f.obs.value, asistencia: asistencia, acuerdos: acuerdos };
+    redacto: f.redacto.value, estado: f.estado.value, orden: f.orden.value, temas: f.temas.value, proxima: f.proxima.value, acta: f.acta.value, escaneo: f.escaneo.value, obs: f.obs.value, asistencia: asistencia, acuerdos: acuerdos };
 }
 
 /* Planilla de asistencia para imprimir y firmar (con los marcados y renglones en blanco). */
@@ -319,6 +324,37 @@ async function enviar(btn, accion, datos, ok) {
   catch (e) { est.textContent = errTxt(e); btn.disabled = false; }
 }
 
+/* ---------- acta como Google Doc (Administración) ---------- */
+async function generarActa(btn, id) {
+  const r = (D.reuniones || []).filter(x => x.ID === id)[0] || {};
+  if (r['Acta (Doc)'] && !confirm('Esta reunión ya tiene acta. Si la generó la app, la anterior va a la papelera y queda la nueva. Lo que hayas corregido a mano en ese Doc se pierde (las correcciones se hacen en la app). ¿Generar de nuevo?')) return;
+  btn.disabled = true; const txt = btn.innerHTML; btn.innerHTML = '<span class="ms">hourglass_top</span>Generando…';
+  try { const x = await S.api('red_acta_generar', { id: id }, 180000); if (!x.ok) throw x; toast('Acta generada (versión 0).'); window.open(x.url, '_blank', 'noopener'); cargar(); }
+  catch (e) { toast(errTxt(e)); btn.disabled = false; btn.innerHTML = txt; }
+}
+
+/* ---------- Ayuda ---------- */
+function dlgAyuda() {
+  const A = adm();
+  const usu = `<p><b>Para qué sirve.</b> Reúne lo del COE de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos y enlaces útiles. Es una base orientadora: no es un registro en tiempo real.</p>
+    <p><b>Qué ves.</b> Solo lo que corresponde a tu participación. Si integrás la parte interna (hospitales y Área Programática), ves también lo del COE interno. Si sos integrante externo, ves lo del COE completo.</p>
+    <p><b>Reuniones.</b> Cada tarjeta muestra los datos, el orden del día, los asistentes y los acuerdos. «Planilla de asistencia» imprime la planilla para firmar. «Acta» y «Asistencia firmada» abren los documentos cuando están cargados.</p>
+    <p><b>Acuerdos y tareas.</b> Todos los acuerdos de las reuniones que ves, con responsable, plazo y estado. Podés filtrar por estado o buscar por texto.</p>
+    <p><b>Documentos.</b> Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
+    <p><b>Establecimientos.</b> Registro único de la red. Los datos que faltan figuran como «s/d (revisar)».</p>
+    <p><b>Comentar.</b> Si tu acceso lo permite, el botón «Comentar» de arriba deja una observación sobre STAR-H o PHR sin modificar lo cargado.</p>
+    <p><b>Sin conexión.</b> Se muestran los últimos datos guardados en el dispositivo. «Actualizar» (flecha circular) los pide de nuevo.</p>
+    <p class="meta">Consultas: Servicio de Higiene y Seguridad Laboral, por los canales habituales del COE.</p>`;
+  const adminTxt = `<hr style="border:0;border-top:1px solid var(--linea);margin:12px 0"><p><b>Administración</b></p>
+    <p><b>Dónde están los datos.</b> En el libro de la app: hojas ORGANOS, INTEGRANTES, PERMISOS, LUGARES, ENLACES, DOCUMENTOS, REUNIONES, ASISTENCIA, ACUERDOS y COMENTARIOS. Todo se puede editar también desde Sheets (respetar los encabezados de la fila 1).</p>
+    <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COE completo o COE interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
+    <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COE, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
+    <p><b>Documentos.</b> «Agregar»: clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos.</p>
+    <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos.</p>
+    <p><b>Comentarios.</b> Llegan a la hoja COMENTARIOS con fecha, persona y módulo.</p>`;
+  abrir('Ayuda', usu + (A ? adminTxt : ''), '<button class="btn" type="button" data-c>Entendido</button>');
+}
+
 /* ---------- eventos ---------- */
 document.addEventListener('click', ev => {
   const t = ev.target.closest('[data-p],[data-a],[data-c]'); if (!t) return;
@@ -335,6 +371,7 @@ document.addEventListener('click', ev => {
   }
   else if (a === 'imprimirDlg') { const r = leerReunion($('#fD')); imprimirPlanilla(r, r.asistencia); }
   else if (a === 'reuGuardar') { const r = leerReunion($('#fD')); r.id = id; if (!r.fecha) { $('#estD').textContent = 'Falta la fecha.'; return; } enviar(t, 'red_reunion_guardar', { reunion: r }, 'Reunión guardada.'); }
+  else if (a === 'acta') generarActa(t, id);
   else if (a === 'docNuevo') dlgFila('doc', ''); else if (a === 'docEditar') dlgFila('doc', id);
   else if (a === 'lugEditar') dlgFila('lug', id);
   else if (a === 'enlNuevo') dlgFila('enl', ''); else if (a === 'enlEditar') dlgFila('enl', id);
@@ -351,6 +388,7 @@ document.addEventListener('change', ev => { const k = ev.target.dataset && ev.ta
 document.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.f; if (k && ev.target.tagName === 'INPUT') { filtro[k] = ev.target.value; clearTimeout(ev.target._t); const pos = ev.target.selectionStart; ev.target._t = setTimeout(() => { pintar(); const n = document.querySelector(`[data-f="${k}"]`); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 300); } });
 $('#bAct').addEventListener('click', () => cargar('Actualizado.'));
 $('#bComentar').addEventListener('click', dlgComentar);
+$('#bAyuda').addEventListener('click', dlgAyuda);
 if (D) pintar('Últimos datos guardados. Actualizando…');
 cargar();
 })();
