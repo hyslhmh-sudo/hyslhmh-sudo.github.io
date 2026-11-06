@@ -245,7 +245,7 @@ function hojaPHR(r, e, cargado) {
   const tw = esTW(r), rw = !tw;
   let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('phr', r)} · VERSIÓN 0</p>
     <h2 class="tit">Relevamiento inicial del plan hospitalario de respuesta (PHR)</h2>
-    <p class="subt">${esc(r.nombre)} · Comité de crisis El Niño 2026-2027</p>`;
+    <p class="subt">${esc(r.extra ? r.nombre.replace(' · otros establecimientos (en blanco)', '') : r.nombre + ' · Comité de crisis El Niño 2026-2027')}</p>`;
   h += datosEst(e, cargado, [
     ['Establecimiento', e ? esc(e.nombre) : ''], ['Código en la planilla', e ? esc(e.codigo) : ''],
     ['Tipo', e ? esc(e.tipo) : (tw ? 'Hospital ☐   Sede ex ADOS ☐   CAPS ☐   Salud Mental ☐' : 'Hospital ☐   CAPS ☐')],
@@ -341,7 +341,7 @@ function hojaSTARH(r, e, cargado) {
   const tw = esTW(r), rw = !tw;
   let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('starh', r)} · VERSIÓN 0</p>
     <h2 class="tit">Relevamiento estratégico de riesgos STAR-H</h2>
-    <p class="subt">${esc(r.nombre)} · Comité de crisis El Niño 2026-2027</p>`;
+    <p class="subt">${esc(r.extra ? r.nombre.replace(' · otros establecimientos (en blanco)', '') : r.nombre + ' · Comité de crisis El Niño 2026-2027')}</p>`;
   h += datosEst(e, cargado, [
     ['Establecimiento', e ? esc(e.nombre) : ''], ['Código en la planilla', e ? esc(e.codigo) : ''],
     ['Tipo', e ? esc(e.tipo) : ''], ['Fecha y hora de la reunión', v(e && e.fechaReunion, cargado)],
