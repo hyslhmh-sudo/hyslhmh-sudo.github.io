@@ -92,7 +92,8 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-widt
 const S = window.STARH, E = S.esc, $ = s => document.querySelector(s), app = $('#app');
 const PEST = [
   ['reu', 'Reuniones', 'event_note'], ['acu', 'Acuerdos y tareas', 'task_alt'], ['doc', 'Documentos', 'description'],
-  ['org', 'Órganos e integrantes', 'groups'], ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link']
+  ['org', 'Órganos e integrantes', 'groups'], ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link'],
+  ['acc', 'Accesos', 'key'] // solo Administración
 ];
 let D = S.store.get('red.cat', null), pest = (location.hash || '#reu').slice(1), filtro = {};
 const adm = () => !!(D && D.admin);
@@ -110,15 +111,16 @@ async function cargar(nota) {
 }
 
 function pintarPest() {
-  const n = { reu: (D.reuniones || []).length, acu: (D.acuerdos || []).length, doc: (D.documentos || []).length, org: (D.organos || []).length, lug: (D.lugares || []).length, enl: (D.enlaces || []).length };
-  $('#pest').innerHTML = PEST.map(p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`).join('');
+  const n = { acc: ((D.accesos || {}).permisos || []).length, reu: (D.reuniones || []).length, acu: (D.acuerdos || []).length, doc: (D.documentos || []).length, org: (D.organos || []).length, lug: (D.lugares || []).length, enl: (D.enlaces || []).length };
+  $('#pest').innerHTML = PEST.filter(p => p[0] !== 'acc' || adm()).map(p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`).join('');
   $('#bComentar').hidden = !D.puedeComentar;
 }
 function pintar(nota) {
   if (!D) return;
   pintarPest();
   const aviso = nota ? `<div class="aviso">${E(nota)}</div>` : '';
-  const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces }[pest] || vReuniones;
+  if (pest === 'acc' && !adm()) pest = 'reu';
+  const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces, acc: vAccesos }[pest] || vReuniones;
   app.innerHTML = aviso + f();
 }
 
@@ -185,9 +187,10 @@ function vOrganos() {
   (D.organos || []).map(o => {
     const I = (D.integrantes || []).filter(i => i.organo === o.ID);
     const g = p => I.filter(i => p.test(i.parte));
-    const lista = arr => arr.map(i => `<li>${E(i.nombre)}${i.funcion ? ' · <span class="meta">' + E(i.funcion) + '</span>' : ''}</li>`).join('');
+    const lista = arr => arr.map(i => `<li>${E(i.nombre)}${i.funcion ? ' · <span class="meta">' + E(i.funcion) + '</span>' : ''}${adm() ? ` <button class="btn sec chico" data-a="intEditar" data-id="${E(i.id)}"><span class="ms">edit</span></button>` : ''}</li>`).join('');
     return `<div class="tarj"><h3>${E(o.Nombre)} <span class="chip">${E(o.Estado || '')}</span></h3>
       <div class="meta">${E([o.Tipo, o['Establecimiento o alcance'], o['Activación vigente'] ? 'Activación: ' + o['Activación vigente'] + (o['Activa desde'] ? ' (desde ' + o['Activa desde'] + ')' : '') : ''].filter(Boolean).join(' · '))}</div>
+      ${adm() ? `<div class="herr" style="margin:6px 0 0"><button class="btn sec chico" data-a="intNuevo" data-id="${E(o.ID)}"><span class="ms">person_add</span>Sumar integrante</button></div>` : ''}
       ${I.length ? `<details ${I.length < 40 ? '' : ''}><summary>Integrantes (${I.length}: ${g(/^intern/i).length} internos, ${g(/^extern/i).length} externos)</summary>
         <p class="meta" style="margin:8px 0 0"><b>Parte interna (COE interno)</b></p><ul class="lst">${lista(g(/^intern/i)) || '<li class="vacio">—</li>'}</ul>
         <p class="meta" style="margin:8px 0 0"><b>Parte externa</b></p><ul class="lst">${lista(g(/^extern/i)) || '<li class="vacio">—</li>'}</ul></details>` : '<p class="vacio">Sin integrantes cargados.</p>'}
@@ -324,6 +327,45 @@ async function enviar(btn, accion, datos, ok) {
   catch (e) { est.textContent = errTxt(e); btn.disabled = false; }
 }
 
+/* ---------- Accesos (Administración): persona × herramienta, órganos y cuenta ---------- */
+const NIV_OP = ['', 'Ver', 'Comentar', 'Cargar', 'Aprobar'];
+const MOD_CORTO = { 'STAR-H': 'STAR-H', PHR: 'PHR', ISH: 'ISH', 'Derivaciones y albergues': 'Derivaciones', 'Pacientes con necesidades especiales': 'Pacientes' };
+function esExterna(pid) {
+  const p = (D.personas || []).filter(x => x.id === pid)[0];
+  return !!(p && /^extern/i.test(p.tipo)) || (D.integrantes || []).some(i => i.persona === pid && /^extern/i.test(i.parte));
+}
+function vAccesos() {
+  const A = D.accesos || { modulos: [], permisos: [], cuentas: [] }, q = (filtro.accQ || '').toLowerCase();
+  const niv = (pid, m) => (A.permisos.filter(x => x.persona === pid && x.modulo === m)[0] || {}).nivel || '';
+  const cuenta = pid => A.cuentas.filter(c => c.persona === pid)[0];
+  const P = (D.personas || []).filter(p => !q || (p.nombre + ' ' + p.institucion).toLowerCase().indexOf(q) >= 0);
+  return `<div class="aviso">Cada cambio se guarda al elegirlo. Las herramientas (STAR-H, PHR, ISH) se habilitan acá, no por integrar un órgano. «Pacientes» es lista cerrada: nunca para integrantes externos. La cuenta (usuario y clave) se crea en la planilla CONFIDENCIAL y se une a la persona por la columna N de ACCESOS STAR-H.</div>
+    <div class="herr"><input data-f="accQ" placeholder="Buscar persona o institución" value="${E(filtro.accQ || '')}"><span class="esp"></span><span class="meta">${P.length} personas</span></div>
+    <div class="tabla"><table><thead><tr><th>Persona</th><th>Órganos</th><th>Cuenta</th>${A.modulos.map(m => `<th>${E(MOD_CORTO[m] || m)}</th>`).join('')}<th></th></tr></thead><tbody>
+    ${P.map(p => { const c = cuenta(p.id), ext = esExterna(p.id), org = (D.integrantes || []).filter(i => i.persona === p.id);
+      return `<tr><td><b>${E(p.nombre)}</b><br><span class="meta">${E(p.id)} · ${E(p.tipo || '')}${p.institucion ? ' · ' + E(p.institucion) : ''}</span></td>
+      <td>${org.map(i => `<span class="chip ${/^intern/i.test(i.parte) ? 'int' : ''}">${E(i.organo)}</span>`).join(' ') || '<span class="meta">—</span>'}</td>
+      <td>${c ? `<span class="chip ${c.estado === 'Activo' ? 'ok' : 'val'}">${E(c.rol)} · ${E(c.estado)}</span>` : '<span class="chip val">sin cuenta</span>'}</td>
+      ${A.modulos.map(m => { const v = niv(p.id, m), bloq = /^pacientes/i.test(m) && ext;
+        return `<td><select data-perm="${E(p.id)}" data-mod="${E(m)}" ${bloq ? 'disabled title="Externo: sin acceso a pacientes"' : ''} style="min-height:32px;font-size:12.5px">${NIV_OP.map(n => `<option value="${n}" ${n === v ? 'selected' : ''}>${n || '—'}</option>`).join('')}</select></td>`; }).join('')}
+      <td><button class="btn sec chico" data-a="intNuevoP" data-id="${E(p.id)}" title="Sumar a un órgano"><span class="ms">person_add</span></button></td></tr>`; }).join('')}
+    </tbody></table></div>`;
+}
+function dlgIntegrante(org, iid, pid) {
+  const i = iid ? (D.integrantes || []).filter(x => x.id === iid)[0] || {} : {};
+  const P = D.personas || [];
+  abrir(iid ? 'Editar integrante' : 'Sumar integrante',
+    (iid ? `<p><b>${E(i.nombre)}</b> · ${E(nomOrg(i.organo))}</p>` :
+      selC('persona', 'Persona (ficha del COE)', pid || '', [['', 'Elegí…']].concat(P.map(p => [p.id, p.nombre + ' · ' + (p.tipo || '')]))) +
+      selC('organo', 'Órgano', org || 'COE-APTW', (D.organos || []).map(o => [o.ID, o.Nombre]))) +
+    selC('parte', 'Parte', i.parte || '', [['', 'Según el tipo de actor de la ficha'], ['Interna', 'Interna (hospitales y Área Programática)'], ['Externa', 'Externa']]) +
+    campo('funcion', 'Función', i.funcion || 'Integrante') +
+    (iid ? campo('hasta', 'Hasta (dd/mm/aaaa) · deja de integrar el órgano, sin borrar la historia', '') : '') +
+    '<p class="meta">Integrar un órgano da acceso a sus reuniones, acuerdos y documentos según su parte. No habilita STAR-H, PHR, ISH, carga ni pacientes: eso se da en Accesos.</p>',
+    `<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" data-a="intGuardar" data-id="${E(iid || '')}"><span class="ms">save</span>Guardar</button>`);
+  dlg._int = i;
+}
+
 /* ---------- acta como Google Doc (Administración) ---------- */
 async function generarActa(btn, id) {
   const r = (D.reuniones || []).filter(x => x.ID === id)[0] || {};
@@ -350,6 +392,7 @@ function dlgAyuda() {
     <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COE completo o COE interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
     <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COE, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
     <p><b>Documentos.</b> «Agregar»: clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos.</p>
+    <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COE o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
     <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos.</p>
     <p><b>Comentarios.</b> Llegan a la hoja COMENTARIOS con fecha, persona y módulo.</p>`;
   abrir('Ayuda', usu + (A ? adminTxt : ''), '<button class="btn" type="button" data-c>Entendido</button>');
@@ -372,6 +415,15 @@ document.addEventListener('click', ev => {
   else if (a === 'imprimirDlg') { const r = leerReunion($('#fD')); imprimirPlanilla(r, r.asistencia); }
   else if (a === 'reuGuardar') { const r = leerReunion($('#fD')); r.id = id; if (!r.fecha) { $('#estD').textContent = 'Falta la fecha.'; return; } enviar(t, 'red_reunion_guardar', { reunion: r }, 'Reunión guardada.'); }
   else if (a === 'acta') generarActa(t, id);
+  else if (a === 'intNuevo') dlgIntegrante(id, '', '');
+  else if (a === 'intNuevoP') dlgIntegrante('', '', id);
+  else if (a === 'intEditar') dlgIntegrante('', id, '');
+  else if (a === 'intGuardar') {
+    const f = $('#fD'), i = dlg._int || {};
+    const datos = { id: id, persona: id ? i.persona : f.persona.value, organo: id ? i.organo : f.organo.value, parte: f.parte.value, funcion: f.funcion.value, hasta: f.hasta ? f.hasta.value.trim() : '' };
+    if (!datos.persona) { $('#estD').textContent = 'Elegí la persona.'; return; }
+    enviar(t, 'red_integrante_guardar', { integrante: datos }, 'Integrante guardado.');
+  }
   else if (a === 'docNuevo') dlgFila('doc', ''); else if (a === 'docEditar') dlgFila('doc', id);
   else if (a === 'lugEditar') dlgFila('lug', id);
   else if (a === 'enlNuevo') dlgFila('enl', ''); else if (a === 'enlEditar') dlgFila('enl', id);
@@ -383,6 +435,18 @@ document.addEventListener('click', ev => {
     enviar(t, cfg.accion, { [cfg.prop]: o }, 'Guardado.');
   }
   else if (a === 'comGuardar') { const f = $('#fD'); if (!f.texto.value.trim()) { $('#estD').textContent = 'Escribí el comentario.'; return; } enviar(t, 'red_comentar', { modulo: f.modulo.value, ref: f.ref.value, texto: f.texto.value }, 'Comentario enviado.'); }
+});
+document.addEventListener('change', async ev => {
+  const s = ev.target; if (!s.dataset || !s.dataset.perm) return;
+  const pid = s.dataset.perm, mod = s.dataset.mod, prev = s.dataset.prev != null ? s.dataset.prev : '';
+  const ant = ((D.accesos || {}).permisos || []).filter(x => x.persona === pid && x.modulo === mod)[0] || {};
+  s.disabled = true;
+  try {
+    const r = await S.api('red_permiso_guardar', { permiso: { persona: pid, modulo: mod, nivel: s.value, tipo: ant.tipo || (/^pacientes/i.test(mod) ? 'Área' : 'Red'), alcance: ant.alcance || (/^pacientes/i.test(mod) ? 'Área Programática Trelew' : 'Red Trelew') } }, 60000);
+    if (!r.ok) throw r; toast(s.value ? 'Acceso guardado: ' + mod + ' · ' + s.value : 'Acceso quitado: ' + mod);
+    const L = D.accesos.permisos.filter(x => !(x.persona === pid && x.modulo === mod)); if (s.value) L.push(Object.assign({}, ant, { persona: pid, modulo: mod, nivel: s.value })); D.accesos.permisos = L;
+  } catch (e) { toast(errTxt(e)); s.value = ant.nivel || ''; }
+  finally { s.disabled = false; }
 });
 document.addEventListener('change', ev => { const k = ev.target.dataset && ev.target.dataset.f; if (k && ev.target.tagName === 'SELECT') { filtro[k] = ev.target.value; pintar(); } });
 document.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.f; if (k && ev.target.tagName === 'INPUT') { filtro[k] = ev.target.value; clearTimeout(ev.target._t); const pos = ev.target.selectionStart; ev.target._t = setTimeout(() => { pintar(); const n = document.querySelector(`[data-f="${k}"]`); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 300); } });
