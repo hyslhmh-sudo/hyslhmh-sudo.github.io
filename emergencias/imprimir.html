@@ -166,6 +166,7 @@ async function iniciar(forzar) {
   if (err === 'sesion') { aviso(`Para imprimir con los establecimientos de tu red tenés que ingresar en la app. <a href="${MOD[mod].app}">Ingresar</a>.`); $('#hojas').innerHTML = ''; return; }
   if (err) { aviso(esc(err)); $('#hojas').innerHTML = ''; return; }
   aviso('');
+  await sumarExtras(mod);
   const d = datos[mod];
   if (!d.redes.length) { aviso('Tu acceso no tiene redes asignadas en este relevamiento.'); $('#hojas').innerHTML = ''; return; }
   const redQ = qs.get('red') || S.store.get(mod === 'starh' ? 'red' : mod + '.red', '');
@@ -181,15 +182,40 @@ function llenarEst(valor) {
   opciones($('#selEst'), l, valor != null ? valor : ($('#selEst').value || ''));
 }
 
+/* ---------- 06/11/2026 · Otros establecimientos (registro único LUGARES) ----------
+ * Los relevamientos tienen planilla solo para Red Trelew y Red Rawson. Para el resto de los establecimientos
+ * (otros hospitales y puestos del Área Programática Trelew y de las demás áreas) se agrega un grupo por área
+ * programática con los formularios EN BLANCO y el nombre del establecimiento: todavía no hay datos cargados de ellos.
+ * Usa el catálogo de la red base (ítems, amenazas, escalas). ISH: solo hospitales. */
+function esTW(r) { return !r.extra && /trelew/i.test(r.nombre); }
+async function lugares() {
+  let c = S.store.get('red.cat', null);
+  if ((!c || !c.lugares) && S.sesion.token() && navigator.onLine) { try { const r = await S.api('red_catalogo', {}, 60000); if (r.ok) { c = r; S.store.set('red.cat', r); } } catch (e) { /* sin red: sin extras */ } }
+  return (c && c.lugares) || [];
+}
+async function sumarExtras(m) {
+  const d = datos[m]; if (!d || !d.redes || !d.redes.length) return;
+  d.redes = d.redes.filter(r => !r.extra);
+  const L = await lugares(); if (!L.length) return;
+  const ya = new Set(); d.redes.forEach(r => r.establecimientos.forEach(e => { const mm = String(e.nombre).match(/\(([A-Z]{3,5})\)/); if (mm) ya.add(mm[1]); }));
+  const base = d.redes.filter(r => /rawson/i.test(r.nombre))[0] || d.redes[0];
+  const areas = {};
+  L.filter(l => !ya.has(l.corto) && l.estado !== 'Inactivo' && (m !== 'ish' || /hospital/i.test(l.tipo)))
+    .forEach(l => (areas[l.area || 's/d'] = areas[l.area || 's/d'] || []).push({ codigo: l.id, nombre: l.nombre + (l.corto && l.corto !== l.nombre ? ' (' + l.corto + ')' : ''), tipo: l.tipo }));
+  const orden = Object.keys(areas).sort((a, b) => (/trelew/i.test(b) ? 1 : 0) - (/trelew/i.test(a) ? 1 : 0) || a.localeCompare(b));
+  orden.forEach(a => d.redes.push(Object.assign({}, base, { nombre: a + ' · otros establecimientos (en blanco)', establecimientos: areas[a], extra: true,
+    base0: base.establecimientos[0] ? base.establecimientos[0].codigo : '', evaluaciones: [], relevamiento: base.relevamiento, amenazas: base.amenazas })));
+}
+
 /* ---------- piezas comunes ---------- */
 function encabezado(r) {
-  const tw = /trelew/i.test(r.nombre), rw = /rawson/i.test(r.nombre);
+  const tw = esTW(r), rw = !r.extra && /rawson/i.test(r.nombre);
   if (tw) return `<div class="enc"><img src="enc-trelew.png" alt="Hospital María Humphreys y Hospital Zonal Trelew"></div>`;
   return `<div class="enc"><img src="enc-secretaria.png" alt="Gobierno del Chubut · Secretaría de Salud" style="height:40px">${rw ? '<img class="hsst" src="enc-hsst.png" alt="Hospital Subzonal Santa Teresita" style="height:48px">' : ''}</div>`;
 }
-function codigo(m, r) { return ({ phr: 'EVA-PHR-', ish: 'EVA-ISH-' }[m] || 'EVA-STARH-') + (/trelew/i.test(r.nombre) ? '001' : '002') + '-F01'; }
+function codigo(m, r) { return ({ phr: 'EVA-PHR-', ish: 'EVA-ISH-' }[m] || 'EVA-STARH-') + (esTW(r) ? '001' : r.extra ? '003' : '002') + '-F01'; }
 function pie(m, r) {
-  const quien = /trelew/i.test(r.nombre) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral';
+  const quien = esTW(r) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral';
   return `<div class="pie"><div class="pt"><div><b>${codigo(m, r)} · VERSIÓN 0</b><br>${quien}</div><div>Impreso el ${S.hoy()}</div></div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"></div>`;
 }
 function v(x, cargado) { return cargado ? esc(x == null || x === 's/d' ? '' : x) : ''; }
@@ -207,7 +233,7 @@ function observaciones(txt) { return `<h3>Observaciones</h3><table><tbody><tr><t
 /* ---------- PHR ---------- */
 function alcancePHR(aplicaA, r) {
   if (!aplicaA || aplicaA === 'Todos') return '';
-  if (!/trelew/i.test(r.nombre)) return ' (solo hospital)';
+  if (!esTW(r)) return ' (solo hospital)';
   return aplicaA === 'Hospitales' ? ' (solo hospitales)' : ' (hospitales y Sede ex ADOS)';
 }
 const EST_CORTO = { 'Cumple': 'C', 'Parcial': 'P', 'No cumple': 'NC' };
@@ -216,7 +242,7 @@ function hojaPHR(r, e, cargado) {
   const rel = e ? r.relevamiento.filter(x => x.codigo === e.codigo) : [];
   const relId = {}; rel.forEach(x => relId[x.id] = x);
   const secc = (datos.phr.secciones || []);
-  const tw = /trelew/i.test(r.nombre), rw = !tw;
+  const tw = esTW(r), rw = !tw;
   let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('phr', r)} · VERSIÓN 0</p>
     <h2 class="tit">Relevamiento inicial del plan hospitalario de respuesta (PHR)</h2>
     <p class="subt">${esc(r.nombre)} · Comité de crisis El Niño 2026-2027</p>`;
@@ -264,12 +290,12 @@ function hojaPHR(r, e, cargado) {
 
 /* ---------- ISH ---------- */
 function hojaISH(r, e, cargado) {
-  const G = window.GUIAS, g = G.ISH_GUIA, tw = /trelew/i.test(r.nombre), rw = !tw;
+  const G = window.GUIAS, g = G.ISH_GUIA, tw = esTW(r), rw = !tw;
   const rel = e ? r.relevamiento.filter(x => x.codigo === e.codigo) : [];
   const am = e ? r.amenazas.filter(x => x.codigo === e.codigo) : [];
   const d = datos.ish, subs = d.submodulos || [];
   // catálogo de ítems y amenazas: se toma del primer hospital de la red (es el mismo para todos)
-  const c0 = r.establecimientos[0] ? r.establecimientos[0].codigo : '';
+  const c0 = r.base0 || (r.establecimientos[0] ? r.establecimientos[0].codigo : '');
   const items = rel.length ? rel : r.relevamiento.filter(x => x.codigo === c0);
   const amen = am.length ? am : r.amenazas.filter(x => x.codigo === c0);
   const NIVC = { 'Bajo': 'B', 'Medio': 'M', 'Alto': 'A', 'No evaluado': 'NE', 'No existe': 'NE' };
@@ -312,7 +338,7 @@ function hojaISH(r, e, cargado) {
 function hojaSTARH(r, e, cargado) {
   const ev = e ? r.evaluaciones.filter(x => x.codigo === e.codigo) : [];
   const evId = {}; ev.forEach(x => evId[x.id] = x);
-  const tw = /trelew/i.test(r.nombre), rw = !tw;
+  const tw = esTW(r), rw = !tw;
   let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('starh', r)} · VERSIÓN 0</p>
     <h2 class="tit">Relevamiento estratégico de riesgos STAR-H</h2>
     <p class="subt">${esc(r.nombre)} · Comité de crisis El Niño 2026-2027</p>`;
@@ -372,12 +398,13 @@ function pintar() {
   const r = red(); if (!r) return;
   const t = S.temaRed(r.nombre), st = document.documentElement.style;
   st.setProperty('--fuerte', t.fuerte); st.setProperty('--medio', t.medio); st.setProperty('--claro', t.claro); st.setProperty('--borde', t.borde);
-  const cargado = $('#selModo').value === 'cargado';
+  const cargado = $('#selModo').value === 'cargado' && !r.extra;
   const sel = $('#selEst').value;
   const lista = sel === '*' ? r.establecimientos : sel ? r.establecimientos.filter(e => e.codigo === sel) : [null];
   const f = mod === 'phr' ? hojaPHR : mod === 'ish' ? hojaISH : hojaSTARH;
   $('#hojas').innerHTML = lista.map(e => `<section class="hoja">${f(r, e, cargado && !!e)}</section>`).join('');
-  $('#selModo').disabled = !sel;
+  $('#selModo').disabled = !sel || !!r.extra;
+  if (r.extra) $('#selModo').value = 'blanco';
   document.title = ({ phr: 'PHR', ish: 'ISH' }[mod] || 'STAR-H') + ' · ' + (sel === '*' ? r.nombre : sel || 'formulario en blanco');
 }
 
