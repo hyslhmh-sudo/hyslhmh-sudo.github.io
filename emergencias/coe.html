@@ -391,9 +391,11 @@ function vistaReuniones() {
   const t = (id, m) => `<div class="tarjeta" style="padding:14px 16px"><b><span class="ms" style="color:#2F5BEA;margin-right:6px">${m.ico}</span>${m.titulo}</b>
     <p class="sub" style="margin:6px 0 10px">${m.txt}</p><div class="acc" style="border:0;padding:0;margin:0"><button class="btn mini" data-act="reuImp" data-mod="${id}"><span class="ms" style="font-size:17px">print</span>Imprimir</button>
     <button class="btn sec mini" data-act="reuWord" data-mod="${id}"><span class="ms" style="font-size:17px">download</span>Descargar en Word</button></div></div>`;
-  $('#vista').innerHTML = `<div class="tarjeta" style="padding:14px 16px;margin-bottom:12px;border:1.5px solid #2F5BEA"><b><span class="ms" style="color:#2F5BEA;margin-right:6px">edit_note</span>Completar el acta (minuta) de una reunión</b>
-      <p class="sub" style="margin:6px 0 10px">Cargás en pantalla los datos, marcás los asistentes entre los participantes del COE (o sumás otros), y anotás temas, decisiones y tareas. Sale impresa o en Word ya completa.${minuta.fecha || minuta.temas ? ' Tenés un acta empezada: se retoma donde la dejaste.' : ''}</p>
-      <button class="btn" data-act="minAbrir"><span class="ms">edit_note</span>Completar acta</button></div>
+  // 06/11/2026 · Rediseño: las reuniones, la asistencia, los acuerdos y las actas pasaron a «COE · Reuniones y documentos».
+  // La hoja COE ACTAS quedó retirada (A-001 y A-004 migradas a REUNIONES, ASISTENCIA y ACUERDOS). Acá quedan los modelos en blanco.
+  $('#vista').innerHTML = `<div class="tarjeta" style="padding:14px 16px;margin-bottom:12px;border:1.5px solid #2F5BEA"><b><span class="ms" style="color:#2F5BEA;margin-right:6px">event_note</span>Reuniones, asistencia, acuerdos y actas</b>
+      <p class="sub" style="margin:6px 0 10px">Ahora se cargan en «COE · Reuniones y documentos»: la reunión, los presentes en el momento, la planilla para firmar, los acuerdos uno por uno y el acta como Google Doc. Las actas anteriores ya están ahí.</p>
+      <a class="btn" href="red.html#reu"><span class="ms">open_in_new</span>Ir a Reuniones</a></div>
     <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px">
       <p class="sub" style="margin:0 0 8px">Modelos con el encabezado «Preparación y Respuesta a Emergencias y desastres» y el logo de Higiene y Seguridad Laboral. Se imprimen para completar a mano o se bajan en Word para completar en la computadora.</p>
       <label class="campo" style="max-width:420px"><span>Proyecto (opcional: precarga participantes y funciones)</span><select id="reuProy">${opts(proyectos(), reuProy, 'Sin precargar')}</select></label></div>
@@ -801,7 +803,7 @@ function dlgUsuario(dni) {
       <label class="campo"><span>Rol</span><select name="rol">${opts(acc.roles, x.rol)}</select></label>
       <label class="campo"><span>Estado</span><select name="estado">${opts(['Activo', 'Inactivo'], x.estado || 'Activo')}</select></label></div>
       <p class="sub" style="margin:2px 0 8px"><b>Administración</b>: carga y ve todo. <b>Referente</b>: carga en sus establecimientos y ve sus redes. <b>Consulta</b>: solo ve los tableros y contactos de sus redes.</p>
-      <div class="campo"><span>Módulos que ve</span>${acc.modulos.map(m => chk('mod', m, ms.indexOf(m) >= 0, E(MOD_TXT[m] || m) + (m === 'ISH' ? ' <span class="sub">(mientras el ISH esté cerrado, solo entra Administración)</span>' : ''))).join('')}</div>
+      <div class="campo"><span>Herramientas que ve y carga</span><p class="sub" style="margin:4px 0">Desde el 06/11/2026 STAR-H, PHR, ISH, Derivaciones y Pacientes se dan por persona y nivel en <a href="red.html#acc">COE · Reuniones y documentos › Accesos</a>. La cuenta tiene que estar unida a su ficha (ID de participante).</p></div>
       <div class="campo"><span>Redes</span>${chk('redTodas', 'Todas', todasR, '<b>Todas las redes</b>')}${acc.redes.map(r => chk('red', r, !todasR && rs.indexOf(r) >= 0, E(r))).join('')}</div>
       <div class="campo"><span>Establecimientos en que carga o que ve</span>${chk('estTodos', 'Todos', todosE, '<b>Todos los de sus redes</b>')}
         <div id="listaEst" style="max-height:220px;overflow:auto;border:1px solid var(--linea);border-radius:10px;padding:4px 10px">${acc.redes.map(r => `<div data-red-est="${E(r)}"><b class="sub">${E(r)}</b>${acc.establecimientos.filter(e => e.red === r).map(e => chk('est', e.codigo, !todosE && es.indexOf(e.codigo.toUpperCase()) >= 0, E(e.codigo + ' · ' + e.nombre))).join('')}</div>`).join('')}</div></div>
