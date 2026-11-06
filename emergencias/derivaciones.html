@@ -292,6 +292,7 @@ function render() {
   if (p[0] === 'albergues') return vistaAlb();
   if (p[0] === 'criterios') return vistaCrit();
   if (p[0] === 'modelos' || p[0] === 'evacuados') return vistaModelos();
+  if (p[0] === 'datos') return vistaDatos();
   return vistaInst();
 }
 function vistaInicio() {
@@ -352,8 +353,8 @@ function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes"><span 
 function esAdmin() { return !!(cat && cat.usuario && cat.usuario.rol === 'Administración'); }
 const SOLO_RED = ['inst', 'alb', 'crit', 'modelos'];
 function secTabs(act) {
-  return `<div class="secciones-tabs">${[['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['crit', '#/criterios', 'handshake', 'Criterios de derivación'], ['modelos', '#/modelos', 'description', 'Planillas modelo']]
-    .map(t => `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>${act !== 'modelos' ? avisoCarga() : ''}`;
+  return `<div class="secciones-tabs">${[['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['crit', '#/criterios', 'handshake', 'Criterios de derivación'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['datos', '#/datos', 'bar_chart', 'Datos de la red']]
+    .map(t => `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>${act !== 'modelos' && act !== 'datos' ? avisoCarga() : ''}`;
 }
 // Qué puede hacer el usuario en la localidad elegida
 function avisoCarga() {
@@ -805,6 +806,72 @@ function imprimir(modo) {
   setTimeout(() => window.print(), 300);
 }
 
+/* ---------- DATOS DE LA RED (05/11/2026) ----------
+ * Solo para ver, para todo usuario que ingresó: camas de internación por establecimiento y por servicio (fichas EVAC)
+ * y población estimada por barrio (planilla de referencia en 07 · REFERENCIAS). Acción del servidor: datos_red.
+ * Se carga en la ficha EVAC y en la planilla de referencia; esta pestaña solo lee. */
+let datos = S.store.get('deriv.datos', null), datosPidiendo = false, qBarrio = '', ordenBarrio = 'n';
+async function cargarDatos(avisar) {
+  if (datosPidiendo || !navigator.onLine) { if (!navigator.onLine && avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return; }
+  datosPidiendo = true;
+  try {
+    const r = await S.api('datos_red');
+    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); cat = null; toast(r.error); return render(); } throw r; }
+    datos = r; S.store.set('deriv.datos', r); if (avisar) toast('Datos actualizados.');
+  } catch (e) {
+    const m = (e && (e.error || e.message)) || 'No se pudieron traer los datos.';
+    if (!datos) datos = { error: /no disponible|desconocid|acci[oó]n/i.test(m) ? 'Esta pestaña todavía no está publicada en el servidor (Apps Script). Avisale a Higiene y Seguridad Laboral.' : m };
+    else toast(m, true);
+  } finally { datosPidiendo = false; if (/^#\/datos/.test(location.hash)) vistaDatos(); }
+}
+const fmtN = (v, d) => (v === '' || v == null || isNaN(Number(v))) ? 's/d' : Number(v).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+const semDens = t => /muy alta/i.test(t) ? `<span class="sem r">${E(t)}</span>` : /alta/i.test(t) ? `<span class="sem n">${E(t)}</span>` : /media/i.test(t) ? `<span class="sem a">${E(t)}</span>` : /baja/i.test(t) ? `<span class="sem v">${E(t)}</span>` : `<span class="sem g">${E(t || 's/d')}</span>`;
+function vistaDatos() {
+  borrador = null;
+  $('#titulo').innerHTML = 'Datos de la red<small>Camas de internación y población estimada · solo para ver</small>';
+  const cab = `${secTabs('datos')}<div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: las camas son las habilitadas según el establecimiento y la población es una <b>estimación</b>. No son camas libres ni un registro en tiempo real.</div>`;
+  if (!datos) { app.innerHTML = cab + '<div class="vacio">Cargando…</div>'; cargarDatos(false); return; }
+  if (datos.error && !datos.redes) { app.innerHTML = cab + `<div class="tarjeta vacio">${E(datos.error)}</div>`; return; }
+  // Camas
+  const camasHTML = (datos.redes || []).map(r => {
+    const con = r.establecimientos.filter(e => String(e.camas).trim() !== '');
+    const sin = r.establecimientos.length - con.length;
+    const total = con.reduce((a, e) => a + num(e.camas), 0);
+    return `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Camas de internación · ${E(r.nombre)}</b>
+      <span class="sub">(${fmtN(total)} camas en ${con.length} establecimiento${con.length === 1 ? '' : 's'} con dato${sin ? ` · ${sin} sin dato de camas: s/d (revisar)` : ''})</span>
+      ${con.length ? con.map(e => `<details style="margin-top:8px"><summary style="cursor:pointer;display:flex;gap:8px;align-items:center;justify-content:space-between"><span><b>${E(e.nombre)}</b> <span class="sub">${E(e.codigo)}${e.tipo ? ' · ' + E(e.tipo) : ''}</span></span><span style="display:inline-flex;gap:4px;align-items:center"><span class="chip">${fmtN(e.camas)} camas</span><span class="ms" style="font-size:20px;color:#8E1B1B" title="Ver el detalle">expand_more</span></span></summary>
+        ${e.nota ? `<p class="sub" style="margin:6px 2px">${E(e.nota)}</p>` : ''}
+        ${e.servicios.length ? `<div class="tabla-wrap" style="margin-top:6px"><table class="tabla"><tr><th>Servicio</th><th>Tipo</th><th class="num">Camas o puestos</th><th>Detalle</th></tr>
+          ${e.servicios.map(d => `<tr><td><b>${E(d.nombre)}</b>${d.piso && !/^s\/d/.test(d.piso) ? `<br><span class="sub">${E(d.piso)}</span>` : ''}</td><td>${E(d.uso)}</td><td class="num"><b>${fmtN(d.camas)}</b></td><td class="sub">${E(d.detalle)}</td></tr>`).join('')}
+          <tr><td colspan="2"><b>Total de los servicios</b></td><td class="num"><b>${fmtN(e.servicios.reduce((a, d) => a + num(d.camas), 0))}</b></td><td></td></tr></table></div>` : '<p class="sub" style="margin:6px 2px">Sin detalle por servicio.</p>'}</details>`).join('') : '<p class="sub">Todavía no hay camas cargadas en esta red.</p>'}</div>`;
+  }).join('') || '<div class="tarjeta vacio">Tu acceso no tiene redes asignadas para ver camas.</div>';
+  // Población
+  const P = datos.poblacion || {}, B = P.barrios || [];
+  let pobHTML;
+  if (P.error) pobHTML = `<div class="tarjeta vacio">${E(P.error)}</div>`;
+  else if (!B.length) pobHTML = '<div class="tarjeta vacio">Sin datos de población cargados.</div>';
+  else {
+    const t25 = B.reduce((a, x) => a + num(x.h2025), 0), t20 = B.reduce((a, x) => a + num(x.h2020), 0), ha = B.reduce((a, x) => a + num(x.ha), 0);
+    const ma = B.filter(x => /muy alta/i.test(x.tipo));
+    const qq = qBarrio.toLowerCase();
+    const l = B.filter(x => !qq || (x.barrio + ' ' + x.referencia + ' ' + x.tipo).toLowerCase().indexOf(qq) >= 0).slice()
+      .sort((a, b) => ordenBarrio === 'h' ? num(b.h2025) - num(a.h2025) : ordenBarrio === 'd' ? num(b.densidad) - num(a.densidad) : ordenBarrio === 'a' ? a.barrio.localeCompare(b.barrio, 'es') : num(a.n) - num(b.n));
+    const fuente = (P.fuente || []).filter(f => /Organismo|Procesamiento|Car[aá]cter|Modelo|Rangos/.test(f.dato));
+    pobHTML = `<div class="kpis"><div class="tarjeta kpi"><b>${fmtN(t25)}</b><span>habitantes estimados 2025 (${fmtN(t20)} en 2020)</span></div><div class="tarjeta kpi"><b>${B.length}</b><span>barrios</span></div><div class="tarjeta kpi"><b>${fmtN(ha ? t25 / ha : '', 2)}</b><span>hab/ha en promedio (${fmtN(ha, 2)} ha)</span></div><div class="tarjeta kpi"><b>${ma.length}</b><span>barrios de densidad muy alta (${fmtN(ma.reduce((a, x) => a + num(x.h2025), 0))} hab.)</span></div></div>
+      <div class="buscar"><input id="qB" type="search" placeholder="Buscar barrio o establecimiento de referencia" value="${E(qBarrio)}">
+        <select id="ordB"><option value="n" ${ordenBarrio === 'n' ? 'selected' : ''}>Orden del original (densidad, de menor a mayor)</option><option value="d" ${ordenBarrio === 'd' ? 'selected' : ''}>Mayor densidad primero</option><option value="h" ${ordenBarrio === 'h' ? 'selected' : ''}>Más habitantes primero</option><option value="a" ${ordenBarrio === 'a' ? 'selected' : ''}>Barrio (A–Z)</option></select>
+        ${P.planilla ? `<a class="btn sec" href="${E(P.planilla)}" target="_blank" rel="noopener" style="text-decoration:none"><span class="ms">table_view</span>Abrir planilla</a>` : ''}</div>
+      <div class="tabla-wrap"><table class="tabla"><tr><th>Barrio</th><th class="num">Hab. 2020</th><th class="num">Hab. 2025</th><th class="num">Hectáreas</th><th class="num">hab/ha</th><th>Densidad</th><th>Establecimiento de referencia</th></tr>
+        ${l.map(x => `<tr><td><b>${E(x.barrio)}</b>${x.obs ? `<br><span class="sub">${E(x.obs)}</span>` : ''}</td><td class="num">${fmtN(x.h2020)}</td><td class="num"><b>${fmtN(x.h2025)}</b></td><td class="num">${fmtN(x.ha, 2)}</td><td class="num">${fmtN(x.densidad, 2)}</td><td>${semDens(x.tipo)}</td><td>${/^s\/d/.test(x.referencia) || !x.referencia ? '<span class="sem g">s/d (revisar)</span>' : E(x.referencia)}</td></tr>`).join('') || '<tr><td colspan="7">Ningún barrio coincide con la búsqueda.</td></tr>'}</table></div>
+      <p class="sub" style="margin:8px 2px">${fuente.map(f => `<b>${E(f.dato)}:</b> ${E(f.valor)}`).join(' · ')}</p>`;
+  }
+  app.innerHTML = `${cab}<h2 style="font-size:17px;margin:4px 2px 8px;color:#8E1B1B">Camas de internación</h2>${camasHTML}
+    <h2 style="font-size:17px;margin:16px 2px 8px;color:#8E1B1B">Población estimada por barrio · Trelew 2025</h2>${pobHTML}
+    <p class="sub" style="margin:10px 2px">Actualizado: ${datos.generado ? E(new Date(datos.generado).toLocaleString('es-AR')) : 's/d'} · <a href="#/datos" data-act="actDatos">Actualizar</a>. Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>`;
+  const qi = $('#qB'); if (qi) qi.addEventListener('input', () => { qBarrio = qi.value; const p = qi.selectionStart; vistaDatos(); const n = $('#qB'); n.focus(); n.setSelectionRange(p, p); });
+  const o = $('#ordB'); if (o) o.addEventListener('change', () => { ordenBarrio = o.value; vistaDatos(); });
+}
+
 /* ---------- eventos ---------- */
 document.addEventListener('click', async ev => {
   const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep],[data-inst],[data-fila]'); if (!t) return;
@@ -814,6 +881,7 @@ document.addEventListener('click', async ev => {
   if (t.dataset.inst) return abrirFila('inst', t.dataset.inst);
   if (t.dataset.fila) return abrirFila(t.dataset.fila, t.dataset.id);
   const a = t.dataset.act;
+  if (a === 'actDatos') { ev.preventDefault(); return cargarDatos(true); }
   if (a === 'tjImp') return tarjetaImprimir(t.dataset.col);
   if (a === 'tjWord') return tarjetaWord(t.dataset.col);
   if (a === 'madImp') { madEsc = t.dataset.esc; modeloImprimir('madurez'); madEsc = ''; return; }
@@ -863,9 +931,9 @@ window.addEventListener('beforeunload', ev => { if ((borrador && Object.keys(bor
 window.addEventListener('hashchange', render);
 // La pestaña y la localidad elegidas quedan a la vista aunque la fila se desplace (pantallas angostas)
 new MutationObserver(() => document.querySelectorAll('.stab[aria-pressed="true"],.red-tab[aria-pressed="true"]').forEach(b => { const p = b.parentElement; p.scrollLeft = b.offsetLeft - (p.clientWidth - b.offsetWidth) / 2; })).observe(app, { childList: true });
-$('#btnAct').addEventListener('click', () => cargar(true));
+$('#btnAct').addEventListener('click', () => { if (/^#\/datos/.test(location.hash)) cargarDatos(true); else cargar(true); });
 $('#btnAyuda').addEventListener('click', () => ir('#/ayuda'));
-$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('deriv.cat'); render(); });
+$('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; S.store.del('deriv.cat'); S.store.del('deriv.datos'); datos = null; render(); });
 
 function vistaIngreso() {
   tema('');
@@ -889,10 +957,12 @@ function vistaAyuda() {
       <li><b>Albergues:</b> edificios que el municipio o Protección Civil podría habilitar, con capacidad estimada, servicios, accesibilidad y centro de salud de referencia. La habilitación y la apertura las decide el COE.</li>
       <li><b>Criterios de derivación:</b> propuesta para acordar en la mesa del COE. Cuando el COE valida un criterio, se cambia el estado y se anotan la fecha y el acta.</li>
       <li><b>Planillas modelo:</b> se imprimen o se descargan en Word para completar en un simulacro o en una emergencia.</li>
+      <li><b>Datos de la red:</b> camas de internación habilitadas por establecimiento y por servicio, y población estimada por barrio de Trelew (Municipalidad de Trelew, 2025; datos estimados, provisorios, no oficiales). Es solo para ver: no son camas libres. Podés buscar un barrio y ordenar la tabla por densidad o por cantidad de habitantes.</li>
       <li>Si ves «Solo ver», tu usuario no carga en esa localidad. Si tenés que cargar, pedíselo a Higiene y Seguridad Laboral.</li>
       <li>Si falta un dato, poné «s/d (revisar)».</li></ol>
     <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COE · Derivaciones y albergues (v0)» (carpeta 06 · COE): hojas LOCALIDADES, RECEPTORAS, ALBERGUES y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
       <li>Quién carga: Administración, en todas las localidades. Para habilitar a otra persona, en COE › Usuarios y accesos (o en ACCESOS STAR-H, columna «Derivación · localidades en que carga») poné sus localidades separadas por punto y coma, por ejemplo «Trelew; Gaiman», o «Todas». Vacío = solo ve. El servidor rechaza cualquier carga fuera de esas localidades.</li>
+      <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025 (v0)» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
       <li>Para sumar una localidad, agregala en la hoja LOCALIDADES (código y nombre). La app la toma sola.</li><li>El orden de derivación de cada localidad se carga en la hoja LOCALIDADES, columnas «Escalón 2» y «Escalón 3»: localidades en orden, separadas por punto y coma (por ejemplo «Rawson; Gaiman; Dolavon»). Mientras diga «s/d (revisar)», la app muestra las demás localidades sin orden acordado.</li></ol>
     <p class="sub">Referencias (MEJORA / buena práctica): Proyecto Esfera (2018); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Vítolo, Planes de contingencia hospitalarios (2026). Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
 }
