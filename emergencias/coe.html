@@ -74,6 +74,16 @@ tr.nueva td{background:#F5F7FB}
 .campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:4px}
 .campo input,.campo select,.campo textarea{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:10px 11px;background:#fff}
 .campo textarea{min-height:64px;resize:vertical}
+/* 05/11/2026 · Cuadro persona × proyecto */
+table.cuadro th.cpr{text-align:center;min-width:120px;vertical-align:bottom}
+table.cuadro th.cpr span{display:block;font-size:12.5px;line-height:1.25}
+table.cuadro th.cpr small{display:block;font-weight:500;opacity:.75;margin:2px 0 4px}
+table.cuadro td.nom{min-width:190px}table.cuadro td.nom small{display:block;font-weight:400;font-size:11.5px;color:var(--suave)}
+table.cuadro td.cel{text-align:center;vertical-align:top}
+table.cuadro td.cel.si{background:#EEF3FF}
+table.cuadro td.cel input[type=checkbox]{width:22px;height:22px;min-width:0;cursor:pointer}
+table.cuadro td.cel input.fun{min-width:0;width:100%;margin-top:4px;font-size:12px;padding:5px 6px}
+table.cuadro td.cel span.fun{display:block;font-size:11.5px;color:var(--suave);margin-top:2px}
 /* 04/11/2026 · casillas dentro de un campo (Módulos, Redes, Localidades…): la casilla chica y el texto pegado a ella */
 .campo input[type=checkbox],.campo input[type=radio]{width:18px;height:18px;min-width:0;min-height:0;padding:0;margin:0;flex:none}
 .campo label{justify-content:flex-start;text-align:left}
@@ -246,7 +256,59 @@ function vistaPersonas() {
 }
 
 /* ---------- 2. Grilla: tipo de actor, proyecto y función ---------- */
+/* 05/11/2026 · «Proyectos y funciones» en dos modos: Cuadro (persona × proyecto, con casillas) y Detalle (la grilla de siempre). */
+let gModo = S.store.get('coe.gmodo', 'cuadro');
+const modoHTML = () => `<div class="opciones" role="group" aria-label="Modo" style="max-width:420px;margin:0 0 10px"><button type="button" class="op" data-gmodo="cuadro" aria-pressed="${gModo === 'cuadro'}"><span class="ms" style="font-size:17px;vertical-align:-3px">grid_on</span> Cuadro</button><button type="button" class="op" data-gmodo="detalle" aria-pressed="${gModo === 'detalle'}"><span class="ms" style="font-size:17px;vertical-align:-3px">table_rows</span> Detalle</button></div>`;
+function atarModo() { document.querySelectorAll('[data-gmodo]').forEach(b => b.addEventListener('click', () => { gModo = b.dataset.gmodo; S.store.set('coe.gmodo', gModo); vistaGrilla(); })); }
+function vistaCuadro() {
+  const pers = cat.personas.filter(pasa).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  const PR = proyectos(), ed = cat.puedeCargar;
+  const parDe = (pid, pr) => cat.participaciones.find(x => x.persona === pid && x.proyecto === pr);
+  const corto = pr => pr.replace(/^Comité de crisis El Niño /, 'Comité El Niño ');
+  $('#vista').innerHTML = filtrosHTML(false) + modoHTML() + `<datalist id="dlFunC">${(cat.listas.funciones || []).map(f => `<option value="${E(f)}">`).join('')}</datalist>
+    <div class="tabla-wrap"><table class="cuadro"><thead><tr><th>Participante</th>${PR.map(pr => { const n = pers.filter(p => parDe(p.id, pr)).length; return `<th class="cpr"><span>${E(corto(pr))}</span><small>${n} de ${pers.length}</small>${ed ? `<button class="btn sec mini" data-todos="${E(pr)}" title="Sumar al proyecto a todos los que se ven en la lista">Tildar todos</button>` : ''}</th>`; }).join('')}</tr></thead><tbody>
+    ${pers.map(p => `<tr data-p="${E(p.id)}"><td class="nom">${E(p.nombre)}<small>${E([p.institucion, p.red].filter(Boolean).join(' · '))}</small></td>${PR.map(pr => { const x = parDe(p.id, pr); return `<td class="cel${x ? ' si' : ''}"><label><input type="checkbox" data-pr="${E(pr)}" ${x ? 'checked' : ''} ${ed ? '' : 'disabled'} aria-label="${E(p.nombre + ' en ' + pr)}"></label>${x ? (ed ? `<input class="fun" data-fun="${E(x.id)}" list="dlFunC" value="${E(x.funcion || '')}" placeholder="Función">` : `<span class="fun">${E(x.funcion || 's/d')}</span>`) : ''}</td>`; }).join('')}</tr>`).join('') || `<tr><td colspan="${PR.length + 1}" class="vacio">No hay participantes con estos filtros.</td></tr>`}
+    </tbody></table></div>
+    ${ed ? '<p class="sub">Tildá para sumar a la persona al proyecto (queda como «Integrante», con la fecha de hoy) y destildá para quitarla. La función se cambia en el casillero que aparece debajo y se guarda al salir. «Tildar todos» suma a todos los que se ven con los filtros de arriba. Fechas y observaciones: modo «Detalle».</p>' : ''}`;
+  atarFiltros(vistaCuadro); atarModo();
+  if (!ed) return;
+  const marcar = (inp, ok) => { inp.style.outline = ok ? '2px solid #2F5BEA' : '2px solid #C62828'; setTimeout(() => { inp.style.outline = ''; }, 1500); };
+  const sumar = async (pid, pr) => { const d = { persona: pid, proyecto: pr, funcion: 'Integrante', desde: S.hoy ? S.hoy() : '', obs: '' }; const r = await S.api('coe_participacion', { participacion: d }); if (!r.ok) throw r; cat.participaciones.push(Object.assign({ id: r.id }, d)); };
+  $('#vista').querySelector('table.cuadro').addEventListener('change', async ev => {
+    const t = ev.target;
+    if (!navigator.onLine) { toast('Para guardar en el COE se necesita conexión.'); if (t.type === 'checkbox') t.checked = !t.checked; return; }
+    try {
+      if (t.dataset.pr) {
+        const pid = t.closest('tr').dataset.p, pr = t.dataset.pr, x = parDe(pid, pr);
+        t.disabled = true;
+        if (t.checked && !x) await sumar(pid, pr);
+        else if (!t.checked && x) {
+          if (!confirm('¿Quitar a ' + per(pid).nombre + ' de «' + pr + '»? La persona sigue en la lista de participantes.')) { t.checked = true; t.disabled = false; return; }
+          const r = await S.api('coe_participacion', { participacion: { id: x.id, borrar: true } }); if (!r.ok) throw r;
+          cat.participaciones = cat.participaciones.filter(y => y.id !== x.id);
+        }
+        S.store.set('coe.cat', cat); vistaCuadro();
+      } else if (t.dataset.fun) {
+        const x = cat.participaciones.find(y => y.id === t.dataset.fun); if (!x) return;
+        const d = { id: x.id, persona: x.persona, proyecto: x.proyecto, funcion: t.value.trim(), desde: x.desde, obs: x.obs };
+        const r = await S.api('coe_participacion', { participacion: d }); if (!r.ok) throw r;
+        x.funcion = d.funcion; S.store.set('coe.cat', cat); marcar(t, true);
+      }
+    } catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.'); if (t.type === 'checkbox') { t.checked = !t.checked; t.disabled = false; } else marcar(t, false); }
+  });
+  $('#vista').querySelectorAll('[data-todos]').forEach(b => b.addEventListener('click', async () => {
+    const pr = b.dataset.todos, faltan = pers.filter(p => p.estado !== 'Inactivo' && !parDe(p.id, pr));
+    if (!faltan.length) { toast('Ya están todos en ese proyecto.'); return; }
+    if (!confirm('¿Sumar a «' + pr + '» a ' + faltan.length + ' participante(s) que se ven en la lista, con la función «Integrante»?')) return;
+    if (!navigator.onLine) { toast('Para guardar en el COE se necesita conexión.'); return; }
+    b.disabled = true; let n = 0;
+    try { for (const p of faltan) { b.textContent = 'Sumando ' + (++n) + ' de ' + faltan.length + '…'; await sumar(p.id, pr); } toast('Listo: ' + faltan.length + ' sumado(s).'); }
+    catch (e) { toast((e && (e.error || e.message)) || 'No se pudo completar.'); }
+    S.store.set('coe.cat', cat); vistaCuadro();
+  }));
+}
 function vistaGrilla() {
+  if (gModo !== 'detalle') return vistaCuadro();
   const pers = cat.personas.filter(pasa), ids = new Set(pers.map(p => p.id));
   const filas = cat.participaciones.filter(x => ids.has(x.persona) && (!fProy || x.proyecto === fProy))
     .sort((a, b) => (a.proyecto + per(a.persona).nombre).localeCompare(b.proyecto + per(b.persona).nombre, 'es'));
@@ -260,7 +322,7 @@ function vistaGrilla() {
       <td><input data-c="desde" placeholder="dd/mm/aaaa"></td>
       <td><input data-c="obs" placeholder="Observaciones"></td>
       <td><button class="btn mini" data-act="agregarFila"><span class="ms" style="font-size:17px">add</span>Agregar</button></td></tr>` : '';
-  $('#vista').innerHTML = filtrosHTML(true) + dl + `<div class="tabla-wrap"><table><thead><tr><th>Participante</th><th>Tipo de actor</th><th>Proyecto</th><th>Función</th><th>Desde</th><th>Observaciones</th><th></th></tr></thead><tbody>${nueva}
+  $('#vista').innerHTML = filtrosHTML(true) + modoHTML() + dl + `<div class="tabla-wrap"><table><thead><tr><th>Participante</th><th>Tipo de actor</th><th>Proyecto</th><th>Función</th><th>Desde</th><th>Observaciones</th><th></th></tr></thead><tbody>${nueva}
     ${filas.map(x => { const p = per(x.persona); return ed ? `<tr data-fila="${E(x.id)}" data-persona="${E(x.persona)}">
       <td class="nom">${E(p.nombre || x.persona)}</td>
       <td><select data-c="tipo">${opts(cat.listas.tipos, p.tipo)}</select></td>
@@ -272,7 +334,7 @@ function vistaGrilla() {
       : `<tr><td class="nom">${E(p.nombre || x.persona)}</td><td>${chipTipo(p.tipo)}</td><td>${E(x.proyecto)}</td><td>${E(x.funcion || 's/d')}</td><td>${E(x.desde || '')}</td><td>${E(x.obs || '')}</td><td></td></tr>`; }).join('')}
     ${filas.length ? '' : '<tr><td colspan="7" class="vacio">No hay filas con estos filtros.</td></tr>'}</tbody></table></div>
     ${ed ? '<p class="sub">Los cambios se guardan solos al salir de cada casillero. El tipo de actor es de la persona (vale para todos sus proyectos); la función es propia de cada proyecto.</p>' : ''}`;
-  atarFiltros(vistaGrilla);
+  atarFiltros(vistaGrilla); atarModo();
   if (!ed) return;
   const nv = $('tr.nueva');
   if (nv) nv.querySelector('[data-c=persona]').addEventListener('change', ev => { const p = per(ev.target.value); nv.querySelector('[data-c=tipo]').innerHTML = `<option>${E(p.tipo || '—')}</option>`; });
@@ -946,7 +1008,7 @@ function vistaAyuda() {
     <p>Acá se registran las personas que integran el comité de crisis y el centro de operaciones de emergencia (COE), con sus datos y contactos, y en qué proyectos participan y con qué función.</p>
     <p><b>Si tu acceso no es de Administración</b>: ves solo la pestaña <b>Participantes</b>, con quiénes integran el COE de tu red, su función y sus contactos institucionales y de emergencia. El avance de las tareas, las reuniones y los acuerdos los ves en el <b>Tablero de control</b> del inicio, si lo tenés habilitado.</p>
     <ul><li><b>Participantes</b>: una ficha por persona con apellidos, nombres, DNI, título, función o cargo, institución (interna o externa), teléfonos (particular, de la institución y de emergencia), correos (personal e institucional), su rol dentro del COE en cada proyecto y su reemplazante. El reemplazante se elige entre los ya cargados o se carga ahí mismo con los mismos datos, y queda como un participante más, enlazado; si se pide, se suma al mismo proyecto como «Alterno». El DNI, el teléfono particular y el correo personal los ve solo Administración; el resto de los usuarios del COE ve los datos institucionales y el teléfono de emergencia. Lo que falta se muestra «s/d (revisar)».</li>
-      <li><b>Proyectos y funciones</b>: la grilla para cargar rápido. Cada fila es una persona en un proyecto: tipo de actor, proyecto, función, desde cuándo y observaciones. La misma persona puede tener funciones distintas en cada proyecto. Los cambios se guardan al salir de cada casillero.</li>
+      <li><b>Proyectos y funciones</b>: modo <b>Cuadro</b> (una fila por persona y una columna por proyecto: tildás para sumarla al proyecto como «Integrante», destildás para quitarla, cambiás la función en el casillero de abajo y «Tildar todos» suma a todos los que se ven con los filtros) o modo <b>Detalle</b>, la grilla para cargar rápido. Cada fila es una persona en un proyecto: tipo de actor, proyecto, función, desde cuándo y observaciones. La misma persona puede tener funciones distintas en cada proyecto. Los cambios se guardan al salir de cada casillero.</li>
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
       <li>Si una persona deja de participar, cambiá su estado a «Inactivo»: no se borra y queda el historial.</li></ul>
