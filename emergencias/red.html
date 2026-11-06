@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>COE · Reuniones, acuerdos y documentos · Emergencias y desastres</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--alerta:#F57C00}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#F5F7FB;border-bottom:3px solid var(--medio);padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+.pest{display:flex;gap:6px;overflow-x:auto;padding:10px 16px 0;max-width:1000px;margin:0 auto}
+.pest button{flex:none;border:1.5px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.pest button[aria-selected=true]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.pest .n{font-size:11px;background:var(--claro);color:var(--fuerte);border-radius:999px;padding:0 7px}
+main{max-width:1000px;margin:0 auto;padding:12px 16px 40px}
+.aviso{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:13.5px;color:var(--suave)}
+.aviso.alerta{border-left-color:var(--alerta)}
+.herr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.herr select,.herr input{border:1px solid var(--borde);border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;background:#fff;min-height:40px}
+.herr .esp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid transparent;border-radius:10px;padding:8px 13px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:none;min-height:40px;background:var(--medio);color:#fff}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--medio)}
+.btn.chico{min-height:32px;padding:4px 10px;font-size:12.5px}
+.btn:disabled{opacity:.55;cursor:default}
+.tarj{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:12px 16px;margin-bottom:10px}
+.tarj h3{margin:0 0 4px;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.meta{font-size:12.5px;color:var(--suave)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--claro);color:var(--fuerte)}
+.chip.int{background:#EEEAFD;color:#3B2A7A}.chip.val{background:#FFF1E0;color:#7A3E00}.chip.ok{background:#E3F4EA;color:#14532D}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--linea);vertical-align:top}
+th{font-size:12px;color:var(--suave);font-weight:700;background:#F9FAFE;position:sticky;top:0}
+.tabla{border:1px solid var(--linea);border-radius:12px;overflow:auto;max-height:70vh}
+a{color:var(--fuerte);text-decoration-color:var(--medio)}
+details{margin-top:8px}details summary{cursor:pointer;font-weight:700;font-size:13.5px}
+ul.lst{margin:6px 0 0;padding-left:18px}ul.lst li{margin:3px 0;font-size:13.5px}
+.vacio{color:var(--tenue);font-size:13.5px;padding:8px 0}
+dialog{border:0;border-radius:16px;padding:0;max-width:720px;width:calc(100% - 24px);box-shadow:0 20px 60px rgba(23,43,77,.3)}dialog::backdrop{background:rgba(23,43,77,.45)}
+.dlg-cab{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--linea)}.dlg-cab b{flex:1}
+.dlg-c{padding:6px 16px 4px;max-height:70vh;overflow:auto}.dlg-p{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--linea)}
+.campo{display:block;margin:9px 0}.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:4px}
+.campo input,.campo textarea,.campo select{width:100%;border:1px solid var(--borde);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px}.campo textarea{min-height:60px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}@media(max-width:560px){.dos{grid-template-columns:1fr}}
+.cerrar{background:none;border:0;cursor:pointer;color:var(--fuerte)}
+.asis{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:4px 12px;margin:6px 0}
+.asis label{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;padding:4px 0}
+.acu-fila{border:1px solid var(--linea);border-radius:10px;padding:8px 10px;margin:6px 0;display:grid;grid-template-columns:110px 1fr;gap:6px}
+.acu-fila textarea{grid-column:1/-1}
+.acu-fila input,.acu-fila select,.acu-fila textarea{border:1px solid var(--borde);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;width:100%}
+.est{font-size:13px;color:var(--suave);min-height:18px}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--fuerte);color:#F5F7FB;border-left:5px solid var(--medio);padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:20}
+@media print{.barra,.pest,.herr,.btn,footer{display:none}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>COE · Reuniones, acuerdos y documentos<small id="sub">COE de Trelew y Área Programática · versión 0</small></h1>
+  <button class="icono" id="bComentar" hidden title="Comentar STAR-H o PHR"><span class="ms">rate_review</span><span>Comentar</span></button>
+  <button class="icono" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span></button>
+</header>
+<nav class="pest" id="pest" role="tablist"></nav>
+<main id="app"><p class="vacio">Cargando…</p></main>
+<dialog id="dlg"></dialog>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+/* 06/11/2026 · Rediseño (v0). Lee la acción red_catalogo del Apps Script (Red.gs): órganos e integrantes, reuniones con
+ * asistencia y acuerdos, índice de documentos, lugares y enlaces. Cada usuario recibe solo lo que puede ver:
+ * la parte interna del COE ve lo del COE interno; los externos, solo lo del COE completo; lo de HySL, solo Administración.
+ * Cargar reuniones, documentos, lugares y enlaces: por ahora solo Administración. */
+const S = window.STARH, E = S.esc, $ = s => document.querySelector(s), app = $('#app');
+const PEST = [
+  ['reu', 'Reuniones', 'event_note'], ['acu', 'Acuerdos y tareas', 'task_alt'], ['doc', 'Documentos', 'description'],
+  ['org', 'Órganos e integrantes', 'groups'], ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link']
+];
+let D = S.store.get('red.cat', null), pest = (location.hash || '#reu').slice(1), filtro = {};
+const adm = () => !!(D && D.admin);
+const nomOrg = id => { const o = (D && D.organos || []).filter(x => x.ID === id)[0]; return o ? o.Nombre : id; };
+const fechaN = s => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Number(m[3] + m[2].padStart(2, '0') + m[1].padStart(2, '0')) : 0; };
+const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3500); };
+const errTxt = e => { const m = (e && (e.error || e.message)) || 'No se pudo completar.'; return /desconocida|No disponible/i.test(m) ? 'Falta publicar la versión nueva del Apps Script (Implementar › Administrar implementaciones › Editar › Nueva versión).' : m; };
+const parteChip = p => /intern/i.test(p) ? '<span class="chip int">COE interno</span>' : /extern/i.test(p) ? '<span class="chip">Externa</span>' : '<span class="chip">COE completo</span>';
+
+async function cargar(nota) {
+  if (S.DEMO) { app.innerHTML = '<div class="aviso alerta">Esta sección necesita conexión con el servidor (no funciona en modo demostración).</div>'; return; }
+  if (!navigator.onLine) { pintar(D ? 'Sin conexión: últimos datos guardados.' : ''); return; }
+  try { const r = await S.api('red_catalogo', {}, 60000); if (!r.ok) throw r; D = r; S.store.set('red.cat', r); pintar(nota || ''); }
+  catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso alerta">${E(errTxt(e))}</div>` + (D ? '' : ''); if (D) pintar('No se pudo actualizar: se muestran los últimos datos guardados.'); }
+}
+
+function pintarPest() {
+  const n = { reu: (D.reuniones || []).length, acu: (D.acuerdos || []).length, doc: (D.documentos || []).length, org: (D.organos || []).length, lug: (D.lugares || []).length, enl: (D.enlaces || []).length };
+  $('#pest').innerHTML = PEST.map(p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`).join('');
+  $('#bComentar').hidden = !D.puedeComentar;
+}
+function pintar(nota) {
+  if (!D) return;
+  pintarPest();
+  const aviso = nota ? `<div class="aviso">${E(nota)}</div>` : '';
+  const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces }[pest] || vReuniones;
+  app.innerHTML = aviso + f();
+}
+
+/* ---------- Reuniones ---------- */
+function vReuniones() {
+  const L = (D.reuniones || []).slice().sort((a, b) => fechaN(b.Fecha) - fechaN(a.Fecha));
+  const herr = `<div class="herr"><span class="esp meta">Asistencia y acuerdos se cargan en el momento de la reunión. La planilla impresa se firma y el escaneo se vincula a la reunión.</span>${adm() ? '<button class="btn" data-a="reuNueva"><span class="ms">add</span>Nueva reunión</button>' : ''}</div>`;
+  if (!L.length) return herr + '<p class="vacio">No hay reuniones que puedas ver.</p>';
+  return herr + L.map(r => {
+    const as = (D.asistencia || []).filter(a => a['Reunión'] === r.ID), ac = (D.acuerdos || []).filter(a => a['Reunión'] === r.ID);
+    return `<div class="tarj"><h3>${E(r.Fecha)} · ${E(nomOrg(r['Órgano']))} ${parteChip(r.Parte)}<span class="chip">${E(r['N.º'] ? 'N.º ' + r['N.º'] : r.ID)}</span></h3>
+      <div class="meta">${E([r.Tipo, r.Horario, r['Lugar o modalidad'], r['Convocó · coordinó'] ? 'Coordinó: ' + r['Convocó · coordinó'] : '', r['Redactó'] ? 'Redactó: ' + r['Redactó'] : ''].filter(x => x && !/^s\/d/.test(x)).join(' · '))}</div>
+      ${r['Orden del día'] ? `<p style="margin:6px 0;font-size:14px">${E(r['Orden del día'])}</p>` : ''}
+      <div class="herr" style="margin:6px 0 0">
+        ${r['Acta (Doc)'] ? `<a class="btn sec chico" href="${E(r['Acta (Doc)'])}" target="_blank" rel="noopener"><span class="ms">article</span>Acta</a>` : '<span class="chip val">Acta: s/d</span>'}
+        ${r['Asistencia firmada (escaneo)'] ? `<a class="btn sec chico" href="${E(r['Asistencia firmada (escaneo)'])}" target="_blank" rel="noopener"><span class="ms">draw</span>Asistencia firmada</a>` : '<span class="chip val">Asistencia firmada: pendiente</span>'}
+        <button class="btn sec chico" data-a="imprimir" data-id="${E(r.ID)}"><span class="ms">print</span>Planilla de asistencia</button>
+        ${adm() ? `<button class="btn sec chico" data-a="reuEditar" data-id="${E(r.ID)}"><span class="ms">edit</span>Editar</button>` : ''}
+      </div>
+      <details><summary>Asistentes (${as.length})</summary><ul class="lst">${as.map(a => `<li>${E(a.Persona)}${a['Institución / función'] ? ' · ' + E(a['Institución / función']) : ''}${a.Presente === 'No' ? ' <span class="chip val">ausente</span>' : ''}</li>`).join('') || '<li class="vacio">Sin datos.</li>'}</ul></details>
+      <details><summary>Acuerdos y tareas (${ac.length})</summary><ul class="lst">${ac.map(a => `<li><b>${E(a.ID)}</b> · ${E(a.Tipo)} · ${E(a.Texto)}${a.Responsable ? ` <span class="meta">· Responsable: ${E(a.Responsable)}</span>` : ''}${a.Plazo ? ` <span class="meta">· Plazo: ${E(a.Plazo)}</span>` : ''} <span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></li>`).join('') || '<li class="vacio">Sin acuerdos.</li>'}</ul></details>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Acuerdos ---------- */
+function vAcuerdos() {
+  const est = filtro.acuEst || '', q = (filtro.acuQ || '').toLowerCase();
+  const estados = [...new Set((D.acuerdos || []).map(a => a.Estado).filter(Boolean))];
+  const reu = id => (D.reuniones || []).filter(r => r.ID === id)[0] || {};
+  const L = (D.acuerdos || []).filter(a => (!est || a.Estado === est) && (!q || (a.Texto + ' ' + a.Responsable).toLowerCase().indexOf(q) >= 0));
+  return `<div class="herr"><select data-f="acuEst"><option value="">Todos los estados</option>${estados.map(e => `<option ${e === est ? 'selected' : ''}>${E(e)}</option>`).join('')}</select>
+    <input data-f="acuQ" placeholder="Buscar texto o responsable" value="${E(filtro.acuQ || '')}"><span class="esp"></span><span class="meta">${L.length} de ${(D.acuerdos || []).length}</span></div>
+    <div class="tabla"><table><thead><tr><th>ID</th><th>Reunión</th><th>Tipo</th><th>Texto</th><th>Responsable</th><th>Plazo</th><th>Estado</th></tr></thead><tbody>
+    ${L.map(a => { const r = reu(a['Reunión']); return `<tr><td>${E(a.ID)}</td><td>${E(r.Fecha || a['Reunión'])}<br><span class="meta">${/intern/i.test(r.Parte) ? 'COE interno' : 'COE completo'}</span></td><td>${E(a.Tipo)}</td><td>${E(a.Texto)}</td><td>${E(a.Responsable)}</td><td>${E(a.Plazo)}</td><td><span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></td></tr>`; }).join('') || '<tr><td colspan="7" class="vacio">Sin resultados.</td></tr>'}
+    </tbody></table></div>`;
+}
+
+/* ---------- Documentos ---------- */
+function vDocumentos() {
+  const L0 = D.documentos || [];
+  const op = k => [...new Set(L0.map(d => d[k]).filter(Boolean))];
+  const fc = filtro.docClase || '', fe = filtro.docEmisor || '', fs = filtro.docEstado || '', q = (filtro.docQ || '').toLowerCase();
+  const L = L0.filter(d => (!fc || d.Clase === fc) && (!fe || d.Emisor === fe) && (!fs || (fs === '__val' ? /validar/i.test(d.Estado) : d.Estado === fs)) && (!q || d['Título'].toLowerCase().indexOf(q) >= 0));
+  const nVal = L0.filter(d => /validar/i.test(d.Estado)).length;
+  const sel = (k, t, arr) => `<select data-f="${k}"><option value="">${t}</option>${arr.map(x => `<option ${x === filtro[k] ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>`;
+  return `<div class="aviso">Cada documento indica quién lo emite (HySL, COE interno, COE completo, Dirección) y su alcance. Las notas de HySL solo las ve Administración. Las solicitudes a organismos salen del COE interno, con firma de la coordinación general y visto bueno de la Dirección.</div>
+    <div class="herr">${sel('docClase', 'Todas las clases', op('Clase'))}${sel('docEmisor', 'Todos los emisores', op('Emisor'))}
+    <select data-f="docEstado"><option value="">Todos los estados</option><option value="__val" ${filtro.docEstado === '__val' ? 'selected' : ''}>Para validar (${nVal})</option>${op('Estado').map(x => `<option ${x === filtro.docEstado ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>
+    <input data-f="docQ" placeholder="Buscar título" value="${E(filtro.docQ || '')}"><span class="esp"></span>${adm() ? '<button class="btn" data-a="docNuevo"><span class="ms">add</span>Agregar</button>' : ''}</div>
+    <div class="tabla"><table><thead><tr><th>Documento</th><th>Clase</th><th>Emisor · alcance</th><th>Estado</th><th>Ve</th>${adm() ? '<th></th>' : ''}</tr></thead><tbody>
+    ${L.map(d => `<tr><td>${d.Enlace ? `<a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a>` : E(d['Título'])}<br><span class="meta">${E(d.ID)} · v${E(d['Versión'] || '0')} · ${E(d.Fecha)}</span></td>
+      <td>${E(d.Clase)}</td><td>${E(d.Emisor)}<br><span class="meta">${E(d.Alcance)}${d.Establecimiento && d.Establecimiento !== '—' ? ' · ' + E(d.Establecimiento) : ''}</span></td>
+      <td><span class="chip ${/validar|borrador/i.test(d.Estado) ? 'val' : 'ok'}">${E(d.Estado)}</span></td><td class="meta">${E(d['Visible para'])}</td>
+      ${adm() ? `<td><button class="btn sec chico" data-a="docEditar" data-id="${E(d.ID)}"><span class="ms">edit</span></button></td>` : ''}</tr>`).join('') || `<tr><td colspan="6" class="vacio">Sin documentos.</td></tr>`}
+    </tbody></table></div>`;
+}
+
+/* ---------- Órganos ---------- */
+function vOrganos() {
+  return `<div class="aviso">Las herramientas (STAR-H, ISH, PHR) no son órganos: tienen sus propios permisos. El COE interno es la parte interna (hospitales y Área Programática) del COE de Trelew y Área Programática.</div>` +
+  (D.organos || []).map(o => {
+    const I = (D.integrantes || []).filter(i => i.organo === o.ID);
+    const g = p => I.filter(i => p.test(i.parte));
+    const lista = arr => arr.map(i => `<li>${E(i.nombre)}${i.funcion ? ' · <span class="meta">' + E(i.funcion) + '</span>' : ''}</li>`).join('');
+    return `<div class="tarj"><h3>${E(o.Nombre)} <span class="chip">${E(o.Estado || '')}</span></h3>
+      <div class="meta">${E([o.Tipo, o['Establecimiento o alcance'], o['Activación vigente'] ? 'Activación: ' + o['Activación vigente'] + (o['Activa desde'] ? ' (desde ' + o['Activa desde'] + ')' : '') : ''].filter(Boolean).join(' · '))}</div>
+      ${I.length ? `<details ${I.length < 40 ? '' : ''}><summary>Integrantes (${I.length}: ${g(/^intern/i).length} internos, ${g(/^extern/i).length} externos)</summary>
+        <p class="meta" style="margin:8px 0 0"><b>Parte interna (COE interno)</b></p><ul class="lst">${lista(g(/^intern/i)) || '<li class="vacio">—</li>'}</ul>
+        <p class="meta" style="margin:8px 0 0"><b>Parte externa</b></p><ul class="lst">${lista(g(/^extern/i)) || '<li class="vacio">—</li>'}</ul></details>` : '<p class="vacio">Sin integrantes cargados.</p>'}
+    </div>`;
+  }).join('');
+}
+
+/* ---------- Establecimientos (registro único de lugares) ---------- */
+function vLugares() {
+  const areas = [...new Set((D.lugares || []).map(l => l.area).filter(Boolean))];
+  const fa = filtro.lugArea === undefined ? 'Área Programática Trelew' : filtro.lugArea, q = (filtro.lugQ || '').toLowerCase();
+  const L = (D.lugares || []).filter(l => (!fa || l.area === fa) && (!q || (l.nombre + ' ' + l.corto).toLowerCase().indexOf(q) >= 0));
+  return `<div class="aviso">Registro único de establecimientos (fuente: catálogo del Portal). Localidad, coordenadas y camas quedan «s/d (revisar)» hasta que cada establecimiento los confirme. Las capacidades son estimadas: la app es una base orientadora, no un registro en tiempo real.</div>
+    <div class="herr"><select data-f="lugArea"><option value="">Todas las áreas</option>${areas.map(a => `<option ${a === fa ? 'selected' : ''}>${E(a)}</option>`).join('')}</select>
+    <input data-f="lugQ" placeholder="Buscar" value="${E(filtro.lugQ || '')}"><span class="esp"></span><span class="meta">${L.length} establecimientos</span></div>
+    <div class="tabla"><table><thead><tr><th>Establecimiento</th><th>Tipo</th><th>Red</th><th>Localidad</th><th>Camas (est.)</th><th>SISA</th>${adm() ? '<th>Libro</th><th></th>' : ''}</tr></thead><tbody>
+    ${L.map(l => `<tr><td><b>${E(l.corto)}</b><br><span class="meta">${E(l.nombre)}</span></td><td>${E(l.tipo)}</td><td>${E(l.red)}</td><td>${E(l.localidad)}</td><td>${E(l.camas)}</td><td class="meta">${E(l.sisa)}</td>
+      ${adm() ? `<td>${l.libro ? `<a href="${E(l.libro)}" target="_blank" rel="noopener">abrir</a>` : '<span class="meta">—</span>'}</td><td><button class="btn sec chico" data-a="lugEditar" data-id="${E(l.id)}"><span class="ms">edit</span></button></td>` : ''}</tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+/* ---------- Enlaces ---------- */
+function vEnlaces() {
+  const g = {}; (D.enlaces || []).forEach(e => (g[e.Grupo || 'Otros'] = g[e.Grupo || 'Otros'] || []).push(e));
+  return (adm() ? '<div class="herr"><span class="esp"></span><button class="btn" data-a="enlNuevo"><span class="ms">add</span>Agregar enlace</button></div>' : '') +
+    (Object.keys(g).map(k => `<div class="tarj"><h3><span class="ms">link</span>${E(k)}</h3><ul class="lst">${g[k].map(e => `<li>${e.Enlace ? `<a href="${E(e.Enlace)}" target="_blank" rel="noopener"><b>${E(e['Título'])}</b></a>` : `<b>${E(e['Título'])}</b> <span class="chip val">enlace s/d</span>`}${e.Detalle ? ' · <span class="meta">' + E(e.Detalle) + '</span>' : ''}${adm() ? ` <button class="btn sec chico" data-a="enlEditar" data-id="${E(e.Orden)}"><span class="ms">edit</span></button>` : ''}</li>`).join('')}</ul></div>`).join('') || '<p class="vacio">Sin enlaces.</p>');
+}
+
+/* ---------- Diálogos (Administración) ---------- */
+const dlg = $('#dlg');
+const campo = (n, t, v, tipo) => `<label class="campo"><span>${t}</span>${tipo === 'area' ? `<textarea name="${n}">${E(v || '')}</textarea>` : `<input name="${n}" value="${E(v || '')}" ${tipo ? 'type="' + tipo + '"' : ''}>`}</label>`;
+const selC = (n, t, v, arr) => `<label class="campo"><span>${t}</span><select name="${n}">${arr.map(x => { const val = Array.isArray(x) ? x[0] : x, lab = Array.isArray(x) ? x[1] : x; return `<option value="${E(val)}" ${val === v ? 'selected' : ''}>${E(lab)}</option>`; }).join('')}</select></label>`;
+function abrir(titulo, cuerpo, pie) {
+  dlg.innerHTML = `<div class="dlg-cab"><b>${E(titulo)}</b><button class="cerrar" data-c aria-label="Cerrar"><span class="ms">close</span></button></div><form class="dlg-c" id="fD" onsubmit="return false">${cuerpo}<p class="est" id="estD"></p></form><div class="dlg-p">${pie}</div>`;
+  dlg.showModal();
+}
+
+function dlgReunion(id) {
+  const r = id ? (D.reuniones || []).filter(x => x.ID === id)[0] : null;
+  const asis = id ? (D.asistencia || []).filter(a => a['Reunión'] === id) : [];
+  const acus = id ? (D.acuerdos || []).filter(a => a['Reunión'] === id) : [];
+  const org = r ? r['Órgano'] : 'COE-APTW', parte = r ? (/intern/i.test(r.Parte) ? 'Interna (COE interno)' : 'Completo') : 'Completo';
+  abrir(r ? 'Editar reunión ' + r.ID : 'Nueva reunión',
+    `<div class="dos">${selC('organo', 'Órgano', org, (D.organos || []).map(o => [o.ID, o.Nombre]))}${selC('parte', 'Quiénes', parte, [['Completo', 'COE completo (interno + externo)'], ['Interna (COE interno)', 'COE interno (solo parte interna)']])}</div>
+     <div class="dos">${campo('fecha', 'Fecha (dd/mm/aaaa) *', r ? r.Fecha : new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }))}${campo('horario', 'Horario', r && r.Horario)}</div>
+     <div class="dos">${campo('num', 'N.º de reunión o acta', r && r['N.º'])}${selC('tipo', 'Tipo', r ? r.Tipo : 'Ordinaria', ['Ordinaria', 'Extraordinaria', 'De trabajo'])}</div>
+     <div class="dos">${campo('lugar', 'Lugar o modalidad', r && r['Lugar o modalidad'])}${campo('coordino', 'Convocó · coordinó', r && r['Convocó · coordinó'])}</div>
+     <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', r ? r.Estado : 'Realizada', ['Convocada', 'Realizada', 'Suspendida'])}</div>
+     ${campo('orden', 'Orden del día', r && r['Orden del día'], 'area')}
+     <p class="meta" style="margin:12px 0 2px"><b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)</p>
+     <div id="asisL" class="asis"></div>
+     ${campo('extras', 'Otros asistentes (uno por línea: Apellido y nombre · institución o función)', asis.filter(a => !a['ID persona']).map(a => a.Persona + (a['Institución / función'] ? ' · ' + a['Institución / función'] : '')).join('\n'), 'area')}
+     <p class="meta" style="margin:12px 0 2px"><b>Acuerdos y tareas</b> (uno por uno)</p><div id="acuL"></div>
+     <button class="btn sec chico" type="button" data-a="acuMas"><span class="ms">add</span>Agregar acuerdo o tarea</button>
+     <div class="dos">${campo('acta', 'Acta (enlace al Doc)', r && r['Acta (Doc)'], 'url')}${campo('escaneo', 'Asistencia firmada (enlace al escaneo)', r && r['Asistencia firmada (escaneo)'], 'url')}</div>
+     ${campo('obs', 'Observaciones', r && r.Observaciones, 'area')}`,
+    `<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn sec" type="button" data-a="imprimirDlg"><span class="ms">print</span>Planilla de asistencia</button><button class="btn" type="button" data-a="reuGuardar" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button>`);
+  const f = $('#fD');
+  const pintarAsis = () => {
+    const o = f.organo.value, soloInt = /intern/i.test(f.parte.value);
+    const marcados = new Set(asis.map(a => a['ID persona']).filter(Boolean));
+    const I = (D.integrantes || []).filter(i => i.organo === o && (!soloInt || /^intern/i.test(i.parte)));
+    $('#asisL').innerHTML = I.map(i => `<label><input type="checkbox" name="as" value="${E(i.persona)}" data-n="${E(i.nombre)}" data-f="${E(i.funcion || '')}" ${marcados.has(i.persona) ? 'checked' : ''}><span>${E(i.nombre)}<br><span class="meta">${E(i.funcion || '')}${/^extern/i.test(i.parte) ? ' · externa' : ''}</span></span></label>`).join('') || '<p class="vacio">Este órgano no tiene integrantes cargados.</p>';
+  };
+  f.organo.addEventListener('change', pintarAsis); f.parte.addEventListener('change', pintarAsis); pintarAsis();
+  acus.forEach(a => filaAcuerdo(a)); if (!acus.length) filaAcuerdo();
+}
+function filaAcuerdo(a) {
+  a = a || {};
+  const d = document.createElement('div'); d.className = 'acu-fila'; d.dataset.id = a.ID || '';
+  d.innerHTML = `<select name="aTipo">${['Acuerdo', 'Decisión', 'Tarea'].map(t => `<option ${t === (a.Tipo || 'Acuerdo') ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    <input name="aResp" placeholder="Responsable" value="${E(a.Responsable || '')}">
+    <input name="aPlazo" placeholder="Plazo" value="${E(a.Plazo || '')}"><select name="aEst">${['Pendiente', 'En curso', 'Cumplido', 'Vigente', 'Sin efecto'].map(t => `<option ${t === (a.Estado || 'Pendiente') ? 'selected' : ''}>${t}</option>`).join('')}</select>
+    <textarea name="aTexto" placeholder="Texto del acuerdo o la tarea">${E(a.Texto || '')}</textarea>`;
+  $('#acuL').appendChild(d);
+}
+function leerReunion(f) {
+  const asistencia = [...f.querySelectorAll('input[name=as]:checked')].map(c => ({ persona: c.value, nombre: c.dataset.n, funcion: c.dataset.f, presente: true }))
+    .concat(f.extras.value.split('\n').map(x => x.trim()).filter(Boolean).map(x => { const p = x.split(/\s+·\s+|\s+-\s+/); return { persona: '', nombre: p[0], funcion: p.slice(1).join(' · '), presente: true }; }));
+  const acuerdos = [...document.querySelectorAll('.acu-fila')].map(d => ({ id: d.dataset.id, tipo: d.querySelector('[name=aTipo]').value, texto: d.querySelector('[name=aTexto]').value.trim(), resp: d.querySelector('[name=aResp]').value, plazo: d.querySelector('[name=aPlazo]').value, estado: d.querySelector('[name=aEst]').value })).filter(a => a.texto);
+  return { organo: f.organo.value, parte: f.parte.value, fecha: f.fecha.value.trim(), horario: f.horario.value, num: f.num.value, tipo: f.tipo.value, lugar: f.lugar.value, coordino: f.coordino.value,
+    redacto: f.redacto.value, estado: f.estado.value, orden: f.orden.value, acta: f.acta.value, escaneo: f.escaneo.value, obs: f.obs.value, asistencia: asistencia, acuerdos: acuerdos };
+}
+
+/* Planilla de asistencia para imprimir y firmar (con los marcados y renglones en blanco). */
+function imprimirPlanilla(r, asis) {
+  const filas = asis.concat(Array(Math.max(6, 22 - asis.length)).fill({}));
+  const w = window.open('', '_blank'); if (!w) { toast('El navegador bloqueó la ventana: permití ventanas emergentes.'); return; }
+  w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Asistencia · ${E(r.fecha || '')}</title>
+  <style>body{font-family:Arial,sans-serif;font-size:11pt;margin:18mm 14mm;color:#000}h1{font-size:13pt;margin:0 0 2mm}p{margin:1mm 0}table{width:100%;border-collapse:collapse;margin-top:4mm}
+  th,td{border:1px solid #000;padding:2.2mm 2mm;text-align:left;vertical-align:middle}th{background:#eee;font-size:10pt}td.n{width:8mm;text-align:center}td.f{width:45mm}
+  footer{margin-top:6mm;text-align:center}footer img{width:66%;max-height:14mm;object-fit:contain}@page{size:A4;margin:0}</style></head><body>
+  <h1>Planilla de asistencia · ${E(nomOrg(r.organo))}${/intern/i.test(r.parte) ? ' · COE interno' : ''}</h1>
+  <p><b>Fecha:</b> ${E(r.fecha || '')} &nbsp; <b>Horario:</b> ${E(r.horario || '')} &nbsp; <b>Lugar:</b> ${E(r.lugar || '')}</p>
+  <p><b>Reunión N.º:</b> ${E(r.num || '')} &nbsp; <b>Orden del día:</b> ${E(r.orden || '')}</p>
+  <table><thead><tr><th>N.º</th><th>Apellido y nombre</th><th>Institución / función</th><th>Firma</th></tr></thead><tbody>
+  ${filas.map((a, i) => `<tr><td class="n">${i + 1}</td><td>${E(a.nombre || '')}</td><td>${E(a.funcion || '')}</td><td class="f"></td></tr>`).join('')}</tbody></table>
+  <p style="margin-top:5mm;font-size:9.5pt">Versión 0. Una vez firmada, escanear y vincular el archivo a la reunión en la app.</p>
+  <footer><img src="${location.href.replace(/[^/]*$/, '')}logo-hysl.png" alt=""></footer>
+  <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+  w.document.close();
+}
+
+function dlgFila(tipo, id) {
+  const cfg = {
+    doc: { t: 'Documento', lista: D.documentos, key: 'ID', camposF: () => [['Título', 'Título *'], ['Enlace', 'Enlace', 'url'], ['Fecha', 'Fecha'], ['Versión', 'Versión'], ['Establecimiento', 'Establecimiento'], ['Reunión', 'Reunión (ID, si corresponde)'], ['Observaciones', 'Observaciones', 'area']],
+      sels: [['Clase', ['Nota', 'Acta', 'Minuta', 'Acuerdo', 'Propuesta', 'Plan', 'Protocolo', 'Procedimiento', 'Modelo', 'Planilla', 'Informe', 'Otro']], ['Emisor', ['HySL', 'COE interno', 'COE completo', 'Dirección', 'Otro organismo']],
+        ['Alcance', ['Área Programática Trelew', 'Red Trelew', 'Red Rawson', 'Establecimiento', 'Toda la red']], ['Órgano', [''].concat((D.organos || []).map(o => o.ID))],
+        ['Estado', ['Borrador', 'Borrador (sin enviar)', 'Para validar', 'Validado', 'Firmado', 'Enviado', 'Vigente', 'Reemplazado']], ['Visible para', ['Integrantes del órgano', 'Parte interna', 'Todos', 'Solo Administración']]], accion: 'red_documento_guardar', prop: 'documento' },
+    lug: { t: 'Establecimiento', lista: (D.lugares || []).map(l => ({ ID: l.id, 'Nombre oficial': l.nombre, 'Nombre corto': l.corto, Tipo: l.tipo, Red: l.red, 'Depende de': l.depende, Localidad: l.localidad, Latitud: l.lat, Longitud: l.lng, 'Camas (total, estimado)': l.camas, 'Libro propio (link)': l.libro, Estado: l.estado, Observaciones: l.obs })), key: 'ID',
+      camposF: () => [['Nombre oficial', 'Nombre oficial *'], ['Nombre corto', 'Nombre corto'], ['Tipo', 'Tipo'], ['Red', 'Red'], ['Depende de', 'Depende de'], ['Localidad', 'Localidad'], ['Latitud', 'Latitud'], ['Longitud', 'Longitud'], ['Camas (total, estimado)', 'Camas (total, estimado)'], ['Libro propio (link)', 'Libro propio (solo Administración)', 'url'], ['Observaciones', 'Observaciones', 'area']],
+      sels: [['Estado', ['Activo', 'Inactivo']]], accion: 'red_lugar_guardar', prop: 'lugar' },
+    enl: { t: 'Enlace', lista: D.enlaces, key: 'Orden', camposF: () => [['Grupo', 'Grupo (Clima y alertas, Rutas, …)'], ['Título', 'Título *'], ['Enlace', 'Enlace', 'url'], ['Detalle', 'Detalle']], sels: [['Lo ven', ['Todos', 'Administración']]], accion: 'red_enlace_guardar', prop: 'enlace' }
+  }[tipo];
+  const o = id ? (cfg.lista || []).filter(x => String(x[cfg.key]) === String(id))[0] || {} : {};
+  abrir((id ? 'Editar ' : 'Agregar ') + cfg.t.toLowerCase(), cfg.sels.map(s => selC(s[0], s[0], o[s[0]] || s[1][0], s[1])).join('') + cfg.camposF().map(c => campo(c[0], c[1], o[c[0]], c[2])).join('') +
+    (tipo === 'doc' ? '<p class="meta">Para que no se pierda nada, todo documento queda en versión 0 hasta su aprobación. Lo que se corrige en el Doc no vuelve a la app.</p>' : ''),
+    `<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" data-a="filaGuardar" data-t="${tipo}" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button>`);
+  dlg._cfg = cfg;
+}
+
+function dlgComentar() {
+  const mods = Object.keys(D.niveles || {}).filter(m => /Comentar|Cargar|Aprobar|Administraci/.test(D.niveles[m]));
+  abrir('Comentar', selC('modulo', 'Herramienta o módulo', mods[0], mods) + campo('ref', 'Sobre qué (establecimiento, amenaza, ítem…)', '') + campo('texto', 'Comentario *', '', 'area') +
+    '<p class="meta">El comentario queda registrado para Higiene y Seguridad Laboral. No modifica lo cargado.</p>',
+    '<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" data-a="comGuardar"><span class="ms">send</span>Enviar</button>');
+}
+
+async function enviar(btn, accion, datos, ok) {
+  const est = $('#estD'); btn.disabled = true; est.textContent = 'Guardando…';
+  try { const r = await S.api(accion, datos, 90000); if (!r.ok) throw r; dlg.close(); toast(ok); cargar(); }
+  catch (e) { est.textContent = errTxt(e); btn.disabled = false; }
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-p],[data-a],[data-c]'); if (!t) return;
+  if (t.dataset.p) { pest = t.dataset.p; history.replaceState(null, '', '#' + pest); pintar(); return; }
+  if (t.hasAttribute('data-c')) { dlg.close(); return; }
+  const a = t.dataset.a, id = t.dataset.id;
+  if (a === 'reuNueva') dlgReunion('');
+  else if (a === 'reuEditar') dlgReunion(id);
+  else if (a === 'acuMas') filaAcuerdo();
+  else if (a === 'imprimir') {
+    const r = (D.reuniones || []).filter(x => x.ID === id)[0] || {};
+    imprimirPlanilla({ organo: r['Órgano'], parte: r.Parte, fecha: r.Fecha, horario: r.Horario, lugar: r['Lugar o modalidad'], num: r['N.º'], orden: r['Orden del día'] },
+      (D.asistencia || []).filter(x => x['Reunión'] === id).map(x => ({ nombre: x.Persona, funcion: x['Institución / función'] })));
+  }
+  else if (a === 'imprimirDlg') { const r = leerReunion($('#fD')); imprimirPlanilla(r, r.asistencia); }
+  else if (a === 'reuGuardar') { const r = leerReunion($('#fD')); r.id = id; if (!r.fecha) { $('#estD').textContent = 'Falta la fecha.'; return; } enviar(t, 'red_reunion_guardar', { reunion: r }, 'Reunión guardada.'); }
+  else if (a === 'docNuevo') dlgFila('doc', ''); else if (a === 'docEditar') dlgFila('doc', id);
+  else if (a === 'lugEditar') dlgFila('lug', id);
+  else if (a === 'enlNuevo') dlgFila('enl', ''); else if (a === 'enlEditar') dlgFila('enl', id);
+  else if (a === 'filaGuardar') {
+    const cfg = dlg._cfg, f = $('#fD'), o = {}; [...f.elements].forEach(el => { if (el.name) o[el.name] = el.value; });
+    o[cfg.key] = id || ''; const tit = o['Título'] || o['Nombre oficial'];
+    if (!String(tit || '').trim()) { $('#estD').textContent = 'Falta el título o nombre.'; return; }
+    if (cfg.prop === 'documento' && !o.Fecha) o.Fecha = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    enviar(t, cfg.accion, { [cfg.prop]: o }, 'Guardado.');
+  }
+  else if (a === 'comGuardar') { const f = $('#fD'); if (!f.texto.value.trim()) { $('#estD').textContent = 'Escribí el comentario.'; return; } enviar(t, 'red_comentar', { modulo: f.modulo.value, ref: f.ref.value, texto: f.texto.value }, 'Comentario enviado.'); }
+});
+document.addEventListener('change', ev => { const k = ev.target.dataset && ev.target.dataset.f; if (k && ev.target.tagName === 'SELECT') { filtro[k] = ev.target.value; pintar(); } });
+document.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.f; if (k && ev.target.tagName === 'INPUT') { filtro[k] = ev.target.value; clearTimeout(ev.target._t); const pos = ev.target.selectionStart; ev.target._t = setTimeout(() => { pintar(); const n = document.querySelector(`[data-f="${k}"]`); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 300); } });
+$('#bAct').addEventListener('click', () => cargar('Actualizado.'));
+$('#bComentar').addEventListener('click', dlgComentar);
+if (D) pintar('Últimos datos guardados. Actualizando…');
+cargar();
+})();
+</script>
+</body>
+</html>

@@ -182,6 +182,7 @@ const MODS = [
   { k: 'phr', grupo: 'relev', t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
   { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
   { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COE', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
+  { k: 'red', grupo: 'gest', t: 'COE · Reuniones y documentos', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E4EAFB' }, // 06/11/2026 · Rediseño (v0)
   { k: 'coe', grupo: 'gest', t: 'COE', d: 'Participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
   { k: 'fuentes', grupo: 'gest', t: 'Fuentes', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
   { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#E4EAFB' }
@@ -301,7 +302,8 @@ function pintar() {
   const admin = !!(u && u.rol === 'Administración');
   // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COE (04/11/2026),
   // COE, Fuentes y Formularios, sin nada de los planes ni de STAR-H o ISH. Administración: todo.
-  const VIS = !u ? [] : ['phr', 'deriv', 'coe', 'fuentes', 'imp'];
+  // 06/11/2026 · Rediseño: también «COE · Reuniones y documentos» y STAR-H para quien lo tenga habilitado (hoja PERMISOS).
+  const VIS = !u ? [] : ['phr', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k] }) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
