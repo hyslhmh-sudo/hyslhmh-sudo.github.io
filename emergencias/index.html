@@ -119,6 +119,25 @@ dialog#dlgPerfil::backdrop{background:rgba(23,43,77,.45)}
 .pf-link .ms{color:#2F5BEA}
 .pf-link b{display:block;font-size:14px}.pf-link span.d{display:block;font-size:12px;color:#4B5B73}
 .pf-nota{font-size:12px;color:#6B7A90;margin:14px 0 0}
+/* 05/11/2026 · Mis datos: ficha obligatoria al ingresar (menos Administración) */
+#quien.misd{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
+#quien.misd .ms{font-size:18px}
+dialog#dlgDatos{border:0;border-radius:18px;padding:0;width:min(720px,96vw);max-height:92vh;box-shadow:0 20px 60px rgba(23,43,77,.35)}
+dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
+#dlgDatos .pf-cuerpo{max-height:calc(92vh - 150px)}
+.md-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+@media (max-width:560px){.md-grid{grid-template-columns:1fr}}
+.md-c{display:block;margin:8px 0}.md-c>span{display:block;font-size:12.5px;font-weight:700;color:#4B5B73;margin-bottom:4px}
+.md-c>span i{color:#C62828;font-style:normal}
+.md-c input,.md-c select{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:10px 11px;font:inherit;background:#fff}
+.md-c input:disabled{background:#F1F3F8;color:#6B7A90}
+.md-no{display:inline-flex!important;align-items:center;gap:6px;font-size:12.5px!important;font-weight:500!important;color:#4B5B73;margin-top:4px}
+.md-no input{width:16px!important;height:16px;padding:0;margin:0}
+.md-aviso{background:#FFF3C4;color:#5A4500;border-radius:10px;padding:10px 12px;font-size:13px;margin:12px 0 4px}
+.md-pie{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:12px 20px;border-top:1px solid #E4EAFB;flex-wrap:wrap}
+.md-pie .est{flex:1;font-size:13px;color:#C62828;min-width:180px}
+.md-pie button{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.md-pie .sec{background:#E4EAFB;color:#172B4D}.md-pie .pri{background:#2F5BEA;color:#fff}
 </style>
 </head>
 <body>
@@ -129,6 +148,11 @@ dialog#dlgPerfil::backdrop{background:rgba(23,43,77,.45)}
 <dialog id="dlgPerfil" aria-label="Mi perfil">
   <div class="pf-cab"><span class="ms">account_circle</span><span><b id="pfNombre"></b><small id="pfRol"></small></span><button type="button" id="pfCerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
   <div class="pf-cuerpo" id="pfCuerpo"></div>
+</dialog>
+<dialog id="dlgDatos" aria-label="Mis datos">
+  <div class="pf-cab"><span class="ms">badge</span><span><b>Mis datos</b><small id="mdSub">Completá tu ficha para seguir</small></span></div>
+  <form class="pf-cuerpo" id="fDatos" novalidate></form>
+  <div class="md-pie"><span class="est" id="mdEst"></span><button type="button" class="sec oculto" id="mdCerrar">Cerrar</button><button type="button" class="pri" id="mdGuardar">Guardar</button></div>
 </dialog>
 <main>
   <form class="tarjeta ingreso oculto" id="fIng">
@@ -198,16 +222,85 @@ function abrirPerfil() {
 }
 $('#pfCerrar').addEventListener('click', () => $('#dlgPerfil').close());
 $('#dlgPerfil').addEventListener('click', ev => { if (ev.target.id === 'dlgPerfil') $('#dlgPerfil').close(); });
-$('#quien').addEventListener('click', abrirPerfil);
-$('#quien').addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrirPerfil(); } });
+const clicQuien = () => { const u = S.sesion.usuario() || {}; if (esBelen(u)) abrirPerfil(); else if (u.rol !== 'Administración') revisarDatos(true); };
+$('#quien').addEventListener('click', clicQuien);
+$('#quien').addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); clicQuien(); } });
+/* ---------- 05/11/2026 · Mis datos (ficha obligatoria, menos Administración) ---------- */
+const kOk = u => 'datosOk.' + sinTilde(u && u.nombre);
+let MD = null, MD_OBLIG = false;
+async function revisarDatos(abrirSiempre) {
+  const u = S.sesion.token() ? S.sesion.usuario() : null;
+  if (!u || u.rol === 'Administración' || S.DEMO) return;
+  if (!abrirSiempre && S.store.get(kOk(u), false)) return;
+  let r; try { r = await S.api('mis_datos'); } catch (e) { if (abrirSiempre) alert('Para ver tus datos se necesita conexión.'); return; }
+  if (!r || !r.ok) { if (abrirSiempre) alert((r && r.error) || 'No se pudieron traer tus datos.'); return; }
+  S.store.set(kOk(u), !!r.completo);
+  S.store.set('datosPend.' + sinTilde(u.nombre), !r.completo);
+  if (r.completo && !abrirSiempre) return;
+  abrirDatos(r, !r.completo);
+}
+function abrirDatos(r, obligatorio) {
+  MD = r; MD_OBLIG = obligatorio;
+  const p = r.persona || {}, v = k => E(/^s\/d/i.test(p[k] || '') ? '' : (p[k] || ''));
+  const no = k => /^no tiene$/i.test(p[k] || '');
+  const campo = (k, et, oblig, extra) => `<label class="md-c"><span>${et}${oblig ? ' <i>*</i>' : ''}</span><input name="${k}" value="${no(k) ? '' : v(k)}" ${no(k) ? 'disabled' : ''} ${extra || ''}>${(r.noTiene || []).indexOf(k) >= 0 ? `<label class="md-no"><input type="checkbox" data-no="${k}" ${no(k) ? 'checked' : ''}> No tengo</label>` : ''}</label>`;
+  $('#mdSub').textContent = obligatorio ? 'Antes de seguir, completá tu ficha. Los campos con * son obligatorios.' : 'Podés actualizar tus datos cuando cambien.';
+  $('#fDatos').innerHTML = `${obligatorio && r.faltan && r.faltan.length ? `<div class="md-aviso">Faltan: ${r.faltan.map(E).join(', ')}. Si no tenés alguno de los teléfonos o correos, tildá «No tengo».</div>` : ''}
+    <h3>Datos personales</h3>
+    <div class="md-grid">
+      <label class="md-c"><span>Usuario (apellido y nombre)</span><input value="${E(r.nombreUsuario || '')}" disabled></label>
+      ${campo('dni', 'DNI (solo números)', true, 'inputmode="numeric" maxlength="10"')}
+      ${campo('tel', 'Teléfono particular', true, 'inputmode="tel"')}
+      ${campo('mail', 'Correo personal', true, 'type="email"')}
+      ${campo('telEm', 'Teléfono de emergencia', true, 'inputmode="tel"')}
+      ${campo('titulo', 'Título (optativo)', false, 'placeholder="Lic. en Enfermería, Médico, Ingeniero…"')}
+    </div>
+    <h3>Datos laborales</h3>
+    <div class="md-grid">
+      <label class="md-c"><span>Interna o externa <i>*</i></span><select name="tipo"><option value="">Elegí…</option>${(r.tipos || ['Interno', 'Externo']).map(t => `<option value="${E(t)}" ${p.tipo === t ? 'selected' : ''}>${t === 'Interno' ? 'Interna (del hospital o la red)' : t === 'Externo' ? 'Externa (otro organismo)' : E(t)}</option>`).join('')}</select></label>
+      ${campo('institucion', 'Institución u organismo', true)}
+      ${campo('servicio', 'Servicio o área', true)}
+      ${campo('cargo', 'Función / cargo', true)}
+      ${campo('tel2', 'Teléfono de la institución', true, 'inputmode="tel" placeholder="Con interno, si tiene"')}
+      ${campo('mailInst', 'Correo institucional', true, 'type="email"')}
+    </div>
+    <h3>En el COE / Comité (optativo)</h3>
+    <div class="md-grid">
+      <label class="md-c"><span>Rol en el COE o comité</span><input name="rol" value="${E(r.rol || '')}" placeholder="Integrante, Enlace, Vocero…"></label>
+      <label class="md-c"><span>Reemplazante</span><select name="reemplazo"><option value="">Sin reemplazante</option>${(r.otros || []).map(o => `<option value="${E(o.id)}" ${o.id === p.reemplazo ? 'selected' : ''}>${E(o.nombre)}${o.institucion ? ' · ' + E(o.institucion) : ''}</option>`).join('')}</select></label>
+    </div>
+    <p class="pf-nota">El DNI, el teléfono particular y el correo personal los ve solo Higiene y Seguridad Laboral. Los demás integrantes ven tus datos institucionales y el teléfono de emergencia. Si tu apellido o nombre está mal escrito, avisale a Higiene y Seguridad Laboral.</p>`;
+  $('#mdEst').textContent = '';
+  $('#mdCerrar').classList.toggle('oculto', obligatorio);
+  const dl = $('#dlgDatos'); if (!dl.open) { if (dl.showModal) dl.showModal(); else dl.setAttribute('open', ''); }
+}
+$('#fDatos').addEventListener('change', ev => { const c = ev.target.closest('[data-no]'); if (!c) return; const i = $('#fDatos').querySelector(`[name="${c.dataset.no}"]`); i.disabled = c.checked; if (c.checked) i.value = ''; });
+$('#dlgDatos').addEventListener('cancel', ev => { if (MD_OBLIG) ev.preventDefault(); });
+$('#mdCerrar').addEventListener('click', () => $('#dlgDatos').close());
+$('#mdGuardar').addEventListener('click', async () => {
+  const f = $('#fDatos'), est = $('#mdEst'), b = $('#mdGuardar'), d = {};
+  ['dni', 'tel', 'mail', 'telEm', 'titulo', 'tipo', 'institucion', 'servicio', 'cargo', 'tel2', 'mailInst', 'rol', 'reemplazo'].forEach(k => { const i = f.querySelector(`[name="${k}"]`); d[k] = i ? i.value.trim() : ''; });
+  f.querySelectorAll('[data-no]').forEach(c => { d[c.dataset.no + '_no'] = c.checked; });
+  const ETQ = { dni: 'DNI', tel: 'teléfono particular', mail: 'correo personal', telEm: 'teléfono de emergencia', tipo: 'interna o externa', institucion: 'institución', servicio: 'servicio o área', cargo: 'función o cargo', tel2: 'teléfono de la institución', mailInst: 'correo institucional' };
+  const falta = Object.keys(ETQ).filter(k => !d[k] && !d[k + '_no']);
+  if (falta.length) { est.textContent = 'Falta completar: ' + falta.map(k => ETQ[k]).join(', ') + '.'; return; }
+  if (!navigator.onLine) { est.textContent = 'Para guardar se necesita conexión.'; return; }
+  b.disabled = true; est.style.color = '#4B5B73'; est.textContent = 'Guardando…';
+  try { const r = await S.api('mis_datos_guardar', { datos: d }); if (!r.ok) throw r;
+    S.store.set(kOk(S.sesion.usuario()), true); S.store.set('datosPend.' + sinTilde(S.sesion.usuario().nombre), false); MD_OBLIG = false; $('#dlgDatos').close(); est.textContent = '';
+  } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudo guardar.'; est.style.color = '#C62828'; est.textContent = /desconocida/i.test(m) ? 'Falta publicar la versión nueva del servidor. Avisale a Higiene y Seguridad Laboral.' : m; }
+  finally { b.disabled = false; }
+});
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
   $('#sesion').classList.toggle('oculto', !u);
   const q = $('#quien'), yo = esBelen(u);
-  q.classList.toggle('perfil', yo);
-  if (yo) { q.setAttribute('role', 'button'); q.tabIndex = 0; q.title = 'Mi perfil: mis documentos'; } else { q.removeAttribute('role'); q.removeAttribute('tabindex'); q.removeAttribute('title'); }
-  if (u) q.innerHTML = (yo ? '<span class="ms">account_circle</span>' : '') + E((u.nombre || '') + (u.rol ? ' · ' + u.rol : ''));
+  const otro = !!(u && !yo && u.rol !== 'Administración');
+  q.classList.toggle('perfil', yo); q.classList.toggle('misd', otro);
+  if (yo || otro) { q.setAttribute('role', 'button'); q.tabIndex = 0; q.title = yo ? 'Mi perfil: mis documentos' : 'Mis datos: actualizar mi ficha'; } else { q.removeAttribute('role'); q.removeAttribute('tabindex'); q.removeAttribute('title'); }
+  if (u) q.innerHTML = (yo ? '<span class="ms">account_circle</span>' : otro ? '<span class="ms">badge</span>' : '') + E((u.nombre || '') + (u.rol ? ' · ' + u.rol : ''));
+  if (otro) revisarDatos(false);
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
   const grande = m => `<div class="mod ${m.grupo === 'resp' || m.grupo === 'ctrl' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">

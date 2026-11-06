@@ -157,11 +157,12 @@ const partsDe = id => cat.participaciones.filter(x => x.persona === id);
 const chipTipo = t => t ? `<span class="chip ${t === 'Externo' ? 'ext' : 'int'}">${E(t)}</span>` : '';
 const telLink = t => 'tel:' + String(t).replace(/[^\d+]/g, '');
 // 04/11/2026 · Ficha ampliada: contactos con etiqueta. DNI, teléfono particular y correo personal llegan solo para Administración.
-const conTel = (v, et) => v ? `<a href="${telLink(v)}" title="${E(et)}"><span class="ms" style="font-size:17px">call</span><small style="opacity:.75">${E(et)}:</small> ${E(v)}</a>` : '';
-const conMail = (v, et) => v ? `<a href="mailto:${E(v)}" title="${E(et)}"><span class="ms" style="font-size:17px">mail</span><small style="opacity:.75">${E(et)}:</small> ${E(v)}</a>` : '';
+const conTel = (v, et) => /^no tiene$/i.test(v || '') ? `<span class="sub" style="font-size:12.5px">${E(et)}: no tiene</span>` : v ? `<a href="${telLink(v)}" title="${E(et)}"><span class="ms" style="font-size:17px">call</span><small style="opacity:.75">${E(et)}:</small> ${E(v)}</a>` : '';
+const conMail = (v, et) => /^no tiene$/i.test(v || '') ? `<span class="sub" style="font-size:12.5px">${E(et)}: no tiene</span>` : v ? `<a href="mailto:${E(v)}" title="${E(et)}"><span class="ms" style="font-size:17px">mail</span><small style="opacity:.75">${E(et)}:</small> ${E(v)}</a>` : '';
 const contactosHTML = p => { const h = conTel(p.tel2, 'Institución') + conTel(p.telEm, 'Emergencia') + conTel(p.tel, 'Particular') + conMail(p.mailInst, 'Institucional') + conMail(p.mail, 'Personal'); return h || '<span class="sub">Sin contactos cargados (s/d (revisar))</span>'; };
-const telPpal = p => p.tel2 || p.telEm || p.tel || '';
-const mailPpal = p => p.mailInst || p.mail || '';
+const siDato = v => /^no tiene$/i.test(v || '') ? '' : (v || '');
+const telPpal = p => siDato(p.tel2) || siDato(p.telEm) || siDato(p.tel) || '';
+const mailPpal = p => siDato(p.mailInst) || siDato(p.mail) || '';
 const opts = (lista, val, vacio) => (vacio != null ? `<option value="">${E(vacio)}</option>` : '') + lista.map(x => `<option ${x === val ? 'selected' : ''}>${E(x)}</option>`).join('') + (val && lista.indexOf(val) < 0 ? `<option selected>${E(val)}</option>` : '');
 const proyectos = () => { const l = (cat.listas.proyectos || []).slice(); cat.participaciones.forEach(x => { if (x.proyecto && l.indexOf(x.proyecto) < 0) l.push(x.proyecto); }); return l; };
 

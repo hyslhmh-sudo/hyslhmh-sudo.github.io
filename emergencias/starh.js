@@ -326,3 +326,16 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigilar); else vigilar();
 })();
+
+/* 05/11/2026 · Mis datos: quien no es Administración y todavía no completó su ficha vuelve al inicio, donde se le pide. */
+(function () {
+  try {
+    const S = window.STARH; if (!S || S.DEMO) return;
+    if (/(^|\/)(index\.html)?$/.test(location.pathname)) return;
+    const u = S.sesion.token() ? S.sesion.usuario() : null;
+    if (!u || u.rol === 'Administración') return;
+    const n = String(u.nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    // Solo si el servidor ya confirmó que la ficha está incompleta (así, sin servidor publicado o sin conexión, no bloquea).
+    if (S.store.get('datosPend.' + n, false) === true) location.replace('index.html');
+  } catch (e) { /* sin bloqueo si algo falla */ }
+})();
