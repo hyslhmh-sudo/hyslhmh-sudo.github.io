@@ -338,12 +338,12 @@ async function cargarPac() {
   PAC_CARGANDO = false; if (pest === 'pac') pintar();
 }
 function vPacientes() {
-  const aviso = `<div class="aviso">Solo cantidades: la app no recibe nombres, documentos, domicilios ni teléfonos. ${PAC && !PAC.admin ? 'Las cantidades de 1 a 4 se muestran «<5» para que no se pueda reconocer a nadie. ' : ''}La base completa para contactar está en el libro de cada establecimiento (confidencial, compartido solo con la lista cerrada). La ubicación la georreferencia Epidemiología.</div>`;
+  const aviso = `<div class="aviso">Solo cantidades: la app no recibe nombres, documentos, domicilios ni teléfonos. ${PAC && !PAC.admin ? 'Las cantidades de 1 a 4 se muestran «<5» para que no se pueda reconocer a nadie. ' : ''}La base completa para contactar está en el libro de cada ciudad (confidencial, compartido solo con la lista cerrada). La ubicación la georreferencia Epidemiología.</div>`;
   if (PAC_ERR) return aviso + `<div class="aviso alerta">${E(PAC_ERR)}</div>`;
   if (!PAC) return aviso + '<p class="vacio">Contando…</p>';
   const tabla = (tit, o) => { const k = Object.keys(o); return `<div class="tarj"><h3>${tit}</h3>${k.length ? `<table><tbody>${k.map(x => `<tr><td>${E(x)}</td><td style="width:90px;text-align:right"><b>${E(o[x])}</b></td></tr>`).join('')}</tbody></table>` : '<p class="vacio">Sin pacientes cargados.</p>'}</div>`; };
   return aviso + `<div class="herr"><span class="meta">Área Programática Trelew · activos: <b>${E(PAC.total)}</b></span><span class="esp"></span><button class="btn sec chico" data-a="pacAct"><span class="ms">refresh</span>Contar de nuevo</button></div>
-    <div class="tarj"><h3>Por establecimiento</h3><table><tbody>${PAC.establecimientos.map(e => `<tr><td><b>${E(e.corto)}</b> · <span class="meta">${E(e.nombre)}</span>${e.error ? ' <span class="chip val">' + E(e.error) + '</span>' : ''}</td><td style="width:90px;text-align:right"><b>${E(e.total)}</b></td>${PAC.admin ? `<td style="width:90px">${e.libro ? `<a href="${E(e.libro)}" target="_blank" rel="noopener">libro</a>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table>
+    <div class="tarj"><h3>${PAC.porCiudad ? 'Por ciudad' : 'Por establecimiento'}</h3><table><tbody>${PAC.establecimientos.map(e => `<tr><td><b>${E(e.corto)}</b> · <span class="meta">${E(e.nombre)}</span>${e.error ? ' <span class="chip val">' + E(e.error) + '</span>' : ''}</td><td style="width:90px;text-align:right"><b>${E(e.total)}</b></td>${PAC.admin ? `<td style="width:90px">${e.libro ? `<a href="${E(e.libro)}" target="_blank" rel="noopener">libro</a>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table>
     ${PAC.sinLibro && PAC.sinLibro.length ? `<p class="meta">Sin libro: ${E(PAC.sinLibro.join(', '))}</p>` : ''}</div>
     ${tabla('Por tipo de patología', PAC.patologia)}${tabla('Por tipo de necesidad', PAC.necesidad)}
     <div class="tarj"><h3>Por localidad y barrio o zona</h3>${PAC.zonas.length ? `<div class="tabla"><table><thead><tr><th>Localidad · barrio o zona</th><th>Total</th><th>Por tipo de patología</th></tr></thead><tbody>${PAC.zonas.map(z => `<tr><td>${E(z.zona)}</td><td><b>${E(z.total)}</b></td><td class="meta">${Object.keys(z.patologia).map(p => E(p) + ': ' + E(z.patologia[p])).join(' · ')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="vacio">Sin pacientes cargados.</p>'}</div>`;
@@ -406,7 +406,7 @@ function dlgAyuda() {
     <p><b>Acuerdos y tareas.</b> Todos los acuerdos de las reuniones que ves, con responsable, plazo y estado. Podés filtrar por estado o buscar por texto.</p>
     <p><b>Documentos.</b> Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
     <p><b>Establecimientos.</b> Registro único de la red. Los datos que faltan figuran como «s/d (revisar)».</p>
-    <p><b>Necesidades especiales.</b> Si tu acceso lo permite, ves cantidades de pacientes por establecimiento, tipo y zona. Nunca datos personales.</p>
+    <p><b>Necesidades especiales.</b> Si tu acceso lo permite, ves cantidades de pacientes por ciudad, tipo y zona. Nunca datos personales.</p>
     <p><b>Comentar.</b> Si tu acceso lo permite, el botón «Comentar» de arriba deja una observación sobre STAR-H o PHR sin modificar lo cargado.</p>
     <p><b>Sin conexión.</b> Se muestran los últimos datos guardados en el dispositivo. «Actualizar» (flecha circular) los pide de nuevo.</p>
     <p class="meta">Consultas: Servicio de Higiene y Seguridad Laboral, por los canales habituales del COE.</p>`;
@@ -417,7 +417,7 @@ function dlgAyuda() {
     <p><b>Documentos.</b> «Agregar»: clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos.</p>
     <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COE o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
     <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos.</p>
-    <p><b>Necesidades especiales.</b> Un libro por establecimiento del Área Programática Trelew en la carpeta 08 (confidencial); el enlace va en LUGARES. La pestaña muestra solo cantidades. Quién la ve: lista cerrada en Accesos › Pacientes (nunca externos). Compartir cada libro con las cuentas que cargan es manual, desde Drive, persona por persona.</p>
+    <p><b>Necesidades especiales.</b> Un libro por ciudad del Área Programática Trelew en la carpeta 08 (confidencial); el enlace va en LUGARES, en cada establecimiento de esa ciudad (HZT y HMH → Trelew). Para dar acceso a una sola ciudad: Accesos › Pacientes y, en la hoja PERMISOS, tipo «Localidad» con la ciudad. La pestaña muestra solo cantidades. Quién la ve: lista cerrada en Accesos › Pacientes (nunca externos). Compartir cada libro con las cuentas que cargan es manual, desde Drive, persona por persona.</p>
     <p><b>Comentarios.</b> Llegan a la hoja COMENTARIOS con fecha, persona y módulo.</p>`;
   abrir('Ayuda', usu + (A ? adminTxt : ''), '<button class="btn" type="button" data-c>Entendido</button>');
 }
