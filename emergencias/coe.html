@@ -752,20 +752,32 @@ async function cargarUsuarios() {
 }
 const MOD_TXT = { 'STAR-H': 'STAR-H', PHR: 'PHR', ISH: 'ISH', COE: 'COE (consulta)', EVAC: 'Evacuación' };
 const modsDe = x => { if (x.rol === 'Administración') return ['STAR-H', 'PHR', 'ISH', 'COE', 'EVAC']; const t = String(x.modulos || '').trim(); return !t || /^todos?$/i.test(t) ? ['STAR-H', 'PHR'] : t.split(/[;,]/).map(y => y.trim().toUpperCase()).filter(Boolean); };
+// 05/11/2026 · Ficha «Mis datos»: completa o pendiente (mismos obligatorios que el servidor). Se busca la ficha por el nombre del usuario.
+const FICHA_OBL = { dni: 'DNI', tel: 'tel. particular', mail: 'correo personal', telEm: 'tel. de emergencia', institucion: 'institución', servicio: 'servicio', cargo: 'función', tipo: 'interna/externa', tel2: 'tel. institución', mailInst: 'correo institucional' };
+const normN = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/['´`’]/g, '').replace(/[^a-z0-9ñ ]+/g, ' ').split(/\s+/).filter(Boolean).sort().join(' ');
+function fichaDe(x) {
+  if (x.rol === 'Administración') return null;
+  const p = cat && cat.personas.find(y => normN(y.nombre) === normN(x.nombre));
+  if (!p) return { completa: false, faltan: ['no figura en Participantes'] };
+  const faltan = Object.keys(FICHA_OBL).filter(k => !String(p[k] || '').trim() || /^s\/d/i.test(String(p[k]).trim())).map(k => FICHA_OBL[k]);
+  return { completa: !faltan.length, faltan: faltan };
+}
 function vistaUsuarios() {
   if (!acc) return cargarUsuarios();
   const l = acc.usuarios.filter(x => !q || (x.nombre + ' ' + x.dni).toLowerCase().indexOf(q.toLowerCase()) >= 0).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   $('#vista').innerHTML = `<div class="herr"><input id="fq" type="search" placeholder="Buscar nombre o DNI" value="${E(q)}"><button class="btn" data-act="nuevoUsr"><span class="ms">person_add</span>Nuevo usuario</button></div>
     <p class="sub" style="margin:0 2px 10px">Elegís qué ve cada persona: rol, redes, establecimientos y módulos. El usuario para ingresar es su nombre y apellido, tal como figura acá (no importan mayúsculas ni tildes); la clave («coe-» y 6 letras y números) se genera acá y se muestra una sola vez para que se la pases. Todo queda en la hoja ACCESOS STAR-H del libro.</p>
-    <div class="lista">${l.map(x => `<div class="tarjeta per">
-      <div class="per-cab"><b>${E(x.nombre || 's/d')}</b><span class="chip ${x.rol === 'Administración' ? 'ext' : 'int'}">${E(x.rol || 's/d')}</span>${x.estado !== 'Activo' ? '<span class="chip inac">Inactivo</span>' : ''}${x.tieneClave ? '' : '<span class="chip inac">Sin clave</span>'}</div>
+    ${(() => { const fs = l.map(fichaDe).filter(Boolean), ok = fs.filter(f => f.completa).length; return fs.length ? `<div class="tarjeta" style="padding:10px 14px;margin-bottom:10px"><b>Fichas «Mis datos»: ${ok} completas de ${fs.length}</b><span class="sub" style="display:block">Cada usuario la completa al ingresar; acá ves quién la tiene pendiente y qué le falta.</span></div>` : ''; })()}
+    <div class="lista">${l.map(x => { const fi = fichaDe(x); return `<div class="tarjeta per">
+      <div class="per-cab"><b>${E(x.nombre || 's/d')}</b><span class="chip ${x.rol === 'Administración' ? 'ext' : 'int'}">${E(x.rol || 's/d')}</span>${x.estado !== 'Activo' ? '<span class="chip inac">Inactivo</span>' : ''}${x.tieneClave ? '' : '<span class="chip inac">Sin clave</span>'}${fi ? (fi.completa ? '<span class="chip" style="background:#E3F4E8;color:#1E6B35">Ficha completa</span>' : '<span class="chip" style="background:#FFF3C4;color:#5A4500">Ficha pendiente</span>') : ''}</div>
+      ${fi && !fi.completa ? `<div class="sub">Le falta: ${E(fi.faltan.join(', '))}</div>` : ''}
       <div class="sub">Usuario: ${E(x.nombre || 's/d')}${dniReal(x.dni) ? ' · DNI ' + E(x.dni) : ''} · Redes: ${E(x.redes || 's/d')} · Establecimientos: ${E(x.estab || 's/d')}</div>
       <div class="proys">${modsDe(x).map(m => `<span class="chip proy">${E(MOD_TXT[m] || m)}</span>`).join('')}</div>
       ${x.deriv ? `<div class="sub">Carga derivaciones y albergues en: ${E(x.deriv)}</div>` : ''}
       <div class="sub">Tablero de control: ${x.rol === 'Administración' ? 'todos los proyectos' : E(x.proyectos || 'ninguno')}</div>
       <div class="sub">${x.claveFecha ? 'Clave generada el ' + E(x.claveFecha) : 'Todavía no tiene clave'}${x.ultimoIngreso ? ' · último ingreso ' + E(x.ultimoIngreso) : ''}</div>
       <div class="acc"><button class="btn sec mini" data-act="editarUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">tune</span>Qué ve</button>
-        <button class="btn sec mini" data-act="claveUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">key</span>${x.tieneClave ? 'Generar clave nueva' : 'Generar clave'}</button></div></div>`).join('') || '<div class="tarjeta vacio">No hay usuarios con esa búsqueda.</div>'}</div>`;
+        <button class="btn sec mini" data-act="claveUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">key</span>${x.tieneClave ? 'Generar clave nueva' : 'Generar clave'}</button></div></div>`; }).join('') || '<div class="tarjeta vacio">No hay usuarios con esa búsqueda.</div>'}</div>`;
   const f = $('#fq'); f.addEventListener('input', () => { q = f.value; const p = f.selectionStart; vistaUsuarios(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); });
 }
 // 04/11/2026 · Se ingresa con nombre y apellido + clave. Sin DNI, el servidor asigna un número interno (9 cifras, empieza con 9) que no se muestra.
