@@ -762,11 +762,15 @@ function fichaDe(x) {
   const faltan = Object.keys(FICHA_OBL).filter(k => !String(p[k] || '').trim() || /^s\/d/i.test(String(p[k]).trim())).map(k => FICHA_OBL[k]);
   return { completa: !faltan.length, faltan: faltan };
 }
+// 05/11/2026 · Acceso a la planilla CONFIDENCIAL de usuarios y claves: solo Belén (Administración).
+const PLANILLA_CLAVES = 'https://docs.google.com/spreadsheets/d/1x13TtT3uV5XsloT49Z93f41AwX74ylRyQaj7YFXvJec';
+const esBelenC = () => { const u = S.sesion.usuario() || {}; return u.rol === 'Administración' && /pellegrini/.test(String(u.nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')); };
 function vistaUsuarios() {
   if (!acc) return cargarUsuarios();
   const l = acc.usuarios.filter(x => !q || (x.nombre + ' ' + x.dni).toLowerCase().indexOf(q.toLowerCase()) >= 0).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   $('#vista').innerHTML = `<div class="herr"><input id="fq" type="search" placeholder="Buscar nombre o DNI" value="${E(q)}"><button class="btn" data-act="nuevoUsr"><span class="ms">person_add</span>Nuevo usuario</button></div>
     <p class="sub" style="margin:0 2px 10px">Elegís qué ve cada persona: rol, redes, establecimientos y módulos. El usuario para ingresar es su nombre y apellido, tal como figura acá (no importan mayúsculas ni tildes); la clave («coe-» y 6 letras y números) se genera acá y se muestra una sola vez para que se la pases. Todo queda en la hoja ACCESOS STAR-H del libro.</p>
+    ${esBelenC() ? `<div class="tarjeta" style="padding:10px 14px;margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="ms">key</span><div style="flex:1;min-width:200px"><b>CONFIDENCIAL · Usuarios y claves de la app</b><span class="sub" style="display:block">Planilla privada en tu Drive (solo vos). Anotá ahí cada clave nueva, porque acá se muestra una sola vez.</span></div><a class="btn sec mini" href="${PLANILLA_CLAVES}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>Abrir la planilla</a></div>` : ''}
     ${(() => { const fs = l.map(fichaDe).filter(Boolean), ok = fs.filter(f => f.completa).length; return fs.length ? `<div class="tarjeta" style="padding:10px 14px;margin-bottom:10px"><b>Fichas «Mis datos»: ${ok} completas de ${fs.length}</b><span class="sub" style="display:block">Cada usuario la completa al ingresar; acá ves quién la tiene pendiente y qué le falta.</span></div>` : ''; })()}
     <div class="lista">${l.map(x => { const fi = fichaDe(x); return `<div class="tarjeta per">
       <div class="per-cab"><b>${E(x.nombre || 's/d')}</b><span class="chip ${x.rol === 'Administración' ? 'ext' : 'int'}">${E(x.rol || 's/d')}</span>${x.estado !== 'Activo' ? '<span class="chip inac">Inactivo</span>' : ''}${x.tieneClave ? '' : '<span class="chip inac">Sin clave</span>'}${fi ? (fi.completa ? '<span class="chip" style="background:#E3F4E8;color:#1E6B35">Ficha completa</span>' : '<span class="chip" style="background:#FFF3C4;color:#5A4500">Ficha pendiente</span>') : ''}</div>
