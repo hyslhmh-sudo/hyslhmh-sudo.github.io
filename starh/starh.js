@@ -176,7 +176,7 @@
     function usuarioDemo(dni) {
       return dni === '22222222'
         ? { dni: dni, nombre: 'Referente Rawson (demo)', rol: 'Referente', redes: ['Red Rawson'] }
-        : { dni: dni, nombre: 'Belén Pellegrini (demo)', rol: 'Administración', redes: Object.keys(ESTAB) };
+        : { dni: dni, nombre: 'Administración (demo)', rol: 'Administración', redes: Object.keys(ESTAB) };
     }
     function publico(u) { return { nombre: u.nombre, rol: u.rol, comparativo: u.rol === 'Administración', puedeCargar: u.rol !== 'Consulta' }; }
     function quien(token) { const u = store.get('demo.quien', null); if (!token || !u) { const e = { ok: false, error: 'La sesión venció. Volvé a ingresar.', sesion: true }; throw e; } return u; }

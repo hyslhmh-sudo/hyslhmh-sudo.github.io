@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* 06/11/2026 · Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fuentes · Emergencias y desastres</title>
 <meta name="description" content="Bibliografía y normativa de STAR-H, PHR, ISH y COE.">
@@ -96,14 +100,14 @@ const BASE = [
 const ORDEN = ['STAR-H', 'ISH', 'PHR', 'COE', 'Evacuación', 'General', 'Normativa'];
 const ICO = { 'STAR-H': 'crisis_alert', ISH: 'local_hospital', PHR: 'fact_check', COE: 'groups', 'Evacuación': 'directions_run', General: 'public', Normativa: 'gavel' };
 // 05/11/2026 · Carpeta de bibliografía (Drive › 07 · REFERENCIAS, privada) y subida: solo Administración.
-const CARPETA = 'https://drive.google.com/drive/folders/1pkRXc2M_pIdv0kFY8CA8DoIkf_Ilcb3N';
+let CARPETA = (S.sesion.token() && S.store.get('fuentes.carpeta', '')) || ''; // 06/11/2026 · El enlace lo manda el servidor solo a Administración (no va en el código público).
 const MAX_MB = 20;
 const esAdm = () => { const u = S.sesion.token() ? (S.sesion.usuario() || {}) : {}; return u.rol === 'Administración'; };
 let actual = [];
 function barraAdm() {
   if (!esAdm()) return '';
   return `<div class="adm"><b>Bibliografía en Drive<small>Carpeta 07 · REFERENCIAS. Es privada: solo la abrís vos. Lo que subas queda ahí y en esta lista.</small></b>
-    <a class="btn sec" href="${CARPETA}" target="_blank" rel="noopener"><span class="ms">folder_open</span>Abrir la carpeta</a>
+    ${CARPETA ? `<a class="btn sec" href="${E(CARPETA)}" target="_blank" rel="noopener"><span class="ms">folder_open</span>Abrir la carpeta</a>` : ''}
     <button class="btn" type="button" id="bSubir"><span class="ms">upload_file</span>Subir a la bibliografía</button></div>`;
 }
 function dlgSubir() {
@@ -148,7 +152,7 @@ async function guardarSub() {
 document.addEventListener('click', ev => { if (ev.target.closest('#bSubir')) dlgSubir(); if (ev.target.closest('[data-c]')) document.getElementById('dlg').close(); });
 function actualizar(nota) {
   if (S.DEMO || !navigator.onLine) return;
-  S.api('fuentes').then(r => { if (r && r.ok && r.fuentes.length) { S.store.set('fuentes', r.fuentes); pintar(r.fuentes, nota || 'Actualizado.'); } }).catch(() => {});
+  S.api('fuentes').then(r => { if (r && r.carpeta) { CARPETA = r.carpeta; S.store.set('fuentes.carpeta', r.carpeta); } if (r && r.ok && r.fuentes.length) { S.store.set('fuentes', r.fuentes); pintar(r.fuentes, nota || 'Actualizado.'); } }).catch(() => {});
 }
 function pintar(lista, nota) {
   actual = lista;

@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Preparación y Respuesta a Emergencias y desastres · Inicio</title>
 <meta name="description" content="Preparación y Respuesta a Emergencias y Desastres · Higiene y Seguridad Laboral.">
@@ -185,40 +186,26 @@ const MODS = [
   { k: 'fuentes', grupo: 'gest', t: 'Fuentes', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
   { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#E4EAFB' }
 ];
-// 05/11/2026 · Mi perfil, solo Belén (Administración): accesos directos a los documentos de trabajo.
-// Los documentos son privados en su Drive: aunque alguien viera el enlace, Google no le deja abrirlos sin permiso.
-// Para agregar o quitar uno, editar esta lista (grupo, título, detalle, enlace, ícono).
-const MIS_DOCS = [
-  { g: 'COE · Para la reunión (v0)', t: 'Acta de constitución del COE', d: 'Para imprimir y firmar: acta, firmas y anexos I a III.', u: 'https://docs.google.com/document/d/1lvmlvqxqbXtvumP5bmySAjjQrms3F8LjzEzIW6LiZrY/edit', i: 'draw' },
-  { g: 'COE · Para la reunión (v0)', t: 'Formalización, cadena de mando y organigrama', d: 'Tarea 1 de la matriz. Propuesta con marco normativo.', u: 'https://docs.google.com/document/d/1u2CoSNGRWrQnudkkOcypte4kVM4ys-meZ1hkUJTPdOw/edit', i: 'account_tree' },
-  { g: 'COE · Para la reunión (v0)', t: 'Circuito de alerta y activación sanitaria', d: 'Tarea 2 de la matriz. Borrador de apoyo para Protección Civil.', u: 'https://docs.google.com/document/d/182cpXM-QfL5t5WYpMxt4W_VRLS50h36pjrT-oZvLhTc/edit', i: 'notifications_active' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-001 · IGEOPAT (UNPSJB)', d: 'Información geográfica e inundaciones.', u: 'https://docs.google.com/document/d/16mK884N1GGnadxS0fDsJmc8vNjXvkK34901HRZqUYkQ/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-002 · Municipalidad de Trelew', d: 'Planos de inundaciones, cuencas, plan municipal y albergues.', u: 'https://docs.google.com/document/d/1eUqt-LLM4CFF5guzRwAv9FywSgze_6nH4Zu-Gb7Tq-k/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-003 · Protección Civil Trelew', d: 'Alertas, aviso a salud, traslado y evacuación.', u: 'https://docs.google.com/document/d/1zWzEWgYHqZ019TzGTMuRLvCnOJD2fDHW4zl5pSG0jWY/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-004 · Subsecretaría de Protección Ciudadana', d: 'Escenarios ENOS, río, presas y alertas provinciales.', u: 'https://docs.google.com/document/d/1WvpxSK0XuWUYfX9QqiYCOeHhzm3sri6iseK02s5N1Qs/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-005 · Instituto Provincial del Agua', d: 'Cota, erogaciones y umbrales de desborde.', u: 'https://docs.google.com/document/d/1v7f-jey23WWWOunTZKn8adp_soZRo8bmKL5BDEBjH0k/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-006 · Cooperativa Eléctrica de Trelew', d: 'Turbiedad, cortes y prioridad de salud.', u: 'https://docs.google.com/document/d/1-MVL9AZRnZVxQDmiLQK04Hf1vs7y3qkzbQtEjOxfBKA/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-007 · Área Programática Trelew', d: 'Población prioritaria (datos agregados) y centros de salud.', u: 'https://docs.google.com/document/d/1lszUJApys2NxB3nFsz1y7988xe_6bhbEPX_vsrxHDmg/edit', i: 'mail' },
-  { g: 'COE · Solicitudes a organismos (borradores, sin enviar)', t: 'SOL-008 · Dirección Una Salud', d: 'Resultados STAR-H, alerta temprana, simulacros y zoonosis.', u: 'https://docs.google.com/document/d/1WK1805JvN2jAwAhuEjqaOJwCTa43JpQ99REOpuikeJk/edit', i: 'mail' },
-  { g: 'Carpetas y planillas', t: 'Carpeta 06 · COE', d: 'Todos los documentos del COE.', u: 'https://drive.google.com/drive/folders/1WIBARSWYU6dF5JWWJGfTXDRPdP15DLk4', i: 'folder' },
-  { g: 'Carpetas y planillas', t: 'Carpeta 06.1 · Solicitudes a organismos', d: 'Notas SOL-001 a SOL-008.', u: 'https://drive.google.com/drive/folders/19znqutQADTgmmsZY2pItTtWjdVvpywjs', i: 'folder' },
-  { g: 'Carpetas y planillas', t: 'Libro de la app', d: 'Participantes, proyectos, actas, matriz operativa y solicitudes del COE.', u: 'https://docs.google.com/spreadsheets/d/1vFnOJe8Ke5WrKGw2yhcA4B4vRN7Z7MBjHIMu_c8WqRk/edit', i: 'table_view' },
-  { g: 'Carpetas y planillas', t: 'COE · Derivaciones y albergues', d: 'Localidades, receptoras, albergues y criterios.', u: 'https://docs.google.com/spreadsheets/d/1oHMYZf_FLdpMN0ZcTqn8pRpUKZPvN9OphzHIaNh4wLU/edit', i: 'table_view' },
-  { g: 'Carpetas y planillas', t: 'CONFIDENCIAL · Usuarios y claves de la app', d: 'Usuario, clave, red, permiso y mensaje para pasar a cada integrante. No compartir.', u: 'https://docs.google.com/spreadsheets/d/1x13TtT3uV5XsloT49Z93f41AwX74ylRyQaj7YFXvJec/edit', i: 'key' }
-];
-const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-const esBelen = u => !!(u && u.rol === 'Administración' && /pellegrini/.test(sinTilde(u.nombre)));
-function abrirPerfil() {
+// Mi perfil (Administración): accesos directos a los documentos de trabajo.
+// 06/11/2026 · La lista ya no está en el código público: la manda el servidor (acción mis_docs) desde la hoja
+// MIS DOCUMENTOS del libro, y solo a la administradora. Para agregar o quitar uno, editar esa hoja.
+const sinTilde = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const esBelen = u => !!(u && u.rol === 'Administración');
+async function abrirPerfil() {
   const u = S.sesion.usuario() || {};
   if (!esBelen(u)) return;
   $('#pfNombre').textContent = u.nombre || '';
   $('#pfRol').textContent = 'Mi perfil · ' + (u.rol || '');
-  const grupos = [];
-  MIS_DOCS.forEach(d => { if (grupos.indexOf(d.g) < 0) grupos.push(d.g); });
-  $('#pfCuerpo').innerHTML = grupos.map(g => `<h3>${E(g)}</h3>` + MIS_DOCS.filter(d => d.g === g).map(d =>
-    `<a class="pf-link" href="${E(d.u)}" target="_blank" rel="noopener"><span class="ms">${E(d.i)}</span><span><b>${E(d.t)}</b><span class="d">${E(d.d)}</span></span></a>`).join('')).join('') +
-    '<p class="pf-nota">Solo vos ves esta lista. Los documentos están en tu Drive y siguen siendo privados. Todos en versión 0 hasta el alta.</p>';
+  $('#pfCuerpo').innerHTML = '<p class="pf-nota">Cargando tus documentos…</p>';
   const dl = $('#dlgPerfil'); if (dl.showModal) dl.showModal(); else dl.setAttribute('open', '');
+  let docs = [];
+  try { const r = await S.api('mis_docs'); if (!r.ok) throw r; docs = r.docs || []; }
+  catch (e) { $('#pfCuerpo').innerHTML = `<p class="pf-nota">${E((e && (e.error || e.message)) || 'No se pudo traer la lista. Se necesita conexión.')}</p>`; return; }
+  const grupos = [];
+  docs.forEach(d => { if (grupos.indexOf(d.g) < 0) grupos.push(d.g); });
+  $('#pfCuerpo').innerHTML = (grupos.map(g => `<h3>${E(g)}</h3>` + docs.filter(d => d.g === g).map(d =>
+    `<a class="pf-link" href="${E(d.u)}" target="_blank" rel="noopener"><span class="ms">${E(d.i)}</span><span><b>${E(d.t)}</b><span class="d">${E(d.d)}</span></span></a>`).join('')).join('') || '<p class="pf-nota">La hoja MIS DOCUMENTOS está vacía.</p>') +
+    '<p class="pf-nota">Solo vos ves esta lista (sale de la hoja MIS DOCUMENTOS del libro). Los documentos están en tu Drive y siguen siendo privados. Todos en versión 0 hasta el alta.</p>';
 }
 $('#pfCerrar').addEventListener('click', () => $('#dlgPerfil').close());
 $('#dlgPerfil').addEventListener('click', ev => { if (ev.target.id === 'dlgPerfil') $('#dlgPerfil').close(); });

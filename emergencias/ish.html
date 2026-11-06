@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
 <script>/* 01/11/2026 · Por ahora la app solo comparte PHR: esta pantalla es solo para Administración.
    Sin sesión de Administración se vuelve al inicio sin mostrar nada. (Los datos además los bloquea el servidor.) */
 (function(){var ok=false;try{var u=JSON.parse(localStorage.getItem('starh.usuario')||'null');ok=!!(u&&u.rol==='Administración'&&localStorage.getItem('starh.token'));}catch(e){}
@@ -503,7 +504,7 @@ function vistaAyuda() {
     <h3>Sin señal</h3><p>Lo cargado queda en el dispositivo y se envía solo al volver la conexión.</p>
     <h3>Dónde quedan los datos</h3><p>En la planilla ISH de cada red (hojas AMENAZAS y RELEVAMIENTO; el cálculo, en TABLERO). Si la app no está disponible, se carga directo ahí.</p>
     <p class="sub">Base: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed. Washington, D.C.: OPS; 2018. Esta evaluación complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento ni la evaluación estructural de profesionales de ingeniería o arquitectura.</p>
-    <h3>Consultas</h3><p>Higiene y Seguridad Laboral · belenpellegrini.hys@gmail.com</p></div>`;
+    <h3>Consultas</h3><p>Servicio de Higiene y Seguridad Laboral, por los canales habituales del COE</p></div>`;
 }
 
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
