@@ -337,7 +337,7 @@ function vistaIngreso() {
       if (!navigator.onLine) throw { error: 'Para ingresar por primera vez se necesita conexión.' };
       const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value }); if (!r.ok) throw r;
       if (r.usuario.ish === false || r.usuario.ish === undefined) throw { error: 'Tu acceso no incluye el Índice de Seguridad Hospitalaria. Por ahora es solo para Administración.' };
-      S.sesion.guardar(r.token, r.usuario); app.innerHTML = '<div class="vacio">Descargando los datos para trabajar también sin señal…</div>';
+      S.sesion.guardar(r.token, r.usuario); cola = S.store.get(K + 'cola', []); app.innerHTML = '<div class="vacio">Descargando los datos para trabajar también sin señal…</div>';
       await actualizarCatalogo(false); ir('#/');
     } catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); } finally { b.disabled = false; }
   });

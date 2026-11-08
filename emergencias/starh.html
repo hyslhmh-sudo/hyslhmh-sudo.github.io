@@ -389,7 +389,7 @@ function vistaIngreso() {
       if (!navigator.onLine) throw { error: 'Para ingresar por primera vez se necesita conexión.' };
       const r = await S.api('login', { dni: f.dni.value, clave: f.clave.value });
       if (!r.ok) throw r;
-      S.sesion.guardar(r.token, r.usuario);
+      S.sesion.guardar(r.token, r.usuario); cola = S.store.get(S.DEMO ? 'demo.cola' : 'cola', []);
       if (r.usuario.starh === false) { location.href = 'phr.html'; return; }
       app.innerHTML = '<div class="vacio">Descargando el catálogo para trabajar también sin señal…</div>';
       await actualizarCatalogo(false);

@@ -41,12 +41,35 @@
   }
 
   /* ---------- sesión ---------- */
+  /* 08/11/2026 · Revisión de seguridad: las copias guardadas en el navegador (catálogos del COE, red, derivaciones,
+   * evacuación, plan, tableros) son de quien ingresó. Al salir se borran; al ingresar otra persona en el mismo
+   * equipo se borra todo, incluidos los cambios pendientes de envío y «Mis datos» de la anterior.
+   * Al salir quedan solo los cambios pendientes (colas) de esa misma persona, por si vuelve a ingresar. */
+  const QUEDA_AL_SALIR = /^(token|usuario|dueno)$|(^|\.)cola$|^datos(Pend|Ok)\./;
+  function limpiarCopias(todo) {
+    const borrar = k => !/^demo\./.test(k) && (todo ? !/^(token|usuario)$/.test(k) : !QUEDA_AL_SALIR.test(k));
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf(PREF) === 0 && borrar(k.slice(PREF.length))) localStorage.removeItem(k);
+      }
+    } catch (e) {}
+    Object.keys(mem).forEach(k => { if (borrar(k)) delete mem[k]; });
+  }
+  const idUsuario = u => u ? String(u.persona || u.nombre || '').trim() : '';
   const sesion = {
     token() { return store.get(DEMO ? 'demo.token' : 'token', ''); },
     usuario() { return store.get(DEMO ? 'demo.usuario' : 'usuario', null); },
-    guardar(token, usuario) { store.set(DEMO ? 'demo.token' : 'token', token); store.set(DEMO ? 'demo.usuario' : 'usuario', usuario); },
-    cerrar() { store.del(DEMO ? 'demo.token' : 'token'); store.del(DEMO ? 'demo.usuario' : 'usuario'); }
+    guardar(token, usuario) {
+      if (!DEMO) { const id = idUsuario(usuario); if (store.get('dueno', '') !== id) limpiarCopias(true); store.set('dueno', id); }
+      store.set(DEMO ? 'demo.token' : 'token', token); store.set(DEMO ? 'demo.usuario' : 'usuario', usuario);
+    },
+    cerrar() { store.del(DEMO ? 'demo.token' : 'token'); store.del(DEMO ? 'demo.usuario' : 'usuario'); if (!DEMO) limpiarCopias(false); }
   };
+  // Sin sesión abierta no queda ninguna copia de datos: se borra antes de que la página las lea.
+  if (!DEMO && !sesion.token()) limpiarCopias(false);
+  // Quien ya tenía la sesión abierta antes de este cambio queda como dueño de sus copias (no pierde cambios pendientes).
+  else if (!DEMO && !store.get('dueno', '')) store.set('dueno', idUsuario(sesion.usuario()));
 
   /* ---------- cálculo STAR-H (mismas fórmulas que la hoja EVALUACIÓN) ---------- */
   function valorDe(lista, etiqueta) {
