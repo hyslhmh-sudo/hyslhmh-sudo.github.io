@@ -67,6 +67,23 @@ body{background:#F5F7FB}
 main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 .grupo-tit{display:flex;align-items:center;gap:10px;margin:22px 4px 10px;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4B5B73}
 .grupo-tit::after{content:'';flex:1;height:1px;background:#DCE3EF}
+/* 12/11/2026 · Agenda de reuniones programadas */
+#agenda{background:#fff;border:1px solid #DCE3EF;border-radius:16px;padding:14px 16px;margin:0 0 6px}
+#agenda .ag-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+#agenda .ag-cab b{font-size:15px;color:#172B4D;flex:1;display:flex;align-items:center;gap:8px}
+#agenda .ag-cab a{display:inline-flex;align-items:center;gap:6px;background:#2F5BEA;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;text-decoration:none;min-height:36px}
+#agenda .ag-item{display:flex;gap:14px;padding:10px 0;border-top:1px solid #EEF2F8}
+#agenda .ag-item:first-of-type{border-top:0}
+#agenda .ag-dia{flex:none;width:64px;text-align:center;border-radius:12px;background:#E4EAFB;color:#172B4D;padding:6px 0;line-height:1.1}
+#agenda .ag-dia b{display:block;font-size:22px}#agenda .ag-dia small{font-size:11px;font-weight:700;text-transform:uppercase}
+#agenda .ag-dia.hoy{background:#2F5BEA;color:#fff}
+#agenda .ag-txt{flex:1;min-width:0}
+#agenda .ag-txt b{font-size:14.5px;color:#172B4D}
+#agenda .ag-txt .m{font-size:12.5px;color:#4B5B73;margin-top:2px}
+#agenda .ag-txt .t{font-size:13px;color:#33414A;margin-top:4px;white-space:pre-line}
+#agenda .ag-chip{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:#EEF2F8;color:#33414A;margin-left:6px;vertical-align:middle}
+#agenda .ag-chip.int{background:#E6F4EA;color:#1E5E2E}
+#agenda .vacio{font-size:13px;color:#4B5B73;margin:4px 0 0}
 .grupo-tit .ms{font-size:19px}
 .fila{display:grid;gap:16px;justify-content:center}
 .fila.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -163,6 +180,7 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
     <button class="btn" type="submit"><span class="ms">login</span>Ingresar</button>
     <div class="msg oculto" id="msg"></div>
   </form>
+  <section id="agenda" class="oculto" aria-label="Agenda de reuniones"></section>
   <div id="rejilla"></div>
 </main>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral</p></footer>
@@ -284,6 +302,30 @@ $('#mdGuardar').addEventListener('click', async () => {
   } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudo guardar.'; est.style.color = '#C62828'; est.textContent = /desconocida/i.test(m) ? 'Falta publicar la versión nueva del servidor. Avisale a Higiene y Seguridad Laboral.' : m; }
   finally { b.disabled = false; }
 });
+// 12/11/2026 · Agenda: próximas reuniones programadas (Estado «Convocada» en COE · Reuniones) que la persona puede ver.
+// Administración ve «Programar reunión», que abre el diálogo en COE · Reuniones y documentos.
+let AG_TK = '';
+function agendaHtml(L, admin) {
+  const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'], DIA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const hoy = new Date(); const esHoy = d => d.getDate() === hoy.getDate() && d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear();
+  const item = r => { const m = String(r.fecha || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); const d = m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+    return `<div class="ag-item"><div class="ag-dia ${d && esHoy(d) ? 'hoy' : ''}">${d ? `<small>${esHoy(d) ? 'hoy' : DIA[d.getDay()]}</small><b>${d.getDate()}</b><small>${MES[d.getMonth()]}</small>` : '<b>s/d</b>'}</div>
+      <div class="ag-txt"><b>${E(r.organo || '')}</b><span class="ag-chip ${/interno/i.test(r.parte) ? 'int' : ''}">${E(r.parte || '')}</span>
+      <div class="m">${E([r.horario ? r.horario : 'horario s/d', r.lugar || 'lugar s/d', r.coordino ? 'Convoca: ' + r.coordino : ''].filter(Boolean).join(' · '))}</div>
+      ${r.orden ? `<div class="t">${E(r.orden)}</div>` : ''}${admin && r.aviso ? `<div class="m">Mail: ${E(r.aviso)}</div>` : ''}</div></div>`; };
+  return `<div class="ag-cab"><b><span class="ms">event_upcoming</span>Agenda · próximas reuniones</b>${admin ? '<a href="red.html#programar"><span class="ms" style="font-size:18px">add</span>Programar reunión</a>' : ''}</div>
+    ${L.length ? L.map(item).join('') : '<p class="vacio">No hay reuniones programadas.</p>'}`;
+}
+async function agenda(u, admin) {
+  const box = $('#agenda');
+  if (!u || S.DEMO) { box.classList.add('oculto'); AG_TK = ''; return; }
+  const c = S.store.get('agenda', null);
+  if (c && c.tk === S.sesion.token()) { box.innerHTML = agendaHtml(c.L, admin); box.classList.remove('oculto'); }
+  if (AG_TK === S.sesion.token() || !navigator.onLine) return;
+  AG_TK = S.sesion.token();
+  try { const r = await S.api('red_agenda', {}, 45000); if (!r.ok) throw r; S.store.set('agenda', { tk: AG_TK, L: r.reuniones || [] }); box.innerHTML = agendaHtml(r.reuniones || [], admin); box.classList.remove('oculto'); }
+  catch (e) { if (!c) box.classList.add('oculto'); }
+}
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
@@ -315,6 +357,7 @@ function pintar() {
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || u.tablero)) : (admin || VIS.indexOf(m.k) >= 0)));
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
+  agenda(u, admin);
   $('#rejilla').innerHTML = fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
 }
 $('#fIng').addEventListener('submit', async ev => {

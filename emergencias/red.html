@@ -98,17 +98,19 @@ const PEST = [
   ['acc', 'Accesos', 'key'] // solo Administración
 ];
 let D = S.store.get('red.cat', null), pest = (location.hash || '#reu').slice(1), filtro = {};
+// 12/11/2026 · «Programar reunión» desde la agenda de la pantalla de inicio: red.html#programar abre el diálogo (Administración).
+let PROG = pest === 'programar'; if (PROG) pest = 'reu';
 const adm = () => !!(D && D.admin);
 const nomOrg = id => { const o = (D && D.organos || []).filter(x => x.ID === id)[0]; return o ? o.Nombre : id; };
 const fechaN = s => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Number(m[3] + m[2].padStart(2, '0') + m[1].padStart(2, '0')) : 0; };
 const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3500); };
 const errTxt = e => { const m = (e && (e.error || e.message)) || 'No se pudo completar.'; return /desconocida|No disponible/i.test(m) ? 'Falta publicar la versión nueva del Apps Script (Implementar › Administrar implementaciones › Editar › Nueva versión).' : m; };
-const parteChip = p => /intern/i.test(p) ? '<span class="chip int">COE interno</span>' : /extern/i.test(p) ? '<span class="chip">Externa</span>' : '<span class="chip">COE completo</span>';
+const parteChip = p => /^otra/i.test(p) ? '<span class="chip">Otra reunión</span>' : /intern/i.test(p) ? '<span class="chip int">COE interno</span>' : /extern/i.test(p) ? '<span class="chip">Externa</span>' : '<span class="chip">COE completo</span>';
 
 async function cargar(nota) {
   if (S.DEMO) { app.innerHTML = '<div class="aviso alerta">Esta sección necesita conexión con el servidor (no funciona en modo demostración).</div>'; return; }
   if (!navigator.onLine) { pintar(D ? 'Sin conexión: últimos datos guardados.' : ''); return; }
-  try { const r = await S.api('red_catalogo', {}, 60000); if (!r.ok) throw r; D = r; S.store.set('red.cat', r); pintar(nota || ''); }
+  try { const r = await S.api('red_catalogo', {}, 60000); if (!r.ok) throw r; D = r; S.store.set('red.cat', r); pintar(nota || ''); if (PROG) { PROG = false; history.replaceState(null, '', '#reu'); if (adm()) dlgReunion('', true); } }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso alerta">${E(errTxt(e))}</div>` + (D ? '' : ''); if (D) pintar('No se pudo actualizar: se muestran los últimos datos guardados.'); }
 }
 
@@ -131,11 +133,12 @@ function pintar(nota) {
 /* ---------- Reuniones ---------- */
 function vReuniones() {
   const L = (D.reuniones || []).slice().sort((a, b) => fechaN(b.Fecha) - fechaN(a.Fecha));
-  const herr = `<div class="herr"><span class="esp meta">Asistencia y acuerdos se cargan en el momento de la reunión. La planilla impresa se firma y el escaneo se vincula a la reunión.</span>${adm() ? '<button class="btn" data-a="reuNueva"><span class="ms">add</span>Nueva reunión</button>' : ''}</div>`;
+  const herr = `<div class="herr"><span class="esp meta">Asistencia y acuerdos se cargan en el momento de la reunión. La planilla impresa se firma y el escaneo se vincula a la reunión.</span>${adm() ? '<button class="btn" data-a="reuProgramar"><span class="ms">event_upcoming</span>Programar reunión</button><button class="btn sec" data-a="reuNueva"><span class="ms">add</span>Cargar reunión realizada</button>' : ''}</div>`;
   if (!L.length) return herr + '<p class="vacio">No hay reuniones que puedas ver.</p>';
   return herr + L.map(r => {
     const as = (D.asistencia || []).filter(a => a['Reunión'] === r.ID), ac = (D.acuerdos || []).filter(a => a['Reunión'] === r.ID);
-    return `<div class="tarj"><h3>${E(r.Fecha)} · ${E(nomOrg(r['Órgano']))} ${parteChip(r.Parte)}<span class="chip">${E(r['N.º'] ? 'N.º ' + r['N.º'] : r.ID)}</span></h3>
+    return `<div class="tarj"><h3>${E(r.Fecha)} · ${E(nomOrg(r['Órgano']))} ${parteChip(r.Parte)}<span class="chip">${E(r['N.º'] ? 'N.º ' + r['N.º'] : r.ID)}</span>${r.Estado === 'Convocada' ? '<span class="chip int">Programada</span>' : r.Estado === 'Suspendida' ? '<span class="chip val">Suspendida</span>' : ''}</h3>
+      ${adm() && r.Estado === 'Convocada' ? `<div class="meta">Mail: ${E(/^no$/i.test(r['Avisar por mail'] || '') ? 'sin aviso' : [r['Convocatoria enviada'] ? 'convocatoria: ' + r['Convocatoria enviada'] : 'convocatoria pendiente', r['Recordatorio enviado'] ? 'recordatorio: ' + r['Recordatorio enviado'] : 'recordatorio 24 h antes: pendiente'].join(' · '))}</div>` : ''}
       <div class="meta">${E([r.Tipo, r.Horario, r['Lugar o modalidad'], r['Convocó · coordinó'] ? 'Coordinó: ' + r['Convocó · coordinó'] : '', r['Redactó'] ? 'Redactó: ' + r['Redactó'] : ''].filter(x => x && !/^s\/d/.test(x)).join(' · '))}</div>
       ${r['Orden del día'] ? `<p style="margin:6px 0;font-size:14px">${E(r['Orden del día'])}</p>` : ''}
       ${r['Temas tratados'] ? `<details><summary>Temas tratados</summary><p style="white-space:pre-line;font-size:13.5px;margin:6px 0">${E(r['Temas tratados'])}</p></details>` : ''}
@@ -146,7 +149,7 @@ function vReuniones() {
         <button class="btn sec chico" data-a="imprimir" data-id="${E(r.ID)}"><span class="ms">print</span>Planilla de asistencia</button>
         ${adm() ? `<button class="btn sec chico" data-a="reuEditar" data-id="${E(r.ID)}"><span class="ms">edit</span>Editar</button><button class="btn sec chico" data-a="acta" data-id="${E(r.ID)}"><span class="ms">description</span>${r['Acta (Doc)'] ? 'Volver a generar el acta' : 'Generar el acta (Doc)'}</button>` : ''}
       </div>
-      <details><summary>Asistentes (${as.length})</summary><ul class="lst">${as.map(a => `<li>${E(a.Persona)}${a['Institución / función'] ? ' · ' + E(a['Institución / función']) : ''}${a.Presente === 'No' ? ' <span class="chip val">ausente</span>' : ''}</li>`).join('') || '<li class="vacio">Sin datos.</li>'}</ul></details>
+      <details><summary>${r.Estado === 'Convocada' ? 'Convocados' : 'Asistentes'} (${as.length})</summary><ul class="lst">${as.map(a => `<li>${E(a.Persona)}${a['Institución / función'] ? ' · ' + E(a['Institución / función']) : ''}${a.Presente === 'No' ? ' <span class="chip val">ausente</span>' : ''}</li>`).join('') || '<li class="vacio">Sin datos.</li>'}</ul></details>
       <details><summary>Acuerdos y tareas (${ac.length})</summary><ul class="lst">${ac.map(a => `<li><b>${E(a.ID)}</b> · ${E(a.Tipo)} · ${E(a.Texto)}${a.Responsable ? ` <span class="meta">· Responsable: ${E(a.Responsable)}</span>` : ''}${a.Plazo ? ` <span class="meta">· Plazo: ${E(a.Plazo)}</span>` : ''} <span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></li>`).join('') || '<li class="vacio">Sin acuerdos.</li>'}</ul></details>
     </div>`;
   }).join('');
@@ -232,21 +235,23 @@ function abrir(titulo, cuerpo, pie) {
   dlg.showModal();
 }
 
-function dlgReunion(id) {
+function dlgReunion(id, programar) {
   const r = id ? (D.reuniones || []).filter(x => x.ID === id)[0] : null;
   const asis = id ? (D.asistencia || []).filter(a => a['Reunión'] === id) : [];
   const acus = id ? (D.acuerdos || []).filter(a => a['Reunión'] === id) : [];
-  const org = r ? r['Órgano'] : 'COE-APTW', parte = r ? (/intern/i.test(r.Parte) ? 'Interna (COE interno)' : 'Completo') : 'Completo';
-  abrir(r ? 'Editar reunión ' + r.ID : 'Nueva reunión',
-    `<div class="dos">${selC('organo', 'Órgano', org, (D.organos || []).map(o => [o.ID, o.Nombre]))}${selC('parte', 'Quiénes', parte, [['Completo', 'COE completo (interno + externo)'], ['Interna (COE interno)', 'COE interno (solo parte interna)']])}</div>
-     <div class="dos">${campo('fecha', 'Fecha (dd/mm/aaaa) *', r ? r.Fecha : new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }))}${campo('horario', 'Horario', r && r.Horario)}</div>
+  const org = r ? r['Órgano'] : 'COE-APTW', parte = r ? (/^otra/i.test(r.Parte) ? 'Otra reunión' : /intern/i.test(r.Parte) ? 'Interna (COE interno)' : 'Completo') : 'Completo';
+  const estado0 = r ? r.Estado : (programar ? 'Convocada' : 'Realizada');
+  abrir(r ? 'Editar reunión ' + r.ID : programar ? 'Programar reunión' : 'Cargar reunión realizada',
+    `<div class="dos">${selC('organo', 'Órgano', org, (D.organos || []).map(o => [o.ID, o.Nombre]))}${selC('parte', 'Quiénes', parte, [['Interna (COE interno)', 'COE interno (solo parte interna)'], ['Completo', 'COE externo (completo: interno + externo)'], ['Otra reunión', 'Otra reunión (convocados que se tilden)']])}</div>
+     <div class="dos">${campo('fecha', 'Fecha (dd/mm/aaaa) *', r ? r.Fecha : programar ? '' : new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }))}${campo('horario', 'Horario (p. ej. 9:00)', r && r.Horario)}</div>
      <div class="dos">${campo('num', 'N.º de reunión o acta', r && r['N.º'])}${selC('tipo', 'Tipo', r ? r.Tipo : 'Ordinaria', ['Ordinaria', 'Extraordinaria', 'De trabajo'])}</div>
      <div class="dos">${campo('lugar', 'Lugar o modalidad', r && r['Lugar o modalidad'])}${campo('coordino', 'Convocó · coordinó', r && r['Convocó · coordinó'])}</div>
-     <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', r ? r.Estado : 'Realizada', ['Convocada', 'Realizada', 'Suspendida'])}</div>
-     ${campo('orden', 'Orden del día', r && r['Orden del día'], 'area')}
+     <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', estado0, [['Convocada', 'Programada (convocada)'], ['Realizada', 'Realizada'], ['Suspendida', 'Suspendida']])}</div>
+     ${campo('orden', 'Orden del día · temas a tratar', r && r['Orden del día'], 'area')}
+     <label class="campo" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="avisar" style="width:auto;margin-top:3px" ${r && /^no$/i.test(r['Avisar por mail'] || '') ? '' : 'checked'}><span style="font-weight:500">Avisar por mail si está programada: convocatoria al guardar y recordatorio 24 h antes. COE interno: integrantes internos · COE externo: todos los integrantes · Otra reunión: los convocados tildados. Sale desde belenpellegrini.hys@gmail.com, en copia oculta.</span></label>
      ${campo('temas', 'Temas tratados (separá los párrafos con una línea en blanco)', r && r['Temas tratados'], 'area')}
      ${campo('proxima', 'Próxima reunión', r && r['Próxima reunión'])}
-     <p class="meta" style="margin:12px 0 2px"><b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)</p>
+     <p class="meta" style="margin:12px 0 2px" id="asisTit"><b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)</p>
      <div id="asisL" class="asis"></div>
      ${campo('extras', 'Otros asistentes (uno por línea: Apellido y nombre · institución o función)', asis.filter(a => !a['ID persona']).map(a => a.Persona + (a['Institución / función'] ? ' · ' + a['Institución / función'] : '')).join('\n'), 'area')}
      <p class="meta" style="margin:12px 0 2px"><b>Acuerdos y tareas</b> (uno por uno)</p><div id="acuL"></div>
@@ -256,12 +261,14 @@ function dlgReunion(id) {
     `<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn sec" type="button" data-a="imprimirDlg"><span class="ms">print</span>Planilla de asistencia</button><button class="btn" type="button" data-a="reuGuardar" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button>`);
   const f = $('#fD');
   const pintarAsis = () => {
-    const o = f.organo.value, soloInt = /intern/i.test(f.parte.value);
+    const o = f.organo.value, soloInt = /intern/i.test(f.parte.value), otra = /^otra/i.test(f.parte.value), conv = f.estado.value === 'Convocada';
+    $('#asisTit').innerHTML = conv ? (otra ? '<b>Convocados</b> (tildá quiénes reciben la convocatoria y el recordatorio)' : '<b>Integrantes convocados</b> (reciben el mail según la parte; la asistencia se marca el día de la reunión)') : '<b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)';
     const marcados = new Set(asis.map(a => a['ID persona']).filter(Boolean));
-    const I = (D.integrantes || []).filter(i => i.organo === o && (!soloInt || /^intern/i.test(i.parte)));
+    // Otra reunión: se elige entre todos los participantes del COE (no solo los integrantes del órgano).
+    const I = otra ? (D.personas || []).map(p => ({ persona: p.id, nombre: p.nombre, funcion: [p.cargo, p.institucion].filter(Boolean).join(' · '), parte: p.tipo })) : (D.integrantes || []).filter(i => i.organo === o && (!soloInt || /^intern/i.test(i.parte)));
     $('#asisL').innerHTML = I.map(i => `<label><input type="checkbox" name="as" value="${E(i.persona)}" data-n="${E(i.nombre)}" data-f="${E(i.funcion || '')}" ${marcados.has(i.persona) ? 'checked' : ''}><span>${E(i.nombre)}<br><span class="meta">${E(i.funcion || '')}${/^extern/i.test(i.parte) ? ' · externa' : ''}</span></span></label>`).join('') || '<p class="vacio">Este órgano no tiene integrantes cargados.</p>';
   };
-  f.organo.addEventListener('change', pintarAsis); f.parte.addEventListener('change', pintarAsis); pintarAsis();
+  f.organo.addEventListener('change', pintarAsis); f.parte.addEventListener('change', pintarAsis); f.estado.addEventListener('change', pintarAsis); pintarAsis();
   acus.forEach(a => filaAcuerdo(a)); if (!acus.length) filaAcuerdo();
 }
 function filaAcuerdo(a) {
@@ -274,11 +281,12 @@ function filaAcuerdo(a) {
   $('#acuL').appendChild(d);
 }
 function leerReunion(f) {
-  const asistencia = [...f.querySelectorAll('input[name=as]:checked')].map(c => ({ persona: c.value, nombre: c.dataset.n, funcion: c.dataset.f, presente: true }))
-    .concat(f.extras.value.split('\n').map(x => x.trim()).filter(Boolean).map(x => { const p = x.split(/\s+·\s+|\s+-\s+/); return { persona: '', nombre: p[0], funcion: p.slice(1).join(' · '), presente: true }; }));
+  const conv = f.estado.value === 'Convocada';
+  const asistencia = [...f.querySelectorAll('input[name=as]:checked')].map(c => ({ persona: c.value, nombre: c.dataset.n, funcion: c.dataset.f, presente: conv ? 'convocado' : true }))
+    .concat(f.extras.value.split('\n').map(x => x.trim()).filter(Boolean).map(x => { const p = x.split(/\s+·\s+|\s+-\s+/); return { persona: '', nombre: p[0], funcion: p.slice(1).join(' · '), presente: conv ? 'convocado' : true }; }));
   const acuerdos = [...document.querySelectorAll('.acu-fila')].map(d => ({ id: d.dataset.id, tipo: d.querySelector('[name=aTipo]').value, texto: d.querySelector('[name=aTexto]').value.trim(), resp: d.querySelector('[name=aResp]').value, plazo: d.querySelector('[name=aPlazo]').value, estado: d.querySelector('[name=aEst]').value })).filter(a => a.texto);
   return { organo: f.organo.value, parte: f.parte.value, fecha: f.fecha.value.trim(), horario: f.horario.value, num: f.num.value, tipo: f.tipo.value, lugar: f.lugar.value, coordino: f.coordino.value,
-    redacto: f.redacto.value, estado: f.estado.value, orden: f.orden.value, temas: f.temas.value, proxima: f.proxima.value, acta: f.acta.value, escaneo: f.escaneo.value, obs: f.obs.value, asistencia: asistencia, acuerdos: acuerdos };
+    redacto: f.redacto.value, estado: f.estado.value, orden: f.orden.value, temas: f.temas.value, proxima: f.proxima.value, acta: f.acta.value, escaneo: f.escaneo.value, obs: f.obs.value, avisar: f.avisar.checked, asistencia: asistencia, acuerdos: acuerdos };
 }
 
 /* Planilla de asistencia para imprimir y firmar (con los marcados y renglones en blanco). */
@@ -327,7 +335,7 @@ function dlgComentar() {
 
 async function enviar(btn, accion, datos, ok) {
   const est = $('#estD'); btn.disabled = true; est.textContent = 'Guardando…';
-  try { const r = await S.api(accion, datos, 90000); if (!r.ok) throw r; dlg.close(); toast(ok); cargar(); }
+  try { const r = await S.api(accion, datos, 90000); if (!r.ok) throw r; dlg.close(); toast(typeof ok === 'function' ? ok(r) : ok); cargar(); }
   catch (e) { est.textContent = errTxt(e); btn.disabled = false; }
 }
 
@@ -404,6 +412,7 @@ function dlgAyuda() {
   const usu = `<p><b>Para qué sirve.</b> Reúne lo del COE de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos y enlaces útiles. Es una base orientadora: no es un registro en tiempo real.</p>
     <p><b>Qué ves.</b> Solo lo que corresponde a tu participación. Si integrás la parte interna (hospitales y Área Programática), ves también lo del COE interno. Si sos integrante externo, ves lo del COE completo.</p>
     <p><b>Reuniones.</b> Cada tarjeta muestra los datos, el orden del día, los asistentes y los acuerdos. «Planilla de asistencia» imprime la planilla para firmar. «Acta» y «Asistencia firmada» abren los documentos cuando están cargados.</p>
+    <p><b>Programar una reunión (Administración).</b> «Programar reunión» la guarda como «Programada (convocada)» con fecha, horario, lugar y temas a tratar. Aparece en la agenda de la pantalla de inicio de quienes la pueden ver. Si está tildado «Avisar por mail», al guardar sale la convocatoria y el día anterior (24 h antes) el recordatorio, desde belenpellegrini.hys@gmail.com y en copia oculta: COE interno, a los integrantes internos del órgano; COE externo, a todos sus integrantes; otra reunión, a los convocados que se tilden. Se usan los correos de cada ficha (institucional; si no hay, el personal). Si se cambia la fecha, el horario o el lugar, sale un aviso de cambio. Después de la reunión se edita, se pasa a «Realizada» y se marca la asistencia.</p>
     <p><b>Acuerdos y tareas.</b> Todos los acuerdos de las reuniones que ves, con responsable, plazo y estado. Podés filtrar por estado o buscar por texto.</p>
     <p><b>Documentos.</b> Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
     <p><b>Establecimientos.</b> Registro único de la red. Los datos que faltan figuran como «s/d (revisar)».</p>
@@ -430,6 +439,7 @@ document.addEventListener('click', ev => {
   if (t.hasAttribute('data-c')) { dlg.close(); return; }
   const a = t.dataset.a, id = t.dataset.id;
   if (a === 'reuNueva') dlgReunion('');
+  else if (a === 'reuProgramar') dlgReunion('', true);
   else if (a === 'reuEditar') dlgReunion(id);
   else if (a === 'acuMas') filaAcuerdo();
   else if (a === 'imprimir') {
@@ -438,7 +448,7 @@ document.addEventListener('click', ev => {
       (D.asistencia || []).filter(x => x['Reunión'] === id).map(x => ({ nombre: x.Persona, funcion: x['Institución / función'] })));
   }
   else if (a === 'imprimirDlg') { const r = leerReunion($('#fD')); imprimirPlanilla(r, r.asistencia); }
-  else if (a === 'reuGuardar') { const r = leerReunion($('#fD')); r.id = id; if (!r.fecha) { $('#estD').textContent = 'Falta la fecha.'; return; } enviar(t, 'red_reunion_guardar', { reunion: r }, 'Reunión guardada.'); }
+  else if (a === 'reuGuardar') { const r = leerReunion($('#fD')); r.id = id; if (!r.fecha) { $('#estD').textContent = 'Falta la fecha.'; return; } enviar(t, 'red_reunion_guardar', { reunion: r }, x => 'Reunión guardada.' + (x.aviso ? ' Mail: ' + x.aviso : '')); }
   else if (a === 'acta') generarActa(t, id);
   else if (a === 'pacAct') { PAC = null; pintar(); cargarPac(); }
   else if (a === 'intNuevo') dlgIntegrante(id, '', '');
