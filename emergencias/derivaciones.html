@@ -413,7 +413,7 @@ function selModo() {
 }
 function cuadroCamasHosp(esc) {
   const todos = hospCamas(); if (!todos.length) return '';
-  const he = hospEvacuado(), hosp = todos.filter(h => h !== he), cats = catsUsadas();
+  const he = hospEvacuado(), hosp = todos.filter(h => !he || h.n !== he.n), cats = catsUsadas();
   const celda = l => { const v = l.reduce((a, f) => a + num(f.camas), 0), ob = l.map(f => [f.servicio, f.observaciones].filter(Boolean).join(': ')).join(' · ');
     return l.length ? `<td class="num" title="${E(ob)}"><b>${v}</b>${l.some(f => f.observaciones) ? '<sup>*</sup>' : ''}</td>` : '<td class="num sub">—</td>'; };
   const filaH = h => `<tr><td><b>${E(h.n)}</b><div class="sub">${E(h.loc || 's/d')}</div></td>${cats.map(c => celda(camasCat(h, c))).join('')}<td class="num"><b>${h.tot}</b></td></tr>`;
@@ -432,6 +432,7 @@ function cuadroCamasHosp(esc) {
     <p class="sub" style="margin:6px 0 0"><sup>*</sup> Tiene observaciones: pasá el dedo o el mouse por el número para verlas (por ejemplo, «UCIP: 5 activas de 8»). Base orientadora: los datos están en la hoja CAMAS del libro de la app${esAdmin() ? ' (Administración la corrige ahí: servicio, camas y categoría)' : ''}; en una emergencia la disponibilidad real se confirma con cada hospital.</p></div>`;
 }
 
+const AVISO_EVAC = h => `<div class="aviso-datos" style="background:#FDECEC;color:#7A1F1F"><b>Evacuación de ${E(h.n)}:</b> ${E(h.n)} no figura como receptor. Se buscan lugares primero en ${E(h.loc || 's/d')} (escalón 1, otros establecimientos de la misma localidad) y después en las localidades del escalón 2 y 3, en el orden que acuerde el COE.</div>`;
 function vistaInst() {
   borrador = null; const he = hospEvacuado(); if (he && red(he.loc)) redActual = he.loc;
   const r = redVista(), todas = r.nombre === TODAS;
@@ -440,7 +441,7 @@ function vistaInst() {
   const filtra = l => l.filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.recibe_de).toLowerCase().indexOf(q.toLowerCase()) >= 0);
   const suma = (l, k) => l.reduce((a, x) => a + num(x[k]), 0);
   const grupos = esc.map(e => ({ e, l: deLocs(recVis(), e.locs) }));
-  app.innerHTML = `${secTabs('inst')}${selModo()}${modoSit === 'evac' ? '' : redesTabs(r)}${modoSit === 'evac' && !he ? '<div class="tarjeta vacio">Elegí arriba el establecimiento que se evacúa.</div>' : ''}${todas ? '' : AVISO_ESC(r.nombre)}${AVISO_EST}
+  app.innerHTML = `${secTabs('inst')}${selModo()}${modoSit === 'evac' ? '' : redesTabs(r)}${modoSit === 'evac' && !he ? '<div class="tarjeta vacio">Elegí arriba el establecimiento que se evacúa.</div>' : ''}${todas ? '' : he ? AVISO_EVAC(he) : AVISO_ESC(r.nombre)}${AVISO_EST}
     <div class="buscar"><input id="q" type="search" placeholder="Buscar institución o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaInst"><span class="ms">add</span>Agregar institución en ' + E(r.nombre) + '</button>' : ''}
       <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
     ${cuadroCamasHosp(esc)}
