@@ -392,7 +392,7 @@
       cab.concat(pri).forEach(c => { if (!opaco(getComputedStyle(c).backgroundColor)) c.style.backgroundColor = fondo(c.parentElement); });
     });
   }
-  let pend = false; const pedir = () => { if (pend) return; pend = true; requestAnimationFrame(() => { pend = false; try { preparar(); } catch (e) { /* nunca rompe la app */ } }); };
+  let pend = false; const pedir = () => { if (pend) return; pend = true; setTimeout(() => { pend = false; try { preparar(); } catch (e) { /* nunca rompe la app */ } }, 60); };
   function iniciar() { pedir(); new MutationObserver(pedir).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', () => { document.querySelectorAll('.tfija').forEach(w => w.classList.toggle('tfija-x', w.scrollWidth > w.clientWidth + 2)); }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
