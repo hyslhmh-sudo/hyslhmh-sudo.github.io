@@ -223,9 +223,9 @@ const TODAS = 'Todas las localidades';
 function armar(r) {
   const de = (l, n) => (l || []).filter(x => x.localidad === n);
   const loc = c => c.clave === 'localidad' ? Object.assign({}, c, { tipo: 'lista', opciones: r.localidades }) : c;
-  r.defInst = r.defInst.map(loc); r.defAlb = r.defAlb.map(loc); r.defCrit = r.defCrit.map(loc);
-  r.redes = r.localidades.map(n => ({ nombre: n, instituciones: de(r.receptoras, n), albergues: de(r.albergues, n), criterios: de(r.criterios, n), puedeInst: (r.cargaEn || []).indexOf(n) >= 0, planilla: r.planilla }));
-  r.redes.push({ nombre: TODAS, instituciones: r.receptoras || [], albergues: r.albergues || [], criterios: r.criterios || [], puedeInst: false, planilla: r.planilla });
+  r.defPob = (r.defPob || []).map(loc); r.defInst = r.defInst.map(loc); r.defAlb = r.defAlb.map(loc); r.defCrit = r.defCrit.map(loc);
+  r.redes = r.localidades.map(n => ({ nombre: n, instituciones: de(r.receptoras, n), albergues: de(r.albergues, n), poblacion: de(r.poblacion, n), criterios: de(r.criterios, n), puedeInst: (r.cargaEn || []).indexOf(n) >= 0, planilla: r.planilla }));
+  r.redes.push({ nombre: TODAS, instituciones: r.receptoras || [], albergues: r.albergues || [], poblacion: r.poblacion || [], criterios: r.criterios || [], puedeInst: false, planilla: r.planilla });
   return r;
 }
 
@@ -291,6 +291,7 @@ function render() {
   if (p[0] === 'ayuda') return vistaAyuda();
   if (p[0] === 'inst') return vistaInst();
   if (p[0] === 'albergues') return vistaAlb();
+  if (p[0] === 'poblacion') return vistaPob();
   if (p[0] === 'criterios') return vistaCrit();
   if (p[0] === 'modelos' || p[0] === 'evacuados') return vistaModelos();
   if (p[0] === 'datos') return vistaDatos();
@@ -352,9 +353,9 @@ async function guardar(req, ok) {
 function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes"><span class="sub" style="align-self:center;font-weight:700;white-space:nowrap">Emergencia en:</span>${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''; }
 // 01/11/2026 · Quien no es Administración ve solo la red de derivación (receptoras, albergues, criterios y planillas modelo), sin cargar.
 function esAdmin() { return !!(cat && cat.usuario && cat.usuario.rol === 'Administración'); }
-const SOLO_RED = ['inst', 'alb', 'crit', 'modelos'];
+const SOLO_RED = ['inst', 'alb', 'pob', 'crit', 'modelos'];
 function secTabs(act) {
-  return `<div class="secciones-tabs">${[['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['crit', '#/criterios', 'handshake', 'Criterios de derivación'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['datos', '#/datos', 'bar_chart', 'Datos de la red']]
+  return `<div class="secciones-tabs">${[['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['pob', '#/poblacion', 'groups', 'Población a cargo'], ['crit', '#/criterios', 'handshake', 'Criterios de derivación'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['datos', '#/datos', 'bar_chart', 'Datos de la red']]
     .map(t => `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>${act !== 'modelos' && act !== 'datos' ? avisoCarga() : ''}`;
 }
 // Qué puede hacer el usuario en la localidad elegida
@@ -483,6 +484,7 @@ function cerrarFila() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML =
 const TIPOS_FILA = {
   inst: { lista: 'instituciones', def: 'defInst', api: 'evac_institucion', nuevo: 'Nueva institución receptora', titulo: x => x.nombre },
   alb: { lista: 'albergues', def: 'defAlb', api: 'evac_albergue', nuevo: 'Nuevo albergue', titulo: x => x.nombre },
+  pob: { lista: 'poblacion', def: 'defPob', api: '', nuevo: 'Nuevo lugar con población a cargo', titulo: x => x.nombre },
   crit: { lista: 'criterios', def: 'defCrit', api: 'evac_criterio', nuevo: 'Nuevo criterio de derivación', titulo: x => (x.id ? x.id + ' · ' : '') + (x.grupo || '') }
 };
 const ESFERA_M2 = 3.5, ESFERA_INODORO = 20;
@@ -507,6 +509,34 @@ function vistaAlb() {
         <div class="pie"><span><b>${E(x.capacidad || 's/d')}</b> personas (estimado)</span>${c.m2 ? `<span>por superficie (Esfera): ${c.m2}</span>` : ''}${c.ino ? `<span>por inodoros (Esfera): ${c.ino}</span>` : ''}${semSN(x.energia === 'Red y grupo electrógeno' ? 'Sí' : x.energia === 'Sin energía' ? 'No' : '', 'Grupo electrógeno', 'Sin energía')}${semSN(x.accesible, 'Accesible', 'No accesible')}${semSN(x.calefaccion, 'Calefacción', 'Sin calefacción')}</div></button>`; }).join('')
       || `<div class="tarjeta vacio">Todavía no hay albergues cargados en ${g.e.locs.map(E).join(', ')}.</div>`}</div>`).join('')}`;
   const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaAlb(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+}
+/* ---------- lugares con población a cargo (12/11/2026, pedido de Belén) ----------
+ * Alcaidía, comisarías, centros de detención, instituto penitenciario, geriátricos, casas infantiles y casas de madres.
+ * Pueden necesitar evacuar o mandar pacientes al hospital: son demanda, no capacidad. NUNCA son albergues ni receptores.
+ * Hoja «POBLACION A CARGO» de la planilla de Derivaciones. Sin datos personales: solo cantidades. */
+const TIPOS_POB = ['Alcaidía', 'Comisaría', 'Centro de detención juvenil', 'Instituto penitenciario', 'Geriátrico', 'Casa infantil', 'Casa de madres', 'Otro'];
+function vistaPob() {
+  borrador = null; const r = redVista(), todas = r.nombre === TODAS;
+  $('#titulo').innerHTML = `Población a cargo · ${todas ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}<small>Lugares que pueden evacuar o mandar pacientes al hospital · nunca son albergues</small>`;
+  const esc = todas ? [{ n: 0, tit: 'Todas las localidades', locs: cat.localidades, sd: false }] : escalones(r.nombre);
+  const grupos = esc.map(e => ({ e, l: deLocs(cat.poblacion, e.locs) }));
+  const filtra = l => l.filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.tipo).toLowerCase().indexOf(q.toLowerCase()) >= 0);
+  const todos = grupos.reduce((a, g) => a.concat(g.l), []);
+  const pob = l => l.reduce((a, x) => a + num(x.poblacion), 0), sd = l => l.filter(x => !(num(x.poblacion) > 0)).length;
+  const tipos = TIPOS_POB.filter(t => todos.some(x => x.tipo === t)).concat([...new Set(todos.map(x => x.tipo).filter(t => t && TIPOS_POB.indexOf(t) < 0))]);
+  app.innerHTML = `${redesTabs(r)}${secTabs('pob')}
+    <div class="aviso-datos" style="background:#FDECEC;color:#7A1F1F"><b>Nunca son albergues ni receptores.</b> Son lugares con población a cargo que, ante una emergencia, pueden necesitar evacuar o mandar pacientes al hospital: suman demanda. Base orientadora: cantidades estimadas, sin datos personales.</div>
+    <div class="buscar"><input id="q" type="search" placeholder="Buscar lugar, tipo o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="pob"><span class="ms">add</span>Agregar lugar en ' + E(r.nombre) + '</button>' : ''}</div>
+    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Población alojada por tipo</b> <span class="sub">(estimada; «sin dato» = lugares con población en s/d)</span>
+      <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo</th>${grupos.map(g => `<th class="num">${g.e.n ? 'Escalón ' + g.e.n : 'Personas'}</th>`).join('')}<th class="num">Lugares</th><th class="num">Sin dato</th></tr>
+      ${tipos.map(t => { const f = l => l.filter(x => x.tipo === t); return `<tr><td>${E(t)}</td>${grupos.map(g => `<td class="num"><b>${pob(f(g.l))}</b></td>`).join('')}<td class="num">${f(todos).length}</td><td class="num">${sd(f(todos))}</td></tr>`; }).join('')}
+      <tr style="background:#F1ECEC"><td><b>Total</b></td>${grupos.map(g => `<td class="num"><b>${pob(g.l)}</b></td>`).join('')}<td class="num"><b>${todos.length}</b></td><td class="num"><b>${sd(todos)}</b></td></tr></table></div>
+      <p class="sub" style="margin:6px 0 0">Requieren custodia para el traslado: <b>${todos.filter(x => x.custodia === 'Sí').length}</b> lugares. Personas con movilidad reducida o dependencia (estimado): <b>${todos.reduce((a, x) => a + num(x.dependientes), 0)}</b>.</p></div>
+    ${grupos.map(g => `<h3>${escTit(g.e)}</h3><div class="lista">${filtra(g.l).map(x => `<button class="tarjeta inst" data-fila="pob" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b><span class="sem g">${E(x.tipo || 's/d')}</span>${x.custodia === 'Sí' ? '<span class="sem a">Traslado con custodia</span>' : ''}${x.zona_riesgo === 'Sí' ? '<span class="sem r">Zona de riesgo</span>' : ''}</div>
+        <div class="sub">${E([x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.ref_salud ? ' · referencia de salud: ' + E(x.ref_salud) : ''}</div>
+        <div class="pie"><span><b>${E(x.poblacion || 's/d')}</b> personas (estimado)</span>${num(x.dependientes) ? `<span>${E(x.dependientes)} con movilidad reducida o dependencia</span>` : ''}${x.tel ? `<span><span class="ms" style="font-size:16px">call</span> ${E(x.tel)}</span>` : ''}${x.plan_evac ? `<span>Plan de evacuación propio: ${E(x.plan_evac)}</span>` : ''}</div></button>`).join('')
+      || `<div class="tarjeta vacio">Todavía no hay lugares cargados en ${g.e.locs.map(E).join(', ')}.</div>`}</div>`).join('')}`;
+  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaPob(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
 }
 const semEstadoCrit = v => ({ 'Validado por el COE': 'v', 'En discusión': 'a', 'Propuesto': 'g', 'Descartado': 'n' }[v] ? `<span class="sem ${{ 'Validado por el COE': 'v', 'En discusión': 'a', 'Propuesto': 'g', 'Descartado': 'n' }[v]}">${E(v)}</span>` : '');
 const SENTIDOS = ['Sale del hospital', 'Llega al hospital o centro de salud', 'Desde el albergue a salud', 'Información al COE'];
@@ -539,7 +569,7 @@ function abrirFila(tipo, id) {
       <td><input data-k="${c[0]}_est" inputmode="numeric" value="${E(x[c[0] + '_est'] || '')}" ${dis}></td></tr>`).join('')}</table>
     <div class="campos" style="padding:6px 0 0">${est.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>`;
   } else {
-    const ayuda = tipo === 'alb' ? '<p class="sub" style="margin:4px 2px 8px">Referencia (Proyecto Esfera, 2018): 3,5 m² cubiertos por persona, 1 inodoro cada 20 personas y 15 litros de agua por persona y por día. Con la superficie y los inodoros la app calcula una capacidad orientativa.</p>'
+    const ayuda = tipo === 'pob' ? '<div class="aviso-datos" style="background:#FDECEC;color:#7A1F1F"><b>Nunca es albergue ni receptor.</b> Lugar con población a cargo que puede necesitar evacuar o mandar pacientes al hospital. Solo cantidades: no se cargan datos personales.</div>' : tipo === 'alb' ? '<p class="sub" style="margin:4px 2px 8px">Referencia (Proyecto Esfera, 2018): 3,5 m² cubiertos por persona, 1 inodoro cada 20 personas y 15 litros de agua por persona y por día. Con la superficie y los inodoros la app calcula una capacidad orientativa.</p>'
       : (puede ? '<p class="sub" style="margin:4px 2px 8px">Cuando el COE valida el criterio, cambiá el estado a «Validado por el COE» y anotá la fecha y el acta o reunión.</p>' : '');
     cuerpo = `${ayuda}<div class="tarjeta" style="padding:6px 14px 10px"><div class="campos" style="padding:0">${def.map(c => campoHTML(c, x[c.clave] != null ? x[c.clave] : (c.clave === 'estado' ? 'Propuesto' : ''), dis, tipo + '_')).join('')}</div></div>`;
   }
@@ -970,7 +1000,7 @@ document.addEventListener('click', async ev => {
     if (a === 'guardarFila' && !b.id && b.tipo === 'crit' && !String(b.datos.grupo || '').trim()) { toast('Falta el grupo de personas.', true); return; }
     if (!navigator.onLine) { toast('Para guardar se necesita conexión.', true); return; }
     t.disabled = true;
-    try { const res = await S.api('deriv_guardar', { tipo: { inst: 'receptora', alb: 'albergue', crit: 'criterio' }[b.tipo], id: b.id, borrar: a === 'borrarFila', datos: Object.assign(b.id ? {} : { localidad: r.nombre }, b.datos) }); if (!res.ok) throw res; toast(a === 'borrarFila' ? 'Quitado.' : 'Guardado.'); borradorFila = null; cerrarFila(); await cargar(false); }
+    try { const res = await S.api('deriv_guardar', { tipo: { inst: 'receptora', alb: 'albergue', pob: 'poblacion', crit: 'criterio' }[b.tipo], id: b.id, borrar: a === 'borrarFila', datos: Object.assign(b.id ? {} : { localidad: r.nombre }, b.datos) }); if (!res.ok) throw res; toast(a === 'borrarFila' ? 'Quitado.' : 'Guardado.'); borradorFila = null; cerrarFila(); await cargar(false); }
     catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar.', true); t.disabled = false; }
     return;
   }
@@ -1022,6 +1052,7 @@ function vistaAyuda() {
     <p>Es información del comité de crisis, para trabajar entre todos: qué instituciones podrían recibir pacientes, qué edificios podrían usarse como albergue y qué criterios de derivación se acuerdan. Está separada por localidad: Trelew, Rawson (con Playa Unión), Gaiman, Dolavon y Puerto Madryn. Puerto Madryn es otra área programática con su propio COE: se carga para saber qué puede venir de allá y qué se puede derivar hacia allá.</p>
     <p><b>Es una base orientadora para planificar, no un registro en tiempo real.</b> Las capacidades son estimadas y no se cargan pacientes.</p>
     <h3>Para usuarios</h3><ol><li>Arriba elegí dónde es la emergencia («Emergencia en:»). Instituciones receptoras y Albergues se ordenan por escalones: <b>1</b>, lo local; <b>2</b> y <b>3</b>, las localidades a las que se deriva después, en el orden que acuerde el COE. Si el orden todavía no está acordado, se muestran con el aviso «orden s/d (revisar)». «Todas las localidades» muestra el conjunto, solo para ver e imprimir.</li>
+      <li><b>Población a cargo</b>: alcaidía, comisarías, centros de detención, instituto penitenciario, geriátricos, casas infantiles y casas de madres. <b>Nunca son albergues ni receptores</b>: son lugares que pueden tener que evacuar o mandar pacientes al hospital. Cada uno tiene su ficha (tocala para ver o cargar): población alojada estimada, personas con movilidad reducida o dependencia, si el traslado requiere custodia, contacto 24 h, hospital o CAPS de referencia, zona de riesgo y plan de evacuación propio. Solo cantidades: no se cargan datos personales.</li>
       <li>En Instituciones receptoras, arriba elegís <b>¿Qué pasa?</b>: <b>Emergencia externa en una localidad</b> (todos los hospitales reciben, incluido el local) o <b>Evacuación de un establecimiento</b> (elegís cuál: ese hospital deja de ser receptor, sus camas aparecen en «Pacientes a reubicar» y se buscan lugares en los demás por escalón desde su localidad).</li>
       <li>El cuadro de camas muestra un hospital por fila y una categoría por columna (int. general / adultos, terapia, pediatría, neonatología, maternidad, salud mental, urgencias…), con subtotal por escalón y total. Son camas habilitadas, no camas libres. El asterisco indica que hay observaciones: pasá el dedo o el mouse por el número. La última columna, <b>Probablemente disponibles</b>, estima cuántas camas podrían estar libres según un supuesto (S-01: ocupación histórica de cada hospital rural; S-02: 15 % como supuesto de planificación donde no hay dato de ocupación). Tocá el código del supuesto para ver la explicación y la bibliografía. En una evacuación, «Pacientes probables» son las camas ocupadas estimadas del establecimiento evacuado. El cuadro siguiente, «Capacidad estimada de recepción», suma lo que cada institución receptora podría recibir por tipo de cama (categorías HAvBED más Maternidad y Urgencias). Hoy esos números son una estimación propia: camas habilitadas × el supuesto S-01 o S-02, redondeado hacia abajo; cuando un hospital informe su propia estimación, se reemplaza en su ficha.</li>
       <li><b>Instituciones receptoras:</b> contacto las 24 horas, acuerdo de derivación y camas que podría recibir por tipo (estimado), con el origen y la fecha del dato.</li>
@@ -1031,7 +1062,7 @@ function vistaAyuda() {
       <li><b>Datos de la red:</b> camas de internación habilitadas por establecimiento y por servicio, y población estimada por barrio de Trelew (Municipalidad de Trelew, 2025; datos estimados, provisorios, no oficiales). Es solo para ver: no son camas libres. Podés buscar un barrio y ordenar la tabla por densidad o por cantidad de habitantes.</li>
       <li>Si ves «Solo ver», tu usuario no carga en esa localidad. Si tenés que cargar, pedíselo a Higiene y Seguridad Laboral.</li>
       <li>Si falta un dato, poné «s/d (revisar)».</li></ol>
-    <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COE · Derivaciones y albergues (v0)» (carpeta 06 · COE): hojas LOCALIDADES, RECEPTORAS, ALBERGUES y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
+    <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COE · Derivaciones y albergues (v0)» (carpeta 06 · COE): hojas LOCALIDADES, RECEPTORAS, ALBERGUES, POBLACION A CARGO y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
       <li>El cuadro «Camas de internación por hospital» se arma con la hoja CAMAS del libro de la app (no de esta planilla): una fila por hospital y servicio, con localidad (escrita igual que en LOCALIDADES), camas, fuente, fecha, observaciones, categoría (columna del cuadro, con lista desplegable) e ID en RECEPTORAS (el que se quita cuando se evacúa ese hospital), disponibilidad supuesta (%) e ID del supuesto. Cada supuesto se explica en la hoja SUPUESTOS (título, etiqueta LEY/MEJORA o dato histórico, valor, a qué se aplica, explicación, cuidados y referencias, una por renglón con «texto — enlace»); sus referencias van también en FUENTES. Cuando haya dato real de ocupación, se cambia el porcentaje y el ID del supuesto en CAMAS. Para corregir o agregar camas, se edita esa hoja; la fila 2 tiene los nombres internos y no se cambia. Los hospitales cuya localidad no está en LOCALIDADES salen al final, «sin escalón asignado».</li>
       <li>Quién carga: Administración, en todas las localidades. Para habilitar a otra persona, en COE › Usuarios y accesos (o en ACCESOS STAR-H, columna «Derivación · localidades en que carga») poné sus localidades separadas por punto y coma, por ejemplo «Trelew; Gaiman», o «Todas». Vacío = solo ve. El servidor rechaza cualquier carga fuera de esas localidades.</li>
       <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025 (v0)» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
