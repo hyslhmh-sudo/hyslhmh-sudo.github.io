@@ -387,36 +387,60 @@ const deLocs = (l, locs) => (l || []).filter(x => locs.indexOf(x.localidad) >= 0
 const escTit = e => `${e.tit}${e.n > 1 ? ' · ' + e.locs.map(E).join(' → ') : ' · ' + E(e.locs[0])}${e.sd ? ' <span class="sem a">orden s/d (revisar)</span>' : ''}`;
 const AVISO_ESC = n => `<div class="aviso-datos" style="background:#EEEAFD;color:#3A1F7A"><b>Emergencia en ${E(n)}:</b> se deriva primero a lo local (escalón 1); si no alcanza, a las localidades del escalón 2 y después a las del escalón 3, en el orden que acuerde el COE (hoja LOCALIDADES de la planilla). Para cargar o corregir una institución o un albergue, tocalo: cada uno pertenece a la localidad donde está.</div>`;
 
-/* ---------- camas de internación por hospital (12/11/2026, pedido de Belén) ----------
- * Lee la hoja CAMAS del libro de la app (una fila por hospital y servicio), que devuelve el servidor en cat.camasHosp.
- * Son las camas habilitadas que informa cada hospital, no camas libres. Se ordena por escalón como el cuadro de abajo;
- * los hospitales de localidades que no están en LOCALIDADES van al final («sin escalón asignado»). */
-function cuadroCamasHosp(esc) {
-  const filas = cat.camasHosp || [];
-  if (!filas.length) return '';
-  const hosp = []; filas.forEach(f => { let h = hosp.find(x => x.n === f.hospital); if (!h) hosp.push(h = { n: f.hospital, loc: f.localidad, s: [] }); h.s.push(f); });
+/* ---------- camas de internación por hospital y tipo de situación (12/11/2026, pedidos de Belén) ----------
+ * Hoja CAMAS del libro de la app (una fila por hospital y servicio, con «categoria» = columna del cuadro y «receptora» = ID
+ * en RECEPTORAS). Son camas habilitadas que informa cada hospital, no camas libres.
+ * Dos situaciones: «ext» = emergencia externa en una localidad (todos los hospitales reciben, incluido el local);
+ * «evac» = evacuación de un establecimiento: ese hospital sale de los receptores y sus camas pasan a «pacientes a reubicar». */
+const CATS_CAMA = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación'];
+let modoSit = S.store.get('deriv.modo', 'ext'), evacuado = S.store.get('deriv.evac', '');
+function hospCamas() {
+  const hosp = []; (cat.camasHosp || []).forEach(f => { let h = hosp.find(x => x.n === f.hospital); if (!h) hosp.push(h = { n: f.hospital, loc: f.localidad, s: [], rec: [] }); h.s.push(f); if (f.receptora && h.rec.indexOf(f.receptora) < 0) h.rec.push(f.receptora); });
   hosp.forEach(h => { h.tot = h.s.reduce((a, f) => a + num(f.camas), 0); h.fte = [...new Set(h.s.map(f => [f.fuente, f.fecha].filter(Boolean).join(', ')).filter(Boolean))].join(' · '); });
+  return hosp;
+}
+function hospEvacuado() { return modoSit === 'evac' ? hospCamas().find(h => h.n === evacuado) || null : null; }
+// Receptoras visibles: en evacuación se quita el establecimiento evacuado
+function recVis() { const h = hospEvacuado(); return (cat.receptoras || []).filter(x => !h || h.rec.indexOf(x.id) < 0); }
+function catsUsadas() { const u = new Set((cat.camasHosp || []).map(f => CATS_CAMA.indexOf(f.categoria) >= 0 ? f.categoria : 'Otra / s/d')); return CATS_CAMA.concat(['Otra / s/d']).filter(c => u.has(c)); }
+const camasCat = (h, c) => h.s.filter(f => (CATS_CAMA.indexOf(f.categoria) >= 0 ? f.categoria : 'Otra / s/d') === c);
+function selModo() {
+  const hs = hospCamas(), ev = modoSit === 'evac';
+  return `<div class="tarjeta" style="padding:10px 14px;margin-bottom:12px"><b>¿Qué pasa?</b>
+    <div class="redes" style="margin:8px 0 0;flex-wrap:wrap"><button class="red-tab" data-act="modoSit" data-v="ext" aria-pressed="${!ev}">Emergencia externa en una localidad</button><button class="red-tab" data-act="modoSit" data-v="evac" aria-pressed="${ev}">Evacuación de un establecimiento</button>
+    ${ev ? `<select id="selEvac" style="padding:8px;border-radius:10px;border:1px solid var(--linea)"><option value="">Elegí el establecimiento que se evacúa</option>${hs.map(h => `<option ${h.n === evacuado ? 'selected' : ''}>${E(h.n)}</option>`).join('')}</select>` : ''}</div>
+    <p class="sub" style="margin:6px 0 0">${ev ? 'El establecimiento evacuado no cuenta como receptor: sus camas pasan a «Pacientes a reubicar» y se buscan lugares en los demás, por escalón desde su localidad.' : 'Todos los hospitales cuentan como receptores, incluido el de la localidad de la emergencia.'}</p></div>`;
+}
+function cuadroCamasHosp(esc) {
+  const todos = hospCamas(); if (!todos.length) return '';
+  const he = hospEvacuado(), hosp = todos.filter(h => h !== he), cats = catsUsadas();
+  const celda = l => { const v = l.reduce((a, f) => a + num(f.camas), 0), ob = l.map(f => [f.servicio, f.observaciones].filter(Boolean).join(': ')).join(' · ');
+    return l.length ? `<td class="num" title="${E(ob)}"><b>${v}</b>${l.some(f => f.observaciones) ? '<sup>*</sup>' : ''}</td>` : '<td class="num sub">—</td>'; };
+  const filaH = h => `<tr><td><b>${E(h.n)}</b><div class="sub">${E(h.loc || 's/d')}</div></td>${cats.map(c => celda(camasCat(h, c))).join('')}<td class="num"><b>${h.tot}</b></td></tr>`;
+  const filaSuma = (tit, l, fondo) => `<tr style="background:${fondo}"><td><b>${tit}</b></td>${cats.map(c => `<td class="num"><b>${l.reduce((a, h) => a + camasCat(h, c).reduce((b, f) => b + num(f.camas), 0), 0)}</b></td>`).join('')}<td class="num"><b>${l.reduce((a, h) => a + h.tot, 0)}</b></td></tr>`;
+  const cab = `<tr><th>Hospital</th>${cats.map(c => `<th class="num">${E(c)}</th>`).join('')}<th class="num">Total</th></tr>`;
   const usados = [], grupos = esc.map(e => { const l = hosp.filter(h => e.locs.indexOf(h.loc) >= 0).sort((a, b) => e.locs.indexOf(a.loc) - e.locs.indexOf(b.loc)); usados.push(...l); return { t: e.n ? escTit(e) : '', l }; });
   const resto = hosp.filter(h => usados.indexOf(h) < 0);
   if (resto.length) grupos.push({ t: 'Sin escalón asignado · localidades que todavía no están en LOCALIDADES <span class="sem a">s/d (revisar)</span>', l: resto });
-  const det = h => h.s.map(f => `${E(f.servicio)} <b>${E(f.camas || 's/d')}</b>${f.observaciones ? ` <span class="sub">(${E(f.observaciones)})</span>` : ''}`).join(' · ');
-  const total = grupos.reduce((a, g) => a + g.l.reduce((b, h) => b + h.tot, 0), 0);
-  return `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Camas de internación por hospital</b> <span class="sub">(camas habilitadas que informa cada hospital, por servicio; no son camas libres)</span>
-    <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Hospital</th><th>Detalle por servicio</th><th class="num">Total</th><th>Fuente y fecha</th></tr>
-    ${grupos.filter(g => g.l.length).map(g => `${g.t ? `<tr><td colspan="4" style="background:#F6F1F1"><b>${g.t}</b> <span class="sub">· ${g.l.reduce((a, h) => a + h.tot, 0)} camas</span></td></tr>` : ''}
-      ${g.l.map(h => `<tr><td><b>${E(h.n)}</b><div class="sub">${E(h.loc || 's/d')}</div></td><td>${det(h)}</td><td class="num"><b>${h.tot}</b></td><td class="sub">${E(h.fte || 's/d')}</td></tr>`).join('')}`).join('')}
-    <tr><td><b>Total</b></td><td class="sub">${hosp.length} hospital${hosp.length === 1 ? '' : 'es'} con camas cargadas</td><td class="num"><b>${total}</b></td><td></td></tr></table></div>
-    <p class="sub" style="margin:6px 0 0">Base orientadora. Los datos están en la hoja CAMAS del libro de la app${esAdmin() ? ' (Administración la corrige ahí)' : ''}; en una emergencia la disponibilidad real se confirma con cada hospital.</p></div>`;
+  const reubicar = he ? `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px;border-left:4px solid #C62828"><b style="color:#8E1B1B">Pacientes a reubicar · evacuación de ${E(he.n)}</b> <span class="sub">(máximo posible: sus camas habilitadas, por categoría)</span>
+    <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla">${cab}${filaH(he)}</table></div></div>` : '';
+  const tit = he ? `Dónde podrían ir · camas de internación de los demás hospitales (sin ${E(he.n)})` : 'Camas de internación por hospital';
+  return `${reubicar}<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">${tit}</b> <span class="sub">(camas habilitadas que informa cada hospital, por categoría; no son camas libres)</span>
+    <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla">${cab}
+    ${grupos.filter(g => g.l.length).map(g => `${g.t ? `<tr><td colspan="${cats.length + 2}" style="background:#F6F1F1"><b>${g.t}</b></td></tr>` : ''}${g.l.map(filaH).join('')}${g.t && grupos.filter(x => x.l.length).length > 1 ? filaSuma('Subtotal', g.l, '#FBF8F8') : ''}`).join('')}
+    ${filaSuma('Total', hosp, '#F1ECEC')}</table></div>
+    <p class="sub" style="margin:6px 0 0"><sup>*</sup> Tiene observaciones: pasá el dedo o el mouse por el número para verlas (por ejemplo, «UCIP: 5 activas de 8»). Base orientadora: los datos están en la hoja CAMAS del libro de la app${esAdmin() ? ' (Administración la corrige ahí: servicio, camas y categoría)' : ''}; en una emergencia la disponibilidad real se confirma con cada hospital.</p></div>`;
 }
 
 function vistaInst() {
-  borrador = null; const r = redVista(), todas = r.nombre === TODAS;
-  $('#titulo').innerHTML = `Instituciones receptoras · ${todas ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}<small>Derivación de pacientes · capacidad estimada</small>`;
+  borrador = null; const he = hospEvacuado(); if (he && red(he.loc)) redActual = he.loc;
+  const r = redVista(), todas = r.nombre === TODAS;
+  $('#titulo').innerHTML = `Instituciones receptoras · ${he ? 'evacuación de ' + E(he.n) : todas ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}<small>Derivación de pacientes · capacidad estimada</small>`;
   const esc = todas ? [{ n: 0, tit: 'Todas las localidades', locs: cat.localidades, sd: false }] : escalones(r.nombre);
   const filtra = l => l.filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.recibe_de).toLowerCase().indexOf(q.toLowerCase()) >= 0);
   const suma = (l, k) => l.reduce((a, x) => a + num(x[k]), 0);
-  const grupos = esc.map(e => ({ e, l: deLocs(cat.receptoras, e.locs) }));
-  app.innerHTML = `${redesTabs(r)}${secTabs('inst')}${todas ? '' : AVISO_ESC(r.nombre)}${AVISO_EST}
+  const grupos = esc.map(e => ({ e, l: deLocs(recVis(), e.locs) }));
+  app.innerHTML = `${secTabs('inst')}${selModo()}${modoSit === 'evac' ? '' : redesTabs(r)}${modoSit === 'evac' && !he ? '<div class="tarjeta vacio">Elegí arriba el establecimiento que se evacúa.</div>' : ''}${todas ? '' : AVISO_ESC(r.nombre)}${AVISO_EST}
     <div class="buscar"><input id="q" type="search" placeholder="Buscar institución o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaInst"><span class="ms">add</span>Agregar institución en ' + E(r.nombre) + '</button>' : ''}
       <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
     ${cuadroCamasHosp(esc)}
@@ -789,11 +813,11 @@ function pieImp(r) { return `<div class="pieimp"><div class="pt"><div><b>Higiene
 function gruposImp(r, lista, cols, fila) {
   const esc = r.nombre === TODAS ? [{ n: 0, tit: 'Todas las localidades', locs: cat.localidades, sd: false }] : escalones(r.nombre);
   return esc.map(e => `<tr><td colspan="${cols}" style="background:#EEEAFD;-webkit-print-color-adjust:exact;print-color-adjust:exact"><b>${e.n ? e.tit + ' · ' + e.locs.map(E).join(' → ') : E(e.tit)}</b>${e.sd ? ' · orden s/d (revisar)' : ''}</td></tr>`
-    + (deLocs(cat[lista], e.locs).map(fila).join('') || `<tr><td colspan="${cols}">Sin cargar en ${e.locs.map(E).join(', ')}.</td></tr>`)).join('');
+    + (deLocs(lista === 'receptoras' ? recVis() : cat[lista], e.locs).map(fila).join('') || `<tr><td colspan="${cols}">Sin cargar en ${e.locs.map(E).join(', ')}.</td></tr>`)).join('');
 }
 function imprimirInst() {
   const r = redVista();
-  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">COE · DERIVACIONES · INSTITUCIONES RECEPTORAS</div><h1>Directorio de derivación · ${r.nombre === TODAS ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}</h1>
+  $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">COE · DERIVACIONES · INSTITUCIONES RECEPTORAS</div><h1>Directorio de derivación · ${hospEvacuado() ? 'evacuación de ' + E(hospEvacuado().n) + ' (no figura como receptor)' : r.nombre === TODAS ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}</h1>
     <table><tr><td class="l">Institución</td><td class="l">Contacto 24 h</td><td class="l">Acuerdo · guardia · ARM</td><td class="l">Camas estimadas</td></tr>
     ${gruposImp(r, 'receptoras', 4, x => `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.distancia ? x.distancia + ' km' : ''].filter(Boolean).join(' · '))}<br>Podría recibir de: ${E(x.recibe_de || 's/d')}</td><td>${E(x.contacto || '')}<br>${E(x.tel || '')}<br>${E(x.correo || '')}</td><td>${E(x.acuerdo || 's/d')}<br>${E(x.guardia || '')}<br>ARM: ${E(x.arm || 's/d')}</td>
       <td>${cat.camas.filter(c => num(x[c[0] + '_est'])).map(c => E(c[1]) + ': ' + E(x[c[0] + '_est'])).join('<br>') || 's/d'}${x.camas_origen || x.camas_fecha ? '<br>' + E([x.camas_origen, x.camas_fecha ? 'al ' + x.camas_fecha : ''].filter(Boolean).join(' · ')) : ''}</td></tr>`)}</table>
@@ -897,6 +921,7 @@ function vistaDatos() {
 }
 
 /* ---------- eventos ---------- */
+document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'selEvac') { evacuado = ev.target.value; S.store.set('deriv.evac', evacuado); render(); } });
 document.addEventListener('click', async ev => {
   const t = ev.target.closest('[data-ir],[data-act],[data-red],[data-dep],[data-inst],[data-fila]'); if (!t) return;
   if (t.dataset.ir) { ir(t.dataset.ir); window.scrollTo(0, 0); return; }
@@ -911,6 +936,7 @@ document.addEventListener('click', async ev => {
   if (a === 'madImp') { madEsc = t.dataset.esc; modeloImprimir('madurez'); madEsc = ''; return; }
   if (a === 'modImp') return modeloImprimir(t.dataset.mod);
   if (a === 'modWord') return modeloWord(t.dataset.mod);
+  if (a === 'modoSit') { modoSit = t.dataset.v; S.store.set('deriv.modo', modoSit); return render(); }
   if (a === 'impInst') return imprimirInst();
   if (a === 'nuevaInst') return abrirFila('inst', '');
   if (a === 'nuevaFila') return abrirFila(t.dataset.tipo, '');
@@ -977,7 +1003,8 @@ function vistaAyuda() {
     <p>Es información del comité de crisis, para trabajar entre todos: qué instituciones podrían recibir pacientes, qué edificios podrían usarse como albergue y qué criterios de derivación se acuerdan. Está separada por localidad: Trelew, Rawson (con Playa Unión), Gaiman, Dolavon y Puerto Madryn. Puerto Madryn es otra área programática con su propio COE: se carga para saber qué puede venir de allá y qué se puede derivar hacia allá.</p>
     <p><b>Es una base orientadora para planificar, no un registro en tiempo real.</b> Las capacidades son estimadas y no se cargan pacientes.</p>
     <h3>Para usuarios</h3><ol><li>Arriba elegí dónde es la emergencia («Emergencia en:»). Instituciones receptoras y Albergues se ordenan por escalones: <b>1</b>, lo local; <b>2</b> y <b>3</b>, las localidades a las que se deriva después, en el orden que acuerde el COE. Si el orden todavía no está acordado, se muestran con el aviso «orden s/d (revisar)». «Todas las localidades» muestra el conjunto, solo para ver e imprimir.</li>
-      <li>En Instituciones receptoras, el primer cuadro, «Camas de internación por hospital», muestra las camas habilitadas que informa cada hospital, por servicio, con su fuente y fecha, ordenadas por escalón. No son camas libres. El cuadro siguiente, «Capacidad estimada de recepción», suma lo que cada institución receptora estima que podría recibir.</li>
+      <li>En Instituciones receptoras, arriba elegís <b>¿Qué pasa?</b>: <b>Emergencia externa en una localidad</b> (todos los hospitales reciben, incluido el local) o <b>Evacuación de un establecimiento</b> (elegís cuál: ese hospital deja de ser receptor, sus camas aparecen en «Pacientes a reubicar» y se buscan lugares en los demás por escalón desde su localidad).</li>
+      <li>El cuadro de camas muestra un hospital por fila y una categoría por columna (int. general / adultos, terapia, pediatría, neonatología, maternidad, salud mental, urgencias…), con subtotal por escalón y total. Son camas habilitadas, no camas libres. El asterisco indica que hay observaciones: pasá el dedo o el mouse por el número. El cuadro siguiente, «Capacidad estimada de recepción», suma lo que cada institución receptora estima que podría recibir.</li>
       <li><b>Instituciones receptoras:</b> contacto las 24 horas, acuerdo de derivación y camas que podría recibir por tipo (estimado), con el origen y la fecha del dato.</li>
       <li><b>Albergues:</b> edificios que el municipio o Protección Civil podría habilitar, con capacidad estimada, servicios, accesibilidad y centro de salud de referencia. La habilitación y la apertura las decide el COE.</li>
       <li><b>Criterios de derivación:</b> propuesta para acordar en la mesa del COE. Cuando el COE valida un criterio, se cambia el estado y se anotan la fecha y el acta.</li>
@@ -986,7 +1013,7 @@ function vistaAyuda() {
       <li>Si ves «Solo ver», tu usuario no carga en esa localidad. Si tenés que cargar, pedíselo a Higiene y Seguridad Laboral.</li>
       <li>Si falta un dato, poné «s/d (revisar)».</li></ol>
     <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COE · Derivaciones y albergues (v0)» (carpeta 06 · COE): hojas LOCALIDADES, RECEPTORAS, ALBERGUES y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
-      <li>El cuadro «Camas de internación por hospital» se arma con la hoja CAMAS del libro de la app (no de esta planilla): una fila por hospital y servicio, con localidad (escrita igual que en LOCALIDADES), camas, fuente, fecha y observaciones. Para corregir o agregar camas, se edita esa hoja; la fila 2 tiene los nombres internos y no se cambia. Los hospitales cuya localidad no está en LOCALIDADES salen al final, «sin escalón asignado».</li>
+      <li>El cuadro «Camas de internación por hospital» se arma con la hoja CAMAS del libro de la app (no de esta planilla): una fila por hospital y servicio, con localidad (escrita igual que en LOCALIDADES), camas, fuente, fecha, observaciones, categoría (columna del cuadro, con lista desplegable) e ID en RECEPTORAS (el que se quita cuando se evacúa ese hospital). Para corregir o agregar camas, se edita esa hoja; la fila 2 tiene los nombres internos y no se cambia. Los hospitales cuya localidad no está en LOCALIDADES salen al final, «sin escalón asignado».</li>
       <li>Quién carga: Administración, en todas las localidades. Para habilitar a otra persona, en COE › Usuarios y accesos (o en ACCESOS STAR-H, columna «Derivación · localidades en que carga») poné sus localidades separadas por punto y coma, por ejemplo «Trelew; Gaiman», o «Todas». Vacío = solo ve. El servidor rechaza cualquier carga fuera de esas localidades.</li>
       <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025 (v0)» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
       <li>Para sumar una localidad, agregala en la hoja LOCALIDADES (código y nombre). La app la toma sola.</li><li>El orden de derivación de cada localidad se carga en la hoja LOCALIDADES, columnas «Escalón 2» y «Escalón 3»: localidades en orden, separadas por punto y coma (por ejemplo «Rawson; Gaiman; Dolavon»). Mientras diga «s/d (revisar)», la app muestra las demás localidades sin orden acordado.</li></ol>
