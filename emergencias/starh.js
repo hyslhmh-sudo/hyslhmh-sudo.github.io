@@ -362,3 +362,37 @@
     if (S.store.get('datosPend.' + n, false) === true) location.replace('index.html');
   } catch (e) { /* sin bloqueo si algo falla */ }
 })();
+
+/* 12/11/2026 · Tablas en pantalla: encabezado fijo y primera columna fija.
+ * Cada tabla que está dentro de un recuadro con desplazamiento (overflow) se muestra con alto máximo:
+ * al bajar, la fila de títulos queda arriba; al correr de costado, la primera columna (hospital, tipo, nombre) queda a la vista.
+ * No toca las hojas para imprimir (#imp, #hojas, .imp) ni cambia al imprimir. */
+(function () {
+  const css = `@media screen{
+.tfija{max-height:75vh;overflow:auto!important;overscroll-behavior:contain}
+.tfija>table>thead>tr:first-child>th,.tfija>table>tbody>tr:first-child>th{position:sticky;top:0;z-index:3;box-shadow:0 1px 0 rgba(0,0,0,.12)}
+.tfija.tfija-x>table>*>tr>:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 rgba(0,0,0,.12)}
+.tfija.tfija-x>table>thead>tr:first-child>th:first-child,.tfija.tfija-x>table>tbody>tr:first-child>th:first-child{z-index:4}
+.tfija.tfija-x>table>*>tr>:first-child:not([colspan]){min-width:120px;max-width:44vw}}
+@media print{.tfija{max-height:none!important;overflow:visible!important}.tfija th,.tfija td{position:static!important;box-shadow:none!important}}`;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  const opaco = c => c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c);
+  function fondo(el) { // color de fondo visible de la celda (las celdas fijas necesitan fondo para tapar lo que pasa por debajo)
+    for (let n = el; n && n !== document.body; n = n.parentElement) { const c = getComputedStyle(n).backgroundColor; if (opaco(c)) return c; }
+    return '#fff';
+  }
+  function preparar() {
+    document.querySelectorAll('table').forEach(t => {
+      const w = t.parentElement; if (!w || t.closest('#imp,#hojas,.imp')) return;
+      if (!w.classList.contains('tfija')) { const ox = getComputedStyle(w).overflowX; if (ox !== 'auto' && ox !== 'scroll') return; w.classList.add('tfija'); }
+      w.classList.toggle('tfija-x', w.scrollWidth > w.clientWidth + 2);
+      if (t.dataset.tfija) return; t.dataset.tfija = '1';
+      const cab = t.rows[0] && t.rows[0].querySelector('th') ? [...t.rows[0].cells] : [];
+      const pri = [...t.rows].map(r => r.cells[0]).filter(Boolean);
+      cab.concat(pri).forEach(c => { if (!opaco(getComputedStyle(c).backgroundColor)) c.style.backgroundColor = fondo(c.parentElement); });
+    });
+  }
+  let pend = false; const pedir = () => { if (pend) return; pend = true; requestAnimationFrame(() => { pend = false; try { preparar(); } catch (e) { /* nunca rompe la app */ } }); };
+  function iniciar() { pedir(); new MutationObserver(pedir).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', () => { document.querySelectorAll('.tfija').forEach(w => w.classList.toggle('tfija-x', w.scrollWidth > w.clientWidth + 2)); }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();

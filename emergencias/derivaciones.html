@@ -177,7 +177,8 @@ body{background:#FAF7F7}
 .tabla-wrap{overflow-x:auto;border:1px solid #F3DADA;border-radius:12px;background:#fff}
 .tabla{width:100%;border-collapse:collapse;font-size:13px}
 .tabla th,.tabla td{padding:7px 8px;border-bottom:1px solid #F3DADA;text-align:left;vertical-align:middle}
-.tabla th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#4B5B73;background:#FDF5F5}
+.tabla th{font-size:11px;text-transform:uppercase;letter-spacing:.02em;color:#4B5B73;background:#FDF5F5;line-height:1.25}
+.tabla th.num{min-width:58px;max-width:96px}
 .tabla td.num,.tabla th.num{text-align:right;font-variant-numeric:tabular-nums}
 .tabla tr.clic{cursor:pointer}.tabla tr.clic:hover td{background:#FFF7F6}
 .grilla-camas{width:100%;border-collapse:collapse;font-size:13px}
@@ -404,6 +405,8 @@ function hospEvacuado() { return modoSit === 'evac' ? hospCamas().find(h => h.n 
 // Receptoras visibles: en evacuación se quita el establecimiento evacuado
 function recVis() { const h = hospEvacuado(); return (cat.receptoras || []).filter(x => !h || h.rec.indexOf(x.id) < 0); }
 function catsUsadas() { const u = new Set((cat.camasHosp || []).map(f => CATS_CAMA.indexOf(f.categoria) >= 0 ? f.categoria : 'Otra / s/d')); return CATS_CAMA.concat(['Otra / s/d']).filter(c => u.has(c)); }
+// Títulos cortos para que el cuadro entre en pantalla (el nombre completo aparece al pasar el mouse o el dedo)
+const CORTO = { 'Int. general / adultos': 'Int. general adultos', 'Terapia intensiva adultos': 'Terapia int. adultos', 'Terapia intensiva pediátrica': 'Terapia int. pediátrica', 'Maternidad / obstetricia': 'Maternidad', 'Urgencias / emergencia con internación': 'Urgencias', 'Otra / s/d': 'Otra' };
 const camasCat = (h, c) => h.s.filter(f => (CATS_CAMA.indexOf(f.categoria) >= 0 ? f.categoria : 'Otra / s/d') === c);
 function selModo() {
   const hs = hospCamas(), ev = modoSit === 'evac';
@@ -435,7 +438,7 @@ function cuadroCamasHosp(esc) {
   const sumaCat = (l, c, f) => l.reduce((a, h) => a + f(camasCat(h, c)), 0);
   const filaSuma = (tit, l, fondo) => `<tr style="background:${fondo}"><td><b>${tit}</b></td>${cats.map(c => `<td class="num"><b>${sumaCat(l, c, x => x.reduce((b, f) => b + num(f.camas), 0))}</b></td>`).join('')}<td class="num"><b>${l.reduce((a, h) => a + h.tot, 0)}</b></td><td class="num" style="background:#E2F1E6"><b>${l.reduce((a, h) => a + (dispL(h.s) || 0), 0)}</b></td></tr>`;
   const filaDisp = l => `<tr style="background:#E2F1E6"><td><b>Probablemente disponibles</b><div class="sub">según los supuestos</div></td>${cats.map(c => `<td class="num"><b>${sumaCat(l, c, x => dispL(x) || 0)}</b></td>`).join('')}<td class="num"><b>${l.reduce((a, h) => a + (dispL(h.s) || 0), 0)}</b></td><td></td></tr>`;
-  const cab = ult => `<tr><th>Hospital</th>${cats.map(c => `<th class="num">${E(c)}</th>`).join('')}<th class="num">Camas habilitadas</th><th class="num">${ult}</th></tr>`;
+  const cab = ult => `<tr><th>Hospital</th>${cats.map(c => `<th class="num" title="${E(c)}">${E(CORTO[c] || c)}</th>`).join('')}<th class="num" title="Camas habilitadas">Habilitadas</th><th class="num" title="${E(ult)}">${E(ult.replace('Probablemente', 'Prob.'))}</th></tr>`;
   const usados = [], grupos = esc.map(e => { const l = hosp.filter(h => e.locs.indexOf(h.loc) >= 0).sort((a, b) => e.locs.indexOf(a.loc) - e.locs.indexOf(b.loc)); usados.push(...l); return { t: e.n ? escTit(e) : '', l }; });
   const resto = hosp.filter(h => usados.indexOf(h) < 0);
   if (resto.length) grupos.push({ t: 'Sin escalón asignado · localidades que todavía no están en LOCALIDADES <span class="sem a">s/d (revisar)</span>', l: resto });
