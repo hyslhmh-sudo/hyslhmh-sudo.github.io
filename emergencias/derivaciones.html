@@ -217,7 +217,7 @@ body{background:#FAF7F7}
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
 let cat = S.store.get('deriv.cat', null), redActual = S.store.get('deriv.loc', ''), q = '', fTipo = '';
 let borrador = null, borradorDep = null, ocupado = false;
-if (cat && !cat.camas) cat = null; // datos guardados de una versión anterior: se vuelven a pedir
+if (cat && (!cat.camas || !cat.arm)) cat = null; // datos guardados de una versión anterior: se vuelven a pedir
 const TODAS = 'Todas las localidades';
 // 04/11/2026 · Base común del comité de crisis, separada por localidad (no por red). Cada localidad se muestra como una «pestaña»;
 // «Todas las localidades» es solo para ver e imprimir el conjunto. Carga: Administración en todas; los demás, en las localidades que tengan asignadas.
@@ -452,6 +452,32 @@ function cuadroCamasHosp(esc) {
     <p class="sub" style="margin:6px 0 0"><b>Probablemente disponibles</b> = camas × disponibilidad supuesta, redondeado hacia abajo. No son camas libres confirmadas: es una estimación para planificar. Tocá el código del supuesto (${linkSup((cat.supuestos || []).map(x => x.id))}) para ver de dónde sale y su bibliografía. <sup>*</sup> Tiene observaciones: pasá el dedo o el mouse por el número. Los datos están en las hojas CAMAS y SUPUESTOS del libro de la app${esAdmin() ? ' (Administración los corrige ahí)' : ''}; en una emergencia la disponibilidad real se confirma con cada hospital.</p></div>`;
 }
 
+// 12/11/2026 · Asistencia respiratoria mecánica (ARM) por hospital (pedido de Belén): hoja «ARM Y EQUIPOS CRÍTICOS» del libro de la app,
+// una fila por hospital, servicio y tipo de equipo. Instalados, operativos, fuera de servicio y ampliación posible con lo que la condiciona.
+// En evacuación, el hospital evacuado sale del cuadro (sus equipos viajan con sus pacientes o quedan; se decide en el plan de cada hospital).
+const esN = v => String(v == null ? '' : v).trim() !== '' && !isNaN(Number(String(v).replace(',', '.')));
+const nTxt = v => esN(v) ? `<b>${E(v)}</b>` : '<span class="sem a">s/d</span>';
+const ARM_CORTO = { 'Respirador de terapia intensiva': 'Respirador de terapia', 'Respirador de transporte': 'Respirador de transporte', 'Ventilación no invasiva (VNI)': 'VNI', 'Máquina de anestesia con ventilador': 'Máquina de anestesia' };
+function cuadroArm(esc) {
+  const todos = cat.arm || []; if (!todos.length) return '';
+  const he = hospEvacuado(), l0 = todos.filter(x => !he || x.hospital !== he.n);
+  const sd = v => !v || /^s\/d/i.test(String(v).trim());
+  const usados = [], grupos = esc.map(e => { const l = l0.filter(x => e.locs.indexOf(x.localidad) >= 0).sort((a, b) => e.locs.indexOf(a.localidad) - e.locs.indexOf(b.localidad)); usados.push(...l); return { t: e.n ? escTit(e) : '', l }; });
+  const resto = l0.filter(x => usados.indexOf(x) < 0); if (resto.length) grupos.push({ t: 'Sin escalón asignado <span class="sem a">s/d (revisar)</span>', l: resto });
+  const suma = (l, k) => { const n = l.filter(x => esN(x[k])); return n.length ? n.reduce((a, x) => a + num(x[k]), 0) + (n.length < l.length ? ' <span class="sub">+ s/d</span>' : '') : '<span class="sem a">s/d</span>'; };
+  const fila = x => `<tr><td><b>${E(x.hospital)}</b><div class="sub">${E(x.localidad || 's/d')}</div></td><td>${sd(x.servicio) ? '<span class="sem a">s/d</span>' : E(x.servicio)}${sd(x.ubicacion) ? '' : `<div class="sub">${E(x.ubicacion)}</div>`}</td>
+    <td title="${E(x.tipo || '')}">${sd(x.tipo) ? '<span class="sem a">s/d</span>' : E(ARM_CORTO[x.tipo] || x.tipo)}</td><td>${sd(x.sirve_para) ? '<span class="sem a">s/d</span>' : E(x.sirve_para)}</td>
+    <td class="num">${nTxt(x.instalados)}</td><td class="num">${nTxt(x.operativos)}</td><td class="num">${nTxt(x.fuera)}</td><td class="num" style="background:#EEF7F0">${nTxt(x.ampliacion)}</td>
+    <td class="sub" style="min-width:180px">${[sd(x.ampliacion_de) ? '' : 'De: ' + E(x.ampliacion_de), sd(x.condiciones) ? '' : 'Condiciona: ' + E(x.condiciones), x.observaciones ? E(x.observaciones) : ''].filter(Boolean).join('<br>') || '—'}</td></tr>`;
+  const sumaF = (tit, l, fondo) => `<tr style="background:${fondo}"><td colspan="4"><b>${tit}</b></td><td class="num"><b>${suma(l, 'instalados')}</b></td><td class="num"><b>${suma(l, 'operativos')}</b></td><td class="num"><b>${suma(l, 'fuera')}</b></td><td class="num" style="background:#E2F1E6"><b>${suma(l, 'ampliacion')}</b></td><td></td></tr>`;
+  const vis = grupos.filter(g => g.l.length), tipos = [...new Set(l0.map(x => x.tipo).filter(t => !sd(t)))];
+  return `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Asistencia respiratoria mecánica (ARM) por hospital${he ? ' (sin ' + E(he.n) + ')' : ''}</b> <span class="sub">(equipos por servicio y tipo: instalados, operativos hoy, fuera de servicio y cuántos más podrían sumarse)</span>
+    <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Hospital</th><th>Servicio y ubicación</th><th>Tipo de equipo</th><th>Sirve para</th><th class="num">Instalados</th><th class="num">Operativos</th><th class="num" title="Fuera de servicio o en reparación">Fuera de servicio</th><th class="num" title="Ampliación posible: equipos que podrían sumarse">Ampliación posible</th><th>De dónde y qué la condiciona</th></tr>
+    ${vis.map(g => `${g.t ? `<tr><td colspan="9" style="background:#F6F1F1"><b>${g.t}</b></td></tr>` : ''}${g.l.map(fila).join('')}${g.t && vis.length > 1 ? sumaF('Subtotal', g.l, '#FBF8F8') : ''}`).join('')}
+    ${tipos.map(t => sumaF('Total · ' + E(t), l0.filter(x => x.tipo === t), '#F1ECEC')).join('')}${sumaF('Total de equipos', l0, '#E9E2E2')}</table></div>
+    <p class="sub" style="margin:6px 0 0">Una fila por hospital, servicio y tipo de equipo. Los totales suman solo lo que tiene número («+ s/d» = hay filas sin dato). <b>Ampliación posible</b>: equipos que podrían sumarse (de otro servicio, de un depósito o en préstamo); depende del oxígeno y el aire comprimido, las tomas, la energía y el personal entrenado. En RECEPTORAS, «Puede recibir pacientes con ARM» se completa solo: «Sí» si hay respiradores de terapia o de transporte operativos. Los datos están en la hoja ARM Y EQUIPOS CRÍTICOS del libro de la app${esAdmin() ? ' (Administración los corrige ahí)' : ''}; en una emergencia se confirma con cada hospital.</p></div>`;
+}
+
 const AVISO_EVAC = h => `<div class="aviso-datos" style="background:#FDECEC;color:#7A1F1F"><b>Evacuación de ${E(h.n)}:</b> ${E(h.n)} no figura como receptor. Se buscan lugares primero en ${E(h.loc || 's/d')} (escalón 1, otros establecimientos de la misma localidad) y después en las localidades del escalón 2 y 3, en el orden que acuerde el COE.</div>`;
 function vistaInst() {
   borrador = null; const he = hospEvacuado(); if (he && red(he.loc)) redActual = he.loc;
@@ -465,6 +491,7 @@ function vistaInst() {
     <div class="buscar"><input id="q" type="search" placeholder="Buscar institución o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaInst"><span class="ms">add</span>Agregar institución en ' + E(r.nombre) + '</button>' : ''}
       <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
     ${cuadroCamasHosp(esc)}
+    ${cuadroArm(esc)}
     <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Capacidad estimada de recepción${todas ? '' : ' por escalón · emergencia en ' + E(r.nombre)}</b> <span class="sub">(suma de lo que podrían recibir las instituciones; categorías HAvBED más Maternidad y Urgencias; hoy, estimación propia con los supuestos S-01 y S-02 del cuadro de camas)</span>
       <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo de cama</th>${grupos.map(g => `<th class="num">${g.e.n ? 'Escalón ' + g.e.n : 'Camas'}</th>`).join('')}${grupos.length > 1 ? '<th class="num">Total</th>' : ''}</tr>
       ${cat.camas.map(c => { const k = c[0] + '_est', v = grupos.map(g => suma(g.l, k)); return `<tr><td>${E(c[1])}</td>${v.map(x => `<td class="num"><b>${x}</b></td>`).join('')}${grupos.length > 1 ? `<td class="num"><b>${v.reduce((a, b) => a + b, 0)}</b></td>` : ''}</tr>`; }).join('')}
@@ -1069,6 +1096,7 @@ function vistaAyuda() {
       <li>Si falta un dato, poné «s/d (revisar)».</li></ol>
     <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COE · Derivaciones y albergues (v0)» (carpeta 06 · COE): hojas LOCALIDADES, RECEPTORAS, ALBERGUES, POBLACION A CARGO y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
       <li>El cuadro «Camas de internación por hospital» se arma con la hoja CAMAS del libro de la app (no de esta planilla): una fila por hospital y servicio, con localidad (escrita igual que en LOCALIDADES), camas, fuente, fecha, observaciones, categoría (columna del cuadro, con lista desplegable) e ID en RECEPTORAS (el que se quita cuando se evacúa ese hospital), disponibilidad supuesta (%) e ID del supuesto. Cada supuesto se explica en la hoja SUPUESTOS (título, etiqueta LEY/MEJORA o dato histórico, valor, a qué se aplica, explicación, cuidados y referencias, una por renglón con «texto — enlace»); sus referencias van también en FUENTES. Cuando haya dato real de ocupación, se cambia el porcentaje y el ID del supuesto en CAMAS. Para corregir o agregar camas, se edita esa hoja; la fila 2 tiene los nombres internos y no se cambia. Los hospitales cuya localidad no está en LOCALIDADES salen al final, «sin escalón asignado».</li>
+      <li>El cuadro «Asistencia respiratoria mecánica (ARM) por hospital» se arma con la hoja ARM Y EQUIPOS CRÍTICOS del libro de la app: una fila por hospital, servicio y tipo de equipo (respirador de terapia, de transporte, VNI, máquina de anestesia), con para quién sirve (adultos, pediatría, neonatología), instalados, operativos, fuera de servicio, ampliación posible, de dónde saldría y qué la condiciona. El hospital se escribe igual que en CAMAS. La columna «Puede recibir pacientes con ARM» de RECEPTORAS se calcula sola desde esa hoja (hoja oculta «ARM (vínculo)»).</li>
       <li>Quién carga: Administración, en todas las localidades. Para habilitar a otra persona, en COE › Usuarios y accesos (o en ACCESOS STAR-H, columna «Derivación · localidades en que carga») poné sus localidades separadas por punto y coma, por ejemplo «Trelew; Gaiman», o «Todas». Vacío = solo ve. El servidor rechaza cualquier carga fuera de esas localidades.</li>
       <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025 (v0)» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
       <li>Para sumar una localidad, agregala en la hoja LOCALIDADES (código y nombre). La app la toma sola.</li><li>El orden de derivación de cada localidad se carga en la hoja LOCALIDADES, columnas «Escalón 2» y «Escalón 3»: localidades en orden, separadas por punto y coma (por ejemplo «Rawson; Gaiman; Dolavon»). Mientras diga «s/d (revisar)», la app muestra las demás localidades sin orden acordado.</li></ol>
