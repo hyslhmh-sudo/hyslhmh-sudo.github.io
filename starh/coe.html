@@ -437,7 +437,7 @@ function dlgUsuario(dni) {
       <div class="campo"><span>Establecimientos en que carga o que ve</span>${chk('estTodos', 'Todos', todosE, '<b>Todos los de sus redes</b>')}
         <div id="listaEst" style="max-height:220px;overflow:auto;border:1px solid var(--linea);border-radius:10px;padding:4px 10px">${acc.redes.map(r => `<div data-red-est="${E(r)}"><b class="sub">${E(r)}</b>${acc.establecimientos.filter(e => e.red === r).map(e => chk('est', e.codigo, !todosE && es.indexOf(e.codigo.toUpperCase()) >= 0, E(e.codigo + ' · ' + e.nombre))).join('')}</div>`).join('')}</div></div>
       <label class="campo"><span>Observaciones</span><input name="obs" value="${E(x.obs || '')}"></label></form>
-    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarUsr" data-dni="${E(dni || '')}"><span class="ms">save</span>Guardar</button></div>`);
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarUsr" data-dni="${E(dni || '')}" data-mods="${E(ms.join('; '))}"><span class="ms">save</span>Guardar</button></div>`);
   const f = $('#fUsr');
   const sync = () => {
     const todas = f.redTodas.checked; f.querySelectorAll('[name=red]').forEach(c => { c.disabled = todas; if (todas) c.checked = false; });
@@ -507,7 +507,7 @@ document.addEventListener('click', async ev => {
   if (a === 'copiarClave') { try { await navigator.clipboard.writeText(t.dataset.txt); toast('Copiado.'); } catch (e) { toast('No se pudo copiar: anotala a mano.'); } return; }
   if (a === 'guardarUsr') {
     const f = $('#fUsr'), val = n => [...f.querySelectorAll(`[name=${n}]:checked`)].map(c => c.value);
-    const d = { dni: t.dataset.dni || f.dni.value.trim(), nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; '),
+    const d = { dni: t.dataset.dni || f.dni.value.trim(), nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; ') || t.dataset.mods || 'STAR-H; PHR', // 12/11/2026 · Las casillas de herramientas se sacaron el 06/11 (los accesos se dan en COE › Accesos): se conservan los módulos que ya tenía la cuenta
       redes: f.redTodas.checked ? 'Todas' : val('red').join('; '), estab: f.estTodos.checked ? 'Todos' : val('est').join('; ') };
     if (!navigator.onLine) { toast('Para guardar se necesita conexión.'); return; }
     t.disabled = true;

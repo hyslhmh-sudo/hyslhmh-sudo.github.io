@@ -810,7 +810,7 @@ function dlgUsuario(dni) {
       <div class="campo"><span>Derivaciones y albergues · COE: localidades en que carga</span><p class="sub" style="margin:0 0 4px">Todos los usuarios ven Derivaciones y albergues; acá se elige dónde carga. Sin tildar = solo ve. Administración carga en todas.</p>${chk('locTodas', 'Todas', /^todas$/i.test(String(x.deriv || '').trim()), '<b>Todas las localidades</b>')}${(acc.localidades || []).map(l => chk('loc', l, lista(x.deriv).indexOf(l) >= 0, E(l))).join('')}</div>
       <div class="campo"><span>Tablero de control: proyectos que ve</span><p class="sub" style="margin:0 0 4px">Solo lectura: tareas de la matriz, reuniones y acuerdos, integrantes y funciones (sin teléfonos ni correos). Sin tildar = no ve ningún tablero. Administración ve todos.</p>${chk('proyTodos', 'Todos', /^todos$/i.test(String(x.proyectos || '').trim()), '<b>Todos los proyectos</b>')}${(acc.proyectos || []).map(p => chk('proyT', p, lista(x.proyectos).map(y => y.toLowerCase()).indexOf(p.toLowerCase()) >= 0, E(p))).join('')}</div>
       <label class="campo"><span>Observaciones</span><input name="obs" value="${E(x.obs || '')}"></label></form>
-    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarUsr" data-dni="${E(dni || '')}"><span class="ms">save</span>Guardar</button></div>`);
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="guardarUsr" data-dni="${E(dni || '')}" data-mods="${E(ms.join('; '))}"><span class="ms">save</span>Guardar</button></div>`);
   const f = $('#fUsr');
   const sync = () => {
     const todas = f.redTodas.checked; f.querySelectorAll('[name=red]').forEach(c => { c.disabled = todas; if (todas) c.checked = false; });
@@ -944,7 +944,7 @@ document.addEventListener('click', async ev => {
     const f = $('#fUsr'), val = n => [...f.querySelectorAll(`[name=${n}]:checked`)].map(c => c.value);
     // 06/11/2026 · El DNI es obligatorio al crear un usuario (solo números, 6 a 9 cifras).
     if (!t.dataset.dni && !/^\d{6,9}$/.test(f.dni.value.replace(/\D/g, ''))) { toast('Falta el DNI (solo números, sin puntos).'); f.dni.focus(); return; }
-    const d = { dni: t.dataset.dni || f.dni.value.replace(/\D/g, ''), nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; '),
+    const d = { dni: t.dataset.dni || f.dni.value.replace(/\D/g, ''), nombre: f.nombre.value, rol: f.rol.value, estado: f.estado.value, obs: f.obs.value, modulos: val('mod').join('; ') || t.dataset.mods || 'STAR-H; PHR', // 12/11/2026 · Las casillas de herramientas se sacaron el 06/11 (los accesos se dan en COE › Accesos): se conservan los módulos que ya tenía la cuenta
       redes: f.redTodas.checked ? 'Todas' : val('red').join('; '), estab: f.estTodos.checked ? 'Todos' : val('est').join('; '),
       deriv: f.locTodas.checked ? 'Todas' : val('loc').join('; '),
       proyectos: f.proyTodos.checked ? 'Todos' : val('proyT').join('; ') };
