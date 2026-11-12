@@ -317,7 +317,9 @@
 .tfija>table>thead>tr:first-child>th,.tfija>table>tbody>tr:first-child>th{position:sticky;top:0;z-index:3;box-shadow:0 1px 0 rgba(0,0,0,.12)}
 .tfija.tfija-x>table>*>tr>:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 rgba(0,0,0,.12)}
 .tfija.tfija-x>table>thead>tr:first-child>th:first-child,.tfija.tfija-x>table>tbody>tr:first-child>th:first-child{z-index:4}
-.tfija.tfija-x>table>*>tr>:first-child:not([colspan]){min-width:120px;max-width:44vw}}
+.tfija.tfija-x>table>*>tr>:first-child:not([colspan]){min-width:120px;max-width:44vw}
+.tfija.tfija-x>table>*>tr>td[colspan]:first-child{position:static;box-shadow:none}
+.tfija.tfija-x .tfija-txt{position:sticky;left:8px;display:inline-block;max-width:calc(100vw - 60px)}}
 @media print{.tfija{max-height:none!important;overflow:visible!important}.tfija th,.tfija td{position:static!important;box-shadow:none!important}}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   const opaco = c => c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c);
@@ -332,7 +334,10 @@
       w.classList.toggle('tfija-x', w.scrollWidth > w.clientWidth + 2);
       if (t.dataset.tfija) return; t.dataset.tfija = '1';
       const cab = t.rows[0] && t.rows[0].querySelector('th') ? [...t.rows[0].cells] : [];
-      const pri = [...t.rows].map(r => r.cells[0]).filter(Boolean);
+      // Filas que ocupan todo el ancho (escalón, subtotal, total): la celda no queda fija (taparía las columnas al correr de costado);
+      // solo su texto queda a la vista a la izquierda.
+      [...t.rows].forEach(r => { const c = r.cells[0]; if (c && c.colSpan > 1 && !c.querySelector(':scope > .tfija-txt')) { const s = document.createElement('span'); s.className = 'tfija-txt'; while (c.firstChild) s.appendChild(c.firstChild); c.appendChild(s); } });
+      const pri = [...t.rows].map(r => r.cells[0]).filter(c => c && c.colSpan === 1);
       cab.concat(pri).forEach(c => { if (!opaco(getComputedStyle(c).backgroundColor)) c.style.backgroundColor = fondo(c.parentElement); });
     });
   }
