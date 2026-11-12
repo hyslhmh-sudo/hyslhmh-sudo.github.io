@@ -503,7 +503,7 @@ function vistaAyuda() {
     <table class="tabla-esc"><tr><th>Categoría</th><th>Índice</th><th>Qué significa</th></tr>${g.categorias.map(c => `<tr><td><b>${c.cat}</b></td><td>${String(c.min).replace('.', ',')} a ${String(c.max).replace('.', ',')}</td><td>${S.esc(c.texto)}</td></tr>`).join('')}</table>
     <h3>Sin señal</h3><p>Lo cargado queda en el dispositivo y se envía solo al volver la conexión.</p>
     <h3>Dónde quedan los datos</h3><p>En la planilla ISH de cada red (hojas AMENAZAS y RELEVAMIENTO; el cálculo, en TABLERO). Si la app no está disponible, se carga directo ahí.</p>
-    <p class="sub">Base: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed. Washington, D.C.: OPS; 2018. Esta evaluación complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento ni la evaluación estructural de profesionales de ingeniería o arquitectura.</p>
+    <p class="sub">Base: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed. Washington, D.C.: OPS; 2018.</p>
     <h3>Consultas</h3><p>Servicio de Higiene y Seguridad Laboral, por los canales habituales del COE</p></div>`;
 }
 

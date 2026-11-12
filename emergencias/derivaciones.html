@@ -597,7 +597,7 @@ function critHTML(r, word) {
   return `<section class="hoja apaisada">${enc}<div class="kick">MESA CONJUNTA DEL COE · CRITERIOS DE DERIVACIÓN</div><h1>${E(r.nombre)} · Reunión del ___/___/______</h1>
     <table class="reg"><tr><td class="l">Sentido</td><td class="l">Grupo de personas</td><td class="l">Criterio</td><td class="l">Destino sugerido</td><td class="l">Condiciones</td><td class="l">Decide</td><td class="l">Cómo se informa</td><td class="l">Estado</td><td class="l">Validación (fecha y firma)</td></tr>
     ${l.map(x => `<tr><td>${E(x.sentido)}</td><td><b>${E(x.grupo)}</b></td><td>${E(x.criterio)}</td><td>${E(x.destino)}</td><td>${E(x.condiciones)}</td><td>${E(x.decide)}</td><td>${E(x.informa)}</td><td>${E(x.estado)}</td><td>${E([x.fecha_val, x.acta].filter(Boolean).join(' · '))}</td></tr>`).join('') || '<tr><td colspan="9">Sin criterios cargados.</td></tr>'}</table>
-    <p style="font-size:7.5pt;color:#4B5B73">Propuesta para discutir y validar en la mesa conjunta del COE. Fuentes: triaje inverso (Kelen, Johns Hopkins); lista EDAC (Feizolahzadeh y col., 2019); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Proyecto Esfera (2018). Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>${pie}</section>`;
+    <p style="font-size:7.5pt;color:#4B5B73">Propuesta para discutir y validar en la mesa conjunta del COE. Fuentes: triaje inverso (Kelen, Johns Hopkins); lista EDAC (Feizolahzadeh y col., 2019); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Proyecto Esfera (2018).</p>${pie}</section>`;
 }
 function bajarWord(nombre, cuerpo, apaisada) {
   const r = redVista();
@@ -898,7 +898,7 @@ function imprimir(modo) {
   const pie = `<div class="pieimp"><div class="pt"><div><b>${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'}</b><br>Impreso el ${S.hoy()}</div><div>${E(r.nombre)}</div></div><img src="logo-hysl.png" alt="HySL"></div>`;
   const deps = cargado ? r.dependencias.filter(d => d.codigo === e.codigo) : [{}];
   $('#imp').innerHTML = `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DEL ESTABLECIMIENTO</div><h1>${E(e.nombre)}</h1><div style="color:#4B5B73">${E(e.codigo)} · ${E(e.tipo || '')} · ${E(r.nombre)}</div>
-      ${tabla(camposDe(r, 'Establecimiento'), e)}<p style="font-size:7.5pt;color:#4B5B73">Si falta un dato, anotar «s/d». Modelos: OPS, EVAC-H (2024); OPS/OMS, ISH Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII. Esta ficha complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.</p>${pie}</section>`
+      ${tabla(camposDe(r, 'Establecimiento'), e)}<p style="font-size:7.5pt;color:#4B5B73">Si falta un dato, anotar «s/d». Modelos: OPS, EVAC-H (2024); OPS/OMS, ISH Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII.</p>${pie}</section>`
     + deps.map(d => `<section class="hoja">${enc}<div class="kick">EVACUACIÓN HOSPITALARIA · FICHA DE DEPENDENCIA</div><h1>${cargado ? E(d.nombre) : 'Dependencia: ______________________________'}</h1><div style="color:#4B5B73">${E(e.nombre)} · ${E(e.codigo)}</div>${tabla(camposDe(r, 'Dependencia'), d)}${pie}</section>`).join('');
   setTimeout(() => window.print(), 300);
 }
@@ -964,7 +964,7 @@ function vistaDatos() {
   }
   app.innerHTML = `${cab}<h2 style="font-size:17px;margin:4px 2px 8px;color:#8E1B1B">Camas de internación</h2>${camasHTML}
     <h2 style="font-size:17px;margin:16px 2px 8px;color:#8E1B1B">Población estimada por barrio · Trelew 2025</h2>${pobHTML}
-    <p class="sub" style="margin:10px 2px">Actualizado: ${datos.generado ? E(new Date(datos.generado).toLocaleString('es-AR')) : 's/d'} · <a href="#/datos" data-act="actDatos">Actualizar</a>. Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>`;
+    <p class="sub" style="margin:10px 2px">Actualizado: ${datos.generado ? E(new Date(datos.generado).toLocaleString('es-AR')) : 's/d'} · <a href="#/datos" data-act="actDatos">Actualizar</a>.</p>`;
   const qi = $('#qB'); if (qi) qi.addEventListener('input', () => { qBarrio = qi.value; const p = qi.selectionStart; vistaDatos(); const n = $('#qB'); n.focus(); n.setSelectionRange(p, p); });
   const o = $('#ordB'); if (o) o.addEventListener('change', () => { ordenBarrio = o.value; vistaDatos(); });
 }
@@ -1069,7 +1069,7 @@ function vistaAyuda() {
       <li>Quién carga: Administración, en todas las localidades. Para habilitar a otra persona, en COE › Usuarios y accesos (o en ACCESOS STAR-H, columna «Derivación · localidades en que carga») poné sus localidades separadas por punto y coma, por ejemplo «Trelew; Gaiman», o «Todas». Vacío = solo ve. El servidor rechaza cualquier carga fuera de esas localidades.</li>
       <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025 (v0)» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
       <li>Para sumar una localidad, agregala en la hoja LOCALIDADES (código y nombre). La app la toma sola.</li><li>El orden de derivación de cada localidad se carga en la hoja LOCALIDADES, columnas «Escalón 2» y «Escalón 3»: localidades en orden, separadas por punto y coma (por ejemplo «Rawson; Gaiman; Dolavon»). Mientras diga «s/d (revisar)», la app muestra las demás localidades sin orden acordado.</li></ol>
-    <p class="sub">Referencias (MEJORA / buena práctica): Proyecto Esfera (2018); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Vítolo, Planes de contingencia hospitalarios (2026). Este material complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p></div>`;
+    <p class="sub">Referencias (MEJORA / buena práctica): Proyecto Esfera (2018); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Vítolo, Planes de contingencia hospitalarios (2026).</p></div>`;
 }
 
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -256,7 +256,7 @@ function hojaPHR(r, e, cargado) {
     <tr><td class="lab">P · Parcial</td><td>Existe pero incompleto, sin aprobar, desactualizado, sin difundir o sin probar.</td><td class="c">0,5</td></tr>
     <tr><td class="lab">NC · No cumple</td><td>No existe o no hay evidencia.</td><td class="c">0</td></tr>
     <tr><td class="lab">No aplica</td><td>No corresponde por el tipo o la complejidad del establecimiento. No entra en el cálculo.</td><td class="c">—</td></tr></tbody></table>
-    <p class="nota">Cumplimiento: avanzado 75 % o más · intermedio 40 % a 74 % · inicial menos de 40 % (lo calcula la planilla). Fuente: adaptado de OPS, Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015, 2023).${rw ? ' Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.' : ''}</p>`;
+    <p class="nota">Cumplimiento: avanzado 75 % o más · intermedio 40 % a 74 % · inicial menos de 40 % (lo calcula la planilla). Fuente: adaptado de OPS, Instructivo para elaborar un plan hospitalario de respuesta a emergencias de salud y desastres (OPS/PHE/CPI/23-0015, 2023).${rw ? '' : ''}</p>`;
   return h + pie('phr', r);
 }
 
@@ -302,7 +302,7 @@ function hojaISH(r, e, cargado) {
     <table style="margin-top:6px"><thead><tr><th style="width:12%">Categoría</th><th style="width:14%">Índice</th><th>Qué significa</th></tr></thead><tbody>
     ${g.categorias.map(k => `<tr><td class="lab c">${k.cat}</td><td>${String(k.min).replace('.', ',')} a ${String(k.max).replace('.', ',')}</td><td>${esc(k.texto)}</td></tr>`).join('')}</tbody></table>`;
   h += observaciones('') + firmas(rw).replace('Referente del establecimiento', 'Coordinador de la evaluación');
-  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Valores Bajo 0, Medio 0,5 y Alto 1; pesos de submódulos e ítems iguales salvo que se carguen otros en la hoja PESOS. Esta evaluación complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento ni la evaluación estructural de profesionales de ingeniería o arquitectura.</p>`;
+  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Valores Bajo 0, Medio 0,5 y Alto 1; pesos de submódulos e ítems iguales salvo que se carguen otros en la hoja PESOS.</p>`;
   return h + pie('ish', r);
 }
 
@@ -350,7 +350,7 @@ function hojaSTARH(r, e, cargado) {
       <table style="margin-top:6px"><thead><tr><th style="width:12%"></th><th>C · Vulnerabilidad</th><th>D · Capacidad de afrontamiento</th></tr></thead><tbody>
       ${es.C.map((c, i) => `<tr><td class="lab">${esc(c.etiqueta)}</td><td>${esc(c.desc)}</td><td>${esc((es.D[i] || {}).desc)}</td></tr>`).join('')}</tbody></table>`;
   }
-  h += `<p class="nota">Fuente: adaptado de OPS, STAR-H (2023).${rw ? ' Este relevamiento complementa y no reemplaza el trabajo del Servicio de Higiene y Seguridad de cada establecimiento.' : ''}</p>`;
+  h += `<p class="nota">Fuente: adaptado de OPS, STAR-H (2023).${rw ? '' : ''}</p>`;
   return h + pie('starh', r);
 }
 

@@ -611,7 +611,7 @@ function vistaInforme(redN, codigo) {
     ${evC.length ? `<table class="inf-tab" style="margin-top:8px"><tr><th style="width:30%">Amenaza</th><th style="width:12%">Nivel</th><th>Nota y acción sugerida por el comité</th></tr>${evC.map(x => `<tr><td><b>${S.esc(x.id)}</b> ${S.esc(x.amenaza)}</td><td>${chipNivel(x.nivel)}</td><td>${S.esc(x._a.rec || '')}${x.accion ? `<br><b>Acción sugerida por el comité:</b> ${S.esc(x.accion)}${x.area ? ' · ' + S.esc(x.area) : ''}` : ''}</td></tr>`).join('')}</table>` : ''}
     <h3>7. Método</h3>
     <p>Metodología STAR-H de la OPS con el catálogo y las fórmulas de la planilla oficial (versión 1.25): gravedad = 0,4 × B1 + 0,3 × B2 + 0,3 × B3; impacto = (gravedad + vulnerabilidad + capacidad de afrontamiento) ÷ 3; riesgo = probabilidad × impacto. Las amenazas de riesgo alto o muy alto requieren un plan específico de respuesta dentro del plan hospitalario de respuesta a emergencias y desastres.</p>
-    <p class="sub">MEJORA / buena práctica · Organización Panamericana de la Salud. STAR-H: Evaluación estratégica del riesgo de emergencias y desastres en establecimientos de salud. Washington, D.C.: OPS; 2022. https://doi.org/10.37774/9789275325582. Esta es una adaptación de una obra original de la OPS; las opiniones expresadas en esta adaptación son responsabilidad exclusiva de sus autores y no representan necesariamente los criterios de la OPS. Complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento.</p>
+    <p class="sub">MEJORA / buena práctica · Organización Panamericana de la Salud. STAR-H: Evaluación estratégica del riesgo de emergencias y desastres en establecimientos de salud. Washington, D.C.: OPS; 2022. https://doi.org/10.37774/9789275325582. Esta es una adaptación de una obra original de la OPS; las opiniones expresadas en esta adaptación son responsabilidad exclusiva de sus autores y no representan necesariamente los criterios de la OPS.</p>
     <div class="inf-pie"><img src="logo-hysl.png" alt="Higiene y Seguridad Laboral"></div>
   </div>`;
 }
@@ -794,7 +794,6 @@ function vistaAyuda() {
     <p class="sub">MEJORA / buena práctica · Organización Panamericana de la Salud. STAR-H: Evaluación estratégica del riesgo de emergencias y desastres en establecimientos de salud. Washington, D.C.: OPS; 2022. https://doi.org/10.37774/9789275325582 · Planilla oficial STAR-H v1.25 (OPS). Esta es una adaptación de una obra original de la OPS; las opiniones expresadas en esta adaptación son responsabilidad exclusiva de sus autores y no representan necesariamente los criterios de la OPS.</p>
     <h3>Dónde quedan los datos</h3>
     <p>Todo se guarda en la planilla STAR-H de cada red, que sigue siendo el respaldo: si la app no está disponible, se puede cargar directo ahí. También existe el formulario de campo en papel.</p>
-    <p class="sub">Este relevamiento complementa y no reemplaza al Servicio de Higiene y Seguridad de cada establecimiento: las medidas correctivas las propone el servicio de cada lugar.</p>
     <h3>Consultas</h3>
     <p>Servicio de Higiene y Seguridad Laboral, por los canales habituales del COE</p>
   </div>`;
