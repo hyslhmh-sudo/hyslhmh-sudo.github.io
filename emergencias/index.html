@@ -84,6 +84,17 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #agenda .ag-chip{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:#EEF2F8;color:#33414A;margin-left:6px;vertical-align:middle}
 #agenda .ag-chip.int{background:#E6F4EA;color:#1E5E2E}
 #agenda .vacio{font-size:13px;color:#4B5B73;margin:4px 0 0}
+/* 13/11/2026 · Boletines El Niño en la pantalla principal (amarillo = alerta) */
+#boletines{background:#FFF8E1;border:1px solid #F2D27A;border-radius:16px;padding:14px 16px;margin:0 0 6px}
+#boletines .bo-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+#boletines .bo-cab b{font-size:15px;color:#5C4300;flex:1;display:flex;align-items:center;gap:8px}
+#boletines .bo-cab a{display:inline-flex;align-items:center;gap:6px;color:#5C4300;font-weight:700;font-size:13px;text-decoration:none;border:1px solid #E0B94A;border-radius:10px;padding:6px 10px;min-height:34px;background:#fff}
+#boletines .bo-ult{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:10px 12px;text-decoration:none;color:#172B4D;border:1px solid #F2D27A}
+#boletines .bo-ult .ms{font-size:30px;color:#B07D00}
+#boletines .bo-ult span.t{flex:1;min-width:0}#boletines .bo-ult b{display:block;font-size:14.5px}#boletines .bo-ult small{font-size:12.5px;color:#4B5B73}
+#boletines .bo-ult .ab{flex:none;background:#B07D00;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px}
+#boletines ul{list-style:none;margin:8px 0 0;padding:0}#boletines li{padding:6px 2px;border-top:1px solid #F2E3B3;font-size:13px}
+#boletines li a{color:#5C4300;text-decoration:none;font-weight:600}#boletines li span{color:#4B5B73;margin-left:6px}
 .grupo-tit .ms{font-size:19px}
 .fila{display:grid;gap:16px;justify-content:center}
 .fila.tres{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -181,6 +192,7 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
     <div class="msg oculto" id="msg"></div>
   </form>
   <section id="agenda" class="oculto" aria-label="Agenda de reuniones"></section>
+  <section id="boletines" class="oculto" aria-label="Boletines El Niño"></section>
   <div id="rejilla"></div>
 </main>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral</p></footer>
@@ -326,6 +338,31 @@ async function agenda(u, admin) {
   try { const r = await S.api('red_agenda', {}, 45000); if (!r.ok) throw r; S.store.set('agenda', { tk: AG_TK, L: r.reuniones || [] }); box.innerHTML = agendaHtml(r.reuniones || [], admin); box.classList.remove('oculto'); }
   catch (e) { if (!c) box.classList.add('oculto'); }
 }
+// 13/11/2026 · Boletines El Niño (Belén: «me gustaría que esté en la pantalla principal»). Se toman solos de COE › Documentos
+// (hoja DOCUMENTOS, sección «Z · Anexos», título que empieza con «Boletín El Niño» o «Pronóstico climático»): el más nuevo destacado
+// y los dos anteriores. Para sumar uno nuevo alcanza con subirlo a 06.Z.1 y agregar su fila en DOCUMENTOS.
+const BO_CARPETA = 'https://drive.google.com/drive/folders/1XndDynIJ5vz9F_cSDmVs564wnshOJwKv';
+let BO_TK = '';
+function boFecha(s) { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : 0; }
+function boletinesHtml(docs) {
+  const L = (docs || []).filter(d => /^Z/.test(d['Sección'] || '') && /^(Bolet[ií]n El Niño|Pronóstico clim[aá]tico)/i.test(d['Título'] || '') && d.Enlace)
+    .sort((a, b) => boFecha(b.Fecha) - boFecha(a.Fecha));
+  if (!L.length) return '';
+  const u = L[0], resto = L.slice(1, 3);
+  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines</b><a href="red.html"><span class="ms" style="font-size:17px">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">cloud</span>Carpeta</a></div>
+    <a class="bo-ult" href="${E(u.Enlace)}" target="_blank" rel="noopener"><span class="ms">description</span><span class="t"><b>${E(u['Título'])}</b><small>Último publicado · ${E(u.Fecha || 's/d')}</small></span><span class="ab">Abrir</span></a>
+    ${resto.length ? `<ul>${resto.map(d => `<li><a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a><span>${E(d.Fecha || '')}</span></li>`).join('')}</ul>` : ''}`;
+}
+async function boletines(u) {
+  const box = $('#boletines');
+  if (!u || S.DEMO) { box.classList.add('oculto'); BO_TK = ''; return; }
+  const c = S.store.get('red.cat', null), pon = docs => { const x = boletinesHtml(docs); box.innerHTML = x; box.classList.toggle('oculto', !x); };
+  if (c && c.documentos) pon(c.documentos);
+  if (BO_TK === S.sesion.token() || !navigator.onLine) return;
+  BO_TK = S.sesion.token();
+  try { const r = await S.api('red_catalogo', {}, 60000); if (!r.ok) throw r; S.store.set('red.cat', r); pon(r.documentos); }
+  catch (e) { if (!c) box.classList.add('oculto'); }
+}
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
@@ -360,9 +397,11 @@ function pintar() {
   agenda(u, admin);
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
   if (u && !admin && u.habilitadoDesde) {
+    $('#boletines').classList.add('oculto');
     $('#rejilla').innerHTML = `<div class="tarjeta" style="padding:18px 20px"><b>Tu acceso se habilita el ${E(u.habilitadoDesde)} h.</b><p style="margin:.5em 0 0">Hasta entonces solo podés completar <b>Mis datos</b> (tocá tu nombre, arriba). Las secciones de la app se van a ver a partir de esa fecha.</p></div>`;
     return;
   }
+  boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   $('#rejilla').innerHTML = fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
 }
 $('#fIng').addEventListener('submit', async ev => {
