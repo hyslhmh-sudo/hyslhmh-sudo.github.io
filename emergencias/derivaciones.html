@@ -674,6 +674,9 @@ function vistaModelos() {
     <button class="btn sec" data-act="modWord" data-mod="${id}"><span class="ms">download</span>Descargar en Word</button></div></div>`;
   app.innerHTML = `${redesTabs(r)}${secTabs('modelos')}
     <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Los pacientes no se registran en la app. Estas planillas se imprimen o se descargan en Word para completarlas a mano o en la computadora en un simulacro o en una emergencia, y quedan en el establecimiento.</div>
+    <div class="tarjeta" style="padding:12px 16px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="ms">domain</span><label class="sub" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>Establecimiento que imprime</b>
+      <select id="selEstImp"><option value="">En blanco (se completa a mano)</option>${estLista().map(x => `<option value="${E(x.corto)}" ${(estElegido() || {}).corto === x.corto ? 'selected' : ''}>${E(x.nombre)}</option>`).join('')}</select></label>
+      <span class="sub" style="flex-basis:100%">Las planillas salen con su nombre y su encabezado. Cada hospital imprime las suyas para trabajar puertas adentro.</span></div>
     <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><div class="est-cab"><b><span class="ms" style="color:#C62828;margin-right:6px">badge</span>Tarjeta de prioridad de derivación</b></div>
       <p class="sub" style="margin:6px 0 8px">Se ata a la muñeca o a la camilla y acompaña al paciente hasta el destino. El color indica la prioridad de derivación; tiene los datos del paciente, su estado, la atención que necesita, lo que lleva, el destino y un talón desprendible para el registro de evacuados. Dos tarjetas por hoja A4. Si la impresora es blanco y negro, el número y el nombre del color quedan escritos en grande.</p>
       <div class="tj-mini">${PRIOR.map(p => `<span style="background:${p.c};color:${p.t}"><b>${p.n}</b> ${p.titulo.split(' · ')[1]}</span>`).join('')}</div>
@@ -683,12 +686,13 @@ function vistaModelos() {
     ${Object.keys(MODELOS).map(k => tarjeta(k, MODELOS[k].ico, MODELOS[k].titulo, MODELOS[k].txt)).join('')}
     <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><b>Autoevaluación por escenario: imprimir uno solo</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${MADUREZ.map(e => `<button class="btn sec" data-act="madImp" data-esc="${e[0]}"><span class="ms">print</span>${e[0]} · ${E(e[1])}</button>`).join('')}</div></div>`;
 }
+document.addEventListener('change', ev => { if (ev.target && ev.target.id === 'selEstImp') { S.store.set('deriv.estImp', ev.target.value); toast(ev.target.value ? 'Las planillas salen a nombre de ' + ((estElegido() || {}).nombre || ev.target.value) + '.' : 'Las planillas salen en blanco.'); } });
 function modeloHTML(id, r, word) {
   if (MODELOS[id] && MODELOS[id].vit) return vitoloHTML(id, r, word);
   const cas = o => `<span class="casilla">${word ? '☐' : ''}</span>${E(o)}`;
   const ops = k => OPC[k].map(cas).join(' ');
   const fila = (l, val) => `<tr><td class="l">${E(l)}</td><td class="v">${val || ''}</td></tr>`;
-  const enc = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${/trelew/i.test(r.nombre) ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const enc = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${encArch(r)}" height="40">` : encImp(r);
   const pie = word ? `<p style="font-size:7.5pt;color:#4B5B73">Higiene y Seguridad Laboral · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
   const cols = (c, n) => `<table class="reg"><tr>${c.map(x => `<td class="l">${x}</td>`).join('')}</tr>${Array.from({ length: n }, (_, i) => `<tr>${c.map((x, j) => `<td>${j === 0 ? i + 1 : ''}</td>`).join('')}</tr>`).join('')}</table>`;
   const nota = t => `<p style="font-size:7.5pt;color:#4B5B73">${t}</p>`;
@@ -778,17 +782,17 @@ function tarjetaHTML(p, r, word) {
   </section>`;
 }
 function tarjetasHTML(cual, r, word) { return PRIOR.filter(p => !cual || String(p.n) === String(cual)).map(p => tarjetaHTML(p, r, word)).join(word ? '<br style="page-break-before:always">' : ''); }
-function tarjetaImprimir(cual) { $('#imp').innerHTML = `<div class="tj-hoja">${tarjetasHTML(cual, redVista(), false)}</div>`; setTimeout(() => window.print(), 300); }
+function tarjetaImprimir(cual) { $('#imp').innerHTML = `<div class="tj-hoja">${conEst(tarjetasHTML(cual, redImp(), false))}</div>`; setTimeout(() => window.print(), 300); }
 function tarjetaWord(cual) {
   const css = `.tj{border:1.5pt solid #172B4D;padding:6pt;margin-bottom:10pt}.tj-banda{padding:8pt 10pt;margin:4pt 0 6pt;-webkit-print-color-adjust:exact}.tj-t td.l{width:30%}.tj-t td{font-size:8pt;height:14pt}.tj-talon{border-top:1.5pt dashed #4B5B73;margin-top:6pt;padding-top:3pt;font-size:7pt}.tj-cab td{font-size:9pt}`;
-  bajarWord('Tarjetas de prioridad de derivación' + (cual ? ' ' + cual : ''), `<style>${css}</style>` + tarjetasHTML(cual, redVista(), true), false);
+  bajarWord('Tarjetas de prioridad de derivación' + (cual ? ' ' + cual : ''), `<style>${css}</style>` + conEst(tarjetasHTML(cual, redImp(), true)), false);
 }
 
 /* ---------- Material de Vítolo (NOBLE): autoevaluaciones e informe posterior al ejercicio ---------- */
 let madEsc = '';
 function vitEncPie(r, word) {
-  const tw = /trelew/i.test(r.nombre);
-  const encV = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${tw ? 'enc-trelew.png' : 'enc-secretaria.png'}" height="40">` : encImp(r);
+  const tw = encArch(r) === 'enc-trelew.png';
+  const encV = word ? `<img src="https://hyslhmh-sudo.github.io/emergencias/${encArch(r)}" height="40">` : encImp(r);
   const pieV = word ? `<p style="font-size:7.5pt;color:#4B5B73">${tw ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral'} · ${E(r.nombre)}</p><p align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL"></p>` : pieImp(r);
   return { encV, pieV };
 }
@@ -884,9 +888,29 @@ function madurezHTML(cual, r, word) {
 }
 
 
-function modeloImprimir(id) { $('#imp').innerHTML = modeloHTML(id, redVista(), false); setTimeout(() => window.print(), 300); }
-function modeloWord(id) { const m = MODELOS[id]; bajarWord(m.titulo, modeloHTML(id, redVista(), true), m.apaisada); }
-function encImp(r) { return /trelew/i.test(r.nombre) ? '<img src="enc-trelew.png" style="height:44px">' : '<img src="enc-secretaria.png" style="height:36px">'; }
+function modeloImprimir(id) { $('#imp').innerHTML = conEst(modeloHTML(id, redImp(), false)); setTimeout(() => window.print(), 300); }
+function modeloWord(id) { const m = MODELOS[id]; bajarWord(m.titulo, conEst(modeloHTML(id, redImp(), true)), m.apaisada); }
+/* 13/11/2026 · Planillas modelo con el nombre del establecimiento que imprime (pedido de Belén: «a partir de Trelew los hospitales
+ * rurales van a trabajar también puertas adentro: que puedan imprimir sus propias planillas»). La lista sale de LUGARES
+ * (Área Programática Trelew, acción deriv_catalogo › lugaresAP); si el servidor todavía no la manda, se usa la de abajo.
+ * Por defecto, el establecimiento del usuario (ACCESOS STAR-H); se puede cambiar o dejar en blanco. Queda en este dispositivo. */
+const EST_AP = [['HZT', 'Hospital Zonal Trelew «Dr. Adolfo Margara»'], ['HMH', 'Hospital María Humphreys'], ['HSST', 'Hospital Subzonal Santa Teresita (Rawson)'],
+  ['Gaiman', 'Hospital Rural Gaiman'], ['Dolavon', 'Hospital Rural Dolavon'], ['Las Plumas', 'Hospital Rural Las Plumas'], ['Paso de Indios', 'Hospital Rural Paso de Indios'],
+  ['Camarones', 'Hospital Rural Camarones'], ['28 de Julio', 'Puesto Sanitario 28 de Julio'], ['Dique Ameghino', 'Puesto Sanitario Dique Florentino Ameghino']].map(x => ({ corto: x[0], nombre: x[1] }));
+const estLista = () => (cat && cat.lugaresAP && cat.lugaresAP.length ? cat.lugaresAP : EST_AP);
+function estElegido() {
+  let c = S.store.get('deriv.estImp', null);
+  if (c === null) { const mios = ((cat && cat.usuario && cat.usuario.estab) || []).map(x => String(x).toUpperCase()); const e = estLista().find(x => mios.indexOf(String(x.corto).toUpperCase()) >= 0); c = e ? e.corto : ''; }
+  return estLista().find(x => x.corto === c) || null;
+}
+function redImp() { const r = redVista(), e = estElegido(); return e ? Object.assign({}, r, { nombre: e.nombre, estImp: e }) : r; }
+function conEst(html) { const e = estElegido(); return e ? html.replace(/Establecimiento: _{20,}/g, 'Establecimiento: <b>' + E(e.nombre) + '</b>') : html; }
+// 13/11/2026 · Encabezado según quién imprime: HZT y HMH con el de Trelew, HSST con el suyo, el resto con el de la Secretaría de Salud.
+function encArch(r) {
+  if (r && r.estImp) { const c = String(r.estImp.corto || '').toUpperCase(); return c === 'HZT' || c === 'HMH' ? 'enc-trelew.png' : c === 'HSST' ? 'enc-hsst.png' : 'enc-secretaria.png'; }
+  return /trelew/i.test(r.nombre) ? 'enc-trelew.png' : 'enc-secretaria.png';
+}
+function encImp(r) { const a = encArch(r); return `<img src="${a}" style="height:${a === 'enc-secretaria.png' ? 36 : 44}px">`; }
 function pieImp(r) { return `<div class="pieimp"><div class="pt"><div><b>Higiene y Seguridad Laboral</b><br>Impreso el ${S.hoy()}</div><div>${E(r.nombre)}</div></div><img src="logo-hysl.png" alt="HySL"></div>`; }
 // Impresión por escalones (orden de derivación)
 function gruposImp(r, lista, cols, fila) {

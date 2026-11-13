@@ -158,6 +158,9 @@ function render() {
   const sel = `<div class="proys" role="group" aria-label="Proyecto">${vis.map(p => `<button class="tab" data-proy="${E(p)}" aria-pressed="${p === proyecto}">${E(p)}</button>`).join('')}</div>`;
   const av = offline ? `<div class="aviso-of">Sin conexión: se muestra la última copia guardada en este dispositivo (${E(datos.cache || 's/d')}).</div>` : '';
   if (!datos.proyecto) { app.innerHTML = av + sel + '<div class="tarjeta vacio">Cargando el proyecto…</div>'; return; }
+  // 13/11/2026 · Proyecto con contenido reservado (COE LISTAS, columna E): solo el nombre, sin contenido.
+  if (datos.reservado) { ['#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
+    app.innerHTML = av + sel + `<div class="tarjeta vacio"><span class="ms" style="font-size:36px;color:var(--tenue)">lock</span><p><b>${E(datos.proyecto)}</b></p><p>${/hospital/i.test(datos.reservado) ? 'El contenido de este proyecto se ve en su módulo: cada hospital ve el suyo.' : 'El contenido de este proyecto lo ve solo Higiene y Seguridad Laboral.'}</p></div>`; return; }
   ['#bImp', '#bWord'].forEach(s => $(s).classList.remove('oculto'));
   app.innerHTML = av + sel + cuerpo(false);
 }
