@@ -28,6 +28,7 @@ html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus 
 .pest button{flex:none;border:1.5px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:999px;padding:7px 13px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
 .pest button[aria-selected=true]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
 .pest .n{font-size:11px;background:var(--claro);color:var(--fuerte);border-radius:999px;padding:0 7px}
+.pest .pest-adm{flex:none;display:inline-flex;align-items:center;gap:4px;margin-left:10px;padding-left:12px;border-left:2px solid var(--borde);font-size:11.5px;font-weight:700;color:var(--suave,#4B5B73);text-transform:uppercase;letter-spacing:.03em}
 main{max-width:1000px;margin:0 auto;padding:12px 16px 40px}
 .aviso{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:12px;padding:10px 14px;margin:0 0 12px;font-size:13.5px;color:var(--suave)}
 .aviso.alerta{border-left-color:var(--alerta)}
@@ -93,12 +94,15 @@ tr.grupo-sec td{background:#E4EAFB;color:#172B4D;position:static!important}
  * Cargar reuniones, documentos, lugares y enlaces: por ahora solo Administración. */
 const S = window.STARH, E = S.esc, $ = s => document.querySelector(s), app = $('#app');
 const PEST = [
-  // 13/11/2026 · Documentos primero (Belén: «la parte más importante es documentos»). Órganos e integrantes y Accesos: solo Administración.
-  ['doc', 'Documentos', 'description'], ['reu', 'Reuniones', 'event_note'], ['acu', 'Acuerdos y tareas', 'task_alt'],
-  ['org', 'Órganos e integrantes', 'groups'], // solo Administración ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link'],
+  // 13/11/2026 · Documentos primero (Belén: «la parte más importante es documentos»).
+  // Reuniones, Órganos e integrantes y Accesos: solo Administración, en un grupo aparte al final («Administración»).
+  // Los demás ven las próximas 2 reuniones en la pantalla de inicio.
+  ['doc', 'Documentos', 'description'], ['acu', 'Acuerdos y tareas', 'task_alt'],
+  ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link'],
   ['pac', 'Necesidades especiales', 'accessible'], // lista cerrada: solo cantidades
-  ['acc', 'Accesos', 'key'] // solo Administración
+  ['reu', 'Reuniones', 'event_note', 'adm'], ['org', 'Órganos e integrantes', 'groups', 'adm'], ['acc', 'Accesos', 'key', 'adm']
 ];
+const SOLO_ADM = ['reu', 'org', 'acc'];
 let D = S.store.get('red.cat', null), pest = (location.hash || '#doc').slice(1), filtro = {};
 // 12/11/2026 · «Programar reunión» desde la agenda de la pantalla de inicio: red.html#programar abre el diálogo (Administración).
 let PROG = pest === 'programar'; if (PROG) pest = 'reu';
@@ -119,14 +123,16 @@ async function cargar(nota) {
 function pintarPest() {
   const n = { pac: PAC && PAC.total != null ? PAC.total : '', acc: ((D.accesos || {}).permisos || []).length, reu: (D.reuniones || []).length, acu: (D.acuerdos || []).length, doc: (D.documentos || []).length, org: (D.organos || []).length, lug: (D.lugares || []).length, enl: (D.enlaces || []).length };
   const vePac = () => adm() || !!((D.niveles || {})['Pacientes con necesidades especiales']) || !!((D.niveles || {})['Pacientes · listado con datos']);
-  $('#pest').innerHTML = PEST.filter(p => ((p[0] !== 'acc' && p[0] !== 'org') || adm()) && (p[0] !== 'pac' || vePac())).map(p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`).join('');
+  const tab = p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`;
+  $('#pest').innerHTML = PEST.filter(p => !p[3] && (p[0] !== 'pac' || vePac())).map(tab).join('')
+    + (adm() ? `<span class="pest-adm" aria-hidden="true"><span class="ms" style="font-size:16px">admin_panel_settings</span>Administración</span>` + PEST.filter(p => p[3]).map(tab).join('') : '');
   $('#bComentar').hidden = !D.puedeComentar;
 }
 function pintar(nota) {
   if (!D) return;
   pintarPest();
   const aviso = nota ? `<div class="aviso">${E(nota)}</div>` : '';
-  if (((pest === 'acc' || pest === 'org') && !adm()) || (pest === 'pac' && !adm() && !(D.niveles || {})['Pacientes con necesidades especiales'] && !(D.niveles || {})['Pacientes · listado con datos'])) pest = 'doc';
+  if ((SOLO_ADM.indexOf(pest) >= 0 && !adm()) || (pest === 'pac' && !adm() && !(D.niveles || {})['Pacientes con necesidades especiales'] && !(D.niveles || {})['Pacientes · listado con datos'])) pest = 'doc';
   if (pest === 'pac' && !PAC && !PAC_CARGANDO && (adm() || (D.niveles || {})['Pacientes con necesidades especiales'])) cargarPac();
   const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces, acc: vAccesos, pac: vPacientes }[pest] || vDocumentos;
   app.innerHTML = aviso + f();
@@ -516,7 +522,7 @@ function dlgAyuda() {
   const A = adm();
   const usu = `<p><b>Para qué sirve.</b> Reúne lo del COE de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos y enlaces útiles. Es una base orientadora: no es un registro en tiempo real.</p>
     <p><b>Qué ves.</b> Solo lo que corresponde a tu participación. Si integrás la parte interna (hospitales y Área Programática), ves también lo del COE interno. Si sos integrante externo, ves lo del COE completo.</p>
-    <p><b>Reuniones.</b> Cada tarjeta muestra los datos, el orden del día, los asistentes y los acuerdos. «Planilla de asistencia» imprime la planilla para firmar. «Acta» y «Asistencia firmada» abren los documentos cuando están cargados.</p>
+    <p><b>Reuniones.</b> Las próximas dos reuniones aparecen en la pantalla de inicio. Las pestañas Reuniones, Órganos e integrantes y Accesos son de Administración (grupo «Administración», al final de la barra).</p>
     <p><b>Programar una reunión (Administración).</b> «Programar reunión» la guarda como «Programada (convocada)» con fecha, horario, lugar y temas a tratar. Mientras está programada no se muestran los campos de después de la reunión (temas tratados, próxima reunión, otros asistentes, acuerdos, acta y escaneo). Los botones «Todos», «Internos», «Externos» y «Ninguno» tildan los convocados de un solo clic. Aparece en la agenda de la pantalla de inicio de quienes la pueden ver. Si está tildado «Avisar por mail», al guardar sale la convocatoria y el día anterior (24 h antes) el recordatorio, desde belenpellegrini.hys@gmail.com y en copia oculta: COE interno, a los integrantes internos del órgano; COE externo, a todos sus integrantes; otra reunión, a los convocados que se tilden. Se usan los correos de cada ficha (institucional; si no hay, el personal). Si se cambia la fecha, el horario o el lugar, sale un aviso de cambio. Después de la reunión se edita, se pasa a «Realizada» y se marca la asistencia.</p>
     <p><b>Acuerdos y tareas.</b> Todos los acuerdos de las reuniones que ves, con responsable, plazo y estado. Podés filtrar por estado o buscar por texto.</p>
     <p><b>Documentos.</b> Están ordenados por sección: internos (A Administrativos, B Derivación y traslados, C Instituciones receptoras, D Albergues, E Medios de traslado, F Contactos y responsables, G Pacientes con requerimientos especiales, H Alerta, activación y comunicación, I Población a cargo, J Servicios esenciales y continuidad, K Seguridad del personal, L Capacitación y simulacros, M Después del evento) y anexos. Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
