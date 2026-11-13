@@ -313,8 +313,8 @@ function agendaHtml(L, admin) {
       <div class="ag-txt"><b>${E(r.organo || '')}</b><span class="ag-chip ${/interno/i.test(r.parte) ? 'int' : ''}">${E(r.parte || '')}</span>
       <div class="m">${E([r.horario ? r.horario : 'horario s/d', r.lugar || 'lugar s/d', r.coordino ? 'Convoca: ' + r.coordino : ''].filter(Boolean).join(' · '))}</div>
       ${r.orden ? `<div class="t">${E(r.orden)}</div>` : ''}${admin && r.aviso ? `<div class="m">Mail: ${E(r.aviso)}</div>` : ''}</div></div>`; };
-  return `<div class="ag-cab"><b><span class="ms">event_upcoming</span>Agenda · próximas reuniones</b>${admin ? '<a href="red.html#programar"><span class="ms" style="font-size:18px">add</span>Programar reunión</a>' : ''}</div>
-    ${L.length ? L.map(item).join('') : '<p class="vacio">No hay reuniones programadas.</p>'}`;
+  return `<div class="ag-cab"><b><span class="ms">event_upcoming</span>Próximas reuniones</b>${admin ? '<a href="red.html#programar"><span class="ms" style="font-size:18px">add</span>Programar reunión</a>' : ''}</div>
+    ${L.length ? L.slice(0, 2).map(item).join('') : '<p class="vacio">No hay reuniones programadas.</p>'}`; // 13/11/2026 · nunca más de dos (pedido de Belén)
 }
 async function agenda(u, admin) {
   const box = $('#agenda');

@@ -93,12 +93,13 @@ tr.grupo-sec td{background:#E4EAFB;color:#172B4D;position:static!important}
  * Cargar reuniones, documentos, lugares y enlaces: por ahora solo Administración. */
 const S = window.STARH, E = S.esc, $ = s => document.querySelector(s), app = $('#app');
 const PEST = [
-  ['reu', 'Reuniones', 'event_note'], ['acu', 'Acuerdos y tareas', 'task_alt'], ['doc', 'Documentos', 'description'],
-  ['org', 'Órganos e integrantes', 'groups'], ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link'],
+  // 13/11/2026 · Documentos primero (Belén: «la parte más importante es documentos»). Órganos e integrantes y Accesos: solo Administración.
+  ['doc', 'Documentos', 'description'], ['reu', 'Reuniones', 'event_note'], ['acu', 'Acuerdos y tareas', 'task_alt'],
+  ['org', 'Órganos e integrantes', 'groups'], // solo Administración ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link'],
   ['pac', 'Necesidades especiales', 'accessible'], // lista cerrada: solo cantidades
   ['acc', 'Accesos', 'key'] // solo Administración
 ];
-let D = S.store.get('red.cat', null), pest = (location.hash || '#reu').slice(1), filtro = {};
+let D = S.store.get('red.cat', null), pest = (location.hash || '#doc').slice(1), filtro = {};
 // 12/11/2026 · «Programar reunión» desde la agenda de la pantalla de inicio: red.html#programar abre el diálogo (Administración).
 let PROG = pest === 'programar'; if (PROG) pest = 'reu';
 const adm = () => !!(D && D.admin);
@@ -118,16 +119,16 @@ async function cargar(nota) {
 function pintarPest() {
   const n = { pac: PAC && PAC.total != null ? PAC.total : '', acc: ((D.accesos || {}).permisos || []).length, reu: (D.reuniones || []).length, acu: (D.acuerdos || []).length, doc: (D.documentos || []).length, org: (D.organos || []).length, lug: (D.lugares || []).length, enl: (D.enlaces || []).length };
   const vePac = () => adm() || !!((D.niveles || {})['Pacientes con necesidades especiales']) || !!((D.niveles || {})['Pacientes · listado con datos']);
-  $('#pest').innerHTML = PEST.filter(p => (p[0] !== 'acc' || adm()) && (p[0] !== 'pac' || vePac())).map(p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`).join('');
+  $('#pest').innerHTML = PEST.filter(p => ((p[0] !== 'acc' && p[0] !== 'org') || adm()) && (p[0] !== 'pac' || vePac())).map(p => `<button role="tab" data-p="${p[0]}" aria-selected="${p[0] === pest}"><span class="ms" style="font-size:17px">${p[2]}</span>${p[1]}<span class="n">${n[p[0]]}</span></button>`).join('');
   $('#bComentar').hidden = !D.puedeComentar;
 }
 function pintar(nota) {
   if (!D) return;
   pintarPest();
   const aviso = nota ? `<div class="aviso">${E(nota)}</div>` : '';
-  if ((pest === 'acc' && !adm()) || (pest === 'pac' && !adm() && !(D.niveles || {})['Pacientes con necesidades especiales'] && !(D.niveles || {})['Pacientes · listado con datos'])) pest = 'reu';
+  if (((pest === 'acc' || pest === 'org') && !adm()) || (pest === 'pac' && !adm() && !(D.niveles || {})['Pacientes con necesidades especiales'] && !(D.niveles || {})['Pacientes · listado con datos'])) pest = 'doc';
   if (pest === 'pac' && !PAC && !PAC_CARGANDO && (adm() || (D.niveles || {})['Pacientes con necesidades especiales'])) cargarPac();
-  const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces, acc: vAccesos, pac: vPacientes }[pest] || vReuniones;
+  const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces, acc: vAccesos, pac: vPacientes }[pest] || vDocumentos;
   app.innerHTML = aviso + f();
 }
 
@@ -185,7 +186,7 @@ function vDocumentos() {
   const fila = d => `<tr><td>${d.Enlace ? `<a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a>` : E(d['Título'])}<br><span class="meta">${E(d.ID)} · v${E(d['Versión'] || '0')} · ${E(d.Fecha)}</span></td>
       <td>${E(d.Clase)}</td><td>${E(d.Emisor)}<br><span class="meta">${E(d.Alcance)}${d.Establecimiento && d.Establecimiento !== '—' ? ' · ' + E(d.Establecimiento) : ''}</span></td>
       <td><span class="chip ${/validar|borrador/i.test(d.Estado) ? 'val' : 'ok'}">${E(d.Estado)}</span></td><td class="meta">${E(d['Visible para'])}</td>
-      ${adm() ? `<td><button class="btn sec chico" data-a="docEditar" data-id="${E(d.ID)}"><span class="ms">edit</span></button></td>` : ''}</tr>`;
+      ${adm() ? `<td style="white-space:nowrap"><button class="btn sec chico" data-a="docEditar" data-id="${E(d.ID)}" title="Editar"><span class="ms">edit</span></button> <button class="btn sec chico" data-a="docBorrar" data-id="${E(d.ID)}" title="Borrar de la lista" aria-label="Borrar ${E(d['Título'])}"><span class="ms" style="color:#C62828">delete</span></button></td>` : ''}</tr>`;
   const nc = adm() ? 6 : 5;
   const cuerpo = secs.map(s => {
     const g = L.filter(d => (d['Sección'] || 'Sin sección') === s);
@@ -378,6 +379,16 @@ async function enviar(btn, accion, datos, ok) {
   catch (e) { est.textContent = errTxt(e); btn.disabled = false; }
 }
 
+/* 13/11/2026 · Borrar un documento de la lista (pedido de Belén: «botón de borrar notas»). Solo Administración.
+ * La fila pasa a la hoja oculta PAPELERA del libro (se puede recuperar copiándola de vuelta); el archivo de Drive no se toca. */
+async function borrarDoc(btn, id) {
+  const d = (D.documentos || []).filter(x => x.ID === id)[0]; if (!d) return;
+  if (!confirm('¿Borrar «' + d['Título'] + '» (' + id + ') de la lista de documentos?\n\nEl archivo de Drive no se borra. La fila queda guardada en la hoja PAPELERA del libro por si hay que recuperarla.')) return;
+  btn.disabled = true;
+  try { const r = await S.api('red_documento_guardar', { documento: { ID: id, _borrar: true } }, 60000); if (!r.ok) throw r; if (!r.borrado) { btn.disabled = false; toast('Falta publicar la versión nueva del servidor (Apps Script): no se borró.'); return; } toast('Documento ' + id + ' borrado de la lista.'); cargar(); }
+  catch (e) { btn.disabled = false; toast(errTxt(e)); }
+}
+
 /* ---------- Pacientes con necesidades especiales: solo cantidades (lista cerrada) ---------- */
 let PAC = null, PAC_CARGANDO = false, PAC_ERR = '';
 async function cargarPac() {
@@ -518,7 +529,7 @@ function dlgAyuda() {
     <p><b>Dónde están los datos.</b> En el libro de la app: hojas ORGANOS, INTEGRANTES, PERMISOS, LUGARES, ENLACES, DOCUMENTOS, REUNIONES, ASISTENCIA, ACUERDOS y COMENTARIOS. Todo se puede editar también desde Sheets (respetar los encabezados de la fila 1).</p>
     <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COE completo o COE interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
     <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COE, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
-    <p><b>Documentos.</b> «Agregar»: sección (A a M o Anexos; se guarda en DOCUMENTOS › «Sección» y coincide con las subcarpetas 06.A a 06.M y 06.Z de Drive), clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos.</p>
+    <p><b>Documentos.</b> «Agregar»: sección (A a M o Anexos; se guarda en DOCUMENTOS › «Sección» y coincide con las subcarpetas 06.A a 06.M y 06.Z de Drive), clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos. El tacho rojo de cada fila lo borra de la lista: pide confirmación, el archivo de Drive no se toca y la fila queda en la hoja oculta PAPELERA del libro (para recuperarla, se copia de vuelta a DOCUMENTOS). Órganos e integrantes y Accesos solo los ve Administración.</p>
     <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COE o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
     <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos. «Pacientes · listado con datos» (columna «Listado con datos»): imprime el listado CONFIDENCIAL con datos personales; para el referente de una ciudad, en PERMISOS poné Tipo de alcance «Localidad» y Alcance = su ciudad (como figura en LUGARES); con «Área» ve todas las ciudades. Cada impresión queda en REGISTRO APP.</p>
     <p><b>Necesidades especiales.</b> Un libro por ciudad del Área Programática Trelew en la carpeta 08 (confidencial); el enlace va en LUGARES, en cada establecimiento de esa ciudad (HZT y HMH → Trelew). Para dar acceso a una sola ciudad: Accesos › Pacientes y, en la hoja PERMISOS, tipo «Localidad» con la ciudad. La pestaña muestra solo cantidades. Quién la ve: lista cerrada en Accesos › Pacientes (nunca externos). Compartir cada libro con las cuentas que cargan es manual, desde Drive, persona por persona.</p>
@@ -556,6 +567,7 @@ document.addEventListener('click', ev => {
     enviar(t, 'red_integrante_guardar', { integrante: datos }, 'Integrante guardado.');
   }
   else if (a === 'docNuevo') dlgFila('doc', ''); else if (a === 'docEditar') dlgFila('doc', id);
+  else if (a === 'docBorrar') borrarDoc(t, id);
   else if (a === 'lugEditar') dlgFila('lug', id);
   else if (a === 'enlNuevo') dlgFila('enl', ''); else if (a === 'enlEditar') dlgFila('enl', id);
   else if (a === 'filaGuardar') {
