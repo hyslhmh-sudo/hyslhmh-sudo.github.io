@@ -67,6 +67,7 @@ dialog{border:0;border-radius:16px;padding:0;max-width:720px;width:calc(100% - 2
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--fuerte);color:#F5F7FB;border-left:5px solid var(--medio);padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:20}
 @media print{.barra,.pest,.herr,.btn,footer{display:none}}
+tr.grupo-sec td{background:#E4EAFB;color:#172B4D;position:static!important}
 </style>
 </head>
 <body>
@@ -169,22 +170,35 @@ function vAcuerdos() {
 }
 
 /* ---------- Documentos ---------- */
+// 13/11/2026 · Secciones del COE (decisión de Belén): internos A a M y anexos (Z). Se guardan en DOCUMENTOS › «Sección».
+const SECCIONES = ['A · Administrativos', 'B · Derivación y traslados', 'C · Instituciones receptoras', 'D · Albergues', 'E · Medios de traslado',
+  'F · Contactos y responsables', 'G · Pacientes con requerimientos especiales', 'H · Alerta, activación y comunicación', 'I · Población a cargo',
+  'J · Servicios esenciales y continuidad', 'K · Seguridad del personal', 'L · Capacitación y simulacros', 'M · Después del evento', 'Z · Anexos'];
 function vDocumentos() {
   const L0 = D.documentos || [];
   const op = k => [...new Set(L0.map(d => d[k]).filter(Boolean))];
-  const fc = filtro.docClase || '', fe = filtro.docEmisor || '', fs = filtro.docEstado || '', q = (filtro.docQ || '').toLowerCase();
-  const L = L0.filter(d => (!fc || d.Clase === fc) && (!fe || d.Emisor === fe) && (!fs || (fs === '__val' ? /validar/i.test(d.Estado) : d.Estado === fs)) && (!q || d['Título'].toLowerCase().indexOf(q) >= 0));
+  const fc = filtro.docClase || '', fe = filtro.docEmisor || '', fs = filtro.docEstado || '', fsec = filtro.docSec || '', q = (filtro.docQ || '').toLowerCase();
+  const L = L0.filter(d => (!fc || d.Clase === fc) && (!fe || d.Emisor === fe) && (!fsec || (d['Sección'] || 'Sin sección') === fsec) && (!fs || (fs === '__val' ? /validar/i.test(d.Estado) : d.Estado === fs)) && (!q || d['Título'].toLowerCase().indexOf(q) >= 0));
   const nVal = L0.filter(d => /validar/i.test(d.Estado)).length;
   const sel = (k, t, arr) => `<select data-f="${k}"><option value="">${t}</option>${arr.map(x => `<option ${x === filtro[k] ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>`;
-  return `<div class="aviso">Cada documento indica quién lo emite (HySL, COE interno, COE completo, Dirección) y su alcance. Las notas de HySL solo las ve Administración. Las solicitudes a organismos salen del COE interno, con firma de la coordinación general y visto bueno de la Dirección.</div>
-    <div class="herr">${sel('docClase', 'Todas las clases', op('Clase'))}${sel('docEmisor', 'Todos los emisores', op('Emisor'))}
+  const secs = SECCIONES.concat(L.some(d => !d['Sección']) ? ['Sin sección'] : []);
+  const fila = d => `<tr><td>${d.Enlace ? `<a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a>` : E(d['Título'])}<br><span class="meta">${E(d.ID)} · v${E(d['Versión'] || '0')} · ${E(d.Fecha)}</span></td>
+      <td>${E(d.Clase)}</td><td>${E(d.Emisor)}<br><span class="meta">${E(d.Alcance)}${d.Establecimiento && d.Establecimiento !== '—' ? ' · ' + E(d.Establecimiento) : ''}</span></td>
+      <td><span class="chip ${/validar|borrador/i.test(d.Estado) ? 'val' : 'ok'}">${E(d.Estado)}</span></td><td class="meta">${E(d['Visible para'])}</td>
+      ${adm() ? `<td><button class="btn sec chico" data-a="docEditar" data-id="${E(d.ID)}"><span class="ms">edit</span></button></td>` : ''}</tr>`;
+  const nc = adm() ? 6 : 5;
+  const cuerpo = secs.map(s => {
+    const g = L.filter(d => (d['Sección'] || 'Sin sección') === s);
+    if (!g.length && (fsec || !adm())) return '';
+    const tit = s === 'Z · Anexos' ? 'Anexos' : (s === 'Sin sección' ? 'Sin sección asignada' : 'Internos · ' + s);
+    return `<tr class="grupo-sec"><td colspan="${nc}"><b>${E(tit)}</b> <span class="meta">(${g.length})</span></td></tr>` + (g.length ? g.map(fila).join('') : `<tr><td colspan="${nc}" class="vacio">Todavía sin documentos.</td></tr>`);
+  }).join('');
+  return `<div class="aviso">Los documentos se ordenan en secciones: internos (A a M) y anexos. Cada uno indica quién lo emite (HySL, COE interno, COE completo, Dirección) y su alcance. Las notas de HySL solo las ve Administración. Las solicitudes a organismos salen del COE interno, con firma de la coordinación general y visto bueno de la Dirección.</div>
+    <div class="herr">${sel('docSec', 'Todas las secciones', secs)}${sel('docClase', 'Todas las clases', op('Clase'))}${sel('docEmisor', 'Todos los emisores', op('Emisor'))}
     <select data-f="docEstado"><option value="">Todos los estados</option><option value="__val" ${filtro.docEstado === '__val' ? 'selected' : ''}>Para validar (${nVal})</option>${op('Estado').map(x => `<option ${x === filtro.docEstado ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>
     <input data-f="docQ" placeholder="Buscar título" value="${E(filtro.docQ || '')}"><span class="esp"></span>${adm() ? '<button class="btn" data-a="docNuevo"><span class="ms">add</span>Agregar</button>' : ''}</div>
     <div class="tabla"><table><thead><tr><th>Documento</th><th>Clase</th><th>Emisor · alcance</th><th>Estado</th><th>Ve</th>${adm() ? '<th></th>' : ''}</tr></thead><tbody>
-    ${L.map(d => `<tr><td>${d.Enlace ? `<a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a>` : E(d['Título'])}<br><span class="meta">${E(d.ID)} · v${E(d['Versión'] || '0')} · ${E(d.Fecha)}</span></td>
-      <td>${E(d.Clase)}</td><td>${E(d.Emisor)}<br><span class="meta">${E(d.Alcance)}${d.Establecimiento && d.Establecimiento !== '—' ? ' · ' + E(d.Establecimiento) : ''}</span></td>
-      <td><span class="chip ${/validar|borrador/i.test(d.Estado) ? 'val' : 'ok'}">${E(d.Estado)}</span></td><td class="meta">${E(d['Visible para'])}</td>
-      ${adm() ? `<td><button class="btn sec chico" data-a="docEditar" data-id="${E(d.ID)}"><span class="ms">edit</span></button></td>` : ''}</tr>`).join('') || `<tr><td colspan="6" class="vacio">Sin documentos.</td></tr>`}
+    ${cuerpo || `<tr><td colspan="${nc}" class="vacio">Sin documentos.</td></tr>`}
     </tbody></table></div>`;
 }
 
@@ -311,7 +325,7 @@ function imprimirPlanilla(r, asis) {
 function dlgFila(tipo, id) {
   const cfg = {
     doc: { t: 'Documento', lista: D.documentos, key: 'ID', camposF: () => [['Título', 'Título *'], ['Enlace', 'Enlace', 'url'], ['Fecha', 'Fecha'], ['Versión', 'Versión'], ['Establecimiento', 'Establecimiento'], ['Reunión', 'Reunión (ID, si corresponde)'], ['Observaciones', 'Observaciones', 'area']],
-      sels: [['Clase', ['Nota', 'Acta', 'Minuta', 'Acuerdo', 'Propuesta', 'Plan', 'Protocolo', 'Procedimiento', 'Modelo', 'Planilla', 'Informe', 'Otro']], ['Emisor', ['HySL', 'COE interno', 'COE completo', 'Dirección', 'Otro organismo']],
+      sels: [['Sección', SECCIONES], ['Clase', ['Nota', 'Acta', 'Minuta', 'Acuerdo', 'Propuesta', 'Plan', 'Protocolo', 'Procedimiento', 'Modelo', 'Planilla', 'Informe', 'Otro']], ['Emisor', ['HySL', 'COE interno', 'COE completo', 'Dirección', 'Otro organismo']],
         ['Alcance', ['Área Programática Trelew', 'Red Trelew', 'Red Rawson', 'Establecimiento', 'Toda la red']], ['Órgano', [''].concat((D.organos || []).map(o => o.ID))],
         ['Estado', ['Borrador', 'Borrador (sin enviar)', 'Para validar', 'Validado', 'Firmado', 'Enviado', 'Vigente', 'Reemplazado']], ['Visible para', ['Integrantes del órgano', 'Parte interna', 'Todos', 'Solo Administración']]], accion: 'red_documento_guardar', prop: 'documento' },
     lug: { t: 'Establecimiento', lista: (D.lugares || []).map(l => ({ ID: l.id, 'Nombre oficial': l.nombre, 'Nombre corto': l.corto, Tipo: l.tipo, Red: l.red, 'Depende de': l.depende, Localidad: l.localidad, Latitud: l.lat, Longitud: l.lng, 'Camas (total, estimado)': l.camas, 'Libro de pacientes (link) · CONFIDENCIAL': l.libro, Estado: l.estado, Observaciones: l.obs })), key: 'ID',
@@ -414,7 +428,7 @@ function dlgAyuda() {
     <p><b>Reuniones.</b> Cada tarjeta muestra los datos, el orden del día, los asistentes y los acuerdos. «Planilla de asistencia» imprime la planilla para firmar. «Acta» y «Asistencia firmada» abren los documentos cuando están cargados.</p>
     <p><b>Programar una reunión (Administración).</b> «Programar reunión» la guarda como «Programada (convocada)» con fecha, horario, lugar y temas a tratar. Aparece en la agenda de la pantalla de inicio de quienes la pueden ver. Si está tildado «Avisar por mail», al guardar sale la convocatoria y el día anterior (24 h antes) el recordatorio, desde belenpellegrini.hys@gmail.com y en copia oculta: COE interno, a los integrantes internos del órgano; COE externo, a todos sus integrantes; otra reunión, a los convocados que se tilden. Se usan los correos de cada ficha (institucional; si no hay, el personal). Si se cambia la fecha, el horario o el lugar, sale un aviso de cambio. Después de la reunión se edita, se pasa a «Realizada» y se marca la asistencia.</p>
     <p><b>Acuerdos y tareas.</b> Todos los acuerdos de las reuniones que ves, con responsable, plazo y estado. Podés filtrar por estado o buscar por texto.</p>
-    <p><b>Documentos.</b> Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
+    <p><b>Documentos.</b> Están ordenados por sección: internos (A Administrativos, B Derivación y traslados, C Instituciones receptoras, D Albergues, E Medios de traslado, F Contactos y responsables, G Pacientes con requerimientos especiales, H Alerta, activación y comunicación, I Población a cargo, J Servicios esenciales y continuidad, K Seguridad del personal, L Capacitación y simulacros, M Después del evento) y anexos. Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
     <p><b>Establecimientos.</b> Registro único de la red. Los datos que faltan figuran como «s/d (revisar)».</p>
     <p><b>Necesidades especiales.</b> Si tu acceso lo permite, ves cantidades de pacientes por ciudad, tipo y zona. Nunca datos personales.</p>
     <p><b>Comentar.</b> Si tu acceso lo permite, el botón «Comentar» de arriba deja una observación sobre STAR-H o PHR sin modificar lo cargado.</p>
@@ -424,7 +438,7 @@ function dlgAyuda() {
     <p><b>Dónde están los datos.</b> En el libro de la app: hojas ORGANOS, INTEGRANTES, PERMISOS, LUGARES, ENLACES, DOCUMENTOS, REUNIONES, ASISTENCIA, ACUERDOS y COMENTARIOS. Todo se puede editar también desde Sheets (respetar los encabezados de la fila 1).</p>
     <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COE completo o COE interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
     <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COE, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
-    <p><b>Documentos.</b> «Agregar»: clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos.</p>
+    <p><b>Documentos.</b> «Agregar»: sección (A a M o Anexos; se guarda en DOCUMENTOS › «Sección» y coincide con las subcarpetas 06.A a 06.M y 06.Z de Drive), clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos.</p>
     <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COE o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
     <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos.</p>
     <p><b>Necesidades especiales.</b> Un libro por ciudad del Área Programática Trelew en la carpeta 08 (confidencial); el enlace va en LUGARES, en cada establecimiento de esa ciudad (HZT y HMH → Trelew). Para dar acceso a una sola ciudad: Accesos › Pacientes y, en la hoja PERMISOS, tipo «Localidad» con la ciudad. La pestaña muestra solo cantidades. Quién la ve: lista cerrada en Accesos › Pacientes (nunca externos). Compartir cada libro con las cuentas que cargan es manual, desde Drive, persona por persona.</p>
