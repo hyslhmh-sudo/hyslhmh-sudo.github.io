@@ -145,8 +145,16 @@ function calcular(r) {
 const LUZ = { rojo: ['#C62828', 'Requiere atención'], amarillo: ['#F57C00', 'Con alertas'], verde: ['#1E7B4B', 'En marcha'], gris: ['#6B7A90', 'Sin tareas cargadas'] };
 
 /* ---------- vistas ---------- */
+const CONTROL_EN_REVISION = true; // poner false para volver a mostrarlo a los usuarios habilitados (también en index.html)
 function render() {
   if (!S.sesion.token()) return vistaIngreso();
+  // 13/11/2026 · Tablero EN REVISIÓN (Belén): mientras CONTROL_EN_REVISION sea true, solo lo ve Administración.
+  const yo = S.sesion.usuario() || {};
+  if (CONTROL_EN_REVISION && yo.rol !== 'Administración') {
+    ['#bAct', '#bImp', '#bWord'].forEach(s => { const b = $(s); if (b) b.classList.add('oculto'); });
+    app.innerHTML = `<div class="tarjeta vacio"><span class="ms" style="font-size:40px;color:var(--tenue)">construction</span><p><b>El tablero de control está en revisión.</b></p><p class="sub">Vuelve a estar disponible en unos días.</p><a class="btn sec" href="index.html">Volver al inicio</a></div>`;
+    return;
+  }
   if (!datos) return;
   const vis = datos.proyectos || [];
   $('#bAct').classList.remove('oculto');

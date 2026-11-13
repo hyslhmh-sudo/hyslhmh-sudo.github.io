@@ -343,6 +343,9 @@ async function agenda(u, admin) {
 // y los dos anteriores. Para sumar uno nuevo alcanza con subirlo a 06.Z.1 y agregar su fila en DOCUMENTOS.
 const BO_CARPETA = 'https://drive.google.com/drive/folders/1XndDynIJ5vz9F_cSDmVs564wnshOJwKv';
 let BO_TK = '';
+// 13/11/2026 · Tablero de control EN REVISIÓN (Belén: «desactivarlo en vista para poder arreglarlo este finde»): solo lo ve Administración.
+// Para volver a mostrarlo a los usuarios habilitados, poner false (acá y en control.html).
+const CONTROL_EN_REVISION = true;
 function boFecha(s) { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : 0; }
 function boletinesHtml(docs) {
   const L = (docs || []).filter(d => /^Z/.test(d['Sección'] || '') && /^(Bolet[ií]n El Niño|Pronóstico clim[aá]tico)/i.test(d['Título'] || '') && d.Enlace)
@@ -392,7 +395,7 @@ function pintar() {
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k] }) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
-  const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || u.tablero)) : (admin || VIS.indexOf(m.k) >= 0)));
+  const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
   agenda(u, admin);
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
