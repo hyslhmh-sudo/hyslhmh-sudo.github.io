@@ -358,6 +358,11 @@ function pintar() {
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || u.tablero)) : (admin || VIS.indexOf(m.k) >= 0)));
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
   agenda(u, admin);
+  // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
+  if (u && !admin && u.habilitadoDesde) {
+    $('#rejilla').innerHTML = `<div class="tarjeta" style="padding:18px 20px"><b>Tu acceso se habilita el ${E(u.habilitadoDesde)} h.</b><p style="margin:.5em 0 0">Hasta entonces solo podés completar <b>Mis datos</b> (tocá tu nombre, arriba). Las secciones de la app se van a ver a partir de esa fecha.</p></div>`;
+    return;
+  }
   $('#rejilla').innerHTML = fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
 }
 $('#fIng').addEventListener('submit', async ev => {
