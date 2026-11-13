@@ -401,3 +401,58 @@
   function iniciar() { pedir(); new MutationObserver(pedir).observe(document.body, { childList: true, subtree: true }); addEventListener('resize', () => { document.querySelectorAll('.tfija').forEach(w => w.classList.toggle('tfija-x', w.scrollWidth > w.clientWidth + 2)); }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
+
+/* 13/11/2026 · Fechas y horarios estandarizados en toda la app (pedido de Belén):
+ * todo campo de fecha se elige con calendario y se guarda dd/mm/aaaa, solo años 2026 y 2027 (salvo fechas de nacimiento);
+ * todo campo de horario se elige con reloj y se guarda HH:MM (o «HH:MM a HH:MM h» si se carga el fin).
+ * El campo original queda oculto con su nombre y su valor: los formularios y el servidor no cambian. */
+(function () {
+  'use strict';
+  if (typeof document === 'undefined') return;
+  const MIN = '2026-01-01', MAX = '2027-12-31';
+  const css = `.fx-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.fx-wrap input{flex:1 1 140px;min-width:0}
+.fx-wrap .fx-a{flex:0 0 auto;font-size:12px;color:#4B5B73}.fx-prev{display:block;font-size:11.5px;color:#6B7A90;margin-top:3px}`;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  const etiqueta = i => { const l = i.closest('label'); if (l) { const s = l.querySelector('span'); return (s ? s.textContent : l.textContent) || ''; } if (i.id) { const l2 = document.querySelector('label[for="' + i.id + '"]'); if (l2) return l2.textContent; } return ''; };
+  const esTexto = i => i.tagName === 'INPUT' && (!i.getAttribute('type') || i.type === 'text') && !i.dataset.fx && !i.readOnly && !i.closest('[data-sinfx]');
+  const esFecha = (i, t) => /dd\/mm\/aaaa/i.test(i.placeholder || '') || /\bfecha\b|\(dd\/mm|vencim|fecha comprometida/i.test(t) || /^(fecha|desde|hasta)$/i.test(i.name || '') || /fecha/i.test(i.name || '');
+  const esHora = (i, t) => /^\s*(horario|hora)\b/i.test(t) || /^(horario|hora)$/i.test(i.name || '');
+  const aISO = v => { const m = String(v || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) : ''; };
+  const deISO = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; };
+  const aviso = (orig, w, ok) => { const v = (orig.value || '').trim(); if (v && !ok) { const p = document.createElement('span'); p.className = 'fx-prev'; p.textContent = 'Valor cargado: ' + v + ' (elegí uno nuevo para reemplazarlo)'; w.appendChild(p); } };
+  const avisar = el => { el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); };
+  function fecha(i, t) {
+    const libre = /nacim/i.test(t) || i.dataset.fechaLibre;
+    const w = document.createElement('span'); w.className = 'fx-wrap';
+    const d = document.createElement('input'); d.type = 'date'; d.dataset.fx = '1'; if (!libre) { d.min = MIN; d.max = MAX; }
+    d.value = aISO(i.value); d.required = i.required; d.disabled = i.disabled; d.title = libre ? 'Elegí la fecha' : 'Elegí la fecha (años 2026 o 2027)';
+    i.dataset.fx = '1'; i.required = false; i.style.display = 'none'; i.parentNode.insertBefore(w, i); w.appendChild(d); w.appendChild(i);
+    aviso(i, w, !!d.value);
+    d.addEventListener('change', () => { i.value = deISO(d.value); const p = w.querySelector('.fx-prev'); if (p) p.remove(); avisar(i); });
+    new MutationObserver(() => { d.disabled = i.disabled; }).observe(i, { attributes: true, attributeFilter: ['disabled'] });
+  }
+  function hora(i) {
+    const m = String(i.value || '').trim().match(/^(\d{1,2})[:.](\d{2})(?:\s*(?:a|-|–)\s*(\d{1,2})[:.](\d{2}))?\s*(?:h|hs)?\.?$/i) || String(i.value || '').trim().match(/^(\d{1,2})\s*(?:h|hs)\.?$/i);
+    const w = document.createElement('span'); w.className = 'fx-wrap';
+    const a = document.createElement('input'); a.type = 'time'; a.dataset.fx = '1'; a.title = 'Hora de inicio';
+    const sep = document.createElement('span'); sep.className = 'fx-a'; sep.textContent = 'a';
+    const b = document.createElement('input'); b.type = 'time'; b.dataset.fx = '1'; b.title = 'Hora de fin (optativa)';
+    const dd = n => ('0' + n).slice(-2);
+    if (m) { a.value = dd(m[1]) + ':' + (m[2] && /^\d{2}$/.test(m[2]) ? m[2] : '00'); if (m[3]) b.value = dd(m[3]) + ':' + m[4]; }
+    a.required = i.required; a.disabled = b.disabled = i.disabled;
+    i.dataset.fx = '1'; i.required = false; i.style.display = 'none'; i.parentNode.insertBefore(w, i); w.appendChild(a); w.appendChild(sep); w.appendChild(b); w.appendChild(i);
+    aviso(i, w, !!m);
+    const sync = () => { i.value = a.value ? (b.value ? a.value + ' a ' + b.value + ' h' : a.value) : ''; const p = w.querySelector('.fx-prev'); if (p) p.remove(); avisar(i); };
+    a.addEventListener('change', sync); b.addEventListener('change', sync);
+  }
+  function revisar() {
+    document.querySelectorAll('input').forEach(i => {
+      if (!esTexto(i) || !i.parentNode || i.offsetParent === null && i.style.display === 'none') return;
+      const t = etiqueta(i);
+      try { if (esHora(i, t)) hora(i); else if (esFecha(i, t)) fecha(i, t); } catch (e) { /* nunca rompe la app */ }
+    });
+  }
+  let pend = false; const pedir = () => { if (pend) return; pend = true; setTimeout(() => { pend = false; revisar(); }, 50); };
+  function iniciar() { pedir(); new MutationObserver(pedir).observe(document.body, { childList: true, subtree: true }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+})();

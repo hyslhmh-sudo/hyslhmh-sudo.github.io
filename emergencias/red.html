@@ -242,6 +242,12 @@ function vEnlaces() {
 
 /* ---------- Diálogos (Administración) ---------- */
 const dlg = $('#dlg');
+// N.º de reunión propuesto: si se cambia el órgano en una reunión nueva, se vuelve a proponer (salvo que se haya escrito a mano).
+dlg.addEventListener('input', ev => { if (ev.target.name === 'num') ev.target.dataset.mano = '1'; });
+dlg.addEventListener('change', ev => {
+  if (ev.target.name !== 'organo' || /^Editar/.test((dlg.querySelector('.dlg-cab b') || {}).textContent || '')) return;
+  const n = dlg.querySelector('input[name="num"]'); if (n && !n.dataset.mano) n.value = numSig(ev.target.value);
+});
 const campo = (n, t, v, tipo) => `<label class="campo"><span>${t}</span>${tipo === 'area' ? `<textarea name="${n}">${E(v || '')}</textarea>` : `<input name="${n}" value="${E(v || '')}" ${tipo ? 'type="' + tipo + '"' : ''}>`}</label>`;
 const selC = (n, t, v, arr) => `<label class="campo"><span>${t}</span><select name="${n}">${arr.map(x => { const val = Array.isArray(x) ? x[0] : x, lab = Array.isArray(x) ? x[1] : x; return `<option value="${E(val)}" ${val === v ? 'selected' : ''}>${E(lab)}</option>`; }).join('')}</select></label>`;
 function abrir(titulo, cuerpo, pie) {
@@ -249,6 +255,19 @@ function abrir(titulo, cuerpo, pie) {
   dlg.showModal();
 }
 
+// 13/11/2026 · N.º de reunión: se propone el siguiente al último registrado del mismo órgano en el año en curso, con el año cargado (N/AAAA).
+function numSig(org) {
+  const anio = String(new Date().getFullYear());
+  let max = 0;
+  (D.reuniones || []).forEach(x => {
+    if (org && x['Órgano'] !== org) return;
+    const n = String(x['N.º'] || ''), m = n.match(/^\s*(\d+)\s*(?:\/\s*(\d{4}))?/);
+    if (!m) return;
+    const a = m[2] || ((String(x.Fecha || '').match(/(\d{4})\s*$/) || [])[1]) || anio;
+    if (a === anio) max = Math.max(max, +m[1]);
+  });
+  return (max + 1) + '/' + anio;
+}
 function dlgReunion(id, programar) {
   const r = id ? (D.reuniones || []).filter(x => x.ID === id)[0] : null;
   const asis = id ? (D.asistencia || []).filter(a => a['Reunión'] === id) : [];
@@ -258,7 +277,7 @@ function dlgReunion(id, programar) {
   abrir(r ? 'Editar reunión ' + r.ID : programar ? 'Programar reunión' : 'Cargar reunión realizada',
     `<div class="dos">${selC('organo', 'Órgano', org, (D.organos || []).map(o => [o.ID, o.Nombre]))}${selC('parte', 'Quiénes', parte, [['Interna (COE interno)', 'COE interno (solo parte interna)'], ['Completo', 'COE externo (completo: interno + externo)'], ['Otra reunión', 'Otra reunión (convocados que se tilden)']])}</div>
      <div class="dos">${campo('fecha', 'Fecha (dd/mm/aaaa) *', r ? r.Fecha : programar ? '' : new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }))}${campo('horario', 'Horario (p. ej. 9:00)', r && r.Horario)}</div>
-     <div class="dos">${campo('num', 'N.º de reunión o acta', r && r['N.º'])}${selC('tipo', 'Tipo', r ? r.Tipo : 'Ordinaria', ['Ordinaria', 'Extraordinaria', 'De trabajo'])}</div>
+     <div class="dos">${campo('num', 'N.º de reunión o acta (se propone el siguiente; corregible)', r ? r['N.º'] : numSig(org))}${selC('tipo', 'Tipo', r ? r.Tipo : 'Ordinaria', ['Ordinaria', 'Extraordinaria', 'De trabajo'])}</div>
      <div class="dos">${campo('lugar', 'Lugar o modalidad', r && r['Lugar o modalidad'])}${campo('coordino', 'Convocó · coordinó', r && r['Convocó · coordinó'])}</div>
      <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', estado0, [['Convocada', 'Programada (convocada)'], ['Realizada', 'Realizada'], ['Suspendida', 'Suspendida']])}</div>
      ${campo('orden', 'Orden del día · temas a tratar', r && r['Orden del día'], 'area')}
