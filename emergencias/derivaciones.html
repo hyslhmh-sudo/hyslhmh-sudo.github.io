@@ -900,7 +900,7 @@ const EST_AP = [['HZT', 'Hospital Zonal Trelew «Dr. Adolfo Margara»'], ['HMH',
 const estLista = () => (cat && cat.lugaresAP && cat.lugaresAP.length ? cat.lugaresAP : EST_AP);
 function estElegido() {
   let c = S.store.get('deriv.estImp', null);
-  if (c === null) { const mios = ((cat && cat.usuario && cat.usuario.estab) || []).map(x => String(x).toUpperCase()); const e = estLista().find(x => mios.indexOf(String(x.corto).toUpperCase()) >= 0); c = e ? e.corto : ''; }
+  if (c === null) { const mios = ((cat && cat.usuario && cat.usuario.estab) || []).map(x => String(x).toUpperCase()); const e = estLista().find(x => mios.indexOf(String(x.corto).toUpperCase()) >= 0 || mios.indexOf(String(x.nombre).toUpperCase()) >= 0); // en ACCESOS puede estar el código (HMH) o el nombre (Hospital Rural Camarones) c = e ? e.corto : ''; }
   return estLista().find(x => x.corto === c) || null;
 }
 function redImp() { const r = redVista(), e = estElegido(); return e ? Object.assign({}, r, { nombre: e.nombre, estImp: e }) : r; }
