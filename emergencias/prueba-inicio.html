@@ -387,6 +387,8 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 #alertasSmn .al-cab a .ms{color:#172B4D!important}
 #alertasSmn .al.Naranja{background:#E65100!important}
 #alertasSmn .al.Naranja details summary{color:#fff!important}
+.fila.sub .tj .tj-tab{color:var(--c)!important;border-color:var(--c)!important;background:#fff}
+.carpeta + .fila.sub + .carpeta,.fila.sub.oculto + .carpeta{margin-top:14px}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
@@ -430,9 +432,9 @@ const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 const BLANCO = '#FFFFFF';
 const MODS = [
   { k: 'control', grupo: 'ctrl', t: 'Tablero de control', r: 'Avance de tareas, vencimientos y acuerdos por proyecto.', d: 'Seguimiento por proyecto, solo lectura: avance de las tareas, vencimientos, reuniones y acuerdos, integrantes y funciones. Ves los proyectos que tenés habilitados.', ico: 'dashboard', href: 'control.html', flag: 'tablero', bg: 'linear-gradient(120deg,#0D313F 0%,#1B7A8C 100%)' },
-  { k: 'starh', grupo: 'relev', t: 'STAR-H', r: 'Riesgos por amenaza y por establecimiento.', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
-  { k: 'ish', grupo: 'relev', t: 'ISH', r: 'Seguridad hospitalaria (OPS/OMS 2018). Solo hospitales.', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
-  { k: 'phr', grupo: 'relev', t: 'PHR', r: 'Plan hospitalario de respuesta (OPS 2023).', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
+  { k: 'starh', grupo: 'relev', t: 'STAR-H', r: 'Riesgos por amenaza y por establecimiento.', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', c: '#2F5BEA', cc: '#E4EAFB', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
+  { k: 'ish', grupo: 'relev', t: 'ISH', r: 'Seguridad hospitalaria (OPS/OMS 2018). Solo hospitales.', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1689B8', cc: '#E1F1F8', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
+  { k: 'phr', grupo: 'relev', t: 'PHR', r: 'Plan hospitalario de respuesta (OPS 2023).', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#6A4FD8', cc: '#EEEAFD', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
   { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', r: 'Plan de Evacuación y Autoprotección y demás planes.', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
   { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COE', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
   { k: 'red', grupo: 'gest', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COE.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
@@ -676,8 +678,8 @@ function pintar() {
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
   // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COE, documentos y apoyo» es una tarjeta que se despliega
   // en el lugar y muestra sus tarjetas chicas. Se recuerda si quedó abierta (en este equipo).
-  const carpeta = (k, ico, tit, fn) => { const L = g(k); if (!L.length) return ''; const ab = !!S.store.get('inicio.abierta.' + k, false);
-    return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
+  const carpeta = (k, ico, tit, fn, bg) => { const L = g(k); if (!L.length) return ''; const ab = !!S.store.get('inicio.abierta.' + k, false);
+    return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"${bg ? ` style="background:${bg}!important"` : ''}><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
   agenda(u, admin);
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
@@ -692,7 +694,7 @@ function pintar() {
   // 13/11/2026 · Orden por urgencia: Respuesta → COE, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
   const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
   const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" ><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
-  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + fila('relev', 'assignment', 'Herramientas OPS/OMS', admin ? 'tres' : 'una', grande) + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
+  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + carpeta('relev', 'assignment', 'Herramientas OPS/OMS', chica, 'linear-gradient(120deg,#0B4F6C 0%,#1689B8 100%)') + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
