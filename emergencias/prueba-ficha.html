@@ -116,7 +116,7 @@ const SEC = [
     { k: 'edif', l: 'Edificios', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['CAPS', 'Puesto sanitario', 'Otro'] }, { k: 'nombre', l: 'Nombre' }, { k: 'dir', l: 'Dirección' }, { k: 'coord', l: 'Coordenadas' }, { k: 'horario', l: 'Horario' }, { k: 'resp', l: 'Responsable' }], add: 'Agregar edificio' } ] },
   { id: 's7', t: 'Personal', d: 'Quiénes responden', min: true, c: [
     { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
-    { k: 'turnos', l: 'Trabajadores por turno (escribir el nombre u horario del turno si es distinto)', t: 'rep', fijo: ['Mañana', 'Tarde', 'Noche'], cols: [{ k: 'quien', l: 'Turno' }, { k: 'trab', l: 'Trabajadores', t: 'n' }, { k: 'med', l: 'Médicos', t: 'n' }, { k: 'enf', l: 'Enfermeros', t: 'n' }], add: 'Agregar turno' },
+    { k: 'turnos', l: 'Trabajadores por turno (turno normal de 6 h o guardia de 12 o 24 h). Completar solo los horarios que usan; si tienen otro, cambiar el horario o agregarlo', t: 'rep', fijo: ['06 a 12 h', '12 a 18 h', '18 a 24 h', '24 a 06 h', '08 a 14 h', '14 a 20 h', 'Guardia de 12 h', 'Guardia de 24 h'], cols: [{ k: 'quien', l: 'Turno' }, { k: 'trab', l: 'Trabajadores', t: 'n' }, { k: 'med', l: 'Médicos', t: 'n' }, { k: 'enf', l: 'Enfermeros', t: 'n' }], add: 'Agregar otro horario' },
     { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
     { k: 'cadena', l: 'Cadena de llamadas (orden de aviso) · opcional', t: 'a', opt: true } ] },
   { id: 's8', t: 'Contactos de emergencia', d: 'Visibles solo para Administración, el referente y la parte interna del COEsp', min: true, c: [
@@ -157,7 +157,7 @@ const vacio = v => v == null || (Array.isArray(v) ? !v.some(f => f && typeof f =
 const esPre = k => { const p = PRE[estab]; return p && p[k] !== undefined && JSON.stringify(p[k]) === JSON.stringify(datos[k]); };
 const clave = e => 'prueba.ficha.' + e;
 let estab = S.store.get('prueba.ficha.estab', ESTAB[0]), datos = {};
-const leer = () => { datos = S.store.get(clave(estab), {}) || {}; const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
+const leer = () => { datos = S.store.get(clave(estab), {}) || {}; if (vacio(datos.turnos)) delete datos.turnos; const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
 const guardar = () => { datos._act = new Date().toISOString(); S.store.set(clave(estab), datos); progreso(); };
 const fechaAct = () => { if (!datos._act) return 'todavía no se cargó nada'; const d = new Date(datos._act); return 'última carga ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); };
 const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
