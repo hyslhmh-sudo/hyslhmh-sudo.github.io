@@ -490,6 +490,20 @@ async function abrirPerfil() {
     `<a class="pf-link" href="${E(d.u)}" target="_blank" rel="noopener"><span class="ms">${E(d.i)}</span><span><b>${E(d.t)}</b><span class="d">${E(d.d)}</span></span></a>`).join('')).join('') || '<p class="pf-nota">La hoja MIS DOCUMENTOS está vacía.</p>') +
     '<p class="pf-nota">Solo vos ves esta lista (sale de la hoja MIS DOCUMENTOS del libro). Los documentos están en tu Drive y siguen siendo privados. Todos en versión 0 hasta el alta.</p>';
   verComoArmar();
+  ingresosArmar();
+}
+// 14/11/2026 13:25 (Belén: «¿me decís si alguien entra?»). Mi perfil › Últimos ingresos: quién abrió la app (una vez por día) o ingresó
+// con usuario y clave. Sale de la hoja REGISTRO APP; no se cuentan tus propios ingresos ni el «Ver como».
+async function ingresosArmar() {
+  const caja = document.createElement('div'); caja.className = 'pf-vc';
+  caja.innerHTML = '<h3>Últimos ingresos</h3><p class="pf-nota">Cargando…</p>';
+  const vc = $('#pfCuerpo .pf-vc'); if (vc) vc.after(caja); else $('#pfCuerpo').prepend(caja);
+  try {
+    const r = await S.api('ultimos_ingresos'); if (!r.ok) throw r;
+    const P = r.personas || [];
+    caja.innerHTML = `<h3>Últimos ingresos</h3><p class="pf-nota" style="margin-top:0">Quién abrió la app (se anota una vez por día) o ingresó con usuario y clave. No cuenta tus propios ingresos.</p>`
+      + (P.length ? `<div style="max-height:240px;overflow:auto;border:1px solid #E4EAFB;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px">${P.map(p => `<tr><td style="padding:6px 10px;border-bottom:1px solid #EEF1F6"><b>${E(p.nombre)}</b></td><td style="padding:6px 10px;border-bottom:1px solid #EEF1F6;white-space:nowrap">${E(p.fecha)}</td><td style="padding:6px 10px;border-bottom:1px solid #EEF1F6;color:#6B7A90">${E(p.que)}</td></tr>`).join('')}</table></div>` : '<p class="pf-nota">Todavía no hay ingresos de otros usuarios registrados.</p>');
+  } catch (e) { caja.innerHTML = `<h3>Últimos ingresos</h3><p class="pf-nota">${E((e && (e.error || e.message)) || 'No se pudo traer.')}</p>`; }
 }
 /* 14/11/2026 · «Ver como» (Belén: «en mi perfil necesito seleccionar "ver como", así me muestra cómo ven la app los demás usuarios»).
  * Elegís un usuario y la app se muestra con sus permisos, en solo lectura (el servidor no deja cargar nada), durante 2 horas
@@ -777,7 +791,9 @@ function pintar() {
     return;
   }
   alertasSmn(u, admin); // 13/11/2026 · alertas del SMN para todos los que ingresan
-  if (S.notasBoton) S.notasBoton(); // 14/11/2026 · botón flotante de Notas rápidas (todas las páginas)
+  if (S.notasBoton) S.notasBoton();
+  // 14/11/2026 · «Abrió la app»: una vez por día y por equipo se avisa al servidor (que anota una vez por persona por día). No en «Ver como».
+  try { const hoy = new Date().toLocaleDateString('es-AR'), k = 'visita.' + hoy; if (!S.DEMO && !(S.sesion.enVista && S.sesion.enVista()) && !S.store.get(k, false)) S.api('visita', {}).then(r => { if (r && r.ok) S.store.set(k, true); }).catch(() => {}); } catch (e) {} // 14/11/2026 · botón flotante de Notas rápidas (todas las páginas)
   rutasDc(u); // 14/11/2026 · estado de rutas (Defensa Civil Chubut) para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   // 13/11/2026 · Orden por urgencia: Respuesta → COEsp, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
