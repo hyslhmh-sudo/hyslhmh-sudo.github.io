@@ -76,7 +76,7 @@ body{background:#F5F7FB}
 .toast{background:#172B4D;color:#F5F7FB;border-left:5px solid #2F5BEA}
 .grupo h2{color:#172B4D}
 li a{color:#172B4D;text-decoration:underline;text-decoration-color:#2F5BEA}
-.visor{position:fixed;inset:0;z-index:50;background:rgba(23,43,77,.92);display:none;flex-direction:column}.visor.abierto{display:flex}
+.visor{position:fixed;inset:0;z-index:50;background:#2B3A55;display:none;flex-direction:column}.visor.abierto{display:flex}
 .vbar{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;background:#172B4D;color:#fff}
 .vbar .vt{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vb{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.14);color:#fff}
@@ -216,7 +216,7 @@ async function leer(b) {
   const id = b.dataset.leer;
   if (!S.sesion.token() || S.DEMO) { alert('Para leer el documento tenés que iniciar sesión.'); return; }
   const v = visor(), cu = v.querySelector('.vcuerpo'), tit = b.dataset.tit || 'Documento';
-  v.dataset.id = id; v.querySelector('.vt').textContent = tit; cu.innerHTML = '<p class="vmsg">Abriendo el documento…</p>';
+  v.dataset.id = id; v.querySelector('.vt').textContent = tit; cu.innerHTML = '<p class="vmsg">Abriendo el documento… (la primera vez puede tardar unos segundos)</p>';
   v.classList.add('abierto'); document.body.style.overflow = 'hidden';
   try {
     const [r, lib] = await Promise.all([S.api('fuentes_archivo', { id: id, ver: true }, 180000), cargarPdfjs().catch(e => e)]);
