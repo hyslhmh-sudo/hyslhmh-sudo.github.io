@@ -95,9 +95,7 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 .grupo-tit::after{content:'';flex:1;height:1px;background:#DCE3EF}
 /* 13/11/2026 · Alertas del SMN (feed CAP oficial), para todos los que ingresan */
 #alertasSmn{margin:0 0 6px}
-/* 14/11/2026 · Notas rápidas: franja arriba de todo con lo pendiente para quien ingresó (sin avisos por mail). */
-#notasFr{display:flex;align-items:center;gap:10px;margin:0 0 10px;background:#FFF6EC;border:1.5px solid #F57C00;border-left:6px solid #F57C00;border-radius:14px;padding:10px 14px;color:#172B4D;text-decoration:none;font-size:14px}
-#notasFr.oculto{display:none}#notasFr .ms{color:#B35500;font-size:24px}#notasFr b{font-weight:800}#notasFr .t{flex:1}#notasFr small{display:block;color:#4B5B73;font-size:12px}
+
 /* 14/11/2026 · Estado de rutas (Defensa Civil Chubut) */
 #rutasDc{margin:0 0 10px}#rutasDc .rt{background:#fff;border:1.5px solid #DCE3EF;border-left:5px solid #2E7D32;border-radius:16px;padding:12px 14px;color:#172B4D}
 #rutasDc .rt.hay{border-left-color:#E67E00}#rutasDc .rt.corte{border-left-color:#C62828}
@@ -431,7 +429,6 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
     <button class="btn" type="submit"><span class="ms">login</span>Ingresar</button>
     <div class="msg oculto" id="msg"></div>
   </form>
-  <a id="notasFr" class="oculto" href="notas.html" aria-label="Notas rápidas pendientes"></a>
   <section id="alertasSmn" class="oculto" aria-label="Alertas del SMN"></section>
   <section id="rutasDc" class="oculto" aria-label="Estado de rutas · Defensa Civil Chubut"></section>
   <div id="arriba">
@@ -456,9 +453,8 @@ const MODS = [
   { k: 'ish', grupo: 'prep', t: 'ISH', r: 'Seguridad hospitalaria (OPS/OMS 2018). Solo hospitales.', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1689B8', cc: '#E1F1F8', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
   { k: 'phr', grupo: 'prep', t: 'PHR', r: 'Plan hospitalario de respuesta (OPS 2023).', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#6A4FD8', cc: '#EEEAFD', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
   { k: 'evac', grupo: 'resil', t: 'Gestión de contingencias', r: 'Plan de Evacuación y Autoprotección y demás planes.', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
-  // 14/11/2026 · Establecimientos · consolidado (solo lectura, todos) y Notas rápidas (las carga cualquier usuario, las ven todos).
+  // 14/11/2026 · Establecimientos · consolidado (solo lectura, todos). Notas rápidas: botón flotante en todas las páginas (starh.js).
   { k: 'estab', grupo: 'gem', t: 'Establecimientos · consolidado', r: 'Camas, personal, ambulancias y fichas del Área Programática Trelew.', d: 'Consolidado de solo lectura de los establecimientos del Área Programática Trelew (HZT, HMH, HSST, hospitales rurales y puestos sanitarios): camas por tipo de internación, personal, ambulancias, grupo electrógeno y estado de la ficha. Base orientadora; los datos se corrigen en la ficha o en las hojas del libro.', ico: 'domain', href: 'establecimientos.html', flag: null, bg: 'linear-gradient(120deg,#0B4F6C 0%,#1689B8 100%)' },
-  { k: 'notas', grupo: 'gem', t: 'Notas rápidas', r: 'Avisos breves entre usuarios: para leer, para responder o con una acción.', d: 'Cualquier usuario carga una nota; la ven todos. Se elige para quién es (todos o una o varias personas), el tipo (para leer, requiere respuesta o requiere acción) y la prioridad. Queda registrado quién, día y hora. Sin datos de pacientes.', ico: 'sticky_note_2', href: 'notas.html', flag: null, bg: 'linear-gradient(120deg,#8A4A00 0%,#F57C00 100%)' },
   { k: 'deriv', grupo: 'gem', t: 'Derivaciones y albergues · COEsp', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
   { k: 'red', grupo: 'gem', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COEsp.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
   { k: 'coe', grupo: 'gem', t: 'Integrantes y contactos del COEsp', r: 'Participantes, funciones y proyectos.', d: 'Centro de Operaciones de Emergencia de Salud Pública (OMS): participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
@@ -677,19 +673,6 @@ function rutasHtml(r) {
     ${cer.length || ext.length || pre.length ? `<p class="rt-res">${linea('Cerradas', cer, 'cerrada')}${linea('Extrema precaución', ext, 'extrema_precaucion')}${linea('Con precaución', pre, 'transitar_con_precaucion')}</p>` : ''}
     <p class="rt-pie">Zona: Área Programática Trelew, Puerto Madryn y RN 3.${r && r.consultado ? ' Consultado: ' + E(r.consultado) + '.' : ''}${r && r.error ? ' ' + E(r.error) : ''} El detalle de cada tramo, en el mapa.</p></div>`;
 }
-// 14/11/2026 · Notas rápidas: cuenta lo pendiente para quien ingresó (sin leer, acción sin hacer o respuesta pedida). Solo en la app, sin mails.
-async function notasFranja(u) {
-  const fr = $('#notasFr');
-  if (!u || S.DEMO) { fr.classList.add('oculto'); return; }
-  const pon = (n, urg) => { if (!n) { fr.classList.add('oculto'); return; } fr.innerHTML = `<span class="ms">sticky_note_2</span><span class="t"><b>Tenés ${n} nota${n > 1 ? 's' : ''} pendiente${n > 1 ? 's' : ''}</b>${urg ? ` · ${urg} urgente${urg > 1 ? 's' : ''}` : ''}<small>Notas rápidas: para leer, responder o con una acción. Tocá para verlas.</small></span><span class="ms">chevron_right</span>`; fr.classList.remove('oculto'); };
-  const c = S.store.get('notas.franja', null); if (c) pon(c.n, c.urg);
-  try {
-    const r = await S.api('notas_leer', {}); if (!r || !r.ok) return;
-    const yo = r.yo, dest = n => n.para === 'todos' || n.para.indexOf(yo) >= 0;
-    const P = r.notas.filter(n => n.estado === 'Abierta' && dest(n) && (!n.lect[yo] || (n.tipo === 'Requiere acción' && !n.hechos[yo]) || (n.tipo === 'Requiere respuesta' && !n.resp.some(x => x.uid === yo))));
-    const o = { n: P.length, urg: P.filter(n => n.prioridad === 'Urgente').length }; S.store.set('notas.franja', o); pon(o.n, o.urg);
-  } catch (e) {}
-}
 async function rutasDc(u) {
   const box = $('#rutasDc');
   if (!u || S.DEMO) { box.classList.add('oculto'); RUT_TK = ''; return; }
@@ -764,7 +747,7 @@ function pintar() {
   // 14/11/2026 · Ficha del establecimiento: la ven Administración y los referentes de los rurales (establecimiento en ACCESOS).
   const RURALES = ['HOSPITAL RURAL GAIMAN', 'HOSPITAL RURAL DOLAVON', 'HOSPITAL RURAL LAS PLUMAS', 'HOSPITAL RURAL PASO DE INDIOS', 'HOSPITAL RURAL CAMARONES', 'PUESTO SANITARIO 28 DE JULIO', 'PUESTO SANITARIO DIQUE FLORENTINO AMEGHINO'];
   const esReferenteRural = !!(u && (u.estab || []).some(e => RURALES.indexOf(String(e).toUpperCase()) >= 0));
-  const VIS = !u ? [] : ['phr', 'estab', 'notas', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []).concat(esReferenteRural ? ['ficha'] : []);
+  const VIS = !u ? [] : ['phr', 'estab', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []).concat(esReferenteRural ? ['ficha'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COEsp, documentos y apoyo».
   const CTRL_CHICO = { grupo: 'gem', t: 'Tablero de control (en revisión)', c: '#1B7A8C', cc: '#E0F2F4' };
@@ -782,12 +765,12 @@ function pintar() {
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
   if (u && !admin && u.habilitadoDesde) {
     $('#boletines').classList.add('oculto');
-    $('#alertasSmn').classList.add('oculto'); $('#rutasDc').classList.add('oculto'); $('#notasFr').classList.add('oculto');
+    $('#alertasSmn').classList.add('oculto'); $('#rutasDc').classList.add('oculto');
     $('#rejilla').innerHTML = `<div class="tarjeta" style="padding:18px 20px"><b>Tu acceso se habilita el ${E(u.habilitadoDesde)} h.</b><p style="margin:.5em 0 0">Hasta entonces solo podés completar <b>Mis datos</b> (tocá tu nombre, arriba). Las secciones de la app se van a ver a partir de esa fecha.</p></div>`;
     return;
   }
   alertasSmn(u, admin); // 13/11/2026 · alertas del SMN para todos los que ingresan
-  notasFranja(u); // 14/11/2026 · notas rápidas pendientes para quien ingresó
+  if (S.notasBoton) S.notasBoton(); // 14/11/2026 · botón flotante de Notas rápidas (todas las páginas)
   rutasDc(u); // 14/11/2026 · estado de rutas (Defensa Civil Chubut) para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   // 13/11/2026 · Orden por urgencia: Respuesta → COEsp, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
@@ -806,8 +789,8 @@ $('#fIng').addEventListener('submit', async ev => {
 });
 $('#rejilla').addEventListener('click', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp) { abrirCarpeta(cp); return; } const i = ev.target.closest('.info'); if (i) { ev.stopPropagation(); const c = i.closest('[data-href]'); if (c) c.classList.toggle('ver'); return; } const a = ev.target.closest('a'); const t = ev.target.closest('[data-href]'); if (a) { if (t) recordar(t.dataset.k); return; } if (t) { recordar(t.dataset.k); location.href = t.dataset.href; } });
 $('#rejilla').addEventListener('keydown', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirCarpeta(cp); return; } if (ev.target.closest('.info')) return; const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); recordar(t.dataset.k); location.href = t.dataset.href; } });
-$('#btnSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
-$('#mdSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
+$('#btnSalir').addEventListener('click', () => { const fb = document.getElementById('fabNotas'); if (fb) fb.remove(); cerrarDatos(); S.sesion.cerrar(); pintar(); });
+$('#mdSalir').addEventListener('click', () => { const fb = document.getElementById('fabNotas'); if (fb) fb.remove(); cerrarDatos(); S.sesion.cerrar(); pintar(); });
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 pintar();
 })();

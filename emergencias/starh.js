@@ -498,3 +498,48 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', poner); else poner();
 })();
+
+/* 14/11/2026 12:31 · Notas rápidas (Belén: «debería aparecer en todas las pantallas; no va adentro de la caja 2 · Gestión de la
+   emergencia, sino un botón visible pero sin ocupar demasiado espacio»). Botón flotante chico abajo a la derecha, en todas las
+   páginas con sesión iniciada, con el número de notas pendientes para quien ingresó. No manda mails ni avisos. No se imprime. */
+(function () {
+  if (typeof document === 'undefined' || !window.STARH || STARH.DEMO) return;
+  var S = STARH;
+  function pendientes(r) {
+    var yo = r.yo, P = (r.notas || []).filter(function (n) {
+      var dest = n.para === 'todos' || (n.para || []).indexOf(yo) >= 0;
+      return n.estado === 'Abierta' && dest && (!n.lect[yo] || (n.tipo === 'Requiere acción' && !n.hechos[yo]) || (n.tipo === 'Requiere respuesta' && !(n.resp || []).some(function (x) { return x.uid === yo; })));
+    });
+    return { n: P.length, urg: P.filter(function (n) { return n.prioridad === 'Urgente'; }).length, t: Date.now(), tk: S.sesion.token() };
+  }
+  function pintar(b, o) {
+    var n = o && o.n || 0, bg = b.querySelector('b');
+    bg.textContent = n > 99 ? '99+' : String(n); bg.style.display = n ? 'inline-block' : 'none';
+    bg.style.background = o && o.urg ? '#C62828' : '#F57C00';
+    b.title = n ? 'Notas rápidas: ' + n + ' pendiente' + (n > 1 ? 's' : '') + (o.urg ? ' (' + o.urg + ' urgente' + (o.urg > 1 ? 's' : '') + ')' : '') : 'Notas rápidas';
+    b.setAttribute('aria-label', b.title);
+  }
+  function poner() {
+    if (!S.sesion.token() || document.getElementById('fabNotas')) return;
+    var u = S.sesion.usuario() || {};
+    if (u.habilitadoDesde && u.rol !== 'Administración') return;
+    var aqui = /notas\.html$/.test(location.pathname);
+    var st = document.createElement('style');
+    st.textContent = '#fabNotas{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 12px;border-radius:999px;border:0;background:#172B4D;color:#fff;font:700 13px/1 "Plus Jakarta Sans",system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(23,43,77,.35);cursor:pointer}'
+      + '#fabNotas:hover{background:#2F5BEA}#fabNotas svg{width:20px;height:20px;fill:currentColor}#fabNotas b{min-width:20px;height:20px;line-height:20px;padding:0 6px;border-radius:999px;color:#fff;font-size:11.5px;text-align:center}'
+      + 'body.con-fab{padding-bottom:64px}#fabNotas.aqui{display:none}@media(max-width:520px){#fabNotas .t{display:none}#fabNotas{padding:0 10px}}@media print{#fabNotas{display:none!important}}';
+    document.head.appendChild(st);
+    var b = document.createElement('a');
+    b.id = 'fabNotas'; b.href = 'notas.html'; b.className = 'no-imp' + (aqui ? ' aqui' : '');
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v9.6L14.6 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h8v-5a1 1 0 0 1 1-1h5V5H5Zm10 10v3.2l3.2-3.2H15ZM7 7h10v2H7V7Zm0 4h10v2H7v-2Zm0 4h5v2H7v-2Z"/></svg><span class="t">Notas</span><b style="display:none"></b>';
+    document.body.appendChild(b); if (!aqui) document.body.classList.add('con-fab');
+    var c = S.store.get('notas.franja', null);
+    if (c && c.tk === S.sesion.token()) pintar(b, c);
+    // Se consulta al servidor como mucho cada 3 minutos (o siempre en el inicio y en Notas).
+    var viejo = !c || c.tk !== S.sesion.token() || Date.now() - (c.t || 0) > 180000 || /(index\.html|\/)$/.test(location.pathname) || aqui;
+    if (viejo && navigator.onLine) S.api('notas_leer', {}).then(function (r) { if (r && r.ok) { var o = pendientes(r); S.store.set('notas.franja', o); pintar(b, o); } }).catch(function () {});
+  }
+  S.notasBoton = poner; S.notasPendientes = pendientes;
+  window.addEventListener('notas:cambio', function () { var b = document.getElementById('fabNotas'); var c = S.store.get('notas.franja', null); if (b && c) pintar(b, c); });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', poner); else poner();
+})();

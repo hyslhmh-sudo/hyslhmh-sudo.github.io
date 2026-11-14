@@ -143,7 +143,7 @@ function notaHtml(n) {
     <div class="acc">${acciones}</div><div class="inline oculto" data-in="${E(n.id)}"></div></article>`;
 }
 async function cargar(msg) {
-  try { const r = await S.api('notas_leer', { archivo: archivo }); if (!r || !r.ok) throw r; D = r; S.store.set('notas.pend', D.notas.filter(pendiente).length); pintar(); if (msg) { const n = document.getElementById('n-' + msg); if (n) n.scrollIntoView({ block: 'center' }); } }
+  try { const r = await S.api('notas_leer', { archivo: archivo }); if (!r || !r.ok) throw r; D = r; if (S.notasPendientes) { S.store.set('notas.franja', S.notasPendientes(D)); window.dispatchEvent(new Event('notas:cambio')); } pintar(); if (msg) { const n = document.getElementById('n-' + msg); if (n) n.scrollIntoView({ block: 'center' }); } }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudieron cargar las notas.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión.')}</div>`; }
 }
 async function marcar(id, que, texto, b) {
