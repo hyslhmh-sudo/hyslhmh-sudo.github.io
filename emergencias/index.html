@@ -615,17 +615,21 @@ function boletinesHtml(docs) {
   }
   const u = L.find(d => /^Bolet[ií]n/i.test(d['Título'] || '')) || L[0];
   const corto = d => { const n = String(d['Título'] || '').match(/N\.?º\s*\d+/i); return n ? 'Boletín El Niño ' + n[0] : String(d['Título'] || '').split(' · ')[0]; };
-  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines y embalse</b><a href="red.html" title="Todos en COEsp › Documentos › Anexos"><span class="ms">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Boletines</a><a href="${E(BO_CARPETA_EMB)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Embalse</a></div>
+  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines y embalse</b><a href="fuentes.html#sub-boletines-y-partes-de-monitoreo" title="Todos en Fuentes › Boletines y partes de monitoreo"><span class="ms">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Boletines</a><a href="${E(BO_CARPETA_EMB)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Embalse</a></div>
     <div class="bo-fila">${u ? `<a class="bo-ult" href="${E(u.Enlace)}" target="_blank" rel="noopener" title="${E(u['Título'])}"><span class="ms">description</span><span class="t"><b>${E(corto(u))}</b><small>Último publicado · ${E(u.Fecha || 's/d')}</small></span><span class="ms ab">open_in_new</span></a>` : ''}${emb}</div>`;
 }
 async function boletines(u) {
   const box = $('#boletines');
   if (!u || S.DEMO) { box.classList.add('oculto'); BO_TK = ''; return; }
-  const c = S.store.get('red.cat', null), pon = docs => { const x = boletinesHtml(docs); box.innerHTML = x; box.classList.toggle('oculto', !x); };
-  if (c && c.documentos) pon(c.documentos);
+  // 14/11/2026 · Los boletines y partes pasaron de Documentos › Anexos a Fuentes › «Boletines y partes de monitoreo» (Belén: «son info que va en Fuentes»).
+  // Se leen de la acción fuentes y se adaptan a la forma que espera boletinesHtml. Abren el archivo (Administración) o la página Fuentes.
+  const aDocs = f => (f || []).filter(x => x.subtema === 'Boletines y partes de monitoreo').map(x => ({ 'Sección': 'Z', 'Título': String(x.cita || '').replace(/^.*?\.\s+(?=(Bolet|Pron|Parte))/, ''),
+    Fecha: (String(x.cita || '').match(/(\d{1,2}\/\d{1,2}\/\d{4})\.?\s*$/) || [])[1] || '', Enlace: x.archivo || 'fuentes.html#sub-boletines-y-partes-de-monitoreo' }));
+  const c = S.store.get('fuentes.bo', null), pon = f => { const x = boletinesHtml(aDocs(f)); box.innerHTML = x; box.classList.toggle('oculto', !x); };
+  if (c) pon(c);
   if (BO_TK === S.sesion.token() || !navigator.onLine) return;
   BO_TK = S.sesion.token();
-  try { const r = await S.api('red_catalogo', {}, 60000); if (!r.ok) throw r; S.store.set('red.cat', r); pon(r.documentos); }
+  try { const r = await S.api('fuentes', {}, 60000); if (!r.ok) throw r; S.store.set('fuentes.bo', r.fuentes); pon(r.fuentes); }
   catch (e) { if (!c) box.classList.add('oculto'); }
 }
 // 13/11/2026 · Alertas del SMN (Belén: «que esta app trabaje con smn.gob.ar/alertas»; las ven todos y se guarda el historial).
