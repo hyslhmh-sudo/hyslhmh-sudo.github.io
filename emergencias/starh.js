@@ -26,7 +26,7 @@
 
   /* ---------- llamada al servidor ---------- */
   async function api(accion, datos, ms) {
-    const cuerpo = Object.assign({ accion: accion, token: store.get(DEMO ? 'demo.token' : 'token', '') }, datos || {});
+    const cuerpo = Object.assign({ accion: accion, token: DEMO ? store.get('demo.token', '') : (store.get('vista.token', '') || store.get('token', '')) }, datos || {}); // 14/11/2026 · «Ver como» usa el token de la vista
     if (DEMO) return Demo.atender(cuerpo);
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), ms || 45000);
