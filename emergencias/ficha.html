@@ -171,7 +171,7 @@ const esPre = k => { if (window.__blanco) return false; const p = PRE[estab]; re
 // 14/11/2026 · Ficha real: se lee y se guarda en el libro (hoja FICHA ESTAB) con las acciones ficha_leer y ficha_guardar.
 let estab = '', datos = {}, srv = { datos: {}, puede: false, establecimientos: ESTAB, mios: [], actualizado: '' }, pend = {}, tGuardar = null;
 const leer = () => { if (window.__blanco) { datos = {}; return; } datos = JSON.parse(JSON.stringify(Object.assign({}, srv.datos || {}, pend || {}))); if (datos.camas) datos.camas = homogeneizar(datos.camas); const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
-const COLA = () => 'ficha.cola.' + estab;
+const COLA = () => 'ficha.' + estab + '.cola'; // termina en «.cola»: se conserva al salir (starh.js)
 const estado = (t, mal) => { const el = document.getElementById('estadoG'); if (el) { el.textContent = t; el.className = 'estadoG' + (mal ? ' mal' : ''); } };
 // Cada cambio queda pendiente (también en este equipo, por si se corta la conexión) y se envía al rato de dejar de escribir.
 const marcar = k => { if (!srv.puede || !k) return; pend[k] = datos[k]; S.store.set(COLA(), pend); estado('Guardando…'); clearTimeout(tGuardar); tGuardar = setTimeout(enviar, 1200); progreso(); };
@@ -187,7 +187,7 @@ async function enviar() {
 async function cargar(est) {
   app.innerHTML = '<p class="pie">Cargando la ficha…</p>';
   try { const r = await S.api('ficha_leer', { est: est || '' }); if (!r.ok) throw r;
-    srv = r; estab = r.est; pend = S.store.get('ficha.cola.' + estab, {}) || {};
+    srv = r; estab = r.est; pend = S.store.get(COLA(), {}) || {};
     if (Object.keys(pend).length && srv.puede) { Object.assign(srv.datos, pend); setTimeout(enviar, 400); }
     S.store.set('ficha.estab', estab); pintar(); }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudo abrir la ficha.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`; }

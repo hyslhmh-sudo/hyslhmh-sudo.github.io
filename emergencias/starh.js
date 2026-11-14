@@ -64,7 +64,8 @@
     verComo(token, usuario) { limpiarCopias(false); store.set('vista.token', token); store.set('vista.usuario', usuario); },
     salirVista() { store.del('vista.token'); store.del('vista.usuario'); limpiarCopias(false); },
     enVista() { return !DEMO && !!store.get('vista.token', ''); },
-    hayPendientes() { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.indexOf(PREF) !== 0) continue; const c = k.slice(PREF.length); if (/(^|\.)cola$|^datosPend\./.test(c)) { const v = localStorage.getItem(k); if (v && v !== '[]' && v !== '{}' && v !== 'null') return true; } } } catch (e) {} return false; },
+    // Cambios cargados en este equipo que todavía no se enviaron (colas de STAR-H, PHR, ISH, ficha, etc.). «datosPend» no cuenta: solo marca si «Mis datos» está incompleto.
+    hayPendientes() { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.indexOf(PREF) !== 0) continue; const c = k.slice(PREF.length); if (/^demo\./.test(c) || !/(^|\.)cola(\.|$)/.test(c)) continue; let v = null; try { v = JSON.parse(localStorage.getItem(k)); } catch (e) {} if (Array.isArray(v) ? v.length : (v && typeof v === 'object' ? Object.keys(v).length : false)) return true; } } catch (e) {} return false; },
     guardar(token, usuario) {
       if (!DEMO) { const id = idUsuario(usuario); if (store.get('dueno', '') !== id) limpiarCopias(true); store.set('dueno', id); }
       store.set(DEMO ? 'demo.token' : 'token', token); store.set(DEMO ? 'demo.usuario' : 'usuario', usuario);
