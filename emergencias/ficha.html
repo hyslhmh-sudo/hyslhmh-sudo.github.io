@@ -115,7 +115,7 @@ const SEC = [
     { k: 'camas_obs', l: 'Aclaraciones sobre las camas (por ejemplo, qué es «Otra» o camas que cambian de uso)', t: 't', opt: true },
     { k: 'cam_guardia', l: 'Camas o camillas de guardia (cantidad)', t: 'n' },
     { k: 'arm', l: 'Respiradores (ARM / AVM): uno por fila, con su estado. Si no tiene, dejar vacío', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Fijo', 'De traslado', 'No sabe'] }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar respirador' },
-    { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Identificación (n.º interno o dominio)' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
+    { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Patente' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
     { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
   { id: 's5', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
