@@ -111,6 +111,38 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #alertasSmn .al-ok{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #DCE3EF;border-radius:14px;padding:9px 12px;font-size:13px;color:#3D4B61}
 #alertasSmn .al-ok .ms{color:#2E7D32;font-size:20px}
 #alertasSmn .al-ok.err .ms{color:#B35C00}
+/* 13/11/2026 · Inicio compacto */
+.fila.dos{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:640px){.fila.dos{grid-template-columns:1fr}}
+.mod{min-height:0!important;padding:16px 18px 14px!important}
+.mod.ancho{padding:16px 20px!important;gap:14px!important}
+.mod.ancho .ico{width:52px!important;height:52px!important}.mod.ancho .ico .ms{font-size:30px!important}
+.mod b,.mod.ancho b{font-size:18px!important;display:flex;align-items:center;gap:6px}
+.mod .fantasma{font-size:96px!important;bottom:-18px!important}
+.mod p.largo,.chica span.d.largo{display:none}
+.mod.ver p.corto,.chica.ver span.d.corto{display:none}
+.mod.ver p.largo,.chica.ver span.d.largo{display:block}
+.chica{align-items:center}
+.mod p.corto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 0 auto}
+.info{border:0;background:transparent;color:inherit;opacity:.75;cursor:pointer;padding:0 2px;line-height:1;display:inline-flex}
+.info .ms{font-size:18px}.info:hover{opacity:1}
+.chica b{display:flex!important;align-items:center;gap:4px}
+.recientes{display:flex;gap:10px;flex-wrap:wrap}
+.rec{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #DCE3EF;border-left:4px solid var(--c);border-radius:12px;padding:9px 14px;font-weight:700;font-size:14px;color:#172B4D;cursor:pointer}
+.rec:hover{box-shadow:0 2px 8px rgba(23,43,77,.12)}.rec .ms{font-size:20px;color:var(--c)}
+#alertasSmn .al-ok .t{flex:1;min-width:0}
+#alertasSmn .al-mini{font-size:12px;color:#4B5B73;white-space:nowrap}
+#alertasSmn .al-mini a{color:#1B4FB0;font-weight:700;text-decoration:none}
+@media (max-width:640px){#alertasSmn .al-ok{flex-wrap:wrap}#alertasSmn .al-mini{width:100%;padding-left:28px}}
+.carpeta{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #DCE3EF;border-left:5px solid #172B4D;border-radius:16px;padding:14px 18px;cursor:pointer;margin-top:22px;box-shadow:0 2px 6px rgba(23,43,77,.08)}
+.carpeta:hover{box-shadow:0 2px 6px rgba(23,43,77,.10),0 12px 24px rgba(23,43,77,.12)}
+.carpeta:focus-visible{outline:3px solid #2F5BEA;outline-offset:3px}
+.carpeta .ico{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:#E4EAFB;color:#172B4D;flex:none}
+.carpeta .t{flex:1;min-width:0}.carpeta b{display:block;font-size:17px;color:#172B4D}
+.carpeta .d{display:block;font-size:12.5px;color:#4B5B73;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.carpeta .flecha{font-size:28px;color:#172B4D;transition:transform .2s}.carpeta.abierta .flecha{transform:rotate(180deg)}
+.carpeta.abierta{border-bottom-left-radius:6px;border-bottom-right-radius:6px}
+.fila.sub{margin-top:10px;padding-left:14px;border-left:3px solid #DCE3EF}
 /* 12/11/2026 · Agenda de reuniones programadas */
 #agenda{background:#fff;border:1px solid #DCE3EF;border-radius:16px;padding:14px 16px;margin:0 0 6px}
 #agenda .ag-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
@@ -231,6 +263,133 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 .md-pie .est{flex:1;font-size:13px;color:#C62828;min-width:180px}
 .md-pie button{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
 .md-pie .sec{background:#E4EAFB;color:#172B4D}.md-pie .pri{background:#2F5BEA;color:#fff}
+
+/* ===== 13/11/2026 · Paleta del sitio («alerta de triaje») en todo el inicio: #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Coral solo para alta prioridad (Respuesta) y errores. ===== */
+:root{--hum:#172B4D;--pat:#2F5BEA;--pat-claro:#E4EAFB;--pat-borde:#C5D1F2;--gris:#4B5B73;--coral:#F57C00}
+.btn{background:var(--hum)!important;color:#fff!important}
+.barra{border-bottom-color:var(--pat)!important}
+.grupo-tit{color:var(--hum)!important}.grupo-tit .ms{color:var(--pat)}
+.tj{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--pat-borde);border-left:5px solid var(--pat);border-radius:16px;padding:14px 16px;min-height:86px;box-sizing:border-box;cursor:pointer;color:var(--hum);box-shadow:0 1px 3px rgba(13,49,63,.08);transition:transform .12s,box-shadow .12s}
+.tj:hover{transform:translateY(-2px);box-shadow:0 2px 6px rgba(13,49,63,.12),0 10px 22px rgba(13,49,63,.12)}
+.tj:focus-visible{outline:3px solid var(--pat);outline-offset:3px}
+.tj .ico{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:var(--pat-claro);color:var(--hum);flex:none}
+.tj .ico .ms{font-size:26px}
+.tj .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tj b{display:flex;align-items:center;gap:4px;font-size:16.5px;font-weight:700;color:var(--hum);line-height:1.25}
+.tj .d{display:block;font-size:12.5px;color:var(--gris);line-height:1.35}
+.tj .d.corto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tj .d.largo{display:none}.tj.ver .d.corto{display:none}.tj.ver .d.largo{display:block}
+.tj .tj-tab{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--hum);text-decoration:none;border:1px solid var(--pat);border-radius:999px;padding:2px 10px}
+.tj .tj-tab .ms{font-size:16px}
+.tj .candado{margin-top:4px;align-self:flex-start}
+.tj-resp{background:var(--hum);border-color:var(--hum);border-left-color:var(--coral)}
+.tj-resp .ico{background:rgba(255,255,255,.14);color:#fff}.tj-resp .d{color:#C9D3E8!important}
+.tj-resp b{color:#fff}.tj-resp .d{color:#D3E3E9}.tj-resp .info{color:#fff}
+.carpeta{border-color:var(--pat-borde)!important;border-left:5px solid var(--pat)!important;min-height:86px;box-sizing:border-box;padding:14px 16px!important}
+.carpeta .ico{background:var(--pat-claro)!important;color:var(--hum)!important}
+.carpeta b{font-size:16.5px!important;color:var(--hum)!important}.carpeta .d{color:var(--gris)!important}.carpeta .flecha{color:var(--pat)!important}
+.fila.sub{border-left-color:var(--pat-borde)!important}
+.rec{border-color:var(--pat-borde)!important;border-left:4px solid var(--pat)!important;color:var(--hum)!important}.rec .ms{color:var(--hum)!important}
+#agenda{border-color:var(--pat-borde)!important}
+#agenda .ag-cab a{background:var(--hum)!important}
+#boletines{background:var(--pat-claro)!important;border-color:var(--pat-borde)!important}
+#boletines .bo-cab b{color:var(--hum)!important}
+#boletines .bo-cab a{color:var(--hum)!important;border-color:var(--pat)!important}
+#boletines .bo-ult,#boletines .bo-emb{border-color:var(--pat-borde)!important;color:var(--hum)!important}
+#boletines .bo-ult:hover,#boletines .bo-emb:hover{border-color:var(--pat)!important}
+#boletines .bo-ult .ms,#boletines .bo-ult .ab,#boletines .bo-emb .ms,#boletines .bo-emb .ab{color:var(--pat)!important}
+#alertasSmn .al-ok{border-color:var(--pat-borde)!important}#alertasSmn .al-ok .ms{color:var(--pat)!important}
+#alertasSmn .al-mini a,#alertasSmn .al-pie a{color:var(--hum)!important}
+#agenda .ag-dia{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-dia.hoy{background:var(--hum)!important;color:#fff!important}
+#agenda .ag-chip{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-chip.int{background:#fff!important;color:var(--hum)!important;border:1px solid var(--pat)}
+/* Herramientas OPS/OMS (STAR-H, ISH, PHR): la descripción completa queda a la vista (Belén, 13/11/2026: «en la tarjeta dejar la info»). */
+.tj-info{align-items:flex-start}.tj-info .d.corto{display:none}.tj-info .d.largo{display:block}.tj-info .info{display:none}
+/* 13/11/2026 22:25 (Belén: «más color» y «unificar detalles»): tarjetas rellenas con la paleta; todos los botones en #2F5BEA; etiquetas y chips en #E4EAFB / #172B4D. */
+.btn{background:var(--pat)!important}
+.tj{background:var(--pat);border:0;border-left:5px solid var(--hum);color:#fff}
+.tj .ico{background:rgba(255,255,255,.18);color:#fff}
+.tj b{color:#fff}.tj .d{color:#E4EAFB}.tj .info{color:#fff}
+.tj .tj-tab{color:#fff;border-color:rgba(255,255,255,.75)}.tj .tj-tab:hover{background:rgba(255,255,255,.16)}
+.tj:hover{box-shadow:0 2px 6px rgba(23,43,77,.18),0 10px 22px rgba(23,43,77,.2)}
+.tj-resp{background:var(--hum);border-left:5px solid var(--coral)}
+.tj-resp .d{color:#C9D3E8!important}
+.carpeta{background:var(--pat)!important;border:0!important;border-left:5px solid var(--hum)!important}
+.carpeta .ico{background:rgba(255,255,255,.18)!important;color:#fff!important}
+.carpeta b{color:#fff!important}.carpeta .d{color:#E4EAFB!important}.carpeta .flecha{color:#fff!important}
+.rec{background:var(--pat-claro)!important;border:0!important;border-left:4px solid var(--pat)!important}
+#agenda .ag-cab a,#boletines .bo-cab a{background:var(--pat)!important;color:#fff!important;border:1px solid var(--pat)!important}
+#agenda .ag-chip,#agenda .ag-chip.int{background:var(--pat-claro)!important;color:var(--hum)!important;border:0!important}
+#agenda .ag-dia{background:var(--pat-claro)!important;color:var(--hum)!important}
+#boletines .bo-ult,#boletines .bo-emb{background:#fff!important}
+#alertasSmn .al-mini a,#alertasSmn .al-pie a{color:var(--pat)!important}
+/* 13/11/2026 22:27 (Belén: «faltan los rojos y el resto de colores»): cada sección conserva su color propio (el de la app original);
+   el diseño (tamaño, título, una línea, ⓘ) es el mismo para todas. */
+.tj,.tj-resp{position:relative;overflow:hidden;background:var(--bg)!important;border:0!important;color:#fff}
+.tj .fantasma{position:absolute;right:-10px;bottom:-26px;font-size:124px;color:#fff;opacity:.09;pointer-events:none}
+.tj .t,.tj .ico{position:relative}
+.tj-resp .d{color:#F3E9E9!important}
+.carpeta{background:linear-gradient(120deg,#172B4D 0%,#2F5BEA 100%)!important;border:0!important}
+/* 13/11/2026 22:30 (Belén: «tiene que estar toda la info»): en todas las tarjetas se ve la descripción completa; sin ⓘ ni recortes. */
+.tj{align-items:flex-start}.tj .d.corto{display:none!important}.tj .d.largo{display:block!important}.tj .info{display:none!important}
+.carpeta .d{white-space:normal!important}
+/* 13/11/2026 22:31 (Belén: «está apelmazado y saturado; en subcarpetas colores diferentes haciendo juego pero más suaves»):
+   dentro de «COE, documentos y apoyo», tarjetas en el tono claro de su color, con borde e ícono en el color fuerte, y más aire. */
+.fila.sub{gap:16px!important;margin:14px 0 6px!important;padding:6px 0 6px 18px!important}
+.fila.sub .tj{background:var(--cc)!important;color:#172B4D;border-left:5px solid var(--c)!important;box-shadow:0 1px 3px rgba(23,43,77,.06);padding:16px 18px!important}
+.fila.sub .tj:hover{box-shadow:0 2px 6px rgba(23,43,77,.10),0 8px 18px rgba(23,43,77,.10)}
+.fila.sub .tj .ico{background:#fff;color:var(--c)}
+.fila.sub .tj b{color:#172B4D}.fila.sub .tj .d{color:#4B5B73!important}.fila.sub .tj .info{color:var(--c)}
+.fila.sub .tj .fantasma{color:var(--c);opacity:.07}
+/* 13/11/2026 22:32 (Belén: «acá también debería utilizar colores»): Próximas reuniones en la familia violeta del COE; El Niño en la familia
+   turquesa/océano (ISH). Tonos suaves de fondo y el color fuerte en fechas, íconos y botones. */
+#agenda{background:#F4F1FE!important;border-color:#D9D0FA!important}
+#agenda .ag-cab b,#agenda .ag-cab .ms{color:#3B2A7A!important}
+#agenda .ag-cab a{background:#5B3FC4!important;border-color:#5B3FC4!important;color:#fff!important}
+#agenda .ag-dia{background:#5B3FC4!important;color:#fff!important}
+#agenda .ag-dia.hoy{background:#D32F2F!important}
+#agenda .ag-chip{background:#fff!important;color:#3B2A7A!important;border:1px solid #CFC4F7!important}
+#agenda .ag-chip.int{background:#EEEAFD!important}
+#agenda .ag-item,#agenda li{border-color:#E3DCFB!important}
+#boletines{background:#E6F4F9!important;border-color:#B9DDEA!important}
+#boletines .bo-cab b,#boletines .bo-cab b .ms{color:#0B4F6C!important}
+#boletines .bo-cab a{background:#0B4F6C!important;border-color:#0B4F6C!important;color:#fff!important}
+#boletines .bo-ult,#boletines .bo-emb{background:#fff!important;border-color:#B9DDEA!important;color:#0B4F6C!important}
+#boletines .bo-ult .ms,#boletines .bo-ult .ab{color:#1689B8!important}
+#boletines .bo-emb .ms,#boletines .bo-emb .ab{color:#1B6FB0!important}
+#boletines .bo-ult:hover,#boletines .bo-emb:hover{border-color:#1689B8!important}
+/* 13/11/2026 22:33 (Belén: «esto debería destacarse»): la línea de Alertas SMN se ve como franja de estado. Sin alertas: verde (situación normal);
+   si no se pudo consultar: naranja; con alertas: las tarjetas del color del nivel del SMN. */
+#alertasSmn .al-ok{background:#E9F7EE!important;border:1.5px solid #8FD0A6!important;border-left:7px solid #2E7D32!important;border-radius:14px!important;padding:12px 16px!important;font-size:15px!important;color:#14401F!important;box-shadow:0 1px 4px rgba(46,125,50,.15)}
+#alertasSmn .al-ok .ms{color:#2E7D32!important;font-size:28px!important}
+#alertasSmn .al-ok b{color:#14401F}
+#alertasSmn .al-ok .al-mini{color:#2F5B3A!important}#alertasSmn .al-ok .al-mini a{color:#1B5E20!important}
+#alertasSmn .al-ok.err{background:#FFF1E0!important;border-color:#F5B971!important;border-left-color:#F57C00!important;color:#5A3200!important}
+#alertasSmn .al-ok.err .ms{color:#F57C00!important}
+/* 13/11/2026 22:34 (Belén: «letra algo más pequeña, no tanto que dificulte la lectura»): tarjetas de adentro de la carpeta. */
+.fila.sub .tj b{font-size:15px!important}.fila.sub .tj .d{font-size:12px!important;line-height:1.4}
+.fila.sub .tj .ico{width:42px!important;height:42px!important}.fila.sub .tj .ico .ms{font-size:23px!important}
+/* 13/11/2026 22:36 (Belén: «tarjeta del color de la alerta, color oficial si existe»): el SMN usa 4 niveles: Verde (tranquilidad), Amarillo
+   (informate), Naranja (preparate) y Rojo (seguí instrucciones oficiales). Tarjetas rellenas del color del nivel. El SMN no publica códigos de color:
+   se usan tonos estándar de semáforo. */
+#alertasSmn .al-ok:not(.err){background:#2E7D32!important;border:0!important;border-left:0!important;color:#fff!important;padding:12px 16px!important}
+#alertasSmn .al-ok:not(.err) .ms{color:#fff!important}
+#alertasSmn .al-ok:not(.err) b{color:#fff!important;display:block;font-size:15.5px}
+#alertasSmn .al-ok:not(.err) small{display:block;font-size:12.5px;color:#E3F4E5}
+#alertasSmn .al-ok:not(.err) .al-mini{color:#E3F4E5!important}#alertasSmn .al-ok:not(.err) .al-mini a{color:#fff!important;text-decoration:underline}
+#alertasSmn .al{border:0!important;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+#alertasSmn .al.Amarilla{background:#FFD400!important;color:#3A2E00!important}#alertasSmn .al.Amarilla .ms{color:#3A2E00!important}
+#alertasSmn .al.Naranja{background:#F57C00!important;color:#fff!important}#alertasSmn .al.Naranja .ms{color:#fff!important}
+#alertasSmn .al.Roja{background:#C62828!important;color:#fff!important}#alertasSmn .al.Roja .ms{color:#fff!important}
+#alertasSmn .al.Naranja small,#alertasSmn .al.Roja small,#alertasSmn .al.Naranja details,#alertasSmn .al.Roja details summary{color:#fff!important}
+#alertasSmn .al.Amarilla small,#alertasSmn .al.Amarilla details summary{color:#3A2E00!important}
+#alertasSmn .al details p{background:rgba(255,255,255,.92);color:#172B4D;border-radius:10px;padding:8px 10px}
+#alertasSmn .al-cab a{background:#fff!important;color:#172B4D!important;border:0!important}
+#alertasSmn .al-cab a .ms{color:#172B4D!important}
+#alertasSmn .al.Naranja{background:#E65100!important}
+#alertasSmn .al.Naranja details summary{color:#fff!important}
+.fila.sub .tj .tj-tab{color:var(--c)!important;border-color:var(--c)!important;background:#fff}
+.carpeta + .fila.sub + .carpeta,.fila.sub.oculto + .carpeta{margin-top:14px}
+/* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
 <body>
@@ -272,16 +431,16 @@ const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 // clave: flag del usuario que habilita la sección (null = abierta a todos)
 const BLANCO = '#FFFFFF';
 const MODS = [
-  { k: 'control', grupo: 'ctrl', t: 'Tablero de control', d: 'Seguimiento por proyecto, solo lectura: avance de las tareas, vencimientos, reuniones y acuerdos, integrantes y funciones. Ves los proyectos que tenés habilitados.', ico: 'dashboard', href: 'control.html', flag: 'tablero', bg: 'linear-gradient(120deg,#0D313F 0%,#1B7A8C 100%)' },
-  { k: 'starh', grupo: 'relev', t: 'STAR-H', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
-  { k: 'ish', grupo: 'relev', t: 'ISH', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
-  { k: 'phr', grupo: 'relev', t: 'PHR', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
-  { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
-  { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COE', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
-  { k: 'red', grupo: 'gest', t: 'COE · Reuniones y documentos', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E4EAFB' }, // 06/11/2026 · Rediseño (v0)
-  { k: 'coe', grupo: 'gest', t: 'COE', d: 'Participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
-  { k: 'fuentes', grupo: 'gest', t: 'Fuentes', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
-  { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#E4EAFB' }
+  { k: 'control', grupo: 'ctrl', t: 'Tablero de control', r: 'Avance de tareas, vencimientos y acuerdos por proyecto.', d: 'Seguimiento por proyecto, solo lectura: avance de las tareas, vencimientos, reuniones y acuerdos, integrantes y funciones. Ves los proyectos que tenés habilitados.', ico: 'dashboard', href: 'control.html', flag: 'tablero', bg: 'linear-gradient(120deg,#0D313F 0%,#1B7A8C 100%)' },
+  { k: 'starh', grupo: 'relev', t: 'STAR-H', r: 'Riesgos por amenaza y por establecimiento.', d: 'Relevamiento estratégico de riesgos: amenazas, gravedad, impacto y nivel de riesgo por establecimiento. Todos los establecimientos.', ico: 'crisis_alert', href: 'starh.html', tab: 'tablero.html', flag: 'starh', c: '#2F5BEA', cc: '#E4EAFB', bg: 'linear-gradient(135deg,#172B4D 0%,#2F5BEA 100%)' },
+  { k: 'ish', grupo: 'relev', t: 'ISH', r: 'Seguridad hospitalaria (OPS/OMS 2018). Solo hospitales.', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1689B8', cc: '#E1F1F8', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
+  { k: 'phr', grupo: 'relev', t: 'PHR', r: 'Plan hospitalario de respuesta (OPS 2023).', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#6A4FD8', cc: '#EEEAFD', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
+  { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', r: 'Plan de Evacuación y Autoprotección y demás planes.', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
+  { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COE', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
+  { k: 'red', grupo: 'gest', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COE.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
+  { k: 'coe', grupo: 'gest', t: 'Integrantes y contactos del COE', r: 'Participantes, funciones y proyectos.', d: 'Participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
+  { k: 'fuentes', grupo: 'fuentes', t: 'Fuentes', r: 'Bibliografía y normativa.', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
+  { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', r: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#EAF0FF' }
 ];
 // Mi perfil (Administración): accesos directos a los documentos de trabajo.
 // 06/11/2026 · La lista ya no está en el código público: la manda el servidor (acción mis_docs) desde la hoja
@@ -457,15 +616,16 @@ function alertasSmnHtml(r, admin) {
   const aviso = r && (r.error || r.incompleto) ? `<div class="al-ok err"><span class="ms">info</span><span>${E(r.error || r.incompleto)}${r.error && L.length ? ' Se muestran las últimas alertas obtenidas.' : ''}</span></div>` : '';
   if (!L.length) {
     if (aviso) return aviso + pie;
-    return `<div class="al-ok"><span class="ms">check_circle</span><span><b>Alertas SMN:</b> sin alertas vigentes para las localidades de las redes Trelew y Rawson.</span></div>` + pie;
+    // 13/11/2026 · Sin alertas: una sola línea, con la fuente y los enlaces al costado.
+    return `<div class="al-ok"><span class="ms">check_circle</span><span class="t"><b>Nivel verde · Tranquilidad</b><small>SMN: sin alertas vigentes para las redes Trelew y Rawson.</small></span><span class="al-mini" title="Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.">Fuente SMN${r && r.consultado ? ' · ' + E(String(r.consultado).slice(-5)) + ' h' : ''} · <a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver</a></span></div>`;
   }
   const items = L.map(a => {
     const niv = /^(Amarilla|Naranja|Roja)$/.test(a.nivel) ? a.nivel : 'sd';
-    const nv = niv === 'sd' ? '' : ' ' + a.nivel.toLowerCase();
+    const nv = niv === 'sd' ? '' : ' ' + a.nivel.toLowerCase(); const LEMA = { Amarilla: 'Informate', Naranja: 'Preparate', Roja: 'Seguí instrucciones oficiales' };
     const tit = (a.tipo === 'Aviso a muy corto plazo' ? 'Aviso' + nv + ' a muy corto plazo' : niv === 'sd' ? 'Alerta (nivel s/d)' : 'Alerta' + nv) + ' · ' + (a.evento || 's/d');
     const sub = [(a.lugares || []).join(', '), a.emitida ? 'emitida ' + a.emitida : '', a.vence ? 'hasta ' + a.vence : ''].filter(Boolean).join(' · ');
     const det = (a.descripcion || a.instruccion) ? `<details><summary>Qué dice el SMN y qué hacer</summary>${a.descripcion ? `<p>${E(a.descripcion)}</p>` : ''}${a.instruccion ? `<p><b>Medidas recomendadas (SMN):</b> ${E(a.instruccion)}</p>` : ''}</details>` : '';
-    return `<div class="al ${niv}"><div class="al-cab"><span class="ms">warning</span><span class="t"><b>${E(tit)}</b><small>${E(sub)}</small></span><a href="${E(a.web || web)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>SMN</a></div>${det}</div>`;
+    return `<div class="al ${niv}"><div class="al-cab"><span class="ms">warning</span><span class="t"><b>${E(tit)}${LEMA[a.nivel] ? ' · ' + E(LEMA[a.nivel]) : ''}</b><small>${E(sub)}</small></span><a href="${E(a.web || web)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>SMN</a></div>${det}</div>`;
   }).join('');
   return aviso + items + pie;
 }
@@ -480,6 +640,12 @@ async function alertasSmn(u, admin) {
   try { const r = await S.api('smn_alertas', {}, 90000); if (!r.ok) throw r; S.store.set('smn.al', r); pon(r); }
   catch (e) { if (!c) pon({ alertas: [], error: 'No se pudo consultar el SMN desde la app en este momento.' }); }
 }
+const INFO = '<button type="button" class="info" aria-label="Más información" title="Más información"><span class="ms">info</span></button>';
+// «Lo que usaste último»: se guarda en este equipo (se borra al cerrar sesión, como el resto de las copias).
+function abrirCarpeta(cp) { const k = cp.dataset.carpeta, sub = document.querySelector('[data-sub="' + k + '"]'), ab = !cp.classList.contains('abierta');
+  cp.classList.toggle('abierta', ab); cp.setAttribute('aria-expanded', ab); if (sub) sub.classList.toggle('oculto', !ab); S.store.set('inicio.abierta.' + k, ab); }
+function recientes() { const v = S.store.get('inicio.recientes', []); return Array.isArray(v) ? v : []; }
+function recordar(k) { if (!k) return; const v = recientes().filter(x => x !== k); v.unshift(k); S.store.set('inicio.recientes', v.slice(0, 6)); }
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
@@ -493,13 +659,11 @@ function pintar() {
   if (otro) revisarDatos(false);
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
-  const grande = m => `<div class="mod ${m.grupo === 'resp' || m.grupo === 'ctrl' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">
-      <span class="ms fantasma" aria-hidden="true">${m.ico}</span>${m.grupo === 'resp' ? '<span class="etq">Respuesta</span>' : m.grupo === 'ctrl' ? '<span class="etq">Solo lectura</span>' : ''}
-      <span class="ico"><span class="ms">${m.ico}</span></span>
-      ${m.grupo === 'resp' || m.grupo === 'ctrl' ? '<span class="txt">' : ''}<b>${E(m.t)}</b><p>${E(m.d)}</p>
-      <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' || m.grupo === 'ctrl' ? '</span>' : ''}</div>`;
-  const chica = m => `<div class="chica" role="link" tabindex="0" data-href="${m.href}" aria-label="${E(m.t)}" style="--c:${m.c};--cc:${m.cc}">
-      <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}</b><span class="d">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
+  // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
+  // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
+  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
+      <span class="ms fantasma" aria-hidden="true">${m.ico}</span><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
+  const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
   // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COE (04/11/2026),
@@ -507,9 +671,17 @@ function pintar() {
   // 06/11/2026 · Rediseño: también «COE · Reuniones y documentos» y STAR-H para quien lo tenga habilitado (hoja PERMISOS).
   const VIS = !u ? [] : ['phr', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
-  const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k] }) : m);
+  // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COE, documentos y apoyo».
+  const CTRL_CHICO = { grupo: 'gest', t: 'Tablero de control (en revisión)', c: '#1B7A8C', cc: '#E0F2F4' };
+  const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k], r: OTRO_TXT[m.k] }) : m).map(m => m.k === 'control' && CONTROL_EN_REVISION ? Object.assign({}, m, CTRL_CHICO) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
+  // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COE, documentos y apoyo» es una tarjeta que se despliega
+  // en el lugar y muestra sus tarjetas chicas. Se recuerda si quedó abierta (en este equipo).
+  const carpeta = (k, ico, tit, fn, bg) => { const L = g(k); if (!L.length) return ''; const ab = !!S.store.get('inicio.abierta.' + k, false);
+    return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"${bg ? ` style="background:${bg}!important"` : ''}><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
+  // 13/11/2026 22:38 (Belén: «Fuentes lo quiero sacar de subcarpeta y ponerlo como carpeta»): tarjeta propia, del mismo tamaño que las carpetas, que abre la página.
+  const enlaceGrande = (m, bg) => `<div class="carpeta" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" aria-label="${E(m.t)}" style="background:${bg}!important"><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}</b><span class="d">${E(m.d)}</span></span><span class="ms flecha">chevron_right</span></div>`;
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
   agenda(u, admin);
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
@@ -521,7 +693,10 @@ function pintar() {
   }
   alertasSmn(u, admin); // 13/11/2026 · alertas del SMN para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
-  $('#rejilla').innerHTML = fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
+  // 13/11/2026 · Orden por urgencia: Respuesta → COE, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
+  const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
+  const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" ><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
+  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + carpeta('relev', 'assignment', 'Herramientas OPS/OMS', chica, 'linear-gradient(120deg,#0B4F6C 0%,#1689B8 100%)') + g('fuentes').map(m => enlaceGrande(m, 'linear-gradient(120deg,#3B2A7A 0%,#6A4FD8 100%)')).join('') + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
@@ -529,8 +704,8 @@ $('#fIng').addEventListener('submit', async ev => {
   catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
   finally { b.disabled = false; }
 });
-$('#rejilla').addEventListener('click', ev => { if (ev.target.closest('a')) return; const t = ev.target.closest('[data-href]'); if (t) location.href = t.dataset.href; });
-$('#rejilla').addEventListener('keydown', ev => { const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); location.href = t.dataset.href; } });
+$('#rejilla').addEventListener('click', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp) { abrirCarpeta(cp); return; } const i = ev.target.closest('.info'); if (i) { ev.stopPropagation(); const c = i.closest('[data-href]'); if (c) c.classList.toggle('ver'); return; } const a = ev.target.closest('a'); const t = ev.target.closest('[data-href]'); if (a) { if (t) recordar(t.dataset.k); return; } if (t) { recordar(t.dataset.k); location.href = t.dataset.href; } });
+$('#rejilla').addEventListener('keydown', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirCarpeta(cp); return; } if (ev.target.closest('.info')) return; const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); recordar(t.dataset.k); location.href = t.dataset.href; } });
 $('#btnSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
 $('#mdSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
