@@ -37,6 +37,9 @@ li small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
 .subs a{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #C5D1F2;border-left:4px solid #2F5BEA;border-radius:12px;padding:8px 12px;font-weight:700;font-size:13.5px;color:#172B4D;text-decoration:none}
 .subs a .ms{font-size:19px;color:#2F5BEA}.subs a b{background:#E4EAFB;border-radius:999px;padding:0 8px;font-size:12px}
 .grupo{scroll-margin-top:12px}
+.det{margin-top:6px;font-size:12.5px;color:var(--suave)}.det summary{cursor:pointer;font-weight:700;color:#2F5BEA;width:max-content}
+.det ul{margin:6px 0 0;padding-left:18px}.det li{padding:4px 0;border:0;font-size:12.5px}
+.det-a{display:inline-block;font-size:11.5px!important;font-weight:700;background:#E4EAFB;color:#172B4D!important;border-radius:999px;padding:1px 8px;text-decoration:none}
 .mod-t{display:inline-block;font-size:11px;font-weight:700;color:#172B4D;background:#E4EAFB;border-radius:6px;padding:1px 6px;vertical-align:1px}
 /* 05/11/2026 · Bibliografía: carpeta y subida (solo Administración) */
 .adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -186,13 +189,24 @@ function actualizar(nota) {
   if (S.DEMO || !navigator.onLine) return;
   S.api('fuentes').then(r => { if (r && r.carpeta) { CARPETA = r.carpeta; S.store.set('fuentes.carpeta', r.carpeta); } if (r && r.ok && r.fuentes.length) { S.store.set('fuentes', r.fuentes); pintar(r.fuentes, nota || 'Actualizado.'); } }).catch(() => {});
 }
+// 14/11/2026 · Nota larga (Belén: «cómo lo agrego sin que ocupe tanta vista»): la primera línea de la nota se ve siempre;
+// las demás (una por renglón en la celda) quedan plegadas en «Ver detalle». Los enlaces de cada renglón se ven como botón «Abrir».
+function lineaHtml(l) {
+  const partes = String(l).split(/(https?:\/\/\S+)/g);
+  return partes.map(x => /^https?:\/\//.test(x) ? `<a class="det-a" href="${E(x)}" target="_blank" rel="noopener">${/zoom\.us\/rec/.test(x) ? 'Ver grabación' : /register/.test(x) ? 'Inscribirse' : 'Abrir'}</a>` : E(x)).join('');
+}
+function notaHtml(n) {
+  const L = String(n || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+  if (!L.length) return '';
+  return `<small>${lineaHtml(L[0])}</small>` + (L.length > 1 ? `<details class="det"><summary>Ver detalle (${L.length - 1})</summary><ul>${L.slice(1).map(l => `<li>${lineaHtml(l)}</li>`).join('')}</ul></details>` : '');
+}
 function pintar(lista, nota) {
   actual = lista;
   const g = {}; lista.forEach(f => { const k = subDe(f); (g[k] = g[k] || []).push(f); });
   const claves = Object.keys(g).sort((a, b) => (SUBT.indexOf(a) + 99) % 99 - (SUBT.indexOf(b) + 99) % 99);
   const indice = `<nav class="subs">${claves.map(k => `<a href="#${idS(k)}"><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)} <b>${g[k].length}</b></a>`).join('')}</nav>`;
   app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
-    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
+    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }
 const guardadas = S.store.get('fuentes', null);
