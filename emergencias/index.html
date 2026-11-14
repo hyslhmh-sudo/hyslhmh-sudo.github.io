@@ -508,7 +508,8 @@ async function ingresosArmar() {
   const vc = $('#pfCuerpo .pf-vc'); if (vc) vc.after(caja); else $('#pfCuerpo').prepend(caja);
   try {
     const r = await S.api('ultimos_ingresos'); if (!r.ok) throw r;
-    const P = r.personas || [];
+    const ord = f => { const m = String(f || '').match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{1,2}):(\d{2})/); return m ? m[3] + m[2] + m[1] + m[4].padStart(2, '0') + m[5] : ''; };
+    const P = (r.personas || []).slice().sort((a, b) => ord(b.fecha).localeCompare(ord(a.fecha)));
     caja.innerHTML = `<h3>Últimos ingresos</h3><p class="pf-nota" style="margin-top:0">Quién abrió la app (se anota una vez por día) o ingresó con usuario y clave. No cuenta tus propios ingresos.</p>`
       + (P.length ? `<div style="max-height:240px;overflow:auto;border:1px solid #E4EAFB;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px">${P.map(p => `<tr><td style="padding:6px 10px;border-bottom:1px solid #EEF1F6"><b>${E(p.nombre)}</b></td><td style="padding:6px 10px;border-bottom:1px solid #EEF1F6;white-space:nowrap">${E(p.fecha)}</td><td style="padding:6px 10px;border-bottom:1px solid #EEF1F6;color:#6B7A90">${E(p.que)}</td></tr>`).join('')}</table></div>` : '<p class="pf-nota">Todavía no hay ingresos de otros usuarios registrados.</p>');
   } catch (e) { caja.innerHTML = `<h3>Últimos ingresos</h3><p class="pf-nota">${E((e && (e.error || e.message)) || 'No se pudo traer.')}</p>`; }
