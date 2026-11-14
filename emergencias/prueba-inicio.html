@@ -134,6 +134,15 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #alertasSmn .al-mini{font-size:12px;color:#4B5B73;white-space:nowrap}
 #alertasSmn .al-mini a{color:#1B4FB0;font-weight:700;text-decoration:none}
 @media (max-width:640px){#alertasSmn .al-ok{flex-wrap:wrap}#alertasSmn .al-mini{width:100%;padding-left:28px}}
+.carpeta{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #DCE3EF;border-left:5px solid #172B4D;border-radius:16px;padding:14px 18px;cursor:pointer;margin-top:22px;box-shadow:0 2px 6px rgba(23,43,77,.08)}
+.carpeta:hover{box-shadow:0 2px 6px rgba(23,43,77,.10),0 12px 24px rgba(23,43,77,.12)}
+.carpeta:focus-visible{outline:3px solid #2F5BEA;outline-offset:3px}
+.carpeta .ico{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:#E4EAFB;color:#172B4D;flex:none}
+.carpeta .t{flex:1;min-width:0}.carpeta b{display:block;font-size:17px;color:#172B4D}
+.carpeta .d{display:block;font-size:12.5px;color:#4B5B73;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.carpeta .flecha{font-size:28px;color:#172B4D;transition:transform .2s}.carpeta.abierta .flecha{transform:rotate(180deg)}
+.carpeta.abierta{border-bottom-left-radius:6px;border-bottom-right-radius:6px}
+.fila.sub{margin-top:10px;padding-left:14px;border-left:3px solid #DCE3EF}
 /* 12/11/2026 · Agenda de reuniones programadas */
 #agenda{background:#fff;border:1px solid #DCE3EF;border-radius:16px;padding:14px 16px;margin:0 0 6px}
 #agenda .ag-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
@@ -506,6 +515,8 @@ async function alertasSmn(u, admin) {
 }
 const INFO = '<button type="button" class="info" aria-label="Más información" title="Más información"><span class="ms">info</span></button>';
 // «Lo que usaste último»: se guarda en este equipo (se borra al cerrar sesión, como el resto de las copias).
+function abrirCarpeta(cp) { const k = cp.dataset.carpeta, sub = document.querySelector('[data-sub="' + k + '"]'), ab = !cp.classList.contains('abierta');
+  cp.classList.toggle('abierta', ab); cp.setAttribute('aria-expanded', ab); if (sub) sub.classList.toggle('oculto', !ab); S.store.set('inicio.abierta.' + k, ab); }
 function recientes() { const v = S.store.get('inicio.recientes', []); return Array.isArray(v) ? v : []; }
 function recordar(k) { if (!k) return; const v = recientes().filter(x => x !== k); v.unshift(k); S.store.set('inicio.recientes', v.slice(0, 6)); }
 function pintar() {
@@ -540,6 +551,10 @@ function pintar() {
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k], r: OTRO_TXT[m.k] }) : m).map(m => m.k === 'control' && CONTROL_EN_REVISION ? Object.assign({}, m, CTRL_CHICO) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
+  // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COE, documentos y apoyo» es una tarjeta que se despliega
+  // en el lugar y muestra sus tarjetas chicas. Se recuerda si quedó abierta (en este equipo).
+  const carpeta = (k, ico, tit, fn) => { const L = g(k); if (!L.length) return ''; const ab = !!S.store.get('inicio.abierta.' + k, false);
+    return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';
   agenda(u, admin);
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
@@ -554,7 +569,7 @@ function pintar() {
   // 13/11/2026 · Orden por urgencia: Respuesta → COE, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
   const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
   const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" style="--c:${m.c || '#172B4D'}"><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
-  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + fila('gest', 'folder_open', 'COE, documentos y apoyo', 'tres', chica) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
+  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
@@ -562,8 +577,8 @@ $('#fIng').addEventListener('submit', async ev => {
   catch (e) { m.textContent = (e && (e.error || e.message)) || 'No se pudo ingresar.'; m.classList.remove('oculto'); }
   finally { b.disabled = false; }
 });
-$('#rejilla').addEventListener('click', ev => { const i = ev.target.closest('.info'); if (i) { ev.stopPropagation(); const c = i.closest('[data-href]'); if (c) c.classList.toggle('ver'); return; } const a = ev.target.closest('a'); const t = ev.target.closest('[data-href]'); if (a) { if (t) recordar(t.dataset.k); return; } if (t) { recordar(t.dataset.k); location.href = t.dataset.href; } });
-$('#rejilla').addEventListener('keydown', ev => { if (ev.target.closest('.info')) return; const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); recordar(t.dataset.k); location.href = t.dataset.href; } });
+$('#rejilla').addEventListener('click', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp) { abrirCarpeta(cp); return; } const i = ev.target.closest('.info'); if (i) { ev.stopPropagation(); const c = i.closest('[data-href]'); if (c) c.classList.toggle('ver'); return; } const a = ev.target.closest('a'); const t = ev.target.closest('[data-href]'); if (a) { if (t) recordar(t.dataset.k); return; } if (t) { recordar(t.dataset.k); location.href = t.dataset.href; } });
+$('#rejilla').addEventListener('keydown', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirCarpeta(cp); return; } if (ev.target.closest('.info')) return; const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); recordar(t.dataset.k); location.href = t.dataset.href; } });
 $('#btnSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
 $('#mdSalir').addEventListener('click', () => { cerrarDatos(); S.sesion.cerrar(); pintar(); });
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
