@@ -54,6 +54,7 @@ details.sec.min{border-left-color:var(--coral)}
 .rep{display:grid;gap:8px}.rep .fila{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));background:var(--fondo);border-radius:10px;padding:8px;position:relative}
 .tabw{overflow-x:auto}.tab{border-collapse:collapse;width:100%;max-width:640px}.tab th{font-size:12px;text-align:left;padding:4px 6px;color:var(--tenue);border-bottom:1.5px solid var(--claro)}.tab td{padding:3px 4px;border-bottom:1px solid var(--claro)}
 .tab input{width:100%;box-sizing:border-box;min-width:64px}.tab input.nom{border:0;background:transparent;font-weight:600;padding-left:2px}.tab input.num{max-width:110px;text-align:center}.tab .quitar{border:0;background:none;color:var(--tenue);cursor:pointer}
+.tab td.nomfijo{font-weight:600;padding-right:12px}
 .ayuda{display:block;color:var(--tenue);font-size:12px;margin:-2px 0 6px}
 .rep .fila .quitar{position:absolute;top:4px;right:4px;border:0;background:none;color:var(--tenue);cursor:pointer}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--medio);border-radius:10px;padding:7px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:var(--fuerte);width:max-content}
@@ -80,6 +81,8 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-widt
 const S = window.STARH, E = S.esc, app = document.getElementById('app');
 const ESTAB = ['Hospital Rural Gaiman', 'Hospital Rural Dolavon', 'Hospital Rural Las Plumas', 'Hospital Rural Paso de Indios', 'Hospital Rural Camarones', 'Puesto Sanitario 28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino'];
 const SN = ['Sí', 'No', 'No sabe'];
+// Tipos de internación: los mismos de la hoja CAMAS (columna «Categoría») para que la tabla sea homogénea en todos los establecimientos
+const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
 // Tipos: t texto · n número · a texto largo · f fecha · sn Sí/No/No sabe · m opciones múltiples · auto dato que se trae de la app · rep lista que se repite
 const SEC = [
   { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
@@ -103,7 +106,8 @@ const SEC = [
     { k: 'grupos', l: 'Personas que requieren asistencia en una emergencia', t: 'auto', x: 'Se completa solo con las cantidades de lo cargado en la ficha de pacientes con necesidades especiales (electrodependientes, oxígeno domiciliario, diálisis, postrados, embarazadas a término). No se vuelve a cargar acá y no se muestran nombres.' } ] },
   { id: 's4', t: 'Capacidad asistencial', d: 'Con qué cuenta (puede no tener todo)', c: [
     { k: 'servicios', l: '¿Con qué servicios cuenta?', t: 'm', o: ['Internación', 'Quirófano', 'Sala de partos', 'Laboratorio', 'Rayos', 'Farmacia', 'Ninguno de estos'] },
-    { k: 'camas', l: 'Internación: cantidad de camas por tipo (dejar vacío el tipo que no tiene)', t: 'rep', fijo: ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'], tabla: 'Escribí la cantidad de camas de cada tipo. Dejá vacío el tipo que no tienen.', cols: [{ k: 'quien', l: 'Tipo de internación' }, { k: 'n', l: 'Camas', t: 'n' }], add: 'Agregar otro tipo' },
+    { k: 'camas', l: 'Internación: cantidad de camas por tipo', t: 'rep', fijo: TIPOS_INT, fija: true, tabla: 'Mismos tipos para todos los establecimientos (como en la hoja CAMAS de la app). Escribí la cantidad de camas de cada tipo; dejá vacío el que no tienen.', cols: [{ k: 'quien', l: 'Tipo de internación' }, { k: 'n', l: 'Camas', t: 'n' }] },
+    { k: 'camas_obs', l: 'Aclaraciones sobre las camas (por ejemplo, qué es «Otra» o camas que cambian de uso)', t: 't', opt: true },
     { k: 'cam_guardia', l: 'Camas o camillas de guardia (cantidad)', t: 'n' },
     { k: 'arm', l: 'Respiradores (ARM / AVM): uno por fila, con su estado. Si no tiene, dejar vacío', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Fijo', 'De traslado', 'No sabe'] }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar respirador' },
     { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Identificación (n.º interno o dominio)' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
@@ -132,8 +136,10 @@ const SEC = [
     { k: 'antec', l: 'Eventos anteriores (inundaciones, nevadas, cortes largos de luz o agua): qué pasó y cómo se resolvió', t: 'a' } ] }
 ];
 // Datos que ya tenemos (libro de la app: LUGARES, CAMAS y COE PARTICIPANTES). El referente los revisa y los puede cambiar.
-const TIPOS_INT = ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'];
-const camasPre = (gen, emerg) => { const L = TIPOS_INT.map(q => ({ quien: q })); L[0].n = String(gen); if (emerg) L.splice(5, 0, { quien: 'Emergencia con internación', n: String(emerg) }); return L; };
+const camasPre = (gen, emerg) => { const L = TIPOS_INT.map(q => ({ quien: q })); L[0].n = String(gen); if (emerg) L[7].n = String(emerg); return L; };
+// Tipos anteriores de la prueba → tipos homogéneos
+const TIPO_VIEJO = { 'General (adultos)': 'Int. general / adultos', 'Maternidad': 'Maternidad / obstetricia', 'Emergencia con internación': 'Urgencias / emergencia con internación' };
+const homogeneizar = L => { if (!Array.isArray(L)) return L; const N = TIPOS_INT.map(q => ({ quien: q })); L.forEach(f => { const q = TIPO_VIEJO[f.quien] || f.quien; const i = TIPOS_INT.indexOf(q); const d = N[i >= 0 ? i : TIPOS_INT.length - 1]; if (f.n) d.n = String((+d.n || 0) + (+f.n || 0)); }); return N; };
 // INDEC, Censo 2022: población por gobierno local (cuadro 1.5) y datos por departamento (cuadros 1.5, 2.5, 7.5, 8.5, 9.5, 10.5 y salud 1.5)
 const DEP = {
   Gaiman: { depto: 'Gaiman', pob_depto: '12.639 (2010: 11.141; +13,4 %)', dens: '11.618,5 km² · 1,1 hab/km²', mayores: '11,8 % · 2,8 %', indices: 'Envejecimiento 52 · dependencia potencial 52', sin_cob: '3.880 de 12.505 (31,0 %)' },
@@ -159,7 +165,7 @@ const vacio = v => v == null || (Array.isArray(v) ? !v.some(f => f && typeof f =
 const esPre = k => { const p = PRE[estab]; return p && p[k] !== undefined && JSON.stringify(p[k]) === JSON.stringify(datos[k]); };
 const clave = e => 'prueba.ficha.' + e;
 let estab = S.store.get('prueba.ficha.estab', ESTAB[0]), datos = {};
-const leer = () => { datos = S.store.get(clave(estab), {}) || {}; const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
+const leer = () => { datos = S.store.get(clave(estab), {}) || {}; if (datos.camas) datos.camas = homogeneizar(datos.camas); const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
 const guardar = () => { datos._act = new Date().toISOString(); S.store.set(clave(estab), datos); progreso(); };
 const fechaAct = () => { if (!datos._act) return 'todavía no se cargó nada'; const d = new Date(datos._act); return 'última carga ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); };
 const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
@@ -176,10 +182,10 @@ function campo(c) {
   if (c.t === 'rep') {
     let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : [{}]);
     datos[c.k] = L;
-    if (c.tabla) return `<div class="campo">${lab}<small class="ayuda">${E(c.tabla)}</small><div class="tabw"><table class="tab"><thead><tr>${c.cols.map(col => `<th>${E(col.l)}</th>`).join('')}<th class="no-imp"></th></tr></thead><tbody>${L.map((f, i) => `<tr>${c.cols.map(col => col.k === 'quien'
-      ? `<td><input class="nom" data-r="${c.k}" data-i="${i}" data-c="quien" value="${E(f.quien || '')}" aria-label="${E(col.l)}"></td>`
-      : `<td><input class="num" data-r="${c.k}" data-i="${i}" data-c="${col.k}" inputmode="numeric" value="${E(f[col.k] || '')}" aria-label="${E(col.l + ' · ' + (f.quien || ''))}"></td>`).join('')}<td class="no-imp"><button class="quitar" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar fila"><span class="ms" style="font-size:18px">close</span></button></td></tr>`).join('')}</tbody></table></div>
-      <button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button></div>`;
+    if (c.tabla) return `<div class="campo">${lab}<small class="ayuda">${E(c.tabla)}</small><div class="tabw"><table class="tab"><thead><tr>${c.cols.map(col => `<th>${E(col.l)}</th>`).join('')}${c.fija ? '' : '<th class="no-imp"></th>'}</tr></thead><tbody>${L.map((f, i) => `<tr>${c.cols.map(col => col.k === 'quien'
+      ? (c.fija ? `<td class="nomfijo">${E(f.quien || '')}</td>` : `<td><input class="nom" data-r="${c.k}" data-i="${i}" data-c="quien" value="${E(f.quien || '')}" aria-label="${E(col.l)}"></td>`)
+      : `<td><input class="num" data-r="${c.k}" data-i="${i}" data-c="${col.k}" inputmode="numeric" value="${E(f[col.k] || '')}" aria-label="${E(col.l + ' · ' + (f.quien || ''))}"></td>`).join('')}${c.fija ? '' : `<td class="no-imp"><button class="quitar" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar fila"><span class="ms" style="font-size:18px">close</span></button></td>`}</tr>`).join('')}</tbody></table></div>
+      ${c.fija ? '' : `<button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button>`}</div>`;
     return `<div class="campo">${lab}<div class="rep" data-rep="${c.k}">${L.map((f, i) => `<div class="fila">${c.cols.map(col => col.o
       ? `<select data-r="${c.k}" data-i="${i}" data-c="${col.k}" aria-label="${E(col.l)}"><option value="">${E(col.l)}</option>${col.o.map(o => `<option${f[col.k] === o ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
       : `<input data-r="${c.k}" data-i="${i}" data-c="${col.k}" ${col.t === 'n' ? 'inputmode="numeric"' : ''} placeholder="${E(col.l)}" value="${E(f[col.k] || '')}">`).join('')}<button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button></div>`).join('')}</div>
