@@ -67,6 +67,24 @@ body{background:#F5F7FB}
 main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 .grupo-tit{display:flex;align-items:center;gap:10px;margin:22px 4px 10px;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4B5B73}
 .grupo-tit::after{content:'';flex:1;height:1px;background:#DCE3EF}
+/* 13/11/2026 · Alertas del SMN (feed CAP oficial), para todos los que ingresan */
+#alertasSmn{margin:0 0 6px}
+#alertasSmn .al{border-radius:16px;padding:12px 14px;margin:0 0 6px;border:1.5px solid;color:#172B4D}
+#alertasSmn .al.Amarilla{background:#FFF6CC;border-color:#E6B800}#alertasSmn .al.Amarilla .ms{color:#9A7A00}
+#alertasSmn .al.Naranja{background:#FFE6CC;border-color:#E67E00}#alertasSmn .al.Naranja .ms{color:#B35C00}
+#alertasSmn .al.Roja{background:#FFDADA;border-color:#C62828}#alertasSmn .al.Roja .ms{color:#C62828}
+#alertasSmn .al.sd{background:#F1F4F9;border-color:#B8C2D3}
+#alertasSmn .al-cab{display:flex;align-items:flex-start;gap:10px}
+#alertasSmn .al-cab .ms{font-size:28px;flex:none}
+#alertasSmn .al-cab span.t{flex:1;min-width:0}#alertasSmn .al-cab b{display:block;font-size:15px}#alertasSmn .al-cab small{display:block;font-size:12.5px;color:#3D4B61;margin-top:2px}
+#alertasSmn .al-cab a{flex:none;display:inline-flex;align-items:center;gap:6px;color:#172B4D;font-weight:700;font-size:13px;text-decoration:none;border:1px solid #9AA7BD;border-radius:10px;padding:6px 10px;min-height:34px;background:#fff}
+#alertasSmn details{margin-top:6px;font-size:13px}#alertasSmn details summary{cursor:pointer;font-weight:700;color:#3D4B61}
+#alertasSmn details p{margin:.4em 0;white-space:pre-line}
+#alertasSmn .al-pie{font-size:12px;color:#4B5B73;margin:2px 4px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#alertasSmn .al-pie a{color:#1B4FB0;font-weight:700;text-decoration:none}
+#alertasSmn .al-ok{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #DCE3EF;border-radius:14px;padding:9px 12px;font-size:13px;color:#3D4B61}
+#alertasSmn .al-ok .ms{color:#2E7D32;font-size:20px}
+#alertasSmn .al-ok.err .ms{color:#B35C00}
 /* 12/11/2026 · Agenda de reuniones programadas */
 #agenda{background:#fff;border:1px solid #DCE3EF;border-radius:16px;padding:14px 16px;margin:0 0 6px}
 #agenda .ag-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
@@ -197,6 +215,7 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
     <button class="btn" type="submit"><span class="ms">login</span>Ingresar</button>
     <div class="msg oculto" id="msg"></div>
   </form>
+  <section id="alertasSmn" class="oculto" aria-label="Alertas del SMN"></section>
   <section id="agenda" class="oculto" aria-label="Agenda de reuniones"></section>
   <section id="boletines" class="oculto" aria-label="Boletines El Niño"></section>
   <div id="rejilla"></div>
@@ -383,6 +402,42 @@ async function boletines(u) {
   try { const r = await S.api('red_catalogo', {}, 60000); if (!r.ok) throw r; S.store.set('red.cat', r); pon(r.documentos); }
   catch (e) { if (!c) box.classList.add('oculto'); }
 }
+// 13/11/2026 · Alertas del SMN (Belén: «que esta app trabaje con smn.gob.ar/alertas»; las ven todos y se guarda el historial).
+// El servidor (Smn.gs, acción smn_alertas) lee el feed CAP oficial del SMN, se queda con las alertas cuyo polígono toca
+// alguna localidad de las redes Trelew y Rawson y guarda cada alerta nueva en la hoja ALERTAS SMN. Copia en el servidor: 15 minutos.
+// Información orientadora: la alerta oficial es la que publica el SMN.
+const SMN_WEB = 'https://www.smn.gob.ar/alertas';
+const SMN_HIST = 'https://docs.google.com/spreadsheets/d/1vFnOJe8Ke5WrKGw2yhcA4B4vRN7Z7MBjHIMu_c8WqRk';
+let SMN_TK = '', SMN_T = 0;
+function alertasSmnHtml(r, admin) {
+  const L = (r && r.alertas) || [], web = (r && r.web) || SMN_WEB;
+  const pie = `<div class="al-pie"><span>Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.</span><a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver en smn.gob.ar</a>${admin ? `<a href="${E(SMN_HIST)}" target="_blank" rel="noopener">Historial (hoja ALERTAS SMN)</a>` : ''}</div>`;
+  const aviso = r && (r.error || r.incompleto) ? `<div class="al-ok err"><span class="ms">info</span><span>${E(r.error || r.incompleto)}${r.error && L.length ? ' Se muestran las últimas alertas obtenidas.' : ''}</span></div>` : '';
+  if (!L.length) {
+    if (aviso) return aviso + pie;
+    return `<div class="al-ok"><span class="ms">check_circle</span><span><b>Alertas SMN:</b> sin alertas vigentes para las localidades de las redes Trelew y Rawson.</span></div>` + pie;
+  }
+  const items = L.map(a => {
+    const niv = /^(Amarilla|Naranja|Roja)$/.test(a.nivel) ? a.nivel : 'sd';
+    const nv = niv === 'sd' ? '' : ' ' + a.nivel.toLowerCase();
+    const tit = (a.tipo === 'Aviso a muy corto plazo' ? 'Aviso' + nv + ' a muy corto plazo' : niv === 'sd' ? 'Alerta (nivel s/d)' : 'Alerta' + nv) + ' · ' + (a.evento || 's/d');
+    const sub = [(a.lugares || []).join(', '), a.emitida ? 'emitida ' + a.emitida : '', a.vence ? 'hasta ' + a.vence : ''].filter(Boolean).join(' · ');
+    const det = (a.descripcion || a.instruccion) ? `<details><summary>Qué dice el SMN y qué hacer</summary>${a.descripcion ? `<p>${E(a.descripcion)}</p>` : ''}${a.instruccion ? `<p><b>Medidas recomendadas (SMN):</b> ${E(a.instruccion)}</p>` : ''}</details>` : '';
+    return `<div class="al ${niv}"><div class="al-cab"><span class="ms">warning</span><span class="t"><b>${E(tit)}</b><small>${E(sub)}</small></span><a href="${E(a.web || web)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>SMN</a></div>${det}</div>`;
+  }).join('');
+  return aviso + items + pie;
+}
+async function alertasSmn(u, admin) {
+  const box = $('#alertasSmn');
+  if (!u || S.DEMO) { box.classList.add('oculto'); SMN_TK = ''; return; }
+  const c = S.store.get('smn.al', null), pon = r => { box.innerHTML = alertasSmnHtml(r, admin); box.classList.remove('oculto'); };
+  if (c) pon(c);
+  // Se vuelve a pedir al ingresar, o si pasaron más de 10 minutos desde la última consulta.
+  if ((SMN_TK === S.sesion.token() && Date.now() - SMN_T < 600000) || !navigator.onLine) return;
+  SMN_TK = S.sesion.token(); SMN_T = Date.now();
+  try { const r = await S.api('smn_alertas', {}, 90000); if (!r.ok) throw r; S.store.set('smn.al', r); pon(r); }
+  catch (e) { if (!c) pon({ alertas: [], error: 'No se pudo consultar el SMN desde la app en este momento.' }); }
+}
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
   $('#fIng').classList.toggle('oculto', !!u);
@@ -418,9 +473,11 @@ function pintar() {
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
   if (u && !admin && u.habilitadoDesde) {
     $('#boletines').classList.add('oculto');
+    $('#alertasSmn').classList.add('oculto');
     $('#rejilla').innerHTML = `<div class="tarjeta" style="padding:18px 20px"><b>Tu acceso se habilita el ${E(u.habilitadoDesde)} h.</b><p style="margin:.5em 0 0">Hasta entonces solo podés completar <b>Mis datos</b> (tocá tu nombre, arriba). Las secciones de la app se van a ver a partir de esa fecha.</p></div>`;
     return;
   }
+  alertasSmn(u, admin); // 13/11/2026 · alertas del SMN para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   $('#rejilla').innerHTML = fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('resp', 'emergency', 'Respuesta', 'una', grande) + fila('gest', 'folder_open', 'Gestión y apoyo', 'tres', chica);
 }
