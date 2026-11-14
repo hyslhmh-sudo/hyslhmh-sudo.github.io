@@ -52,6 +52,9 @@ details.sec.min{border-left-color:var(--coral)}
 .sn input{width:auto;margin:0}.sn label:has(input:checked){background:var(--claro);border-color:var(--medio);font-weight:700}
 .auto{background:var(--fondo);border:1px dashed var(--borde);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--suave)}
 .rep{display:grid;gap:8px}.rep .fila{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));background:var(--fondo);border-radius:10px;padding:8px;position:relative}
+.tabw{overflow-x:auto}.tab{border-collapse:collapse;width:100%;max-width:640px}.tab th{font-size:12px;text-align:left;padding:4px 6px;color:var(--tenue);border-bottom:1.5px solid var(--claro)}.tab td{padding:3px 4px;border-bottom:1px solid var(--claro)}
+.tab input{width:100%;box-sizing:border-box;min-width:64px}.tab input.nom{border:0;background:transparent;font-weight:600;padding-left:2px}.tab input.num{max-width:110px;text-align:center}.tab .quitar{border:0;background:none;color:var(--tenue);cursor:pointer}
+.ayuda{display:block;color:var(--tenue);font-size:12px;margin:-2px 0 6px}
 .rep .fila .quitar{position:absolute;top:4px;right:4px;border:0;background:none;color:var(--tenue);cursor:pointer}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--medio);border-radius:10px;padding:7px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:var(--fuerte);width:max-content}
 .btn.pri{background:var(--medio);color:#fff}
@@ -100,7 +103,7 @@ const SEC = [
     { k: 'grupos', l: 'Personas que requieren asistencia en una emergencia', t: 'auto', x: 'Se completa solo con las cantidades de lo cargado en la ficha de pacientes con necesidades especiales (electrodependientes, oxígeno domiciliario, diálisis, postrados, embarazadas a término). No se vuelve a cargar acá y no se muestran nombres.' } ] },
   { id: 's4', t: 'Capacidad asistencial', d: 'Con qué cuenta (puede no tener todo)', c: [
     { k: 'servicios', l: '¿Con qué servicios cuenta?', t: 'm', o: ['Internación', 'Quirófano', 'Sala de partos', 'Laboratorio', 'Rayos', 'Farmacia', 'Ninguno de estos'] },
-    { k: 'camas', l: 'Internación: cantidad de camas por tipo (dejar vacío el tipo que no tiene)', t: 'rep', fijo: ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'], cols: [{ k: 'quien', l: 'Tipo de internación' }, { k: 'n', l: 'Camas', t: 'n' }], add: 'Agregar otro tipo' },
+    { k: 'camas', l: 'Internación: cantidad de camas por tipo (dejar vacío el tipo que no tiene)', t: 'rep', fijo: ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'], tabla: 'Escribí la cantidad de camas de cada tipo. Dejá vacío el tipo que no tienen.', cols: [{ k: 'quien', l: 'Tipo de internación' }, { k: 'n', l: 'Camas', t: 'n' }], add: 'Agregar otro tipo' },
     { k: 'cam_guardia', l: 'Camas o camillas de guardia (cantidad)', t: 'n' },
     { k: 'arm', l: 'Respiradores (ARM / AVM): uno por fila, con su estado. Si no tiene, dejar vacío', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Fijo', 'De traslado', 'No sabe'] }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar respirador' },
     { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Identificación (n.º interno o dominio)' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
@@ -116,7 +119,7 @@ const SEC = [
     { k: 'edif', l: 'Edificios', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['CAPS', 'Puesto sanitario', 'Otro'] }, { k: 'nombre', l: 'Nombre' }, { k: 'dir', l: 'Dirección' }, { k: 'coord', l: 'Coordenadas' }, { k: 'horario', l: 'Horario' }, { k: 'resp', l: 'Responsable' }], add: 'Agregar edificio' } ] },
   { id: 's7', t: 'Personal', d: 'Quiénes responden', min: true, c: [
     { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
-    { k: 'turnos', l: 'Trabajadores por turno (turno normal de 6 h o guardia de 12 o 24 h). Completar solo los horarios que usan; si tienen otro, cambiar el horario o agregarlo', t: 'rep', fijo: ['06 a 12 h', '12 a 18 h', '18 a 24 h', '24 a 06 h', '08 a 14 h', '14 a 20 h', 'Guardia de 12 h', 'Guardia de 24 h'], cols: [{ k: 'quien', l: 'Turno' }, { k: 'trab', l: 'Trabajadores', t: 'n' }, { k: 'med', l: 'Médicos', t: 'n' }, { k: 'enf', l: 'Enfermeros', t: 'n' }], add: 'Agregar otro horario' },
+    { k: 'turnos', l: 'Trabajadores por turno (turno normal de 6 h o guardia de 12 o 24 h). Completar solo los horarios que usan; si tienen otro, cambiar el horario o agregarlo', t: 'rep', fijo: ['06 a 12 h', '12 a 18 h', '18 a 24 h', '24 a 06 h', '08 a 14 h', '14 a 20 h', 'Guardia de 12 h', 'Guardia de 24 h'], tabla: 'Escribí cuántas personas trabajan en cada horario. Dejá vacíos los horarios que no usan.', cols: [{ k: 'quien', l: 'Horario' }, { k: 'trab', l: 'Trabajadores', t: 'n' }, { k: 'med', l: 'Médicos', t: 'n' }, { k: 'enf', l: 'Enfermeros', t: 'n' }], add: 'Agregar otro horario' },
     { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
     { k: 'cadena', l: 'Cadena de llamadas (orden de aviso) · opcional', t: 'a', opt: true } ] },
   { id: 's8', t: 'Contactos de emergencia', d: 'Visibles solo para Administración, el referente y la parte interna del COEsp', min: true, c: [
@@ -174,6 +177,10 @@ function campo(c) {
   if (c.t === 'rep') {
     let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : [{}]);
     datos[c.k] = L;
+    if (c.tabla) return `<div class="campo">${lab}<small class="ayuda">${E(c.tabla)}</small><div class="tabw"><table class="tab"><thead><tr>${c.cols.map(col => `<th>${E(col.l)}</th>`).join('')}<th class="no-imp"></th></tr></thead><tbody>${L.map((f, i) => `<tr>${c.cols.map(col => col.k === 'quien'
+      ? `<td><input class="nom" data-r="${c.k}" data-i="${i}" data-c="quien" value="${E(f.quien || '')}" aria-label="${E(col.l)}"></td>`
+      : `<td><input class="num" data-r="${c.k}" data-i="${i}" data-c="${col.k}" inputmode="numeric" value="${E(f[col.k] || '')}" aria-label="${E(col.l + ' · ' + (f.quien || ''))}"></td>`).join('')}<td class="no-imp"><button class="quitar" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar fila"><span class="ms" style="font-size:18px">close</span></button></td></tr>`).join('')}</tbody></table></div>
+      <button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button></div>`;
     return `<div class="campo">${lab}<div class="rep" data-rep="${c.k}">${L.map((f, i) => `<div class="fila">${c.cols.map(col => col.o
       ? `<select data-r="${c.k}" data-i="${i}" data-c="${col.k}" aria-label="${E(col.l)}"><option value="">${E(col.l)}</option>${col.o.map(o => `<option${f[col.k] === o ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
       : `<input data-r="${c.k}" data-i="${i}" data-c="${col.k}" ${col.t === 'n' ? 'inputmode="numeric"' : ''} placeholder="${E(col.l)}" value="${E(f[col.k] || '')}">`).join('')}<button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button></div>`).join('')}</div>
