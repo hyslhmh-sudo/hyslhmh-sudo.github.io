@@ -75,6 +75,9 @@ body{background:#F5F7FB}
 /* 13/11/2026 22:05 (Belén): el botón del mapa va al borde inferior izquierdo de la banda, para no tapar la zona de interés (derecha). */
 .barra{padding-bottom:52px}
 .barra .sst{position:absolute;left:max(16px,calc((100% - 960px) / 2));bottom:10px;margin:0;justify-content:flex-start}
+/* 13/11/2026 22:08 (Belén): título con fondo oscuro, como el nombre de usuario, para que se lea sobre la imagen. */
+.barra h1{flex:0 1 auto;background:rgba(10,20,40,.78);border:1px solid rgba(255,255,255,.55);border-radius:14px;padding:8px 14px;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.barra .sesion{margin-left:auto}
 .barra h1{text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .barra .sst{max-width:960px;margin:10px auto 0;display:flex;justify-content:flex-end}
 .barra .sst a{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#F5F7FB;text-decoration:none;background:rgba(15,28,52,.55);border:1px solid rgba(245,247,251,.45);border-radius:999px;padding:5px 11px;backdrop-filter:blur(2px)}
