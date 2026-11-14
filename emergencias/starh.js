@@ -41,7 +41,7 @@
   }
 
   /* ---------- sesión ---------- */
-  /* 08/11/2026 · Revisión de seguridad: las copias guardadas en el navegador (catálogos del COE, red, derivaciones,
+  /* 08/11/2026 · Revisión de seguridad: las copias guardadas en el navegador (catálogos del COEsp, red, derivaciones,
    * evacuación, plan, tableros) son de quien ingresó. Al salir se borran; al ingresar otra persona en el mismo
    * equipo se borra todo, incluidos los cambios pendientes de envío y «Mis datos» de la anterior.
    * Al salir quedan solo los cambios pendientes (colas) de esa misma persona, por si vuelve a ingresar. */

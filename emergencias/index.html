@@ -333,14 +333,14 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 .tj{align-items:flex-start}.tj .d.corto{display:none!important}.tj .d.largo{display:block!important}.tj .info{display:none!important}
 .carpeta .d{white-space:normal!important}
 /* 13/11/2026 22:31 (Belén: «está apelmazado y saturado; en subcarpetas colores diferentes haciendo juego pero más suaves»):
-   dentro de «COE, documentos y apoyo», tarjetas en el tono claro de su color, con borde e ícono en el color fuerte, y más aire. */
+   dentro de «COEsp, documentos y apoyo», tarjetas en el tono claro de su color, con borde e ícono en el color fuerte, y más aire. */
 .fila.sub{gap:16px!important;margin:14px 0 6px!important;padding:6px 0 6px 18px!important}
 .fila.sub .tj{background:var(--cc)!important;color:#172B4D;border-left:5px solid var(--c)!important;box-shadow:0 1px 3px rgba(23,43,77,.06);padding:16px 18px!important}
 .fila.sub .tj:hover{box-shadow:0 2px 6px rgba(23,43,77,.10),0 8px 18px rgba(23,43,77,.10)}
 .fila.sub .tj .ico{background:#fff;color:var(--c)}
 .fila.sub .tj b{color:#172B4D}.fila.sub .tj .d{color:#4B5B73!important}.fila.sub .tj .info{color:var(--c)}
 .fila.sub .tj .fantasma{color:var(--c);opacity:.07}
-/* 13/11/2026 22:32 (Belén: «acá también debería utilizar colores»): Próximas reuniones en la familia violeta del COE; El Niño en la familia
+/* 13/11/2026 22:32 (Belén: «acá también debería utilizar colores»): Próximas reuniones en la familia violeta del COEsp; El Niño en la familia
    turquesa/océano (ISH). Tonos suaves de fondo y el color fuerte en fechas, íconos y botones. */
 #agenda{background:#F4F1FE!important;border-color:#D9D0FA!important}
 #agenda .ag-cab b,#agenda .ag-cab .ms{color:#3B2A7A!important}
@@ -436,9 +436,9 @@ const MODS = [
   { k: 'ish', grupo: 'relev', t: 'ISH', r: 'Seguridad hospitalaria (OPS/OMS 2018). Solo hospitales.', d: 'Índice de Seguridad Hospitalaria (OPS/OMS 2018): seguridad estructural, no estructural y gestión de emergencias. Solo hospitales.', ico: 'local_hospital', href: 'ish.html', tab: 'ish-tablero.html', flag: 'ish', c: '#1689B8', cc: '#E1F1F8', bg: 'linear-gradient(135deg,#0B4F6C 0%,#1689B8 100%)' },
   { k: 'phr', grupo: 'relev', t: 'PHR', r: 'Plan hospitalario de respuesta (OPS 2023).', d: 'Relevamiento inicial del plan hospitalario de respuesta a emergencias de salud y desastres (OPS 2023). Todos los establecimientos.', ico: 'fact_check', href: 'phr.html', tab: 'phr-tablero.html', flag: 'phr', c: '#6A4FD8', cc: '#EEEAFD', bg: 'linear-gradient(135deg,#3B2A7A 0%,#6A4FD8 100%)' },
   { k: 'evac', grupo: 'resp', t: 'Gestión de contingencias', r: 'Plan de Evacuación y Autoprotección y demás planes.', d: 'Planes de contingencia por establecimiento. Primero, el Plan de Evacuación y Autoprotección: fichas, sectores, roles y planillas modelo.', ico: 'directions_run', href: 'evac.html', flag: 'evac', bg: 'linear-gradient(120deg,#8E1B1B 0%,#D32F2F 100%)' },
-  { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COE', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
-  { k: 'red', grupo: 'gest', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COE.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
-  { k: 'coe', grupo: 'gest', t: 'Integrantes y contactos del COE', r: 'Participantes, funciones y proyectos.', d: 'Participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
+  { k: 'deriv', grupo: 'resp', t: 'Derivaciones y albergues · COEsp', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
+  { k: 'red', grupo: 'gest', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COEsp.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
+  { k: 'coe', grupo: 'gest', t: 'Integrantes y contactos del COEsp', r: 'Participantes, funciones y proyectos.', d: 'Centro de Operaciones de Emergencia de Salud Pública (OMS): participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
   { k: 'fuentes', grupo: 'fuentes', t: 'Fuentes', r: 'Bibliografía y normativa.', d: 'Bibliografía y normativa, con enlaces.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
   { k: 'imp', grupo: 'gest', t: 'Formularios para imprimir', r: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#EAF0FF' }
 ];
@@ -512,9 +512,9 @@ function abrirDatos(r, obligatorio) {
       ${campo('tel2', 'Teléfono de la institución', true, 'inputmode="tel" placeholder="Con interno, si tiene"')}
       ${campo('mailInst', 'Correo institucional', true, 'type="email"')}
     </div>
-    <h3>En el COE / Comité (optativo)</h3>
+    <h3>En el COEsp / Comité (optativo)</h3>
     <div class="md-grid">
-      <label class="md-c"><span>Rol en el COE o comité</span><input name="rol" value="${E(r.rol || '')}" placeholder="Integrante, Enlace, Vocero…"></label>
+      <label class="md-c"><span>Rol en el COEsp o comité</span><input name="rol" value="${E(r.rol || '')}" placeholder="Integrante, Enlace, Vocero…"></label>
       <label class="md-c"><span>Reemplazante</span><select name="reemplazo"><option value="">Sin reemplazante</option>${(r.otros || []).map(o => `<option value="${E(o.id)}" ${o.id === p.reemplazo ? 'selected' : ''}>${E(o.nombre)}${o.institucion ? ' · ' + E(o.institucion) : ''}</option>`).join('')}</select></label>
     </div>
     <p class="pf-nota">El DNI, el teléfono particular y el correo personal los ve solo Higiene y Seguridad Laboral. Los demás integrantes ven tus datos institucionales y el teléfono de emergencia. Si tu apellido o nombre está mal escrito, avisale a Higiene y Seguridad Laboral.</p>`;
@@ -540,8 +540,8 @@ $('#mdGuardar').addEventListener('click', async () => {
   } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudo guardar.'; est.style.color = '#C62828'; est.textContent = /desconocida/i.test(m) ? 'Falta publicar la versión nueva del servidor. Avisale a Higiene y Seguridad Laboral.' : m; }
   finally { b.disabled = false; }
 });
-// 12/11/2026 · Agenda: próximas reuniones programadas (Estado «Convocada» en COE · Reuniones) que la persona puede ver.
-// Administración ve «Programar reunión», que abre el diálogo en COE · Reuniones y documentos.
+// 12/11/2026 · Agenda: próximas reuniones programadas (Estado «Convocada» en COEsp · Reuniones) que la persona puede ver.
+// Administración ve «Programar reunión», que abre el diálogo en COEsp · Reuniones y documentos.
 let AG_TK = '';
 function agendaHtml(L, admin) {
   const MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'], DIA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
@@ -564,7 +564,7 @@ async function agenda(u, admin) {
   try { const r = await S.api('red_agenda', {}, 45000); if (!r.ok) throw r; S.store.set('agenda', { tk: AG_TK, L: r.reuniones || [] }); box.innerHTML = agendaHtml(r.reuniones || [], admin); box.classList.remove('oculto'); }
   catch (e) { if (!c) box.classList.add('oculto'); }
 }
-// 13/11/2026 · Boletines El Niño (Belén: «me gustaría que esté en la pantalla principal»). Se toman solos de COE › Documentos
+// 13/11/2026 · Boletines El Niño (Belén: «me gustaría que esté en la pantalla principal»). Se toman solos de COEsp › Documentos
 // (hoja DOCUMENTOS, sección «Z · Anexos», título que empieza con «Boletín El Niño» o «Pronóstico climático»): el más nuevo destacado
 // y los dos anteriores. Para sumar uno nuevo alcanza con subirlo a 06.Z.1 y agregar su fila en DOCUMENTOS.
 const BO_CARPETA = 'https://drive.google.com/drive/folders/1XndDynIJ5vz9F_cSDmVs564wnshOJwKv';
@@ -590,7 +590,7 @@ function boletinesHtml(docs) {
   }
   const u = L.find(d => /^Bolet[ií]n/i.test(d['Título'] || '')) || L[0];
   const corto = d => { const n = String(d['Título'] || '').match(/N\.?º\s*\d+/i); return n ? 'Boletín El Niño ' + n[0] : String(d['Título'] || '').split(' · ')[0]; };
-  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines y embalse</b><a href="red.html" title="Todos en COE › Documentos › Anexos"><span class="ms">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Boletines</a><a href="${E(BO_CARPETA_EMB)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Embalse</a></div>
+  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines y embalse</b><a href="red.html" title="Todos en COEsp › Documentos › Anexos"><span class="ms">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Boletines</a><a href="${E(BO_CARPETA_EMB)}" target="_blank" rel="noopener"><span class="ms">cloud</span>Embalse</a></div>
     <div class="bo-fila">${u ? `<a class="bo-ult" href="${E(u.Enlace)}" target="_blank" rel="noopener" title="${E(u['Título'])}"><span class="ms">description</span><span class="t"><b>${E(corto(u))}</b><small>Último publicado · ${E(u.Fecha || 's/d')}</small></span><span class="ms ab">open_in_new</span></a>` : ''}${emb}</div>`;
 }
 async function boletines(u) {
@@ -666,17 +666,17 @@ function pintar() {
   const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
-  // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COE (04/11/2026),
-  // COE, Fuentes y Formularios, sin nada de los planes ni de STAR-H o ISH. Administración: todo.
-  // 06/11/2026 · Rediseño: también «COE · Reuniones y documentos» y STAR-H para quien lo tenga habilitado (hoja PERMISOS).
+  // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COEsp (04/11/2026),
+  // COEsp, Fuentes y Formularios, sin nada de los planes ni de STAR-H o ISH. Administración: todo.
+  // 06/11/2026 · Rediseño: también «COEsp · Reuniones y documentos» y STAR-H para quien lo tenga habilitado (hoja PERMISOS).
   const VIS = !u ? [] : ['phr', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
-  // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COE, documentos y apoyo».
+  // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COEsp, documentos y apoyo».
   const CTRL_CHICO = { grupo: 'gest', t: 'Tablero de control (en revisión)', c: '#1B7A8C', cc: '#E0F2F4' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k], r: OTRO_TXT[m.k] }) : m).map(m => m.k === 'control' && CONTROL_EN_REVISION ? Object.assign({}, m, CTRL_CHICO) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
-  // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COE, documentos y apoyo» es una tarjeta que se despliega
+  // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COEsp, documentos y apoyo» es una tarjeta que se despliega
   // en el lugar y muestra sus tarjetas chicas. Se recuerda si quedó abierta (en este equipo).
   const carpeta = (k, ico, tit, fn, bg) => { const L = g(k); if (!L.length) return ''; const ab = !!S.store.get('inicio.abierta.' + k, false);
     return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"${bg ? ` style="background:${bg}!important"` : ''}><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
@@ -693,10 +693,10 @@ function pintar() {
   }
   alertasSmn(u, admin); // 13/11/2026 · alertas del SMN para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
-  // 13/11/2026 · Orden por urgencia: Respuesta → COE, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
+  // 13/11/2026 · Orden por urgencia: Respuesta → COEsp, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
   const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
   const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" ><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
-  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + carpeta('relev', 'assignment', 'Herramientas OPS/OMS', chica, 'linear-gradient(120deg,#0B4F6C 0%,#1689B8 100%)') + g('fuentes').map(m => enlaceGrande(m, 'linear-gradient(120deg,#3B2A7A 0%,#6A4FD8 100%)')).join('') + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
+  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COEsp, documentos y apoyo', chica) + carpeta('relev', 'assignment', 'Herramientas OPS/OMS', chica, 'linear-gradient(120deg,#0B4F6C 0%,#1689B8 100%)') + g('fuentes').map(m => enlaceGrande(m, 'linear-gradient(120deg,#3B2A7A 0%,#6A4FD8 100%)')).join('') + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');

@@ -8,7 +8,7 @@
 if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fuentes · Emergencias y desastres</title>
-<meta name="description" content="Bibliografía y normativa de STAR-H, PHR, ISH y COE.">
+<meta name="description" content="Bibliografía y normativa de STAR-H, PHR, ISH y COEsp.">
 <meta name="theme-color" content="#172B4D">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -176,7 +176,7 @@ function pintar(lista, nota) {
   actual = lista;
   const g = {}; lista.forEach(f => (g[f.modulo || 'General'] = g[f.modulo || 'General'] || []).push(f));
   const claves = Object.keys(g).sort((a, b) => (ORDEN.indexOf(a) + 99) % 99 - (ORDEN.indexOf(b) + 99) % 99);
-  app.innerHTML = barraAdm() + claves.map(k => `<section class="grupo"><h2><span class="ms">${ICO[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${E(f.cita)}
+  app.innerHTML = barraAdm() + claves.map(k => `<section class="grupo"><h2><span class="ms">${ICO[k] || 'description'}</span>${E(k === 'COE' ? 'COEsp' : k)}</h2><ol>${g[k].map(f => `<li>${E(f.cita)}
     ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }

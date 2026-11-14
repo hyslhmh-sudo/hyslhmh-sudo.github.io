@@ -7,7 +7,7 @@
 (function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
 if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>COE · Reuniones, acuerdos y documentos · Emergencias y desastres</title>
+<title>COEsp · Reuniones, acuerdos y documentos · Emergencias y desastres</title>
 <meta name="theme-color" content="#172B4D">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,7 +74,7 @@ tr.grupo-sec td{background:#E4EAFB;color:#172B4D;position:static!important}
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>COE · Reuniones, acuerdos y documentos<small id="sub">COE de Trelew y Área Programática · versión 0</small></h1>
+  <h1>COEsp · Reuniones, acuerdos y documentos<small id="sub">COEsp de Trelew y Área Programática · versión 0</small></h1>
   <button class="icono" id="bComentar" hidden title="Comentar STAR-H o PHR"><span class="ms">rate_review</span><span>Comentar</span></button>
   <button class="icono" id="bAyuda" aria-label="Ayuda"><span class="ms">help</span></button>
   <button class="icono" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span></button>
@@ -90,7 +90,7 @@ tr.grupo-sec td{background:#E4EAFB;color:#172B4D;position:static!important}
 'use strict';
 /* 06/11/2026 · Rediseño (v0). Lee la acción red_catalogo del Apps Script (Red.gs): órganos e integrantes, reuniones con
  * asistencia y acuerdos, índice de documentos, lugares y enlaces. Cada usuario recibe solo lo que puede ver:
- * la parte interna del COE ve lo del COE interno; los externos, solo lo del COE completo; lo de HySL, solo Administración.
+ * la parte interna del COEsp ve lo del COEsp interno; los externos, solo lo del COEsp completo; lo de HySL, solo Administración.
  * Cargar reuniones, documentos, lugares y enlaces: por ahora solo Administración. */
 const S = window.STARH, E = S.esc, $ = s => document.querySelector(s), app = $('#app');
 const PEST = [
@@ -111,7 +111,7 @@ const nomOrg = id => { const o = (D && D.organos || []).filter(x => x.ID === id)
 const fechaN = s => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Number(m[3] + m[2].padStart(2, '0') + m[1].padStart(2, '0')) : 0; };
 const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3500); };
 const errTxt = e => { const m = (e && (e.error || e.message)) || 'No se pudo completar.'; return /desconocida|No disponible/i.test(m) ? 'Falta publicar la versión nueva del Apps Script (Implementar › Administrar implementaciones › Editar › Nueva versión).' : m; };
-const parteChip = p => /^otra/i.test(p) ? '<span class="chip">Otra reunión</span>' : /intern/i.test(p) ? '<span class="chip int">COE interno</span>' : /extern/i.test(p) ? '<span class="chip">Externa</span>' : '<span class="chip">COE completo</span>';
+const parteChip = p => /^otra/i.test(p) ? '<span class="chip">Otra reunión</span>' : /intern/i.test(p) ? '<span class="chip int">COEsp interno</span>' : /extern/i.test(p) ? '<span class="chip">Externa</span>' : '<span class="chip">COEsp completo</span>';
 
 async function cargar(nota) {
   if (S.DEMO) { app.innerHTML = '<div class="aviso alerta">Esta sección necesita conexión con el servidor (no funciona en modo demostración).</div>'; return; }
@@ -172,12 +172,12 @@ function vAcuerdos() {
   return `<div class="herr"><select data-f="acuEst"><option value="">Todos los estados</option>${estados.map(e => `<option ${e === est ? 'selected' : ''}>${E(e)}</option>`).join('')}</select>
     <input data-f="acuQ" placeholder="Buscar texto o responsable" value="${E(filtro.acuQ || '')}"><span class="esp"></span><span class="meta">${L.length} de ${(D.acuerdos || []).length}</span></div>
     <div class="tabla"><table><thead><tr><th>ID</th><th>Reunión</th><th>Tipo</th><th>Texto</th><th>Responsable</th><th>Plazo</th><th>Estado</th></tr></thead><tbody>
-    ${L.map(a => { const r = reu(a['Reunión']); return `<tr><td>${E(a.ID)}</td><td>${E(r.Fecha || a['Reunión'])}<br><span class="meta">${/intern/i.test(r.Parte) ? 'COE interno' : 'COE completo'}</span></td><td>${E(a.Tipo)}</td><td>${E(a.Texto)}</td><td>${E(a.Responsable)}</td><td>${E(a.Plazo)}</td><td><span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></td></tr>`; }).join('') || '<tr><td colspan="7" class="vacio">Sin resultados.</td></tr>'}
+    ${L.map(a => { const r = reu(a['Reunión']); return `<tr><td>${E(a.ID)}</td><td>${E(r.Fecha || a['Reunión'])}<br><span class="meta">${/intern/i.test(r.Parte) ? 'COEsp interno' : 'COEsp completo'}</span></td><td>${E(a.Tipo)}</td><td>${E(a.Texto)}</td><td>${E(a.Responsable)}</td><td>${E(a.Plazo)}</td><td><span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></td></tr>`; }).join('') || '<tr><td colspan="7" class="vacio">Sin resultados.</td></tr>'}
     </tbody></table></div>`;
 }
 
 /* ---------- Documentos ---------- */
-// 13/11/2026 · Secciones del COE (decisión de Belén): internos A a M y anexos (Z). Se guardan en DOCUMENTOS › «Sección».
+// 13/11/2026 · Secciones del COEsp (decisión de Belén): internos A a M y anexos (Z). Se guardan en DOCUMENTOS › «Sección».
 const SECCIONES = ['A · Administrativos', 'B · Derivación y traslados', 'C · Instituciones receptoras', 'D · Albergues', 'E · Medios de traslado',
   'F · Contactos y responsables', 'G · Pacientes con requerimientos especiales', 'H · Alerta, activación y comunicación', 'I · Población a cargo',
   'J · Servicios esenciales y continuidad', 'K · Seguridad del personal', 'L · Capacitación y simulacros', 'M · Después del evento', 'Z · Anexos'];
@@ -200,7 +200,7 @@ function vDocumentos() {
     const tit = s === 'Z · Anexos' ? 'Anexos' : (s === 'Sin sección' ? 'Sin sección asignada' : 'Internos · ' + s);
     return `<tr class="grupo-sec"><td colspan="${nc}"><b>${E(tit)}</b> <span class="meta">(${g.length})</span></td></tr>` + (g.length ? g.map(fila).join('') : `<tr><td colspan="${nc}" class="vacio">Todavía sin documentos.</td></tr>`);
   }).join('');
-  return `<div class="aviso">Los documentos se ordenan en secciones: internos (A a M) y anexos. Cada uno indica quién lo emite (HySL, COE interno, COE completo, Dirección) y su alcance. Las notas de HySL solo las ve Administración. Las solicitudes a organismos salen del COE interno, con firma de la coordinación general y visto bueno de la Dirección.</div>
+  return `<div class="aviso">Los documentos se ordenan en secciones: internos (A a M) y anexos. Cada uno indica quién lo emite (HySL, COEsp interno, COEsp completo, Dirección) y su alcance. Las notas de HySL solo las ve Administración. Las solicitudes a organismos salen del COEsp interno, con firma de la coordinación general y visto bueno de la Dirección.</div>
     <div class="herr">${sel('docSec', 'Todas las secciones', secs)}${sel('docClase', 'Todas las clases', op('Clase'))}${sel('docEmisor', 'Todos los emisores', op('Emisor'))}
     <select data-f="docEstado"><option value="">Todos los estados</option><option value="__val" ${filtro.docEstado === '__val' ? 'selected' : ''}>Para validar (${nVal})</option>${op('Estado').map(x => `<option ${x === filtro.docEstado ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>
     <input data-f="docQ" placeholder="Buscar título" value="${E(filtro.docQ || '')}"><span class="esp"></span>${adm() ? '<button class="btn" data-a="docNuevo"><span class="ms">add</span>Agregar</button>' : ''}</div>
@@ -211,7 +211,7 @@ function vDocumentos() {
 
 /* ---------- Órganos ---------- */
 function vOrganos() {
-  return `<div class="aviso">Las herramientas (STAR-H, ISH, PHR) no son órganos: tienen sus propios permisos. El COE interno es la parte interna (hospitales y Área Programática) del COE de Trelew y Área Programática.</div>` +
+  return `<div class="aviso">Las herramientas (STAR-H, ISH, PHR) no son órganos: tienen sus propios permisos. El COEsp interno es la parte interna (hospitales y Área Programática) del COEsp de Trelew y Área Programática.</div>` +
   (D.organos || []).map(o => {
     const I = (D.integrantes || []).filter(i => i.organo === o.ID);
     const g = p => I.filter(i => p.test(i.parte));
@@ -220,7 +220,7 @@ function vOrganos() {
       <div class="meta">${E([o.Tipo, o['Establecimiento o alcance'], o['Activación vigente'] ? 'Activación: ' + o['Activación vigente'] + (o['Activa desde'] ? ' (desde ' + o['Activa desde'] + ')' : '') : ''].filter(Boolean).join(' · '))}</div>
       ${adm() ? `<div class="herr" style="margin:6px 0 0"><button class="btn sec chico" data-a="intNuevo" data-id="${E(o.ID)}"><span class="ms">person_add</span>Sumar integrante</button></div>` : ''}
       ${I.length ? `<details ${I.length < 40 ? '' : ''}><summary>Integrantes (${I.length}: ${g(/^intern/i).length} internos, ${g(/^extern/i).length} externos)</summary>
-        <p class="meta" style="margin:8px 0 0"><b>Parte interna (COE interno)</b></p><ul class="lst">${lista(g(/^intern/i)) || '<li class="vacio">—</li>'}</ul>
+        <p class="meta" style="margin:8px 0 0"><b>Parte interna (COEsp interno)</b></p><ul class="lst">${lista(g(/^intern/i)) || '<li class="vacio">—</li>'}</ul>
         <p class="meta" style="margin:8px 0 0"><b>Parte externa</b></p><ul class="lst">${lista(g(/^extern/i)) || '<li class="vacio">—</li>'}</ul></details>` : '<p class="vacio">Sin integrantes cargados.</p>'}
     </div>`;
   }).join('');
@@ -279,16 +279,16 @@ function dlgReunion(id, programar) {
   const r = id ? (D.reuniones || []).filter(x => x.ID === id)[0] : null;
   const asis = id ? (D.asistencia || []).filter(a => a['Reunión'] === id) : [];
   const acus = id ? (D.acuerdos || []).filter(a => a['Reunión'] === id) : [];
-  const org = r ? r['Órgano'] : 'COE-APTW', parte = r ? (/^otra/i.test(r.Parte) ? 'Otra reunión' : /intern/i.test(r.Parte) ? 'Interna (COE interno)' : 'Completo') : 'Completo';
+  const org = r ? r['Órgano'] : 'COE-APTW', parte = r ? (/^otra/i.test(r.Parte) ? 'Otra reunión' : /intern/i.test(r.Parte) ? 'Interna (COEsp interno)' : 'Completo') : 'Completo';
   const estado0 = r ? r.Estado : (programar ? 'Convocada' : 'Realizada');
   abrir(r ? 'Editar reunión ' + r.ID : programar ? 'Programar reunión' : 'Cargar reunión realizada',
-    `<div class="dos">${selC('organo', 'Órgano', org, (D.organos || []).map(o => [o.ID, o.Nombre]))}${selC('parte', 'Quiénes', parte, [['Interna (COE interno)', 'COE interno (solo parte interna)'], ['Completo', 'COE externo (completo: interno + externo)'], ['Otra reunión', 'Otra reunión (convocados que se tilden)']])}</div>
+    `<div class="dos">${selC('organo', 'Órgano', org, (D.organos || []).map(o => [o.ID, o.Nombre]))}${selC('parte', 'Quiénes', parte, [['Interna (COEsp interno)', 'COEsp interno (solo parte interna)'], ['Completo', 'COEsp externo (completo: interno + externo)'], ['Otra reunión', 'Otra reunión (convocados que se tilden)']])}</div>
      <div class="dos">${campo('fecha', 'Fecha (dd/mm/aaaa) *', r ? r.Fecha : programar ? '' : new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }))}${campo('horario', 'Horario (p. ej. 9:00)', r && r.Horario)}</div>
      <div class="dos">${campo('num', 'N.º de reunión o acta (se propone el siguiente; corregible)', r ? r['N.º'] : numSig(org))}${selC('tipo', 'Tipo', r ? r.Tipo : 'Ordinaria', ['Ordinaria', 'Extraordinaria', 'De trabajo'])}</div>
      <div class="dos">${campo('lugar', 'Lugar o modalidad', r && r['Lugar o modalidad'])}${campo('coordino', 'Convocó · coordinó', r && r['Convocó · coordinó'])}</div>
      <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', estado0, [['Convocada', 'Programada (convocada)'], ['Realizada', 'Realizada'], ['Suspendida', 'Suspendida']])}</div>
      ${campo('orden', 'Orden del día · temas a tratar', r && r['Orden del día'], 'area')}
-     <label class="campo" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="avisar" style="width:auto;margin-top:3px" ${r && /^no$/i.test(r['Avisar por mail'] || '') ? '' : 'checked'}><span style="font-weight:500">Avisar por mail si está programada: convocatoria al guardar y recordatorio 24 h antes. COE interno: integrantes internos · COE externo: todos los integrantes · Otra reunión: los convocados tildados. Sale desde belenpellegrini.hys@gmail.com, en copia oculta.</span></label>
+     <label class="campo" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="avisar" style="width:auto;margin-top:3px" ${r && /^no$/i.test(r['Avisar por mail'] || '') ? '' : 'checked'}><span style="font-weight:500">Avisar por mail si está programada: convocatoria al guardar y recordatorio 24 h antes. COEsp interno: integrantes internos · COEsp externo: todos los integrantes · Otra reunión: los convocados tildados. Sale desde belenpellegrini.hys@gmail.com, en copia oculta.</span></label>
      <div class="post-reu">${campo('temas', 'Temas tratados (después de la reunión; separá los párrafos con una línea en blanco)', r && r['Temas tratados'], 'area')}
      ${campo('proxima', 'Próxima reunión (la que se acordó al cerrar esta: fecha, hora y lugar)', r && r['Próxima reunión'])}</div>
      <p class="meta" style="margin:12px 0 2px" id="asisTit"><b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)</p>
@@ -305,7 +305,7 @@ function dlgReunion(id, programar) {
     const o = f.organo.value, soloInt = /intern/i.test(f.parte.value), otra = /^otra/i.test(f.parte.value), conv = f.estado.value === 'Convocada';
     $('#asisTit').innerHTML = conv ? (otra ? '<b>Convocados</b> (tildá quiénes reciben la convocatoria y el recordatorio)' : '<b>Integrantes convocados</b> (reciben el mail según la parte; la asistencia se marca el día de la reunión)') : '<b>Asistencia</b> (se marca en el momento; después imprimís la planilla para firmar)';
     const marcados = new Set(asis.map(a => a['ID persona']).filter(Boolean));
-    // Otra reunión: se elige entre todos los participantes del COE (no solo los integrantes del órgano).
+    // Otra reunión: se elige entre todos los participantes del COEsp (no solo los integrantes del órgano).
     const I = otra ? (D.personas || []).map(p => ({ persona: p.id, nombre: p.nombre, funcion: [p.cargo, p.institucion].filter(Boolean).join(' · '), parte: p.tipo })) : (D.integrantes || []).filter(i => i.organo === o && (!soloInt || /^intern/i.test(i.parte)));
     $('#asisL').innerHTML = I.map(i => `<label><input type="checkbox" name="as" value="${E(i.persona)}" data-p="${/^extern/i.test(i.parte) ? 'ext' : 'int'}" data-n="${E(i.nombre)}" data-f="${E(i.funcion || '')}" ${marcados.has(i.persona) ? 'checked' : ''}><span>${E(i.nombre)}<br><span class="meta">${E(i.funcion || '')}${/^extern/i.test(i.parte) ? ' · externa' : ''}</span></span></label>`).join('') || '<p class="vacio">Este órgano no tiene integrantes cargados.</p>';
   };
@@ -343,7 +343,7 @@ function imprimirPlanilla(r, asis) {
   <style>body{font-family:Arial,sans-serif;font-size:11pt;margin:18mm 14mm;color:#000}h1{font-size:13pt;margin:0 0 2mm}p{margin:1mm 0}table{width:100%;border-collapse:collapse;margin-top:4mm}
   th,td{border:1px solid #000;padding:2.2mm 2mm;text-align:left;vertical-align:middle}th{background:#eee;font-size:10pt}td.n{width:8mm;text-align:center}td.f{width:45mm}
   footer{margin-top:6mm;text-align:center}footer img{width:66%;max-height:14mm;object-fit:contain}@page{size:A4;margin:0}</style></head><body>
-  <h1>Planilla de asistencia · ${E(nomOrg(r.organo))}${/intern/i.test(r.parte) ? ' · COE interno' : ''}</h1>
+  <h1>Planilla de asistencia · ${E(nomOrg(r.organo))}${/intern/i.test(r.parte) ? ' · COEsp interno' : ''}</h1>
   <p><b>Fecha:</b> ${E(r.fecha || '')} &nbsp; <b>Horario:</b> ${E(r.horario || '')} &nbsp; <b>Lugar:</b> ${E(r.lugar || '')}</p>
   <p><b>Reunión N.º:</b> ${E(r.num || '')} &nbsp; <b>Orden del día:</b> ${E(r.orden || '')}</p>
   <table><thead><tr><th>N.º</th><th>Apellido y nombre</th><th>Institución / función</th><th>Firma</th></tr></thead><tbody>
@@ -357,7 +357,7 @@ function imprimirPlanilla(r, asis) {
 function dlgFila(tipo, id) {
   const cfg = {
     doc: { t: 'Documento', lista: D.documentos, key: 'ID', camposF: () => [['Título', 'Título *'], ['Enlace', 'Enlace', 'url'], ['Fecha', 'Fecha'], ['Versión', 'Versión'], ['Establecimiento', 'Establecimiento'], ['Reunión', 'Reunión (ID, si corresponde)'], ['Observaciones', 'Observaciones', 'area']],
-      sels: [['Sección', SECCIONES], ['Clase', ['Nota', 'Acta', 'Minuta', 'Acuerdo', 'Propuesta', 'Plan', 'Protocolo', 'Procedimiento', 'Modelo', 'Planilla', 'Informe', 'Otro']], ['Emisor', ['HySL', 'COE interno', 'COE completo', 'Dirección', 'Otro organismo']],
+      sels: [['Sección', SECCIONES], ['Clase', ['Nota', 'Acta', 'Minuta', 'Acuerdo', 'Propuesta', 'Plan', 'Protocolo', 'Procedimiento', 'Modelo', 'Planilla', 'Informe', 'Otro']], ['Emisor', ['HySL', 'COEsp interno', 'COEsp completo', 'Dirección', 'Otro organismo']],
         ['Alcance', ['Área Programática Trelew', 'Red Trelew', 'Red Rawson', 'Establecimiento', 'Toda la red']], ['Órgano', [''].concat((D.organos || []).map(o => o.ID))],
         ['Estado', ['Borrador', 'Borrador (sin enviar)', 'Para validar', 'Validado', 'Firmado', 'Enviado', 'Vigente', 'Reemplazado']], ['Visible para', ['Integrantes del órgano', 'Parte interna', 'Todos', 'Solo Administración']]], accion: 'red_documento_guardar', prop: 'documento' },
     lug: { t: 'Establecimiento', lista: (D.lugares || []).map(l => ({ ID: l.id, 'Nombre oficial': l.nombre, 'Nombre corto': l.corto, Tipo: l.tipo, Red: l.red, 'Depende de': l.depende, Localidad: l.localidad, Latitud: l.lat, Longitud: l.lng, 'Camas (total, estimado)': l.camas, 'Libro de pacientes (link) · CONFIDENCIAL': l.libro, Estado: l.estado, Observaciones: l.obs })), key: 'ID',
@@ -498,7 +498,7 @@ function dlgIntegrante(org, iid, pid) {
   const P = D.personas || [];
   abrir(iid ? 'Editar integrante' : 'Sumar integrante',
     (iid ? `<p><b>${E(i.nombre)}</b> · ${E(nomOrg(i.organo))}</p>` :
-      selC('persona', 'Persona (ficha del COE)', pid || '', [['', 'Elegí…']].concat(P.map(p => [p.id, p.nombre + ' · ' + (p.tipo || '')]))) +
+      selC('persona', 'Persona (ficha del COEsp)', pid || '', [['', 'Elegí…']].concat(P.map(p => [p.id, p.nombre + ' · ' + (p.tipo || '')]))) +
       selC('organo', 'Órgano', org || 'COE-APTW', (D.organos || []).map(o => [o.ID, o.Nombre]))) +
     selC('parte', 'Parte', i.parte || '', [['', 'Según el tipo de actor de la ficha'], ['Interna', 'Interna (hospitales y Área Programática)'], ['Externa', 'Externa']]) +
     campo('funcion', 'Función', i.funcion || 'Integrante') +
@@ -520,23 +520,23 @@ async function generarActa(btn, id) {
 /* ---------- Ayuda ---------- */
 function dlgAyuda() {
   const A = adm();
-  const usu = `<p><b>Para qué sirve.</b> Reúne lo del COE de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos y enlaces útiles. Es una base orientadora: no es un registro en tiempo real.</p>
-    <p><b>Qué ves.</b> Solo lo que corresponde a tu participación. Si integrás la parte interna (hospitales y Área Programática), ves también lo del COE interno. Si sos integrante externo, ves lo del COE completo.</p>
+  const usu = `<p><b>Para qué sirve.</b> Reúne lo del COEsp de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos y enlaces útiles. Es una base orientadora: no es un registro en tiempo real.</p>
+    <p><b>Qué ves.</b> Solo lo que corresponde a tu participación. Si integrás la parte interna (hospitales y Área Programática), ves también lo del COEsp interno. Si sos integrante externo, ves lo del COEsp completo.</p>
     <p><b>Reuniones.</b> Las próximas dos reuniones aparecen en la pantalla de inicio. Las pestañas Reuniones, Órganos e integrantes y Accesos son de Administración (grupo «Administración», al final de la barra).</p>
-    <p><b>Programar una reunión (Administración).</b> «Programar reunión» la guarda como «Programada (convocada)» con fecha, horario, lugar y temas a tratar. Mientras está programada no se muestran los campos de después de la reunión (temas tratados, próxima reunión, otros asistentes, acuerdos, acta y escaneo). Los botones «Todos», «Internos», «Externos» y «Ninguno» tildan los convocados de un solo clic. Aparece en la agenda de la pantalla de inicio de quienes la pueden ver. Si está tildado «Avisar por mail», al guardar sale la convocatoria y el día anterior (24 h antes) el recordatorio, desde belenpellegrini.hys@gmail.com y en copia oculta: COE interno, a los integrantes internos del órgano; COE externo, a todos sus integrantes; otra reunión, a los convocados que se tilden. Se usan los correos de cada ficha (institucional; si no hay, el personal). Si se cambia la fecha, el horario o el lugar, sale un aviso de cambio. Después de la reunión se edita, se pasa a «Realizada» y se marca la asistencia.</p>
+    <p><b>Programar una reunión (Administración).</b> «Programar reunión» la guarda como «Programada (convocada)» con fecha, horario, lugar y temas a tratar. Mientras está programada no se muestran los campos de después de la reunión (temas tratados, próxima reunión, otros asistentes, acuerdos, acta y escaneo). Los botones «Todos», «Internos», «Externos» y «Ninguno» tildan los convocados de un solo clic. Aparece en la agenda de la pantalla de inicio de quienes la pueden ver. Si está tildado «Avisar por mail», al guardar sale la convocatoria y el día anterior (24 h antes) el recordatorio, desde belenpellegrini.hys@gmail.com y en copia oculta: COEsp interno, a los integrantes internos del órgano; COEsp externo, a todos sus integrantes; otra reunión, a los convocados que se tilden. Se usan los correos de cada ficha (institucional; si no hay, el personal). Si se cambia la fecha, el horario o el lugar, sale un aviso de cambio. Después de la reunión se edita, se pasa a «Realizada» y se marca la asistencia.</p>
     <p><b>Acuerdos y tareas.</b> Todos los acuerdos de las reuniones que ves, con responsable, plazo y estado. Podés filtrar por estado o buscar por texto.</p>
-    <p><b>Documentos.</b> Están ordenados por sección: internos (A Administrativos, B Derivación y traslados, C Instituciones receptoras, D Albergues, E Medios de traslado, F Contactos y responsables, G Pacientes con requerimientos especiales, H Alerta, activación y comunicación, I Población a cargo, J Servicios esenciales y continuidad, K Seguridad del personal, L Capacitación y simulacros, M Después del evento) y anexos. Cada documento indica quién lo emite (COE interno, COE completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
+    <p><b>Documentos.</b> Están ordenados por sección: internos (A Administrativos, B Derivación y traslados, C Instituciones receptoras, D Albergues, E Medios de traslado, F Contactos y responsables, G Pacientes con requerimientos especiales, H Alerta, activación y comunicación, I Población a cargo, J Servicios esenciales y continuidad, K Seguridad del personal, L Capacitación y simulacros, M Después del evento) y anexos. Cada documento indica quién lo emite (COEsp interno, COEsp completo, Dirección) y su alcance. «Para validar» reúne los que esperan revisión.</p>
     <p><b>Establecimientos.</b> Registro único de la red. Los datos que faltan figuran como «s/d (revisar)».</p>
     <p><b>Necesidades especiales.</b> Si tu acceso lo permite, ves cantidades de pacientes por ciudad, tipo y zona; en pantalla, nunca datos personales. Si además tenés «Listado con datos» (referente de cada ciudad, Epidemiología y Farmacia), podés imprimir el listado CONFIDENCIAL de tu ciudad con nombre, DNI, domicilio, teléfonos y necesidades: no queda guardado en el dispositivo y cada impresión queda registrada.</p>
     <p><b>Comentar.</b> Si tu acceso lo permite, el botón «Comentar» de arriba deja una observación sobre STAR-H o PHR sin modificar lo cargado.</p>
     <p><b>Sin conexión.</b> Se muestran los últimos datos guardados en el dispositivo. «Actualizar» (flecha circular) los pide de nuevo.</p>
-    <p class="meta">Consultas: Servicio de Higiene y Seguridad Laboral, por los canales habituales del COE.</p>`;
+    <p class="meta">Consultas: Servicio de Higiene y Seguridad Laboral, por los canales habituales del COEsp.</p>`;
   const adminTxt = `<hr style="border:0;border-top:1px solid var(--linea);margin:12px 0"><p><b>Administración</b></p>
     <p><b>Dónde están los datos.</b> En el libro de la app: hojas ORGANOS, INTEGRANTES, PERMISOS, LUGARES, ENLACES, DOCUMENTOS, REUNIONES, ASISTENCIA, ACUERDOS y COMENTARIOS. Todo se puede editar también desde Sheets (respetar los encabezados de la fila 1).</p>
-    <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COE completo o COE interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
-    <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COE, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
+    <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COEsp completo o COEsp interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
+    <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COEsp, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
     <p><b>Documentos.</b> «Agregar»: sección (A a M o Anexos; se guarda en DOCUMENTOS › «Sección» y coincide con las subcarpetas 06.A a 06.M y 06.Z de Drive), clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos. El tacho rojo de cada fila lo borra de la lista: pide confirmación, el archivo de Drive no se toca y la fila queda en la hoja oculta PAPELERA del libro (para recuperarla, se copia de vuelta a DOCUMENTOS). Órganos e integrantes y Accesos solo los ve Administración.</p>
-    <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COE o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
+    <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COEsp o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
     <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos. «Pacientes · listado con datos» (columna «Listado con datos»): imprime el listado CONFIDENCIAL con datos personales; para el referente de una ciudad, en PERMISOS poné Tipo de alcance «Localidad» y Alcance = su ciudad (como figura en LUGARES); con «Área» ve todas las ciudades. Cada impresión queda en REGISTRO APP.</p>
     <p><b>Necesidades especiales.</b> Un libro por ciudad del Área Programática Trelew en la carpeta 08 (confidencial); el enlace va en LUGARES, en cada establecimiento de esa ciudad (HZT y HMH → Trelew). Para dar acceso a una sola ciudad: Accesos › Pacientes y, en la hoja PERMISOS, tipo «Localidad» con la ciudad. La pestaña muestra solo cantidades. Quién la ve: lista cerrada en Accesos › Pacientes (nunca externos). Compartir cada libro con las cuentas que cargan es manual, desde Drive, persona por persona.</p>
     <p><b>Comentarios.</b> Llegan a la hoja COMENTARIOS con fecha, persona y módulo.</p>`;

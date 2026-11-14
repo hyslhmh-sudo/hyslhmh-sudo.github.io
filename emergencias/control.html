@@ -166,7 +166,7 @@ function render() {
   const sel = `<div class="proys" role="group" aria-label="Proyecto">${vis.map(p => `<button class="tab" data-proy="${E(p)}" aria-pressed="${p === proyecto}">${E(p)}</button>`).join('')}</div>`;
   const av = offline ? `<div class="aviso-of">Sin conexión: se muestra la última copia guardada en este dispositivo (${E(datos.cache || 's/d')}).</div>` : '';
   if (!datos.proyecto) { app.innerHTML = av + sel + '<div class="tarjeta vacio">Cargando el proyecto…</div>'; return; }
-  // 13/11/2026 · Proyecto con contenido reservado (COE LISTAS, columna E): solo el nombre, sin contenido.
+  // 13/11/2026 · Proyecto con contenido reservado (COEsp LISTAS, columna E): solo el nombre, sin contenido.
   if (datos.reservado) { ['#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
     app.innerHTML = av + sel + `<div class="tarjeta vacio"><span class="ms" style="font-size:36px;color:var(--tenue)">lock</span><p><b>${E(datos.proyecto)}</b></p><p>${/hospital/i.test(datos.reservado) ? 'El contenido de este proyecto se ve en su módulo: cada hospital ve el suyo.' : 'El contenido de este proyecto lo ve solo Higiene y Seguridad Laboral.'}</p></div>`; return; }
   ['#bImp', '#bWord'].forEach(s => $(s).classList.remove('oculto'));
@@ -216,10 +216,10 @@ function cuerpo(word) {
   const so = r.solicitudes;
   const sol = !so ? '' : `<section class="tarjeta panel"><h2><span class="ms">outgoing_mail</span>Solicitudes a organismos <span class="chip">Solo Administración</span></h2>
     <p class="sub" style="margin:0 0 6px">Total ${so.total} · Borrador ${so['Borrador'] || 0} · Enviadas ${so['Enviada'] || 0} · Respondidas ${so['Respondida'] || 0} · Sin respuesta ${so['Sin respuesta'] || 0}${so.vencidas ? ` · <b style="color:var(--rojo)">${so.vencidas} con plazo vencido</b>` : ''}</p>
-    ${word ? '' : '<a class="btn sec" href="coe.html" data-ir-sol style="min-height:36px;padding:6px 12px"><span class="ms" style="font-size:18px">open_in_new</span>Ver en COE › Solicitudes</a>'}</section>`;
+    ${word ? '' : '<a class="btn sec" href="coe.html" data-ir-sol style="min-height:36px;padding:6px 12px"><span class="ms" style="font-size:18px">open_in_new</span>Ver en COEsp › Solicitudes</a>'}</section>`;
 
   const cabImp = `<div class="solo-imp" ${word ? 'style="display:block"' : ''}><p style="font-size:9pt;color:#4B5B73;margin:0">Preparación y Respuesta a Emergencias y desastres · Higiene y Seguridad Laboral</p>
-    <h1 style="font-size:15pt;margin:4px 0 2px">Informe de avance · ${E(r.proyecto)}</h1><p style="font-size:9.5pt;margin:0 0 10px">Fecha de corte: ${hoyTxt()} · Versión 0 · Base orientadora: los datos surgen de la matriz, las actas y la nómina del COE cargadas a esa fecha.</p></div>`;
+    <h1 style="font-size:15pt;margin:4px 0 2px">Informe de avance · ${E(r.proyecto)}</h1><p style="font-size:9.5pt;margin:0 0 10px">Fecha de corte: ${hoyTxt()} · Versión 0 · Base orientadora: los datos surgen de la matriz, las actas y la nómina del COEsp cargadas a esa fecha.</p></div>`;
   const pieImp = word ? '' : '<div class="solo-imp pie-imp"><img src="logo-hysl.png" alt="HySL"></div>';
 
   return `${cabImp}
@@ -232,10 +232,10 @@ function cuerpo(word) {
   </div>
   <div class="dos">
     <section class="tarjeta panel"><h2><span class="ms">groups</span>Reuniones y acuerdos</h2>${reu}</section>
-    <section class="tarjeta panel"><h2><span class="ms">badge</span>Integrantes y funciones</h2><p class="nota">Sin teléfonos ni correos: los contactos están en el módulo COE.</p>${integ}</section>
+    <section class="tarjeta panel"><h2><span class="ms">badge</span>Integrantes y funciones</h2><p class="nota">Sin teléfonos ni correos: los contactos están en el módulo COEsp.</p>${integ}</section>
   </div>
   ${sol}
-  <p class="sub" style="margin:4px 2px 0">Tablero de solo lectura y base orientadora, no es un registro en tiempo real. Datos al ${E(new Date(r.generado || Date.now()).toLocaleString('es-AR'))}. Las correcciones se hacen en el módulo COE (Administración).</p>
+  <p class="sub" style="margin:4px 2px 0">Tablero de solo lectura y base orientadora, no es un registro en tiempo real. Datos al ${E(new Date(r.generado || Date.now()).toLocaleString('es-AR'))}. Las correcciones se hacen en el módulo COEsp (Administración).</p>
   ${pieImp}`;
 }
 
@@ -245,7 +245,7 @@ function ficha(id) {
   const row = (k, v) => `<dt>${k}</dt><dd>${E(sd(v))}</dd>`;
   d.innerHTML = `<div class="dlg-cab"><b>${E(t.num || t.id)} · Tarea de la matriz</b><button class="icono" style="color:var(--fuerte)" data-cerrar aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="dlg-cuerpo"><p style="margin:0 0 12px;font-weight:700">${E(sd(t.tarea))}</p><dl>${row('Eje', t.eje)}${row('Estado', t.estado)}${row('Responsable designado', t.respDesig)}${row('Responsable propuesto', t.respProp)}${row('Fecha comprometida', t.fecha)}${row('Plazo sugerido', t.plazo)}${row('Producto', t.producto)}${row('Brecha', t.brecha)}</dl>
-    <p class="sub" style="margin:12px 0 0">Solo lectura. Las modificaciones las hace Administración en COE › Matriz operativa.</p></div>`;
+    <p class="sub" style="margin:12px 0 0">Solo lectura. Las modificaciones las hace Administración en COEsp › Matriz operativa.</p></div>`;
   d.showModal();
 }
 
