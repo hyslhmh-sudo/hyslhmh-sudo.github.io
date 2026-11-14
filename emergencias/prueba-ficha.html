@@ -62,14 +62,18 @@ details.sec.min{border-left-color:var(--coral)}
 .tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}.tag.ley{background:#172B4D;color:#fff}.tag.mej{background:var(--claro);color:var(--fuerte)}
 .pie{font-size:12px;color:var(--tenue)}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
-@media print{.barra .icono,.aviso,.no-imp{display:none}details.sec{break-inside:avoid}}
+.paso{font-size:15px;margin:18px 0 6px;color:var(--fuerte)}.paso small{font-weight:400;color:var(--tenue);font-size:12px}
+.blanco-cab{border:1.5px solid #999;border-radius:8px;padding:10px;margin-bottom:10px;line-height:2}
+@media print{.barra .icono,.aviso,.no-imp,#prog{display:none}details.sec{break-inside:avoid}details.sec summary .chip,details.sec summary .fl{display:none}
+body.blanco input:not([type=radio]):not([type=checkbox]),body.blanco textarea,body.blanco select{border:0;border-bottom:1px solid #777;border-radius:0;background:none}
+body.blanco textarea{min-height:70px;border:1px solid #777}body.blanco select{-webkit-appearance:none;appearance:none}}
 </style>
 </head>
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
   <h1>Ficha del establecimiento<small>VISTA DE PRUEBA · versión 0 · hospitales rurales</small></h1>
-  <button class="icono" type="button" onclick="abrirTodo();window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
+  <button class="icono" type="button" onclick="imprimir(false)" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"></main>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
@@ -84,6 +88,10 @@ const SN = ['Sí', 'No', 'No sabe'];
 // Tipos de internación: los mismos de la hoja CAMAS (columna «Categoría») para que la tabla sea homogénea en todos los establecimientos
 const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
 // Tipos: t texto · n número · a texto largo · f fecha · sn Sí/No/No sabe · m opciones múltiples · auto dato que se trae de la app · rep lista que se repite
+// Paso 1: datos del referente (en la app real salen de «Mis datos» / COEsp · Participantes y se guardan ahí)
+const YO = { id: 's0', t: 'Tus datos', d: 'Quién completa la ficha', c: [
+  { k: 'yo_nombre', l: 'Apellido y nombre', t: 't' }, { k: 'yo_cargo', l: 'Cargo o función en el establecimiento', t: 't' },
+  { k: 'yo_cel', l: 'Celular', t: 't' }, { k: 'yo_tel2', l: 'Otro teléfono de contacto', t: 't', opt: true }, { k: 'yo_mail', l: 'Correo electrónico', t: 't' } ] };
 const SEC = [
   { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
     { k: 'nombre', l: 'Nombre oficial', t: 't' }, { k: 'corto', l: 'Nombre corto', t: 't' },
@@ -162,10 +170,10 @@ const FUENTE_PRE = { camas: 'Informe APTW de camas de hospitales rurales, ene–
 ['pob_ciu', 'viv'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadro 1.5 por gobierno local');
 ['depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadros por departamento (la densidad solo se publica por departamento)');
 const vacio = v => v == null || (Array.isArray(v) ? !v.some(f => f && typeof f === 'object' ? Object.entries(f).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim()) : String(f).trim()) : String(v).trim() === '');
-const esPre = k => { const p = PRE[estab]; return p && p[k] !== undefined && JSON.stringify(p[k]) === JSON.stringify(datos[k]); };
+const esPre = k => { if (window.__blanco) return false; const p = PRE[estab]; return p && p[k] !== undefined && JSON.stringify(p[k]) === JSON.stringify(datos[k]); };
 const clave = e => 'prueba.ficha.' + e;
 let estab = S.store.get('prueba.ficha.estab', ESTAB[0]), datos = {};
-const leer = () => { datos = S.store.get(clave(estab), {}) || {}; if (datos.camas) datos.camas = homogeneizar(datos.camas); const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
+const leer = () => { if (window.__blanco) { datos = {}; return; } datos = S.store.get(clave(estab), {}) || {}; if (datos.camas) datos.camas = homogeneizar(datos.camas); const p = PRE[estab] || {}; Object.keys(p).forEach(k => { if (vacio(datos[k])) datos[k] = JSON.parse(JSON.stringify(p[k])); }); };
 const guardar = () => { datos._act = new Date().toISOString(); S.store.set(clave(estab), datos); progreso(); };
 const fechaAct = () => { if (!datos._act) return 'todavía no se cargó nada'; const d = new Date(datos._act); return 'última carga ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); };
 const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
@@ -177,10 +185,10 @@ function campo(c) {
   if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
   if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
   if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
-  if (c.t === 'a') return `<label class="campo">${lab}<textarea data-k="${c.k}" placeholder="s/d (revisar)">${E(v || '')}</textarea></label>`;
-  if (c.t === 'coord') return `<label class="campo">${lab}<input data-k="${c.k}" value="${E(v || '')}" placeholder="-43.2, -65.5 · s/d (revisar)"></label><div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-gps="${c.k}"><span class="ms">my_location</span>Usar mi ubicación</button>${v ? `<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(v)}"><span class="ms">map</span>Ver en el mapa</a>` : ''}</div>`;
+  if (c.t === 'a') return `<label class="campo">${lab}<textarea data-k="${c.k}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}">${E(v || '')}</textarea></label>`;
+  if (c.t === 'coord') return `<label class="campo">${lab}<input data-k="${c.k}" value="${E(v || '')}" placeholder="${window.__blanco ? '' : '-43.2, -65.5 · s/d (revisar)'}"></label><div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-gps="${c.k}"><span class="ms">my_location</span>Usar mi ubicación</button>${v ? `<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(v)}"><span class="ms">map</span>Ver en el mapa</a>` : ''}</div>`;
   if (c.t === 'rep') {
-    let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : [{}]);
+    let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : (window.__blanco ? [{}, {}, {}] : [{}]));
     datos[c.k] = L;
     if (c.tabla) return `<div class="campo">${lab}<small class="ayuda">${E(c.tabla)}</small><div class="tabw"><table class="tab"><thead><tr>${c.cols.map(col => `<th>${E(col.l)}</th>`).join('')}${c.fija ? '' : '<th class="no-imp"></th>'}</tr></thead><tbody>${L.map((f, i) => `<tr>${c.cols.map(col => col.k === 'quien'
       ? (c.fija ? `<td class="nomfijo">${E(f.quien || '')}</td>` : `<td><input class="nom" data-r="${c.k}" data-i="${i}" data-c="quien" value="${E(f.quien || '')}" aria-label="${E(col.l)}"></td>`)
@@ -191,15 +199,23 @@ function campo(c) {
       : `<input data-r="${c.k}" data-i="${i}" data-c="${col.k}" ${col.t === 'n' ? 'inputmode="numeric"' : ''} placeholder="${E(col.l)}" value="${E(f[col.k] || '')}">`).join('')}<button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button></div>`).join('')}</div>
       <button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button></div>`;
   }
-  return `<label class="campo">${lab}<input data-k="${c.k}" ${c.t === 'n' ? 'inputmode="numeric"' : ''} ${c.t === 'f' ? 'type="date"' : ''} value="${E(v || '')}" placeholder="s/d (revisar)"></label>`;
+  return `<label class="campo">${lab}<input data-k="${c.k}" ${c.t === 'n' ? 'inputmode="numeric"' : ''} ${c.t === 'f' ? 'type="date"' : ''} value="${E(v || '')}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}"></label>`;
 }
+const secHtml = (s, n) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${n}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · conviene empezar por esta' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}</div></details>`;
 function pintar() {
   leer();
-  app.innerHTML = `<div class="aviso"><b>Vista de prueba.</b> Lo que cargues acá queda solo en este equipo y no llega al libro. Sirve para revisar el diseño antes de ponerlo en la app.</div>
+  const B = window.__blanco;
+  app.innerHTML = B ? `<div class="blanco-cab"><b>Ficha del establecimiento · planilla para completar a mano</b><br>Establecimiento: ____________________________________ &nbsp; Fecha: ____/____/______<br>Completó (apellido y nombre): ____________________________________</div>
+  <h2 class="paso">Paso 1 · Tus datos</h2>${secHtml(YO, '·')}<h2 class="paso">Paso 2 · Datos del establecimiento</h2>${SEC.map((s, i) => secHtml(s, i + 1)).join('')}
+  <p class="pie">Versión 0. Lo que no se sabe se deja en blanco o se anota «no sabe». Después se pasa a la app (se puede cargar por partes).</p>` : `<div class="aviso"><b>Vista de prueba.</b> Lo que cargues acá queda solo en este equipo y no llega al libro. Sirve para revisar el diseño antes de ponerlo en la app.</div>
   <div class="aviso" style="background:var(--claro)"><b>Algunos datos ya vienen cargados</b> con la información que tenemos (marcados «Precargado»): revisarlos y corregirlos si no son correctos.<br><b>Se completa por tandas.</b> No hace falta cargar todo de una vez: cada dato se guarda solo apenas se escribe. Se puede cerrar y seguir otro día, por la sección que se quiera. Lo que no se sabe se deja vacío.</div>
   <div class="cab"><label for="selEst">Establecimiento</label><select id="selEst">${ESTAB.map(e => `<option${e === estab ? ' selected' : ''}>${E(e)}</option>`).join('')}</select>
+  <div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" type="button" onclick="imprimir(true)"><span class="ms">print</span>Imprimir planilla en blanco</button><button class="btn" type="button" onclick="imprimir(false)"><span class="ms">print</span>Imprimir lo cargado</button></div>
   <div id="prog"></div></div>
-  ${SEC.map((s, i) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${i + 1}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · conviene empezar por esta' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}</div></details>`).join('')}
+  <h2 class="paso">Paso 1 · Tus datos <small>(primero esto)</small></h2>
+  ${secHtml(YO, '·')}
+  <h2 class="paso">Paso 2 · Datos del establecimiento <small>(se puede completar por partes)</small></h2>
+  ${SEC.map((s, i) => secHtml(s, i + 1)).join('')}
   <p class="pie">Versión 0. Lo que no se sabe queda como «s/d (revisar)». Base orientadora: no es un registro en tiempo real.</p>`;
   progreso();
 }
@@ -208,7 +224,7 @@ function progreso() {
   const p = document.getElementById('prog'); if (!p) return;
   p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b><small>· ${fechaAct()}</small>
     <span class="chip ${minOk ? 'ok' : 'falta'}"><span class="ms" style="font-size:16px">${minOk ? 'check_circle' : 'schedule'}</span>${minOk ? 'Ya están las secciones 1, 2, 7 y 8: alcanza para empezar STAR-H y PHR' : 'Sugerido: empezar por las secciones 1, 2, 7 y 8 (marcadas en naranja)'}</span></div>`;
-  SEC.forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const R = req(s), n = R.filter(lleno).length; ch.className = 'chip ' + (n === R.length ? 'ok' : 'falta'); ch.textContent = n === R.length ? 'Completa' : n ? `En curso · ${n} de ${R.length}` : 'Sin empezar'; });
+  [YO, ...SEC].forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const R = req(s), n = R.filter(lleno).length; ch.className = 'chip ' + (n === R.length ? 'ok' : 'falta'); ch.textContent = n === R.length ? 'Completa' : n ? `En curso · ${n} de ${R.length}` : 'Sin empezar'; });
 }
 app.addEventListener('change', ev => {
   const t = ev.target;
@@ -227,7 +243,8 @@ app.addEventListener('click', ev => {
     navigator.geolocation.getCurrentPosition(p => { datos[g.dataset.gps] = p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6); guardar(); reabrir(id); }, () => alert('No se pudo tomar la ubicación. Escribila a mano.')); }
 });
 window.abrirTodo = () => { window.__sinAcordeon = true; document.querySelectorAll('details.sec').forEach(d => d.setAttribute('open', '')); };
-window.addEventListener('afterprint', () => { setTimeout(() => { window.__sinAcordeon = false; }, 500); });
+window.imprimir = enBlanco => { window.__blanco = !!enBlanco; document.body.classList.toggle('blanco', !!enBlanco); if (enBlanco) pintar(); abrirTodo(); setTimeout(() => window.print(), 150); };
+window.addEventListener('afterprint', () => { setTimeout(() => { window.__sinAcordeon = false; if (window.__blanco) { window.__blanco = false; document.body.classList.remove('blanco'); pintar(); } }, 500); });
 pintar();
 })();
 </script>
