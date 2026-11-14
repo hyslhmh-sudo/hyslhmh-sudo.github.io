@@ -368,6 +368,25 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 /* 13/11/2026 22:34 (Belén: «letra algo más pequeña, no tanto que dificulte la lectura»): tarjetas de adentro de la carpeta. */
 .fila.sub .tj b{font-size:15px!important}.fila.sub .tj .d{font-size:12px!important;line-height:1.4}
 .fila.sub .tj .ico{width:42px!important;height:42px!important}.fila.sub .tj .ico .ms{font-size:23px!important}
+/* 13/11/2026 22:36 (Belén: «tarjeta del color de la alerta, color oficial si existe»): el SMN usa 4 niveles: Verde (tranquilidad), Amarillo
+   (informate), Naranja (preparate) y Rojo (seguí instrucciones oficiales). Tarjetas rellenas del color del nivel. El SMN no publica códigos de color:
+   se usan tonos estándar de semáforo. */
+#alertasSmn .al-ok:not(.err){background:#2E7D32!important;border:0!important;border-left:0!important;color:#fff!important;padding:12px 16px!important}
+#alertasSmn .al-ok:not(.err) .ms{color:#fff!important}
+#alertasSmn .al-ok:not(.err) b{color:#fff!important;display:block;font-size:15.5px}
+#alertasSmn .al-ok:not(.err) small{display:block;font-size:12.5px;color:#E3F4E5}
+#alertasSmn .al-ok:not(.err) .al-mini{color:#E3F4E5!important}#alertasSmn .al-ok:not(.err) .al-mini a{color:#fff!important;text-decoration:underline}
+#alertasSmn .al{border:0!important;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+#alertasSmn .al.Amarilla{background:#FFD400!important;color:#3A2E00!important}#alertasSmn .al.Amarilla .ms{color:#3A2E00!important}
+#alertasSmn .al.Naranja{background:#F57C00!important;color:#fff!important}#alertasSmn .al.Naranja .ms{color:#fff!important}
+#alertasSmn .al.Roja{background:#C62828!important;color:#fff!important}#alertasSmn .al.Roja .ms{color:#fff!important}
+#alertasSmn .al.Naranja small,#alertasSmn .al.Roja small,#alertasSmn .al.Naranja details,#alertasSmn .al.Roja details summary{color:#fff!important}
+#alertasSmn .al.Amarilla small,#alertasSmn .al.Amarilla details summary{color:#3A2E00!important}
+#alertasSmn .al details p{background:rgba(255,255,255,.92);color:#172B4D;border-radius:10px;padding:8px 10px}
+#alertasSmn .al-cab a{background:#fff!important;color:#172B4D!important;border:0!important}
+#alertasSmn .al-cab a .ms{color:#172B4D!important}
+#alertasSmn .al.Naranja{background:#E65100!important}
+#alertasSmn .al.Naranja details summary{color:#fff!important}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
@@ -587,24 +606,24 @@ async function boletines(u) {
 // alguna localidad de las redes Trelew y Rawson y guarda cada alerta nueva en la hoja ALERTAS SMN. Copia en el servidor: 15 minutos.
 // Información orientadora: la alerta oficial es la que publica el SMN.
 const SMN_WEB = 'https://www.smn.gob.ar/alertas';
-const SMN_HIST = 'https://docs.google.com/spreadsheets/d/1vFnOJe8Ke5WrKGw2yhcA4B4vRN7Z7MBjHIMu_c8WqRk';
+// 13/11/2026 22:35 (Belén): sin enlace al historial en la pantalla: el libro madre no se muestra a nadie desde la app.
 let SMN_TK = '', SMN_T = 0;
 function alertasSmnHtml(r, admin) {
   const L = (r && r.alertas) || [], web = (r && r.web) || SMN_WEB;
-  const pie = `<div class="al-pie"><span>Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.</span><a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver en smn.gob.ar</a>${admin ? `<a href="${E(SMN_HIST)}" target="_blank" rel="noopener">Historial (hoja ALERTAS SMN)</a>` : ''}</div>`;
+  const pie = `<div class="al-pie"><span>Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.</span><a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver en smn.gob.ar</a></div>`;
   const aviso = r && (r.error || r.incompleto) ? `<div class="al-ok err"><span class="ms">info</span><span>${E(r.error || r.incompleto)}${r.error && L.length ? ' Se muestran las últimas alertas obtenidas.' : ''}</span></div>` : '';
   if (!L.length) {
     if (aviso) return aviso + pie;
     // 13/11/2026 · Sin alertas: una sola línea, con la fuente y los enlaces al costado.
-    return `<div class="al-ok"><span class="ms">check_circle</span><span class="t"><b>Alertas SMN:</b> sin alertas vigentes para las redes Trelew y Rawson.</span><span class="al-mini" title="Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.">Fuente SMN${r && r.consultado ? ' · ' + E(String(r.consultado).slice(-5)) + ' h' : ''} · <a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver</a>${admin ? ` · <a href="${E(SMN_HIST)}" target="_blank" rel="noopener">Historial</a>` : ''}</span></div>`;
+    return `<div class="al-ok"><span class="ms">check_circle</span><span class="t"><b>Nivel verde · Tranquilidad</b><small>SMN: sin alertas vigentes para las redes Trelew y Rawson.</small></span><span class="al-mini" title="Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.">Fuente SMN${r && r.consultado ? ' · ' + E(String(r.consultado).slice(-5)) + ' h' : ''} · <a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver</a></span></div>`;
   }
   const items = L.map(a => {
     const niv = /^(Amarilla|Naranja|Roja)$/.test(a.nivel) ? a.nivel : 'sd';
-    const nv = niv === 'sd' ? '' : ' ' + a.nivel.toLowerCase();
+    const nv = niv === 'sd' ? '' : ' ' + a.nivel.toLowerCase(); const LEMA = { Amarilla: 'Informate', Naranja: 'Preparate', Roja: 'Seguí instrucciones oficiales' };
     const tit = (a.tipo === 'Aviso a muy corto plazo' ? 'Aviso' + nv + ' a muy corto plazo' : niv === 'sd' ? 'Alerta (nivel s/d)' : 'Alerta' + nv) + ' · ' + (a.evento || 's/d');
     const sub = [(a.lugares || []).join(', '), a.emitida ? 'emitida ' + a.emitida : '', a.vence ? 'hasta ' + a.vence : ''].filter(Boolean).join(' · ');
     const det = (a.descripcion || a.instruccion) ? `<details><summary>Qué dice el SMN y qué hacer</summary>${a.descripcion ? `<p>${E(a.descripcion)}</p>` : ''}${a.instruccion ? `<p><b>Medidas recomendadas (SMN):</b> ${E(a.instruccion)}</p>` : ''}</details>` : '';
-    return `<div class="al ${niv}"><div class="al-cab"><span class="ms">warning</span><span class="t"><b>${E(tit)}</b><small>${E(sub)}</small></span><a href="${E(a.web || web)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>SMN</a></div>${det}</div>`;
+    return `<div class="al ${niv}"><div class="al-cab"><span class="ms">warning</span><span class="t"><b>${E(tit)}${LEMA[a.nivel] ? ' · ' + E(LEMA[a.nivel]) : ''}</b><small>${E(sub)}</small></span><a href="${E(a.web || web)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>SMN</a></div>${det}</div>`;
   }).join('');
   return aviso + items + pie;
 }

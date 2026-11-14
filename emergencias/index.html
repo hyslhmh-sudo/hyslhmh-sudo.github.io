@@ -449,11 +449,11 @@ async function boletines(u) {
 // alguna localidad de las redes Trelew y Rawson y guarda cada alerta nueva en la hoja ALERTAS SMN. Copia en el servidor: 15 minutos.
 // Información orientadora: la alerta oficial es la que publica el SMN.
 const SMN_WEB = 'https://www.smn.gob.ar/alertas';
-const SMN_HIST = 'https://docs.google.com/spreadsheets/d/1vFnOJe8Ke5WrKGw2yhcA4B4vRN7Z7MBjHIMu_c8WqRk';
+// 13/11/2026 22:35 (Belén): sin enlace al historial en la pantalla: el libro madre no se muestra a nadie desde la app.
 let SMN_TK = '', SMN_T = 0;
 function alertasSmnHtml(r, admin) {
   const L = (r && r.alertas) || [], web = (r && r.web) || SMN_WEB;
-  const pie = `<div class="al-pie"><span>Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.</span><a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver en smn.gob.ar</a>${admin ? `<a href="${E(SMN_HIST)}" target="_blank" rel="noopener">Historial (hoja ALERTAS SMN)</a>` : ''}</div>`;
+  const pie = `<div class="al-pie"><span>Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.</span><a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver en smn.gob.ar</a></div>`;
   const aviso = r && (r.error || r.incompleto) ? `<div class="al-ok err"><span class="ms">info</span><span>${E(r.error || r.incompleto)}${r.error && L.length ? ' Se muestran las últimas alertas obtenidas.' : ''}</span></div>` : '';
   if (!L.length) {
     if (aviso) return aviso + pie;
