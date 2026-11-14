@@ -207,8 +207,7 @@ function notaHtml(n) {
 }
 // 14/11/2026 · Cada subtema se pliega (Belén: que no ocupe tanta vista). «Cursos gratuitos» arranca cerrado; el resto abierto. Se recuerda en este equipo.
 const CERRADOS = ['Cursos gratuitos'];
-const abierto = k => { const v = S.store.get('fuentes.abierto.' + k, null); return v === null ? CERRADOS.indexOf(k) < 0 : !!v; };
-document.addEventListener('toggle', ev => { const d = ev.target; if (d.classList && d.classList.contains('gr')) S.store.set('fuentes.abierto.' + d.dataset.k, d.open); }, true);
+const abierto = () => false; // 14/11/2026 · Todas cerradas hasta que se tocan (regla de Belén); al abrir una se cierran las otras (starh.js).
 document.addEventListener('click', ev => { const a = ev.target.closest('.subs a'); if (!a) return; const sec = document.querySelector(a.getAttribute('href')); const d = sec && sec.querySelector('details.gr'); if (d) d.open = true; });
 function pintar(lista, nota) {
   actual = lista;

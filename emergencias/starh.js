@@ -456,3 +456,17 @@
   function iniciar() { pedir(); new MutationObserver(pedir).observe(document.body, { childList: true, subtree: true }); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();
+
+/* 14/11/2026 · Regla de Belén para toda la app: «las listas desplegables siempre deben estar retraídas a menos que se clickeen.
+ * Si cambio de lista, se debe cerrar la que estaba y abrir la nueva». Al abrir un desplegable (<details>) se cierran los demás
+ * abiertos de la página, salvo los que lo contienen o los que están adentro de él. */
+(function () {
+  if (typeof document === 'undefined') return;
+  document.addEventListener('toggle', function (ev) {
+    var d = ev.target;
+    if (!d || d.tagName !== 'DETAILS' || !d.open) return;
+    document.querySelectorAll('details[open]').forEach(function (o) {
+      if (o !== d && !o.contains(d) && !d.contains(o)) o.open = false;
+    });
+  }, true);
+})();

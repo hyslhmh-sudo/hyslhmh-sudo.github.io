@@ -643,7 +643,9 @@ async function alertasSmn(u, admin) {
 const INFO = '<button type="button" class="info" aria-label="Más información" title="Más información"><span class="ms">info</span></button>';
 // «Lo que usaste último»: se guarda en este equipo (se borra al cerrar sesión, como el resto de las copias).
 function abrirCarpeta(cp) { const k = cp.dataset.carpeta, sub = document.querySelector('[data-sub="' + k + '"]'), ab = !cp.classList.contains('abierta');
-  cp.classList.toggle('abierta', ab); cp.setAttribute('aria-expanded', ab); if (sub) sub.classList.toggle('oculto', !ab); S.store.set('inicio.abierta.' + k, ab); }
+  // 14/11/2026 · Al abrir una carpeta se cierra la otra que estaba abierta (regla de Belén); no se recuerda el estado.
+  if (ab) document.querySelectorAll('.carpeta.abierta').forEach(o => { if (o !== cp) { o.classList.remove('abierta'); o.setAttribute('aria-expanded', false); const s2 = document.querySelector('[data-sub="' + o.dataset.carpeta + '"]'); if (s2) s2.classList.add('oculto'); } });
+  cp.classList.toggle('abierta', ab); cp.setAttribute('aria-expanded', ab); if (sub) sub.classList.toggle('oculto', !ab); }
 function recientes() { const v = S.store.get('inicio.recientes', []); return Array.isArray(v) ? v : []; }
 function recordar(k) { if (!k) return; const v = recientes().filter(x => x !== k); v.unshift(k); S.store.set('inicio.recientes', v.slice(0, 6)); }
 function pintar() {
@@ -678,7 +680,7 @@ function pintar() {
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
   // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COEsp, documentos y apoyo» es una tarjeta que se despliega
   // en el lugar y muestra sus tarjetas chicas. Se recuerda si quedó abierta (en este equipo).
-  const carpeta = (k, ico, tit, fn, bg) => { const L = g(k); if (!L.length) return ''; const ab = !!S.store.get('inicio.abierta.' + k, false);
+  const carpeta = (k, ico, tit, fn, bg) => { const L = g(k); if (!L.length) return ''; const ab = false; // 14/11/2026 · Siempre cerrada hasta que se toca (regla de Belén).
     return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"${bg ? ` style="background:${bg}!important"` : ''}><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
   // 13/11/2026 22:38 (Belén: «Fuentes lo quiero sacar de subcarpeta y ponerlo como carpeta»): tarjeta propia, del mismo tamaño que las carpetas, que abre la página.
   const enlaceGrande = (m, bg) => `<div class="carpeta" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" aria-label="${E(m.t)}" style="background:${bg}!important"><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}</b><span class="d">${E(m.d)}</span></span><span class="ms flecha">chevron_right</span></div>`;

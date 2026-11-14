@@ -216,7 +216,7 @@ function resuelto(e) { return e.aplica === 'No aplica' || !!e.estado; }
 function pct(lista) { const v = lista.filter(e => e.aplica !== 'No aplica' && e.estado).map(e => ({ 'Cumple': 1, 'Parcial': 0.5, 'No cumple': 0 }[e.estado])); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length * 100) : null; }
 function guiaHTML(letra, abierta) {
   const g = (window.GUIAS && GUIAS.PHR_GUIA[letra]); if (!g) return '';
-  return `<details class="guia"${abierta ? ' open' : ''}><summary><span class="ms" style="font-size:18px">lightbulb</span>Cómo completar esta sección</summary><div class="g-in">
+  return `<details class="guia"><summary><span class="ms" style="font-size:18px">lightbulb</span>Cómo completar esta sección</summary><div class="g-in">
     <p><b>Qué se evalúa:</b> ${S.esc(g.que)}</p><p><b>Qué pedir o mirar:</b> ${S.esc(g.pedir)}</p>
     <div class="crit"><b style="color:#172B4D">Cumple</b><span>${S.esc(g.c)}</span><b style="color:#172B4D">Parcial</b><span>${S.esc(g.p)}</span><b style="color:#172B4D">No cumple</b><span>${S.esc(g.nc)}</span></div></div></details>`;
 }

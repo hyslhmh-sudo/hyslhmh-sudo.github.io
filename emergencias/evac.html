@@ -252,7 +252,7 @@ function campoHTML(c, v, dis, pref) {
 }
 function seccionesHTML(l, obj, dis, pref, abrirPrimera) {
   return secciones(l).map((s, i) => { const n = s.c.filter(c => lleno(obj[c.clave])).length;
-    return `<details class="tarjeta sec" ${abrirPrimera && i === 0 ? 'open' : ''}><summary>${E(s.n)}<small>${n} de ${s.c.length}</small></summary><div class="campos">${s.c.map(c => campoHTML(c, obj[c.clave], dis, pref)).join('')}</div></details>`; }).join('');
+    return `<details class="tarjeta sec" ><summary>${E(s.n)}<small>${n} de ${s.c.length}</small></summary><div class="campos">${s.c.map(c => campoHTML(c, obj[c.clave], dis, pref)).join('')}</div></details>`; }).join('');
 }
 function atarCampos(cont, b) {
   cont.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k) { b.datos[k] = ev.target.value; ev.target.classList.add('cambiado'); avisarCambios(); } });
