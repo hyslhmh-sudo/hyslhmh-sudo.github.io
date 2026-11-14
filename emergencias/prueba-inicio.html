@@ -365,6 +365,9 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 #alertasSmn .al-ok .al-mini{color:#2F5B3A!important}#alertasSmn .al-ok .al-mini a{color:#1B5E20!important}
 #alertasSmn .al-ok.err{background:#FFF1E0!important;border-color:#F5B971!important;border-left-color:#F57C00!important;color:#5A3200!important}
 #alertasSmn .al-ok.err .ms{color:#F57C00!important}
+/* 13/11/2026 22:34 (Belén: «letra algo más pequeña, no tanto que dificulte la lectura»): tarjetas de adentro de la carpeta. */
+.fila.sub .tj b{font-size:15px!important}.fila.sub .tj .d{font-size:12px!important;line-height:1.4}
+.fila.sub .tj .ico{width:42px!important;height:42px!important}.fila.sub .tj .ico .ms{font-size:23px!important}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
@@ -637,7 +640,7 @@ function pintar() {
   const cerr = m => u && m.flag && u[m.flag] === false;
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
   // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
-  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
+  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
       <span class="ms fantasma" aria-hidden="true">${m.ico}</span><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
   const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
