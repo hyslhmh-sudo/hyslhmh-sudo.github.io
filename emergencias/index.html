@@ -464,6 +464,7 @@ const MODS = [
   { k: 'estab', grupo: 'gem', t: 'Establecimientos · consolidado', r: 'Camas, personal, ambulancias y fichas del Área Programática Trelew.', d: 'Consolidado de solo lectura de los establecimientos del Área Programática Trelew (HZT, HMH, HSST, hospitales rurales y puestos sanitarios): camas por tipo de internación, personal, ambulancias, grupo electrógeno y estado de la ficha. Base orientadora; los datos se corrigen en la ficha o en las hojas del libro.', ico: 'domain', href: 'establecimientos.html', flag: null, bg: 'linear-gradient(120deg,#0B4F6C 0%,#1689B8 100%)' },
   { k: 'deriv', grupo: 'gem', t: 'Derivaciones y albergues · COEsp', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
   { k: 'red', grupo: 'coesp', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COEsp.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
+  { k: 'anexos', grupo: 'coesp', t: 'Anexos por hospital', r: 'Anexos A a M: parte común y ficha de cada unidad.', d: 'Grilla de los anexos del COEsp (A a M) por unidad: Trelew, Rawson, hospitales rurales y puestos sanitarios. Cada anexo tiene una parte común y una ficha por unidad. Versión 0, en elaboración.', ico: 'grid_view', href: 'anexos.html', flag: null }, // 14/11/2026 · Anexos por hospital (v0)
   { k: 'coe', grupo: 'gem', t: 'Integrantes y contactos del COEsp', r: 'Participantes, funciones y proyectos.', d: 'Centro de Operaciones de Emergencia de Salud Pública (OMS): participantes, contactos, proyectos y funciones.', ico: 'groups', href: 'coe.html', flag: 'coe', c: '#5B3FC4', cc: '#EEEAFD' },
   { k: 'fuentes', grupo: 'fuentes', t: 'Fuentes', r: 'Bibliografía, normativa, links y cursos.', d: 'Normativa, herramientas OPS/OMS, cursos gratuitos, videos, bibliografía, salud mental, archivos del APTW y links a páginas.', ico: 'menu_book', href: 'fuentes.html', flag: null, c: '#0B4F6C', cc: '#E1F1F8' },
   { k: 'imp', grupo: 'prep', t: 'Formularios para imprimir', r: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#EAF0FF' },
@@ -473,7 +474,7 @@ const MODS = [
 // Un color distinto por tarjeta dentro de cada sección. Los niveles de alerta del SMN no se tocan.
 const COLOR_TJ = {
   ficha: ['#172B4D', '#2F5BEA'], starh: ['#7A2E0E', '#E8590C'], ish: ['#0B4F6C', '#1689B8'], phr: ['#3B2A7A', '#6A4FD8'], imp: ['#1B5E20', '#2E9E4F'],
-  estab: ['#7A5200', '#E0A100'], deriv: ['#7A1150', '#D6338A'], red: ['#0D4D40', '#14967A'], coe: ['#5B1F7A', '#A33FC4'], control: ['#8A4A00', '#F57C00'],
+  estab: ['#7A5200', '#E0A100'], deriv: ['#7A1150', '#D6338A'], red: ['#0D4D40', '#14967A'], coe: ['#5B1F7A', '#A33FC4'], anexos: ['#6B2D0B', '#C2571A'], control: ['#8A4A00', '#F57C00'],
   evac: ['#8E1B1B', '#D32F2F'], fuentes: ['#2B3A55', '#4B6A9B']
 };
 MODS.forEach(m => { const c = COLOR_TJ[m.k]; if (c) { m.bg = `linear-gradient(120deg,${c[0]} 0%,${c[1]} 100%)`; m.c = c[1]; } });
@@ -777,7 +778,7 @@ function pintar() {
   // 14/11/2026 · Ficha del establecimiento: la ven Administración y los referentes de los rurales (establecimiento en ACCESOS).
   const RURALES = ['HOSPITAL RURAL GAIMAN', 'HOSPITAL RURAL DOLAVON', 'HOSPITAL RURAL LAS PLUMAS', 'HOSPITAL RURAL PASO DE INDIOS', 'HOSPITAL RURAL CAMARONES', 'PUESTO SANITARIO 28 DE JULIO', 'PUESTO SANITARIO DIQUE FLORENTINO AMEGHINO'];
   const esReferenteRural = !!(u && (u.estab || []).some(e => RURALES.indexOf(String(e).toUpperCase()) >= 0));
-  const VIS = !u ? [] : ['phr', 'estab', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []).concat(esReferenteRural ? ['ficha'] : []);
+  const VIS = !u ? [] : ['phr', 'estab', 'deriv', 'red', 'anexos', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []).concat(esReferenteRural ? ['ficha'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COEsp, documentos y apoyo».
   const CTRL_CHICO = { grupo: 'gem', t: 'Tablero de control (en revisión)', c: '#F57C00', cc: '#FFF0E0' };

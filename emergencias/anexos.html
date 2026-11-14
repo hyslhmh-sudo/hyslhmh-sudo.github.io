@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anexos por hospital · COEsp</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* 14/11/2026 · Anexos por hospital (v0). Belén: «tenemos anexos de A a M, cada anexo se hace por hospital» y «OK» a la grilla.
+   Grilla sección (A a M) × unidad. Los enlaces se leen de la hoja ANEXOS del libro (acción anexos_leer): no van en el código
+   público de la página. Solo lectura. Ver claude/cambios-app-emergencias-12.md. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:1200px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid var(--coral);border-left:6px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda summary{cursor:pointer;font-weight:700}
+.tabw{overflow-x:auto;background:#fff;border:1px solid var(--borde);border-radius:16px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--claro);text-align:center;vertical-align:middle}
+th{font-size:11.5px;color:var(--suave);background:#fff;white-space:nowrap}
+th abbr{text-decoration:none;cursor:help}
+th.sec,td.sec{position:sticky;left:0;background:#fff;text-align:left;min-width:200px;z-index:1;border-right:1.5px solid var(--claro)}
+td.sec b{color:var(--medio);margin-right:4px}
+td.sec small{display:block;color:var(--tenue);font-size:11.5px}
+a.doc{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:var(--claro);color:var(--medio);text-decoration:none}
+a.doc:hover{background:var(--medio);color:#fff}
+a.doc.comun{background:#E3F4EC;color:var(--ok)}a.doc.comun:hover{background:var(--ok);color:#fff}
+.vacio{color:#B9C3D6}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--suave);margin:12px 2px 0}
+.leyenda b{color:var(--fuerte)}
+.pie{font-size:12px;color:var(--tenue)}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
+@media print{.barra .icono,.ayuda{display:none}.barra{position:static;background:#fff;color:#000;border-bottom:2px solid #000}.tabw{overflow:visible;border:0}body{background:#fff}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Anexos por hospital<small>COEsp · versión 0 · en elaboración</small></h1>
+  <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
+</header>
+<main id="app"><p class="pie">Cargando…</p></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const SECC = [['A', 'Administrativos'], ['B', 'Derivación y traslados'], ['C', 'Instituciones receptoras'], ['D', 'Albergues'], ['E', 'Medios de traslado públicos y privados'],
+  ['F', 'Contactos y responsables'], ['G', 'Pacientes con requerimientos especiales'], ['H', 'Alerta, activación y comunicación'], ['I', 'Población a cargo'],
+  ['J', 'Servicios esenciales y continuidad'], ['K', 'Seguridad del personal'], ['L', 'Capacitación y simulacros'], ['M', 'Después del evento']];
+const UNID = [['COMÚN', 'Parte común (vale para todas las unidades)'], ['TW', 'Hospital Zonal Trelew, Hospital María Humphreys y dependencias'],
+  ['RW', 'Hospital Subzonal Santa Teresita y dependencias (Rawson)'], ['GA', 'Hospital Rural Gaiman'], ['DO', 'Hospital Rural Dolavon'], ['LP', 'Hospital Rural Las Plumas'],
+  ['PI', 'Hospital Rural Paso de Indios'], ['CA', 'Hospital Rural Camarones'], ['JU', 'Puesto Sanitario 28 de Julio'], ['DA', 'Puesto Sanitario Dique Florentino Ameghino']];
+function pintar(filas) {
+  const idx = {}; filas.forEach(f => { idx[f.sec + '|' + f.unidad] = f; });
+  const cab = '<tr><th class="sec">Anexo</th>' + UNID.map(u => `<th><abbr title="${E(u[1])}">${E(u[0] === 'COMÚN' ? 'Común' : u[0])}</abbr></th>`).join('') + '</tr>';
+  const cuerpo = SECC.map(s => {
+    const n = UNID.filter(u => idx[s[0] + '|' + u[0]]).length;
+    return `<tr><td class="sec"><b>${s[0]}</b>${E(s[1])}<small>${n ? n + ' documento' + (n > 1 ? 's' : '') : 'Sin documentos todavía'}</small></td>` + UNID.map(u => {
+      const f = idx[s[0] + '|' + u[0]];
+      if (!f || !f.url) return '<td><span class="vacio">—</span></td>';
+      const tit = `${f.titulo || ''} · ${u[1]} · versión ${f.version || '0'} · ${f.estado || 's/d'}${f.act ? ' · ' + f.act : ''}`;
+      return `<td><a class="doc${u[0] === 'COMÚN' ? ' comun' : ''}" href="${E(f.url)}" target="_blank" rel="noopener" title="${E(tit)}" aria-label="${E(tit)}"><span class="ms">description</span></a></td>`;
+    }).join('') + '</tr>';
+  }).join('');
+  app.innerHTML = `<div class="aviso">Documentos en versión 0, en elaboración. Cada anexo tiene una <b>parte común</b> (vale para todas las unidades) y una <b>ficha por unidad</b> con lo propio de cada hospital o puesto sanitario.</div>
+  <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
+  <p>Tocá un ícono para abrir el documento en Google Docs (se abre en otra pestaña). El ícono verde es la parte común; el azul, la ficha de la unidad. Una raya significa que ese documento todavía no está hecho.</p>
+  <p>Para abrir los documentos necesitás permiso en Drive. Si no podés abrir alguno, pedíselo a la administración de la app.</p>
+  <p>Las correcciones del texto común se hacen en la parte común y valen para todas las unidades; lo propio de cada establecimiento se corrige en su ficha.</p></details>
+  <div class="tabw"><table><thead>${cab}</thead><tbody>${cuerpo}</tbody></table></div>
+  <div class="leyenda">${UNID.map(u => `<span><b>${E(u[0] === 'COMÚN' ? 'Común' : u[0])}</b> · ${E(u[1])}</span>`).join('')}</div>`;
+}
+(async function () {
+  const c = S.store.get('anexos.cache'); if (c && c.filas) pintar(c.filas);
+  try { const r = await S.api('anexos_leer', {}); if (!r || !r.ok) throw r; S.store.set('anexos.cache', r); pintar(r.filas || []); }
+  catch (e) { if (!c) app.innerHTML = '<div class="aviso">No se pudieron leer los anexos. Probá de nuevo en un rato.</div>'; }
+})();
+})();
+</script>
+</body>
+</html>
