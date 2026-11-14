@@ -105,7 +105,9 @@ const SEC = [
   { id: 's6', t: 'Edificios a cargo', d: 'CAPS, puestos sanitarios y otros', c: [
     { k: 'edif', l: 'Edificios', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['CAPS', 'Puesto sanitario', 'Otro'] }, { k: 'nombre', l: 'Nombre' }, { k: 'dir', l: 'Dirección' }, { k: 'coord', l: 'Coordenadas' }, { k: 'horario', l: 'Horario' }, { k: 'resp', l: 'Responsable' }], add: 'Agregar edificio' } ] },
   { id: 's7', t: 'Personal', d: 'Quiénes responden', min: true, c: [
-    { k: 'dotacion', l: 'Dotación aproximada por turno', t: 'a' }, { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
+    { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
+    { k: 'turnos', l: 'Trabajadores por turno (escribir el nombre u horario del turno si es distinto)', t: 'rep', fijo: ['Mañana', 'Tarde', 'Noche'], cols: [{ k: 'quien', l: 'Turno' }, { k: 'trab', l: 'Trabajadores', t: 'n' }, { k: 'med', l: 'Médicos', t: 'n' }, { k: 'enf', l: 'Enfermeros', t: 'n' }], add: 'Agregar turno' },
+    { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
     { k: 'cadena', l: 'Cadena de llamadas (orden de aviso)', t: 'a' } ] },
   { id: 's8', t: 'Contactos de emergencia', d: 'Visibles solo para Administración, el referente y la parte interna del COEsp', min: true, c: [
     { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Director/a o autoridad', 'Otra autoridad', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Municipalidad', 'Hospital de referencia', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)', 'Radio local'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
@@ -120,7 +122,8 @@ const SEC = [
 const clave = e => 'prueba.ficha.' + e;
 let estab = S.store.get('prueba.ficha.estab', ESTAB[0]), datos = {};
 const leer = () => { datos = S.store.get(clave(estab), {}) || {}; };
-const guardar = () => { S.store.set(clave(estab), datos); progreso(); };
+const guardar = () => { datos._act = new Date().toISOString(); S.store.set(clave(estab), datos); progreso(); };
+const fechaAct = () => { if (!datos._act) return 'todavía no se cargó nada'; const d = new Date(datos._act); return 'última carga ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); };
 const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
 const secOk = s => s.c.every(lleno);
 function campo(c) {
@@ -144,18 +147,19 @@ function campo(c) {
 function pintar() {
   leer();
   app.innerHTML = `<div class="aviso"><b>Vista de prueba.</b> Lo que cargues acá queda solo en este equipo y no llega al libro. Sirve para revisar el diseño antes de ponerlo en la app.</div>
+  <div class="aviso" style="background:var(--claro)"><b>Se completa por tandas.</b> No hace falta cargar todo de una vez: cada dato se guarda solo apenas se escribe. Se puede cerrar y seguir otro día, por la sección que se quiera. Lo que no se sabe se deja vacío.</div>
   <div class="cab"><label for="selEst">Establecimiento</label><select id="selEst">${ESTAB.map(e => `<option${e === estab ? ' selected' : ''}>${E(e)}</option>`).join('')}</select>
   <div id="prog"></div></div>
-  ${SEC.map((s, i) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${i + 1}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · obligatoria para empezar STAR-H y PHR' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}</div></details>`).join('')}
+  ${SEC.map((s, i) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${i + 1}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · conviene empezar por esta' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}</div></details>`).join('')}
   <p class="pie">Versión 0. Lo que no se sabe queda como «s/d (revisar)». Base orientadora: no es un registro en tiempo real.</p>`;
   progreso();
 }
 function progreso() {
   const ok = SEC.filter(secOk).length, min = SEC.filter(s => s.min), minOk = min.every(secOk);
   const p = document.getElementById('prog'); if (!p) return;
-  p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b>
-    <span class="chip ${minOk ? 'ok' : 'falta'}"><span class="ms" style="font-size:16px">${minOk ? 'check_circle' : 'error'}</span>${minOk ? 'Mínimo completo: puede empezar STAR-H y PHR' : 'Falta el mínimo (secciones 1, 2, 7 y 8) para empezar STAR-H y PHR'}</span></div>`;
-  SEC.forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const n = s.c.filter(lleno).length; ch.className = 'chip ' + (n === s.c.length ? 'ok' : 'falta'); ch.textContent = n === s.c.length ? 'Completa' : `${n} de ${s.c.length}`; });
+  p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b><small>· ${fechaAct()}</small>
+    <span class="chip ${minOk ? 'ok' : 'falta'}"><span class="ms" style="font-size:16px">${minOk ? 'check_circle' : 'schedule'}</span>${minOk ? 'Ya están las secciones 1, 2, 7 y 8: alcanza para empezar STAR-H y PHR' : 'Sugerido: empezar por las secciones 1, 2, 7 y 8 (marcadas en naranja)'}</span></div>`;
+  SEC.forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const n = s.c.filter(lleno).length; ch.className = 'chip ' + (n === s.c.length ? 'ok' : 'falta'); ch.textContent = n === s.c.length ? 'Completa' : n ? `En curso · ${n} de ${s.c.length}` : 'Sin empezar'; });
 }
 app.addEventListener('change', ev => {
   const t = ev.target;
