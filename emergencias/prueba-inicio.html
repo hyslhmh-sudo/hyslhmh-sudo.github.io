@@ -322,6 +322,13 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 #agenda .ag-dia{background:var(--pat-claro)!important;color:var(--hum)!important}
 #boletines .bo-ult,#boletines .bo-emb{background:#fff!important}
 #alertasSmn .al-mini a,#alertasSmn .al-pie a{color:var(--pat)!important}
+/* 13/11/2026 22:27 (Belén: «faltan los rojos y el resto de colores»): cada sección conserva su color propio (el de la app original);
+   el diseño (tamaño, título, una línea, ⓘ) es el mismo para todas. */
+.tj,.tj-resp{position:relative;overflow:hidden;background:var(--bg)!important;border:0!important;color:#fff}
+.tj .fantasma{position:absolute;right:-8px;bottom:-22px;font-size:96px;color:#fff;opacity:.09;pointer-events:none}
+.tj .t,.tj .ico{position:relative}
+.tj-resp .d{color:#F3E9E9!important}
+.carpeta{background:linear-gradient(120deg,#172B4D 0%,#2F5BEA 100%)!important;border:0!important}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
@@ -594,8 +601,8 @@ function pintar() {
   const cerr = m => u && m.flag && u[m.flag] === false;
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
   // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
-  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}">
-      <span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
+  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'}">
+      <span class="ms fantasma" aria-hidden="true">${m.ico}</span><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
   const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
@@ -605,7 +612,7 @@ function pintar() {
   const VIS = !u ? [] : ['phr', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COE, documentos y apoyo».
-  const CTRL_CHICO = { grupo: 'gest', t: 'Tablero de control (en revisión)', c: '#0D313F', cc: '#DDF1F4' };
+  const CTRL_CHICO = { grupo: 'gest', t: 'Tablero de control (en revisión)' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k], r: OTRO_TXT[m.k] }) : m).map(m => m.k === 'control' && CONTROL_EN_REVISION ? Object.assign({}, m, CTRL_CHICO) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
