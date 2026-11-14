@@ -33,6 +33,11 @@ li:last-child{border-bottom:0}
 li a{color:var(--fuerte);font-weight:700;font-size:13px;word-break:break-word}
 li small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
 .pie{font-size:12px;color:var(--tenue)}
+.subs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.subs a{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #C5D1F2;border-left:4px solid #2F5BEA;border-radius:12px;padding:8px 12px;font-weight:700;font-size:13.5px;color:#172B4D;text-decoration:none}
+.subs a .ms{font-size:19px;color:#2F5BEA}.subs a b{background:#E4EAFB;border-radius:999px;padding:0 8px;font-size:12px}
+.grupo{scroll-margin-top:12px}
+.mod-t{display:inline-block;font-size:11px;font-weight:700;color:#172B4D;background:#E4EAFB;border-radius:6px;padding:1px 6px;vertical-align:1px}
 /* 05/11/2026 · Bibliografía: carpeta y subida (solo Administración) */
 .adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .adm b{flex:1;min-width:200px;font-size:14px}.adm b small{display:block;font-weight:500;color:var(--suave);font-size:12px}
@@ -99,6 +104,14 @@ const BASE = [
   ['Normativa', 'Resolución SRT N.º 905/2015, Anexo II, punto 2.2: funciones de los Servicios de Higiene y Seguridad en el Trabajo (planes de contingencia y emergencias).', '', '']
 ].map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
 const ORDEN = ['STAR-H', 'ISH', 'PHR', 'COE', 'Evacuación', 'General', 'Normativa'];
+// 14/11/2026 · Belén: «separar las fuentes en subtemas». Se agrupa por Subtema (hoja FUENTES, col. F); el módulo queda como etiqueta.
+const SUBT = ['Normativa', 'Herramientas OPS/OMS', 'Bibliografía de gestión de riesgos', 'Archivos de APTW', 'Links a páginas'];
+const ICO_S = { Normativa: 'gavel', 'Herramientas OPS/OMS': 'construction', 'Bibliografía de gestión de riesgos': 'menu_book', 'Archivos de APTW': 'folder_shared', 'Links a páginas': 'link' };
+const subDe = f => { const t = String(f.subtema || '').trim(); if (t) return t; const m = String(f.modulo || '').trim();
+  if (/^normativa$/i.test(m)) return 'Normativa'; if (/^(STAR-H|ISH|PHR|Evacuación)$/i.test(m)) return 'Herramientas OPS/OMS';
+  return f.enlace && !f.archivo && !f.archivoId ? 'Links a páginas' : 'Bibliografía de gestión de riesgos'; };
+const modNom = m => m === 'COE' ? 'COEsp' : m;
+const idS = k => 'sub-' + k.normalize('NFD').replace(/[^\w]+/g, '-').toLowerCase();
 const ICO = { 'STAR-H': 'crisis_alert', ISH: 'local_hospital', PHR: 'fact_check', COE: 'groups', 'Evacuación': 'directions_run', General: 'public', Normativa: 'gavel' };
 // 05/11/2026 · Carpeta de bibliografía (Drive › 07 · REFERENCIAS, privada) y subida: solo Administración.
 let CARPETA = (S.sesion.token() && S.store.get('fuentes.carpeta', '')) || ''; // 06/11/2026 · El enlace lo manda el servidor solo a Administración (no va en el código público).
@@ -118,6 +131,7 @@ function dlgSubir() {
     <form class="dlg-c" id="fSub">
       <label class="campo"><span>Archivo (PDF, Word, Excel, imagen · hasta ${MAX_MB} MB) · optativo</span><input type="file" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,image/*"></label>
       <label class="campo"><span>Cita *</span><textarea name="cita" placeholder="Autor. Título. Ciudad: Editorial o institución; año."></textarea></label>
+      <label class="campo"><span>Subtema</span><select name="subtema">${SUBT.map(t => `<option${t === 'Bibliografía de gestión de riesgos' ? ' selected' : ''}>${E(t)}</option>`).join('')}</select></label>
       <label class="campo"><span>Módulo o tema</span><input name="modulo" list="dlMod" value="General"><datalist id="dlMod">${mods.map(m => `<option value="${E(m)}">`).join('')}</datalist></label>
       <label class="campo"><span>Enlace público (si existe en internet) · optativo</span><input name="enlace" type="url" placeholder="https://…"></label>
       <label class="campo"><span>Nota (para qué sirve, qué parte usar) · optativo</span><textarea name="nota"></textarea></label>
@@ -139,7 +153,7 @@ async function guardarSub() {
   if (!navigator.onLine) { est.textContent = 'Para subir se necesita conexión.'; return; }
   b.disabled = true; est.textContent = a ? 'Subiendo ' + a.name + '… (puede tardar un poco)' : 'Guardando…';
   try {
-    const datos = { cita: f.cita.value, modulo: f.modulo.value, enlace: f.enlace.value, nota: f.nota.value };
+    const datos = { cita: f.cita.value, subtema: f.subtema.value, modulo: f.modulo.value, enlace: f.enlace.value, nota: f.nota.value };
     if (a) datos.archivo = { nombre: a.name, tipo: a.type || '', datos: await base64(a) };
     const r = await S.api('fuente_subir', datos, 180000);
     if (!r.ok) throw r;
@@ -174,9 +188,10 @@ function actualizar(nota) {
 }
 function pintar(lista, nota) {
   actual = lista;
-  const g = {}; lista.forEach(f => (g[f.modulo || 'General'] = g[f.modulo || 'General'] || []).push(f));
-  const claves = Object.keys(g).sort((a, b) => (ORDEN.indexOf(a) + 99) % 99 - (ORDEN.indexOf(b) + 99) % 99);
-  app.innerHTML = barraAdm() + claves.map(k => `<section class="grupo"><h2><span class="ms">${ICO[k] || 'description'}</span>${E(k === 'COE' ? 'COEsp' : k)}</h2><ol>${g[k].map(f => `<li>${E(f.cita)}
+  const g = {}; lista.forEach(f => { const k = subDe(f); (g[k] = g[k] || []).push(f); });
+  const claves = Object.keys(g).sort((a, b) => (SUBT.indexOf(a) + 99) % 99 - (SUBT.indexOf(b) + 99) % 99);
+  const indice = `<nav class="subs">${claves.map(k => `<a href="#${idS(k)}"><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)} <b>${g[k].length}</b></a>`).join('')}</nav>`;
+  app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
     ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }
