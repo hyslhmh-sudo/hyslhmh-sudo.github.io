@@ -96,7 +96,9 @@ const num = v => { const t = String(v == null ? '' : v).trim(); if (!t) return n
 const fmt = n => n == null ? '' : n.toLocaleString('es-AR');
 const val = v => v == null || v === '' ? SD : Array.isArray(v) ? (v.length ? E(v.join(', ')) : SD) : typeof v === 'object' ? E(JSON.stringify(v)) : E(String(v));
 let datos = null, abierto = '';
-const F = { area: S.store.get('estab.area', 'Área Programática Trelew'), tipo: '', red: '', loc: '', q: '' };
+// 14/11/2026 12:29 (Belén: «solo debería estar Trelew y no el resto»): el consolidado muestra solo el Área Programática Trelew.
+const AREA = 'Área Programática Trelew';
+const F = { area: AREA, tipo: '', red: '', loc: '', q: '' };
 
 function fichaEstado(f) {
   if (!f) return null;
@@ -113,7 +115,7 @@ function filtrados() {
   return datos.establecimientos.filter(e => (!F.area || e.area === F.area) && (!F.tipo || e.tipo === F.tipo) && (!F.red || e.red === F.red) && (!F.loc || e.loc === F.loc)
     && (!F.q || st(e.nombre + ' ' + e.corto + ' ' + e.loc).indexOf(st(F.q)) >= 0));
 }
-const opciones = (k, todos) => { const L = [...new Set(datos.establecimientos.map(e => e[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')); return `<option value="">${todos}</option>` + L.map(x => `<option${F[k] === x ? ' selected' : ''}>${E(x)}</option>`).join(''); };
+const opciones = (k, todos) => { const L = [...new Set(datos.establecimientos.filter(e => e.area === AREA).map(e => e[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')); return `<option value="">${todos}</option>` + L.map(x => `<option${F[k] === x ? ' selected' : ''}>${E(x)}</option>`).join(''); };
 
 function pintar() {
   const L = filtrados();
@@ -128,7 +130,7 @@ function pintar() {
   });
   const ambTot = sumObj(amb);
   const kpis = `<div class="kpis">
-    <div class="kpi"><span>Establecimientos</span><b>${L.length}</b><small>${E(F.area || 'Todas las áreas programáticas')}</small></div>
+    <div class="kpi"><span>Establecimientos</span><b>${L.length}</b><small>${E(AREA)}</small></div>
     <div class="kpi"><span>Camas (total estimado)</span><b>${fmt(camasTot)}</b><small>${camasSd ? `${camasSd} establecimiento${camasSd > 1 ? 's' : ''} sin dato (s/d)` : 'Todos con dato'}</small></div>
     <div class="kpi"><span>Ambulancias cargadas en fichas</span><b>${ambTot || '—'}</b><small>${ambTot ? Object.keys(amb).map(k => `${amb[k]} ${E(k.toLowerCase())}`).join(' · ') : 'Todavía sin datos'}</small></div>
     <div class="kpi"><span>Personal (fichas cargadas)</span><b>${conPers ? fmt(trab) : '—'}</b><small>${conPers ? `${fmt(med)} médicos · ${fmt(enf)} enfermeros · ${conPers} ficha${conPers > 1 ? 's' : ''}` : 'Todavía sin datos'}</small></div>
@@ -141,7 +143,6 @@ function pintar() {
   const filas = areas.map(a => (F.area ? '' : `<tr class="grupo"><td colspan="8">${E(a || 's/d (revisar)')}</td></tr>`) + L.filter(e => e.area === a).map(filaHtml).join('')).join('');
   app.innerHTML = `<div class="aviso"><b>Base orientadora, no es un registro en tiempo real.</b> Las capacidades son estimadas y salen de las hojas LUGARES y CAMAS y de la ficha del establecimiento (HZT, HMH, HSST, hospitales rurales y puestos sanitarios). Lo que falta figura como «s/d (revisar)». No se muestran contactos ni datos de pacientes.</div>
   <div class="filtros no-imp">
-    <label>Área programática<select data-f="area">${opciones('area', 'Todas')}</select></label>
     <label>Tipo<select data-f="tipo">${opciones('tipo', 'Todos')}</select></label>
     <label>Red<select data-f="red">${opciones('red', 'Todas')}</select></label>
     <label>Localidad<select data-f="loc">${opciones('loc', 'Todas')}</select></label>
@@ -188,7 +189,7 @@ function detalleHtml(e) {
   }
   return `<tr class="det"><td colspan="8"><div class="dgrid">${ident}${cajCamas}${cajFicha}</div></td></tr>`;
 }
-app.addEventListener('change', ev => { const k = ev.target.dataset.f; if (!k) return; F[k] = ev.target.value; if (k === 'area') S.store.set('estab.area', F.area); abierto = ''; pintar(); });
+app.addEventListener('change', ev => { const k = ev.target.dataset.f; if (!k) return; F[k] = ev.target.value; abierto = ''; pintar(); });
 app.addEventListener('input', ev => { if (ev.target.dataset.f !== 'q') return; F.q = ev.target.value; clearTimeout(app._t); app._t = setTimeout(() => { const p = ev.target.selectionStart; pintar(); const i = app.querySelector('[data-f=q]'); i.focus(); try { i.setSelectionRange(p, p); } catch (e) {} }, 250); });
 const alternar = tr => { abierto = abierto === tr.dataset.id ? '' : tr.dataset.id; pintar(); const n = app.querySelector(`tr.fila[data-id="${abierto}"]`); if (n) n.scrollIntoView({ block: 'nearest' }); };
 app.addEventListener('click', ev => {
