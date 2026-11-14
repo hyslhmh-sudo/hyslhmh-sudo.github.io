@@ -92,9 +92,10 @@ const SEC = [
     { k: 'pob_at', l: 'Población atendida (estimada)', t: 'n' }, { k: 'pob_ciu', l: 'Población estimada de la localidad', t: 'n' },
     { k: 'grupos', l: 'Personas que requieren asistencia en una emergencia', t: 'auto', x: 'Se completa solo con las cantidades de lo cargado en la ficha de pacientes con necesidades especiales (electrodependientes, oxígeno domiciliario, diálisis, postrados, embarazadas a término). No se vuelve a cargar acá y no se muestran nombres.' } ] },
   { id: 's4', t: 'Capacidad asistencial', d: 'Con qué cuenta (puede no tener todo)', c: [
-    { k: 'camas', l: 'Camas', t: 'auto', x: 'Se trae de la hoja LUGARES (camas de internación y de emergencia).' },
     { k: 'servicios', l: '¿Con qué servicios cuenta?', t: 'm', o: ['Internación', 'Quirófano', 'Sala de partos', 'Laboratorio', 'Rayos', 'Farmacia', 'Ninguno de estos'] },
-    { k: 'intern', l: 'Si tiene internación: ¿de qué tipo?', t: 'm', o: ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'] },
+    { k: 'camas', l: 'Internación: cantidad de camas por tipo (dejar vacío el tipo que no tiene)', t: 'rep', fijo: ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'], cols: [{ k: 'quien', l: 'Tipo de internación' }, { k: 'n', l: 'Camas', t: 'n' }], add: 'Agregar otro tipo' },
+    { k: 'cam_guardia', l: 'Camas o camillas de guardia (cantidad)', t: 'n' },
+    { k: 'arm', l: 'Respiradores (ARM / AVM): uno por fila, con su estado. Si no tiene, dejar vacío', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Fijo', 'De traslado', 'No sabe'] }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar respirador' },
     { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Identificación (n.º interno o dominio)' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
     { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
   { id: 's5', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
