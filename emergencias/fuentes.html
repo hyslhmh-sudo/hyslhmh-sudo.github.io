@@ -37,6 +37,7 @@ li small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
 .adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .adm b{flex:1;min-width:200px;font-size:14px}.adm b small{display:block;font-weight:500;color:var(--suave);font-size:12px}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid transparent;border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:none;min-height:42px}
+.chip-a.leer{border:0;cursor:pointer;font-family:inherit;background:#2F5BEA;color:#fff}.chip-a.leer:disabled{opacity:.6}
 .chip-a{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;font-weight:700;color:#172B4D;background:#E4EAFB;border-radius:999px;padding:3px 9px;text-decoration:none}
 dialog{border:0;border-radius:16px;padding:0;max-width:560px;width:calc(100% - 24px);box-shadow:0 20px 60px rgba(23,43,77,.3)}dialog::backdrop{background:rgba(23,43,77,.45)}
 .dlg-cab{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--linea)}.dlg-cab b{flex:1}
@@ -120,7 +121,7 @@ function dlgSubir() {
       <label class="campo"><span>Módulo o tema</span><input name="modulo" list="dlMod" value="General"><datalist id="dlMod">${mods.map(m => `<option value="${E(m)}">`).join('')}</datalist></label>
       <label class="campo"><span>Enlace público (si existe en internet) · optativo</span><input name="enlace" type="url" placeholder="https://…"></label>
       <label class="campo"><span>Nota (para qué sirve, qué parte usar) · optativo</span><textarea name="nota"></textarea></label>
-      <p class="msg-s">El archivo queda en la carpeta privada 07 · REFERENCIAS. Los demás usuarios ven la cita y el enlace público solo en los módulos PHR, General, Normativa y Evacuación; el archivo de Drive lo ves solo vos.</p>
+      <p class="msg-s">El archivo queda en la carpeta privada 07 · REFERENCIAS. Todos los usuarios ven la cita y el enlace público, y leen el archivo desde la app con «Leer el documento» (la carpeta no se comparte). El enlace de Drive lo ves solo vos. Las planillas de Google no se muestran a los demás.</p>
       <p class="msg-s" id="estSub"></p>
     </form>
     <div class="dlg-p"><button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" id="bGuardarSub"><span class="ms">save</span>Guardar</button></div>`;
@@ -149,7 +150,24 @@ async function guardarSub() {
     b.disabled = false;
   }
 }
-document.addEventListener('click', ev => { if (ev.target.closest('#bSubir')) dlgSubir(); if (ev.target.closest('[data-c]')) document.getElementById('dlg').close(); });
+// 14/11/2026 · Todos leen los documentos de Fuentes desde la app: el servidor entrega el archivo a quien inició sesión (el Drive no se comparte).
+async function leer(b) {
+  const id = b.dataset.leer, txt = b.lastChild.textContent;
+  if (!S.sesion.token() || S.DEMO) { alert('Para leer el documento tenés que iniciar sesión.'); return; }
+  const w = window.open('', '_blank');
+  b.disabled = true; b.lastChild.textContent = 'Abriendo…';
+  try {
+    const r = await S.api('fuentes_archivo', { id: id }, 120000);
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo abrir el documento.');
+    const bin = atob(r.datos), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([u8], { type: r.tipo }));
+    if (w) w.location.href = url; else { const a = document.createElement('a'); a.href = url; a.download = r.nombre; a.click(); }
+    setTimeout(() => URL.revokeObjectURL(url), 600000);
+  } catch (e) { if (w) w.close(); alert(/desconocida|disponible/i.test(e.message) ? 'Falta publicar la versión nueva del Apps Script de la app.' : e.message); }
+  finally { b.disabled = false; b.lastChild.textContent = txt; }
+}
+document.addEventListener('click', ev => { const l = ev.target.closest('[data-leer]'); if (l) leer(l); if (ev.target.closest('#bSubir')) dlgSubir(); if (ev.target.closest('[data-c]')) document.getElementById('dlg').close(); });
 function actualizar(nota) {
   if (S.DEMO || !navigator.onLine) return;
   S.api('fuentes').then(r => { if (r && r.carpeta) { CARPETA = r.carpeta; S.store.set('fuentes.carpeta', r.carpeta); } if (r && r.ok && r.fuentes.length) { S.store.set('fuentes', r.fuentes); pintar(r.fuentes, nota || 'Actualizado.'); } }).catch(() => {});
@@ -159,7 +177,7 @@ function pintar(lista, nota) {
   const g = {}; lista.forEach(f => (g[f.modulo || 'General'] = g[f.modulo || 'General'] || []).push(f));
   const claves = Object.keys(g).sort((a, b) => (ORDEN.indexOf(a) + 99) % 99 - (ORDEN.indexOf(b) + 99) % 99);
   app.innerHTML = barraAdm() + claves.map(k => `<section class="grupo"><h2><span class="ms">${ICO[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${E(f.cita)}
-    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivo && esAdm() ? `<br><a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
+    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${f.nota ? `<small>${E(f.nota)}</small>` : ''}</li>`).join('')}</ol></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }
 const guardadas = S.store.get('fuentes', null);
