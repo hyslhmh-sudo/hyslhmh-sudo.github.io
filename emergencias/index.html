@@ -72,6 +72,9 @@ body{background:#F5F7FB}
 .barra .sesion button{background:#fff;color:#172B4D;border:1px solid #fff;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .barra .sesion button:hover{background:#E8EEFF}
 .barra .sst a{background:rgba(10,20,40,.78);border-color:rgba(255,255,255,.7);font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+/* 13/11/2026 22:05 (Belén): el botón del mapa va al borde inferior izquierdo de la banda, para no tapar la zona de interés (derecha). */
+.barra{padding-bottom:52px}
+.barra .sst{position:absolute;left:max(16px,calc((100% - 960px) / 2));bottom:10px;margin:0;justify-content:flex-start}
 .barra h1{text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .barra .sst{max-width:960px;margin:10px auto 0;display:flex;justify-content:flex-end}
 .barra .sst a{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#F5F7FB;text-decoration:none;background:rgba(15,28,52,.55);border:1px solid rgba(245,247,251,.45);border-radius:999px;padding:5px 11px;backdrop-filter:blur(2px)}
