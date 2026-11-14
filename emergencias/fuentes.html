@@ -45,6 +45,8 @@ details.gr>summary h2{display:flex;align-items:center;gap:8px;margin:0}
 details.gr>summary h2 .n{background:#E4EAFB;color:#172B4D;border-radius:999px;padding:0 9px;font-size:12px}
 details.gr>summary h2 .fl{margin-left:auto;color:#2F5BEA;transition:transform .2s}details.gr[open]>summary h2 .fl{transform:rotate(180deg)}
 details.gr[open]>summary{margin-bottom:8px}
+li.dest{border:2px solid #F57C00;border-left-width:6px;border-radius:12px;background:#FFF6EC;padding:10px 12px;margin:6px 0 8px -6px;list-style-position:inside}
+.dest-t{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:800;color:#fff;background:#F57C00;border-radius:999px;padding:1px 9px 1px 6px;margin-bottom:4px}.dest-t .ms{font-size:14px}
 .mod-t{display:inline-block;font-size:11px;font-weight:700;color:#172B4D;background:#E4EAFB;border-radius:6px;padding:1px 6px;vertical-align:1px}
 /* 05/11/2026 · Bibliografía: carpeta y subida (solo Administración) */
 .adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -200,8 +202,10 @@ function lineaHtml(l) {
   const partes = String(l).split(/(https?:\/\/\S+)/g);
   return partes.map(x => /^https?:\/\//.test(x) ? `<a class="det-a" href="${E(x)}" target="_blank" rel="noopener">${/zoom\.us\/rec/.test(x) ? 'Ver grabación' : /register/.test(x) ? 'Inscribirse' : 'Abrir'}</a>` : E(x)).join('');
 }
+// 14/11/2026 · Fuente destacada (Belén: «ponerla como destacada, en el 1.er lugar y con borde de color»): la nota empieza con «★».
+const esDest = f => /^\s*★/.test(String(f.nota || ''));
 function notaHtml(n) {
-  const L = String(n || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+  const L = String(n || '').replace(/^\s*★\s*/, '').split(/\n+/).map(x => x.trim()).filter(Boolean);
   if (!L.length) return '';
   return `<small>${lineaHtml(L[0])}</small>` + (L.length > 1 ? `<details class="det"><summary>Ver detalle (${L.length - 1})</summary><ul>${L.slice(1).map(l => `<li>${lineaHtml(l)}</li>`).join('')}</ul></details>` : '');
 }
@@ -212,9 +216,10 @@ document.addEventListener('click', ev => { const a = ev.target.closest('.subs a'
 function pintar(lista, nota) {
   actual = lista;
   const g = {}; lista.forEach(f => { const k = subDe(f); (g[k] = g[k] || []).push(f); });
+  Object.keys(g).forEach(k => { g[k] = g[k].filter(esDest).concat(g[k].filter(f => !esDest(f))); }); // destacadas primero
   const claves = Object.keys(g).sort((a, b) => (SUBT.indexOf(a) + 99) % 99 - (SUBT.indexOf(b) + 99) % 99);
   const indice = `<nav class="subs">${claves.map(k => `<a href="#${idS(k)}"><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)} <b>${g[k].length}</b></a>`).join('')}</nav>`;
-  app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><details class="gr" data-k="${E(k)}"${abierto(k) ? ' open' : ''}><summary><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}<b class="n">${g[k].length}</b><span class="ms fl">expand_more</span></h2></summary><ol>${g[k].map(f => `<li>${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
+  app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><details class="gr" data-k="${E(k)}"${abierto(k) ? ' open' : ''}><summary><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}<b class="n">${g[k].length}</b><span class="ms fl">expand_more</span></h2></summary><ol>${g[k].map(f => `<li${esDest(f) ? ' class="dest"' : ''}>${esDest(f) ? '<span class="dest-t"><span class="ms">star</span>Destacado</span><br>' : ''}${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
     ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></details></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }
