@@ -469,6 +469,14 @@ const MODS = [
   { k: 'imp', grupo: 'prep', t: 'Formularios para imprimir', r: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', d: 'STAR-H, PHR e ISH, en blanco o con lo cargado.', ico: 'print', href: 'imprimir.html', flag: null, c: '#2F5BEA', cc: '#EAF0FF' },
   { k: 'control', grupo: 'gem', t: 'Tablero de control', r: 'Avance de tareas, vencimientos y acuerdos por proyecto.', d: 'Seguimiento por proyecto, solo lectura: avance de las tareas, vencimientos, reuniones y acuerdos, integrantes y funciones. Ves los proyectos que tenés habilitados.', ico: 'dashboard', href: 'control.html', flag: 'tablero', bg: 'linear-gradient(120deg,#0D313F 0%,#1B7A8C 100%)' }
 ];
+// 14/11/2026 13:27 (Belén: «revisar colores para que no se repitan tanto; incorporar anaranjados, amarillos, fucsia»).
+// Un color distinto por tarjeta dentro de cada sección. Los niveles de alerta del SMN no se tocan.
+const COLOR_TJ = {
+  ficha: ['#172B4D', '#2F5BEA'], starh: ['#7A2E0E', '#E8590C'], ish: ['#0B4F6C', '#1689B8'], phr: ['#3B2A7A', '#6A4FD8'], imp: ['#1B5E20', '#2E9E4F'],
+  estab: ['#7A5200', '#E0A100'], deriv: ['#7A1150', '#D6338A'], red: ['#0D4D40', '#14967A'], coe: ['#5B1F7A', '#A33FC4'], control: ['#8A4A00', '#F57C00'],
+  evac: ['#8E1B1B', '#D32F2F'], fuentes: ['#2B3A55', '#4B6A9B']
+};
+MODS.forEach(m => { const c = COLOR_TJ[m.k]; if (c) { m.bg = `linear-gradient(120deg,${c[0]} 0%,${c[1]} 100%)`; m.c = c[1]; } });
 // Mi perfil (Administración): accesos directos a los documentos de trabajo.
 // 06/11/2026 · La lista ya no está en el código público: la manda el servidor (acción mis_docs) desde la hoja
 // MIS DOCUMENTOS del libro, y solo a la administradora. Para agregar o quitar uno, editar esa hoja.
@@ -771,7 +779,7 @@ function pintar() {
   const VIS = !u ? [] : ['phr', 'estab', 'deriv', 'red', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []).concat(esReferenteRural ? ['ficha'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COEsp, documentos y apoyo».
-  const CTRL_CHICO = { grupo: 'gem', t: 'Tablero de control (en revisión)', c: '#1B7A8C', cc: '#E0F2F4' };
+  const CTRL_CHICO = { grupo: 'gem', t: 'Tablero de control (en revisión)', c: '#F57C00', cc: '#FFF0E0' };
   const MV = MODS.map(m => !admin && OTRO_TXT[m.k] ? Object.assign({}, m, { d: OTRO_TXT[m.k], r: OTRO_TXT[m.k] }) : m).map(m => m.k === 'control' && CONTROL_EN_REVISION ? Object.assign({}, m, CTRL_CHICO) : m);
   // 04/11/2026 · Tablero de control: tarjeta propia, solo si el usuario tiene al menos un proyecto habilitado (columna M de ACCESOS).
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
@@ -802,7 +810,7 @@ function pintar() {
   // 14/11/2026 (Belén: «organizar tarjetas según 1. preparación (relevamientos y herramientas OPS), 2. gestión de la emergencia,
   // 3. resiliencia (como lo plantea la OMS), 4. fuentes, bibliografía, links, cursos»). MEJORA / buena práctica: OPS 2025, Hospitales resilientes
   // (antes, durante y después del evento). Las secciones sin tarjetas para el usuario no se muestran.
-  $('#rejilla').innerHTML = recHtml + fila('prep', 'fact_check', '1 · Preparación · relevamientos y herramientas OPS/OMS', 'dos', grande) + fila('gem', 'emergency', '2 · Gestión de la emergencia', 'dos', grande) + fila('resil', 'health_and_safety', '3 · Resiliencia · planes y continuidad', 'dos', grande) + (g('fuentes').length ? `<div class="grupo-tit"><span class="ms">menu_book</span>4 · Fuentes · bibliografía, normativa, links y cursos</div>` : '') + g('fuentes').map(m => enlaceGrande(m, 'linear-gradient(120deg,#3B2A7A 0%,#6A4FD8 100%)')).join('');
+  $('#rejilla').innerHTML = recHtml + fila('prep', 'fact_check', '1 · Preparación · relevamientos y herramientas OPS/OMS', 'dos', grande) + fila('gem', 'emergency', '2 · Gestión de la emergencia', 'dos', grande) + fila('resil', 'health_and_safety', '3 · Resiliencia · planes y continuidad', 'dos', grande) + (g('fuentes').length ? `<div class="grupo-tit"><span class="ms">menu_book</span>4 · Fuentes · bibliografía, normativa, links y cursos</div>` : '') + g('fuentes').map(m => enlaceGrande(m, m.bg)).join('');
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
