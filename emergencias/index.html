@@ -64,7 +64,8 @@ body{background:#F5F7FB}
 .barra{--sst-x:56%;--sst-y:46%;--sst-brillo:1.35;--sst-color:1.6;position:relative;isolation:isolate;overflow:hidden;background:#172B4D;padding-bottom:16px;min-height:150px;box-sizing:border-box}
 .barra::before{content:'';position:absolute;inset:0;z-index:-2;background:url(banda-sst.jpg) var(--sst-x) var(--sst-y)/cover no-repeat;filter:brightness(var(--sst-brillo)) saturate(var(--sst-color)) contrast(1.05)}
 .barra::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(10,20,40,.62) 0%,rgba(10,20,40,.25) 38%,rgba(10,20,40,0) 60%)}
-@media (max-width:520px){.barra{min-height:0;--sst-x:62%}.barra::after{background:linear-gradient(180deg,rgba(10,20,40,.55),rgba(10,20,40,.2))}.barra .sst .largo{display:none}.barra-in{flex-wrap:wrap}.barra .sesion{width:100%;justify-content:flex-end}.barra #quien{max-width:calc(100% - 80px);overflow:hidden;text-overflow:ellipsis}}
+@media (max-width:520px){.barra{min-height:0;--sst-x:62%}.barra::after{background:linear-gradient(180deg,rgba(10,20,40,.55),rgba(10,20,40,.2))}.barra .sst .largo{display:none}}
+@media (max-width:760px){.barra-in{flex-wrap:wrap}.barra .sesion{width:100%;justify-content:flex-end}.barra #quien{max-width:calc(100% - 80px);overflow:hidden;text-overflow:ellipsis}}
 /* Nombre de usuario y «Salir» sobre la imagen: fondo oscuro sólido para que se lean */
 .barra #quien,.barra #quien.perfil,.barra #quien.misd{background:rgba(10,20,40,.82);border:1px solid rgba(255,255,255,.7);color:#fff;border-radius:999px;padding:6px 12px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .barra #quien.perfil:hover,.barra #quien.misd:hover{background:rgba(10,20,40,.95)}
