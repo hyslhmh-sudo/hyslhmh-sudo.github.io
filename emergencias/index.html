@@ -95,6 +95,18 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 .grupo-tit::after{content:'';flex:1;height:1px;background:#DCE3EF}
 /* 13/11/2026 · Alertas del SMN (feed CAP oficial), para todos los que ingresan */
 #alertasSmn{margin:0 0 6px}
+/* 14/11/2026 · Estado de rutas (Defensa Civil Chubut) */
+#rutasDc{margin:0 0 10px}#rutasDc .rt{background:#fff;border:1.5px solid #DCE3EF;border-left:5px solid #2E7D32;border-radius:16px;padding:12px 14px;color:#172B4D}
+#rutasDc .rt.hay{border-left-color:#E67E00}#rutasDc .rt.corte{border-left-color:#C62828}
+#rutasDc .rt-cab{display:flex;align-items:flex-start;gap:10px}#rutasDc .rt-cab>.ms{font-size:28px;flex:none;color:#3D4B61}#rutasDc .rt-cab .t{flex:1;min-width:0}
+#rutasDc .rt-cab b{display:block;font-size:15px}#rutasDc .rt-cab small{display:block;font-size:12.5px;color:#3D4B61;margin-top:2px}
+#rutasDc .rt-cab a{flex:none;display:inline-flex;align-items:center;gap:6px;color:#172B4D;font-weight:700;font-size:13px;text-decoration:none;border:1px solid #9AA7BD;border-radius:10px;padding:6px 10px;min-height:34px;background:#fff}
+#rutasDc ul{list-style:none;margin:8px 0 0;padding:0}#rutasDc li{font-size:13px;padding:6px 0 6px 10px;border-top:1px solid #EEF1F6;border-left:4px solid #B8C2D3;margin-top:2px}
+#rutasDc li.cerrada{border-left-color:#C62828}#rutasDc li.extrema_precaucion{border-left-color:#E67E00}#rutasDc li.transitar_con_precaucion{border-left-color:#E6B800}#rutasDc li.normal{border-left-color:#2E7D32}
+#rutasDc .rc{font-weight:700}#rutasDc li.cerrada .rc{color:#C62828}#rutasDc li.extrema_precaucion .rc{color:#B35C00}
+#rutasDc .rd{color:#3D4B61}#rutasDc .ra{display:block;font-size:11.5px;color:#6B7A90}
+#rutasDc details{margin-top:6px;font-size:13px}#rutasDc details summary{cursor:pointer;font-weight:700;color:#3D4B61}
+#rutasDc .rt-pie{font-size:12px;color:#4B5B73;margin:6px 2px 0}
 #alertasSmn .al{border-radius:16px;padding:12px 14px;margin:0 0 6px;border:1.5px solid;color:#172B4D}
 #alertasSmn .al.Amarilla{background:#FFF6CC;border-color:#E6B800}#alertasSmn .al.Amarilla .ms{color:#9A7A00}
 #alertasSmn .al.Naranja{background:#FFE6CC;border-color:#E67E00}#alertasSmn .al.Naranja .ms{color:#B35C00}
@@ -416,6 +428,7 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
     <div class="msg oculto" id="msg"></div>
   </form>
   <section id="alertasSmn" class="oculto" aria-label="Alertas del SMN"></section>
+  <section id="rutasDc" class="oculto" aria-label="Estado de rutas · Defensa Civil Chubut"></section>
   <div id="arriba">
     <section id="agenda" class="oculto" aria-label="Agenda de reuniones"></section>
     <section id="boletines" class="oculto" aria-label="Boletines El Niño"></section>
@@ -638,7 +651,35 @@ async function boletines(u) {
 // Información orientadora: la alerta oficial es la que publica el SMN.
 const SMN_WEB = 'https://www.smn.gob.ar/alertas';
 // 13/11/2026 22:35 (Belén): sin enlace al historial en la pantalla: el libro madre no se muestra a nadie desde la app.
-let SMN_TK = '', SMN_T = 0;
+let SMN_TK = '', SMN_T = 0, RUT_TK = '', RUT_T = 0;
+/* 14/11/2026 · Estado de rutas (Belén: «chubut.gob.ar/destacado/1291, acá sale el estado de las rutas: ¿ponerlo como tarjeta y que se actualice, como con el SMN?»).
+ * El servidor (acción rutas_estado) lee el mapa de Defensa Civil Chubut cada 30 minutos, se queda con los tramos del Área Programática Trelew,
+ * Puerto Madryn y la RN 3, y guarda los cambios en la hoja RUTAS DC. Arriba lo cerrado y con extrema precaución; lo demás plegado. */
+const RUT_WEB = 'https://chubut.gob.ar/destacado/1291';
+function rutasHtml(r) {
+  const T = (r && r.tramos) || [], A = (r && r.avisos) || [];
+  const de = c => T.filter(t => t.cond === c), cer = de('cerrada'), ext = de('extrema_precaucion'), pre = de('transitar_con_precaucion');
+  const otros = T.filter(t => ['cerrada', 'extrema_precaucion', 'transitar_con_precaucion'].indexOf(t.cond) < 0);
+  const li = t => `<li class="${E(t.cond)}"><b>${E(t.ruta)} · ${E(t.tramo || 's/d')}</b> · <span class="rc">${E(t.condicion)}</span>${t.detalle ? `<br><span class="rd">${E(t.detalle)}</span>` : ''}${t.actualizado ? `<span class="ra">Actualizado por Defensa Civil: ${E(t.actualizado)}</span>` : ''}</li>`;
+  const resumen = !T.length ? 'Sin datos por ahora.' : [cer.length ? cer.length + (cer.length === 1 ? ' tramo cerrado' : ' tramos cerrados') : '', ext.length ? ext.length + ' con extrema precaución' : '', pre.length ? pre.length + ' con precaución' : '', otros.length ? otros.length + ' normales' : ''].filter(Boolean).join(' · ');
+  const clase = cer.length ? 'corte' : (ext.length || pre.length ? 'hay' : '');
+  return `<div class="rt ${clase}"><div class="rt-cab"><span class="ms">directions_car</span><span class="t"><b>Rutas · Defensa Civil Chubut</b><small>${E(resumen)}</small></span><a href="${RUT_WEB}" target="_blank" rel="noopener"><span class="ms" style="font-size:18px">map</span>Ver mapa</a></div>
+    ${cer.length || ext.length ? `<ul>${cer.concat(ext).map(li).join('')}</ul>` : ''}
+    ${pre.length ? `<details><summary>Transitar con precaución (${pre.length})</summary><ul>${pre.map(li).join('')}</ul></details>` : ''}
+    ${otros.length ? `<details><summary>Otros tramos (${otros.length})</summary><ul>${otros.map(li).join('')}</ul></details>` : ''}
+    ${A.length ? `<details><summary>Avisos de Defensa Civil (${A.length})</summary><ul>${A.map(a => `<li><b>${E(a.tipo || 'Aviso')}${a.localidad ? ' · ' + E(a.localidad) : ''}</b><br><span class="rd">${E(a.detalle)}</span>${a.fecha ? `<span class="ra">${E(a.fecha)}</span>` : ''}</li>`).join('')}</ul></details>` : ''}
+    <p class="rt-pie">Zona: Área Programática Trelew (valle, meseta y Camarones), Puerto Madryn y toda la RN 3.${r && r.consultado ? ' Consultado: ' + E(r.consultado) + '.' : ''}${r && r.error ? ' ' + E(r.error) : ''} Fuente: mapa de Defensa Civil Chubut (información orientadora; ante dudas, llamar al 0800-666-2447).</p></div>`;
+}
+async function rutasDc(u) {
+  const box = $('#rutasDc');
+  if (!u || S.DEMO) { box.classList.add('oculto'); RUT_TK = ''; return; }
+  const c = S.store.get('rutas.dc', null), pon = r => { box.innerHTML = rutasHtml(r); box.classList.remove('oculto'); };
+  if (c) pon(c);
+  if ((RUT_TK === S.sesion.token() && Date.now() - RUT_T < 600000) || !navigator.onLine) return;
+  RUT_TK = S.sesion.token(); RUT_T = Date.now();
+  try { const r = await S.api('rutas_estado', {}, 90000); if (!r.ok) throw r; S.store.set('rutas.dc', r); pon(r); }
+  catch (e) { if (!c) pon({ tramos: [], error: 'No se pudo consultar el estado de rutas desde la app en este momento.' }); }
+}
 function alertasSmnHtml(r, admin) {
   const L = (r && r.alertas) || [], web = (r && r.web) || SMN_WEB;
   const pie = `<div class="al-pie"><span>Fuente: SMN (feed CAP oficial)${r && r.consultado ? ' · consultado ' + E(r.consultado) : ''}. Información orientadora: la alerta oficial es la publicada por el SMN.</span><a href="${E(SMN_WEB)}" target="_blank" rel="noopener">Ver en smn.gob.ar</a></div>`;
@@ -721,11 +762,12 @@ function pintar() {
   // 13/11/2026 · «Habilitado desde» (ACCESOS col. O): hasta esa fecha y hora solo «Mis datos»; no se muestran secciones.
   if (u && !admin && u.habilitadoDesde) {
     $('#boletines').classList.add('oculto');
-    $('#alertasSmn').classList.add('oculto');
+    $('#alertasSmn').classList.add('oculto'); $('#rutasDc').classList.add('oculto');
     $('#rejilla').innerHTML = `<div class="tarjeta" style="padding:18px 20px"><b>Tu acceso se habilita el ${E(u.habilitadoDesde)} h.</b><p style="margin:.5em 0 0">Hasta entonces solo podés completar <b>Mis datos</b> (tocá tu nombre, arriba). Las secciones de la app se van a ver a partir de esa fecha.</p></div>`;
     return;
   }
   alertasSmn(u, admin); // 13/11/2026 · alertas del SMN para todos los que ingresan
+  rutasDc(u); // 14/11/2026 · estado de rutas (Defensa Civil Chubut) para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   // 13/11/2026 · Orden por urgencia: Respuesta → COEsp, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
   const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
