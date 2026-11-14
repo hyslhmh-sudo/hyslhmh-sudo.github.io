@@ -57,6 +57,15 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-widt
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB}
 body{background:#F5F7FB}
 .barra{background:#172B4D;color:#F5F7FB;border-bottom:3px solid #2F5BEA}
+/* 13/11/2026 · Banda superior con la imagen de corrientes y anomalía de temperatura del mar (earth.nullschool.net), a pedido de Belén.
+   Es una captura fija del 13/11/2026; el enlace «Ver en tiempo real» abre el mapa vivo. Velo oscuro encima para que el título se lea. */
+.barra{background:linear-gradient(90deg,rgba(15,28,52,.78) 0%,rgba(15,28,52,.45) 45%,rgba(15,28,52,.08) 100%),url(banda-sst.jpg) 70% 35%/cover no-repeat #172B4D;padding-bottom:16px;min-height:150px;box-sizing:border-box}
+@media (max-width:520px){.barra{min-height:0;background-position:78% 30%}.barra .sst .largo{display:none}}
+.barra h1{text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.barra .sst{max-width:960px;margin:10px auto 0;display:flex;justify-content:flex-end}
+.barra .sst a{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#F5F7FB;text-decoration:none;background:rgba(15,28,52,.55);border:1px solid rgba(245,247,251,.45);border-radius:999px;padding:5px 11px;backdrop-filter:blur(2px)}
+.barra .sst a:hover{background:rgba(15,28,52,.8)}
+.barra .sst .ms{font-size:16px}
 .tarjeta,.grupo{border-color:#E4EAFB}
 .btn{background:#2F5BEA;color:#FFFFFF}
 .btn.sec{background:#fff;color:#172B4D;border-color:#2F5BEA}
@@ -197,7 +206,7 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 <header class="barra"><div class="barra-in">
   <h1>Preparación y Respuesta a Emergencias y desastres<small>Higiene y Seguridad Laboral</small></h1>
   <div class="sesion oculto" id="sesion"><span id="quien"></span><button id="btnSalir">Salir</button></div>
-</div></header>
+</div><div class="sst"><a href="https://earth.nullschool.net/#current/ocean/surface/currents/overlay=sea_surface_temp_anomaly/orthographic=-67.32,-42.53,2855" target="_blank" rel="noopener" title="Imagen: earth.nullschool.net (captura del 13/11/2026). Abre el mapa en tiempo real."><span class="ms">waves</span><span class="largo">Corrientes y anomalía de temperatura del mar ·&nbsp;</span>Ver en tiempo real</a></div></header>
 <dialog id="dlgPerfil" aria-label="Mi perfil">
   <div class="pf-cab"><span class="ms">account_circle</span><span><b id="pfNombre"></b><small id="pfRol"></small></span><button type="button" id="pfCerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
   <div class="pf-cuerpo" id="pfCuerpo"></div>
