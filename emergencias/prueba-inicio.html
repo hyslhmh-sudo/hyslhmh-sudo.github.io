@@ -304,6 +304,24 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 #agenda .ag-chip{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-chip.int{background:#fff!important;color:var(--hum)!important;border:1px solid var(--pat)}
 /* Herramientas OPS/OMS (STAR-H, ISH, PHR): la descripción completa queda a la vista (Belén, 13/11/2026: «en la tarjeta dejar la info»). */
 .tj-info{align-items:flex-start}.tj-info .d.corto{display:none}.tj-info .d.largo{display:block}.tj-info .info{display:none}
+/* 13/11/2026 22:25 (Belén: «más color» y «unificar detalles»): tarjetas rellenas con la paleta; todos los botones en #2F5BEA; etiquetas y chips en #E4EAFB / #172B4D. */
+.btn{background:var(--pat)!important}
+.tj{background:var(--pat);border:0;border-left:5px solid var(--hum);color:#fff}
+.tj .ico{background:rgba(255,255,255,.18);color:#fff}
+.tj b{color:#fff}.tj .d{color:#E4EAFB}.tj .info{color:#fff}
+.tj .tj-tab{color:#fff;border-color:rgba(255,255,255,.75)}.tj .tj-tab:hover{background:rgba(255,255,255,.16)}
+.tj:hover{box-shadow:0 2px 6px rgba(23,43,77,.18),0 10px 22px rgba(23,43,77,.2)}
+.tj-resp{background:var(--hum);border-left:5px solid var(--coral)}
+.tj-resp .d{color:#C9D3E8!important}
+.carpeta{background:var(--pat)!important;border:0!important;border-left:5px solid var(--hum)!important}
+.carpeta .ico{background:rgba(255,255,255,.18)!important;color:#fff!important}
+.carpeta b{color:#fff!important}.carpeta .d{color:#E4EAFB!important}.carpeta .flecha{color:#fff!important}
+.rec{background:var(--pat-claro)!important;border:0!important;border-left:4px solid var(--pat)!important}
+#agenda .ag-cab a,#boletines .bo-cab a{background:var(--pat)!important;color:#fff!important;border:1px solid var(--pat)!important}
+#agenda .ag-chip,#agenda .ag-chip.int{background:var(--pat-claro)!important;color:var(--hum)!important;border:0!important}
+#agenda .ag-dia{background:var(--pat-claro)!important;color:var(--hum)!important}
+#boletines .bo-ult,#boletines .bo-emb{background:#fff!important}
+#alertasSmn .al-mini a,#alertasSmn .al-pie a{color:var(--pat)!important}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
