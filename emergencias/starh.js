@@ -45,7 +45,7 @@
    * evacuación, plan, tableros) son de quien ingresó. Al salir se borran; al ingresar otra persona en el mismo
    * equipo se borra todo, incluidos los cambios pendientes de envío y «Mis datos» de la anterior.
    * Al salir quedan solo los cambios pendientes (colas) de esa misma persona, por si vuelve a ingresar. */
-  const QUEDA_AL_SALIR = /^(token|usuario|dueno)$|(^|\.)cola$|^datos(Pend|Ok)\./;
+  const QUEDA_AL_SALIR = /^(token|usuario|dueno|vista\.token|vista\.usuario)$|(^|\.)cola$|^datos(Pend|Ok)\./;
   function limpiarCopias(todo) {
     const borrar = k => !/^demo\./.test(k) && (todo ? !/^(token|usuario)$/.test(k) : !QUEDA_AL_SALIR.test(k));
     try {
@@ -58,13 +58,19 @@
   }
   const idUsuario = u => u ? String(u.persona || u.nombre || '').trim() : '';
   const sesion = {
-    token() { return store.get(DEMO ? 'demo.token' : 'token', ''); },
-    usuario() { return store.get(DEMO ? 'demo.usuario' : 'usuario', null); },
+    // 14/11/2026 · «Ver como» (Administración): mientras dura, la app usa el token y el usuario de la vista (solo lectura).
+    token() { return DEMO ? store.get('demo.token', '') : (store.get('vista.token', '') || store.get('token', '')); },
+    usuario() { return DEMO ? store.get('demo.usuario', null) : (store.get('vista.token', '') ? store.get('vista.usuario', null) : store.get('usuario', null)); },
+    verComo(token, usuario) { limpiarCopias(false); store.set('vista.token', token); store.set('vista.usuario', usuario); },
+    salirVista() { store.del('vista.token'); store.del('vista.usuario'); limpiarCopias(false); },
+    enVista() { return !DEMO && !!store.get('vista.token', ''); },
+    hayPendientes() { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.indexOf(PREF) !== 0) continue; const c = k.slice(PREF.length); if (/(^|\.)cola$|^datosPend\./.test(c)) { const v = localStorage.getItem(k); if (v && v !== '[]' && v !== '{}' && v !== 'null') return true; } } } catch (e) {} return false; },
     guardar(token, usuario) {
       if (!DEMO) { const id = idUsuario(usuario); if (store.get('dueno', '') !== id) limpiarCopias(true); store.set('dueno', id); }
       store.set(DEMO ? 'demo.token' : 'token', token); store.set(DEMO ? 'demo.usuario' : 'usuario', usuario);
     },
-    cerrar() { store.del(DEMO ? 'demo.token' : 'token'); store.del(DEMO ? 'demo.usuario' : 'usuario'); if (!DEMO) limpiarCopias(false); }
+    cerrar() { if (!DEMO && store.get('vista.token', '')) { sesion.salirVista(); return; } // en «Ver como», salir = volver al usuario propio
+      store.del(DEMO ? 'demo.token' : 'token'); store.del(DEMO ? 'demo.usuario' : 'usuario'); if (!DEMO) limpiarCopias(false); }
   };
   // Sin sesión abierta no queda ninguna copia de datos: se borra antes de que la página las lea.
   if (!DEMO && !sesion.token()) limpiarCopias(false);
@@ -469,4 +475,25 @@
       if (o !== d && !o.contains(d) && !d.contains(o)) o.open = false;
     });
   }, true);
+})();
+
+/* 14/11/2026 · «Ver como»: barra fija arriba en todas las páginas mientras Administración mira la app como otro usuario. */
+(function () {
+  if (typeof document === 'undefined' || !window.STARH || !STARH.sesion.enVista || !STARH.sesion.enVista()) return;
+  function poner() {
+    if (document.getElementById('barraVerComo')) return;
+    var u = STARH.sesion.usuario() || {}, b = document.createElement('div');
+    b.id = 'barraVerComo';
+    b.setAttribute('style', 'position:sticky;top:0;z-index:9999;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px 12px;background:#F57C00;color:#fff;font:600 14px/1.3 system-ui,sans-serif;text-align:center');
+    b.className = 'no-imp';
+    var t = document.createElement('span');
+    t.textContent = 'Estás viendo la app como ' + (u.nombre || '') + (u.rol ? ' · ' + u.rol : '') + ' (solo lectura)';
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.textContent = 'Volver a mi usuario';
+    btn.setAttribute('style', 'border:0;border-radius:999px;padding:6px 14px;background:#fff;color:#172B4D;font:700 13px system-ui,sans-serif;cursor:pointer');
+    btn.addEventListener('click', function () { STARH.sesion.salirVista(); location.href = 'index.html'; });
+    b.appendChild(t); b.appendChild(btn);
+    document.body.insertBefore(b, document.body.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', poner); else poner();
 })();

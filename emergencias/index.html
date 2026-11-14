@@ -244,6 +244,7 @@ dialog#dlgPerfil::backdrop{background:rgba(23,43,77,.45)}
 .pf-link .ms{color:#2F5BEA}
 .pf-link b{display:block;font-size:14px}.pf-link span.d{display:block;font-size:12px;color:#4B5B73}
 .pf-nota{font-size:12px;color:#6B7A90;margin:14px 0 0}
+.pf-vc{background:#FFF4E5;border:1.5px solid #F57C00;border-radius:12px;padding:10px 12px;margin-bottom:12px}.pf-vc h3{margin-top:0}
 /* 05/11/2026 · Mis datos: ficha obligatoria al ingresar (menos Administración) */
 #quien.misd{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
 #quien.misd .ms{font-size:18px}
@@ -464,6 +465,28 @@ async function abrirPerfil() {
   $('#pfCuerpo').innerHTML = (grupos.map(g => `<h3>${E(g)}</h3>` + docs.filter(d => d.g === g).map(d =>
     `<a class="pf-link" href="${E(d.u)}" target="_blank" rel="noopener"><span class="ms">${E(d.i)}</span><span><b>${E(d.t)}</b><span class="d">${E(d.d)}</span></span></a>`).join('')).join('') || '<p class="pf-nota">La hoja MIS DOCUMENTOS está vacía.</p>') +
     '<p class="pf-nota">Solo vos ves esta lista (sale de la hoja MIS DOCUMENTOS del libro). Los documentos están en tu Drive y siguen siendo privados. Todos en versión 0 hasta el alta.</p>';
+  verComoArmar();
+}
+/* 14/11/2026 · «Ver como» (Belén: «en mi perfil necesito seleccionar "ver como", así me muestra cómo ven la app los demás usuarios»).
+ * Elegís un usuario y la app se muestra con sus permisos, en solo lectura (el servidor no deja cargar nada), durante 2 horas
+ * o hasta tocar «Volver a mi usuario» en la barra de arriba. Tu sesión y tus cambios pendientes no se tocan. */
+async function verComoArmar() {
+  const caja = document.createElement('div'); caja.className = 'pf-vc';
+  caja.innerHTML = '<h3>Ver como</h3><p class="pf-nota" style="margin-top:0">Mirá la app como la ve otro usuario (solo lectura).</p><p class="pf-nota">Cargando usuarios…</p>';
+  $('#pfCuerpo').prepend(caja);
+  try {
+    const r = await S.api('ver_como_lista'); if (!r.ok) throw r;
+    caja.innerHTML = `<h3>Ver como</h3><p class="pf-nota" style="margin-top:0">Mirá la app como la ve otro usuario: mismos permisos y secciones, en solo lectura (no se puede cargar nada). Dura 2 horas o hasta que toques «Volver a mi usuario».</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="vcSel" style="flex:1;min-width:220px;padding:8px;border-radius:10px;border:1.5px solid #C9D3EA;font:inherit"><option value="">Elegí un usuario…</option>${(r.usuarios || []).map(x => `<option value="${E(x.dni)}">${E(x.nombre)} · ${E(x.rol)}${x.estab && !/^todos?$/i.test(x.estab) ? ' · ' + E(x.estab) : ''}</option>`).join('')}</select>
+      <button class="btn" type="button" id="vcIr" style="display:inline-flex;align-items:center;gap:6px"><span class="ms">visibility</span>Ver la app así</button></div><p class="pf-nota" id="vcMsg"></p>`;
+    $('#vcIr').addEventListener('click', async () => {
+      const dni = $('#vcSel').value, msg = $('#vcMsg'); if (!dni) { msg.textContent = 'Elegí un usuario.'; return; }
+      if (S.sesion.hayPendientes()) { msg.textContent = 'Tenés cambios guardados en este equipo que todavía no se enviaron. Esperá a que se envíen (con conexión) y volvé a intentar.'; return; }
+      msg.textContent = 'Abriendo…';
+      try { const v = await S.api('ver_como', { dni: dni }); if (!v.ok) throw v; S.sesion.verComo(v.token, v.usuario); $('#dlgPerfil').close(); location.reload(); }
+      catch (e) { msg.textContent = (e && (e.error || e.message)) || 'No se pudo.'; }
+    });
+  } catch (e) { caja.innerHTML = '<h3>Ver como</h3><p class="pf-nota">' + E((e && (e.error || e.message)) || 'No se pudo traer la lista de usuarios.') + '</p>'; }
 }
 $('#pfCerrar').addEventListener('click', () => $('#dlgPerfil').close());
 $('#dlgPerfil').addEventListener('click', ev => { if (ev.target.id === 'dlgPerfil') $('#dlgPerfil').close(); });
@@ -660,7 +683,7 @@ function pintar() {
   if (yo || otro) { q.setAttribute('role', 'button'); q.tabIndex = 0; q.title = yo ? 'Mi perfil: mis documentos' : 'Mis datos: actualizar mi ficha'; } else { q.removeAttribute('role'); q.removeAttribute('tabindex'); q.removeAttribute('title'); }
   if (u) q.innerHTML = (yo ? '<span class="ms">account_circle</span>' : otro ? '<span class="ms">badge</span>' : '') + E((u.nombre || '') + (u.rol ? ' · ' + u.rol : ''));
   if (MD_TK && MD_TK !== S.sesion.token()) cerrarDatos();
-  if (otro) revisarDatos(false);
+  if (otro && !u.vistaDe) revisarDatos(false); // 14/11/2026 · en «Ver como» no se abre «Mis datos» (solo lectura)
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
