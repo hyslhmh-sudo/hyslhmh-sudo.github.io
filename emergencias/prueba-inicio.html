@@ -264,8 +264,8 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 .md-pie button{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
 .md-pie .sec{background:#E4EAFB;color:#172B4D}.md-pie .pri{background:#2F5BEA;color:#fff}
 
-/* ===== 13/11/2026 · Paleta institucional en todo el inicio (Azul Humphreys #0D313F · Azul Patagonia #5894A7) ===== */
-:root{--hum:#0D313F;--pat:#5894A7;--pat-claro:#E6F0F3;--pat-borde:#C9DCE2;--gris:#4B5B66}
+/* ===== 13/11/2026 · Paleta del sitio («alerta de triaje») en todo el inicio: #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Coral solo para alta prioridad (Respuesta) y errores. ===== */
+:root{--hum:#172B4D;--pat:#2F5BEA;--pat-claro:#E4EAFB;--pat-borde:#C5D1F2;--gris:#4B5B73;--coral:#F57C00}
 .btn{background:var(--hum)!important;color:#fff!important}
 .barra{border-bottom-color:var(--pat)!important}
 .grupo-tit{color:var(--hum)!important}.grupo-tit .ms{color:var(--pat)}
@@ -282,8 +282,8 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 .tj .tj-tab{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--hum);text-decoration:none;border:1px solid var(--pat);border-radius:999px;padding:2px 10px}
 .tj .tj-tab .ms{font-size:16px}
 .tj .candado{margin-top:4px;align-self:flex-start}
-.tj-resp{background:var(--hum);border-color:var(--hum);border-left-color:var(--pat)}
-.tj-resp .ico{background:rgba(255,255,255,.14);color:#fff}
+.tj-resp{background:var(--hum);border-color:var(--hum);border-left-color:var(--coral)}
+.tj-resp .ico{background:rgba(255,255,255,.14);color:#fff}.tj-resp .d{color:#C9D3E8!important}
 .tj-resp b{color:#fff}.tj-resp .d{color:#D3E3E9}.tj-resp .info{color:#fff}
 .carpeta{border-color:var(--pat-borde)!important;border-left:5px solid var(--pat)!important;min-height:86px;box-sizing:border-box;padding:14px 16px!important}
 .carpeta .ico{background:var(--pat-claro)!important;color:var(--hum)!important}
@@ -575,7 +575,7 @@ function pintar() {
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
-  // con la paleta institucional (Azul Humphreys #0D313F y Azul Patagonia #5894A7). Las de Respuesta van rellenas en Azul Humphreys; mismo tamaño y tipografía.
+  // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
   const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}">
       <span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
   const grande = tarjeta, chica = tarjeta;
