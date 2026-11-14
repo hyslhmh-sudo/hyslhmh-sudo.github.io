@@ -107,6 +107,7 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #rutasDc .rd{color:#3D4B61}#rutasDc .ra{display:block;font-size:11.5px;color:#6B7A90}
 #rutasDc details{margin-top:6px;font-size:13px}#rutasDc details summary{cursor:pointer;font-weight:700;color:#3D4B61}
 #rutasDc .rt-pie{font-size:12px;color:#4B5B73;margin:6px 2px 0}
+#rutasDc .rt-res{margin:8px 0 0;font-size:13px;display:flex;flex-direction:column;gap:3px}#rutasDc .rl{padding-left:8px;border-left:4px solid #B8C2D3}#rutasDc .rl.cerrada{border-left-color:#C62828}#rutasDc .rl.cerrada b{color:#C62828}#rutasDc .rl.extrema_precaucion{border-left-color:#E67E00}#rutasDc .rl.extrema_precaucion b{color:#B35C00}#rutasDc .rl.transitar_con_precaucion{border-left-color:#E6B800}
 #alertasSmn .al{border-radius:16px;padding:12px 14px;margin:0 0 6px;border:1.5px solid;color:#172B4D}
 #alertasSmn .al.Amarilla{background:#FFF6CC;border-color:#E6B800}#alertasSmn .al.Amarilla .ms{color:#9A7A00}
 #alertasSmn .al.Naranja{background:#FFE6CC;border-color:#E67E00}#alertasSmn .al.Naranja .ms{color:#B35C00}
@@ -660,15 +661,14 @@ function rutasHtml(r) {
   const T = (r && r.tramos) || [], A = (r && r.avisos) || [];
   const de = c => T.filter(t => t.cond === c), cer = de('cerrada'), ext = de('extrema_precaucion'), pre = de('transitar_con_precaucion');
   const otros = T.filter(t => ['cerrada', 'extrema_precaucion', 'transitar_con_precaucion'].indexOf(t.cond) < 0);
-  const li = t => `<li class="${E(t.cond)}"><b>${E(t.ruta)} · ${E(t.tramo || 's/d')}</b> · <span class="rc">${E(t.condicion)}</span>${t.detalle ? `<br><span class="rd">${E(t.detalle)}</span>` : ''}${t.actualizado ? `<span class="ra">Actualizado por Defensa Civil: ${E(t.actualizado)}</span>` : ''}</li>`;
   const resumen = !T.length ? 'Sin datos por ahora.' : [cer.length ? cer.length + (cer.length === 1 ? ' tramo cerrado' : ' tramos cerrados') : '', ext.length ? ext.length + ' con extrema precaución' : '', pre.length ? pre.length + ' con precaución' : '', otros.length ? otros.length + ' normales' : ''].filter(Boolean).join(' · ');
   const clase = cer.length ? 'corte' : (ext.length || pre.length ? 'hay' : '');
+  // 14/11/2026 12:01 (Belén: «solo mostrar la info resumida; para el resto, ir al mapa»): cantidades y qué rutas, sin el detalle de cada tramo.
+  const rutas = L => [...new Set(L.map(t => t.ruta))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })).join(', ');
+  const linea = (txt, L, cls) => L.length ? `<span class="rl ${cls}"><b>${txt}:</b> ${E(rutas(L))}</span>` : '';
   return `<div class="rt ${clase}"><div class="rt-cab"><span class="ms">directions_car</span><span class="t"><b>Rutas · Defensa Civil Chubut</b><small>${E(resumen)}</small></span><a href="${RUT_WEB}" target="_blank" rel="noopener"><span class="ms" style="font-size:18px">map</span>Ver mapa</a></div>
-    ${cer.length || ext.length ? `<ul>${cer.concat(ext).map(li).join('')}</ul>` : ''}
-    ${pre.length ? `<details><summary>Transitar con precaución (${pre.length})</summary><ul>${pre.map(li).join('')}</ul></details>` : ''}
-    ${otros.length ? `<details><summary>Otros tramos (${otros.length})</summary><ul>${otros.map(li).join('')}</ul></details>` : ''}
-    ${A.length ? `<details><summary>Avisos de Defensa Civil (${A.length})</summary><ul>${A.map(a => `<li><b>${E(a.tipo || 'Aviso')}${a.localidad ? ' · ' + E(a.localidad) : ''}</b><br><span class="rd">${E(a.detalle)}</span>${a.fecha ? `<span class="ra">${E(a.fecha)}</span>` : ''}</li>`).join('')}</ul></details>` : ''}
-    <p class="rt-pie">Zona: Área Programática Trelew (valle, meseta y Camarones), Puerto Madryn y toda la RN 3.${r && r.consultado ? ' Consultado: ' + E(r.consultado) + '.' : ''}${r && r.error ? ' ' + E(r.error) : ''} Fuente: mapa de Defensa Civil Chubut (información orientadora; ante dudas, llamar al 0800-666-2447).</p></div>`;
+    ${cer.length || ext.length || pre.length ? `<p class="rt-res">${linea('Cerradas', cer, 'cerrada')}${linea('Extrema precaución', ext, 'extrema_precaucion')}${linea('Con precaución', pre, 'transitar_con_precaucion')}</p>` : ''}
+    <p class="rt-pie">Zona: Área Programática Trelew, Puerto Madryn y RN 3.${r && r.consultado ? ' Consultado: ' + E(r.consultado) + '.' : ''}${r && r.error ? ' ' + E(r.error) : ''} El detalle de cada tramo, en el mapa.</p></div>`;
 }
 async function rutasDc(u) {
   const box = $('#rutasDc');
