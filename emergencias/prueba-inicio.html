@@ -263,6 +263,46 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 .md-pie .est{flex:1;font-size:13px;color:#C62828;min-width:180px}
 .md-pie button{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
 .md-pie .sec{background:#E4EAFB;color:#172B4D}.md-pie .pri{background:#2F5BEA;color:#fff}
+
+/* ===== 13/11/2026 · Paleta institucional en todo el inicio (Azul Humphreys #0D313F · Azul Patagonia #5894A7) ===== */
+:root{--hum:#0D313F;--pat:#5894A7;--pat-claro:#E6F0F3;--pat-borde:#C9DCE2;--gris:#4B5B66}
+.btn{background:var(--hum)!important;color:#fff!important}
+.barra{border-bottom-color:var(--pat)!important}
+.grupo-tit{color:var(--hum)!important}.grupo-tit .ms{color:var(--pat)}
+.tj{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--pat-borde);border-left:5px solid var(--pat);border-radius:16px;padding:14px 16px;min-height:86px;box-sizing:border-box;cursor:pointer;color:var(--hum);box-shadow:0 1px 3px rgba(13,49,63,.08);transition:transform .12s,box-shadow .12s}
+.tj:hover{transform:translateY(-2px);box-shadow:0 2px 6px rgba(13,49,63,.12),0 10px 22px rgba(13,49,63,.12)}
+.tj:focus-visible{outline:3px solid var(--pat);outline-offset:3px}
+.tj .ico{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:var(--pat-claro);color:var(--hum);flex:none}
+.tj .ico .ms{font-size:26px}
+.tj .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tj b{display:flex;align-items:center;gap:4px;font-size:16.5px;font-weight:700;color:var(--hum);line-height:1.25}
+.tj .d{display:block;font-size:12.5px;color:var(--gris);line-height:1.35}
+.tj .d.corto{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tj .d.largo{display:none}.tj.ver .d.corto{display:none}.tj.ver .d.largo{display:block}
+.tj .tj-tab{align-self:flex-start;margin-top:4px;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--hum);text-decoration:none;border:1px solid var(--pat);border-radius:999px;padding:2px 10px}
+.tj .tj-tab .ms{font-size:16px}
+.tj .candado{margin-top:4px;align-self:flex-start}
+.tj-resp{background:var(--hum);border-color:var(--hum);border-left-color:var(--pat)}
+.tj-resp .ico{background:rgba(255,255,255,.14);color:#fff}
+.tj-resp b{color:#fff}.tj-resp .d{color:#D3E3E9}.tj-resp .info{color:#fff}
+.carpeta{border-color:var(--pat-borde)!important;border-left:5px solid var(--pat)!important;min-height:86px;box-sizing:border-box;padding:14px 16px!important}
+.carpeta .ico{background:var(--pat-claro)!important;color:var(--hum)!important}
+.carpeta b{font-size:16.5px!important;color:var(--hum)!important}.carpeta .d{color:var(--gris)!important}.carpeta .flecha{color:var(--pat)!important}
+.fila.sub{border-left-color:var(--pat-borde)!important}
+.rec{border-color:var(--pat-borde)!important;border-left:4px solid var(--pat)!important;color:var(--hum)!important}.rec .ms{color:var(--hum)!important}
+#agenda{border-color:var(--pat-borde)!important}
+#agenda .ag-cab a{background:var(--hum)!important}
+#boletines{background:var(--pat-claro)!important;border-color:var(--pat-borde)!important}
+#boletines .bo-cab b{color:var(--hum)!important}
+#boletines .bo-cab a{color:var(--hum)!important;border-color:var(--pat)!important}
+#boletines .bo-ult,#boletines .bo-emb{border-color:var(--pat-borde)!important;color:var(--hum)!important}
+#boletines .bo-ult:hover,#boletines .bo-emb:hover{border-color:var(--pat)!important}
+#boletines .bo-ult .ms,#boletines .bo-ult .ab,#boletines .bo-emb .ms,#boletines .bo-emb .ab{color:var(--pat)!important}
+#alertasSmn .al-ok{border-color:var(--pat-borde)!important}#alertasSmn .al-ok .ms{color:var(--pat)!important}
+#alertasSmn .al-mini a,#alertasSmn .al-pie a{color:var(--hum)!important}
+#agenda .ag-dia{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-dia.hoy{background:var(--hum)!important;color:#fff!important}
+#agenda .ag-chip{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-chip.int{background:#fff!important;color:var(--hum)!important;border:1px solid var(--pat)}
+/* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
 <body>
@@ -532,13 +572,11 @@ function pintar() {
   if (otro) revisarDatos(false);
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   const cerr = m => u && m.flag && u[m.flag] === false;
-  const grande = m => `<div class="mod ${m.grupo === 'resp' || m.grupo === 'ctrl' ? 'ancho' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}" style="--bg:${m.bg};--fg:${BLANCO}">
-      <span class="ms fantasma" aria-hidden="true">${m.ico}</span>${m.grupo === 'ctrl' ? '<span class="etq">Solo lectura</span>' : ''}
-      <span class="ico"><span class="ms">${m.ico}</span></span>
-      ${m.grupo === 'resp' || m.grupo === 'ctrl' ? '<span class="txt">' : ''}<b>${E(m.t)}${INFO}</b><p class="corto">${E(m.r || m.d)}</p><p class="largo">${E(m.d)}</p>
-      <span class="pie">${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a href="${m.tab}"><span class="ms" style="font-size:17px">monitoring</span>Tablero</a>` : ''}</span>${m.grupo === 'resp' || m.grupo === 'ctrl' ? '</span>' : ''}</div>`;
-  const chica = m => `<div class="chica" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}" style="--c:${m.c};--cc:${m.cc}">
-      <span class="ico"><span class="ms">${m.ico}</span></span><span><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}</span></div>`;
+  // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
+  // con la paleta institucional (Azul Humphreys #0D313F y Azul Patagonia #5894A7). Las de Respuesta van rellenas en Azul Humphreys; mismo tamaño y tipografía.
+  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}">
+      <span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
+  const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
   // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COE (04/11/2026),
@@ -568,7 +606,7 @@ function pintar() {
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   // 13/11/2026 · Orden por urgencia: Respuesta → COE, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
   const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
-  const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" style="--c:${m.c || '#172B4D'}"><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
+  const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" ><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
   $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
 }
 $('#fIng').addEventListener('submit', async ev => {
