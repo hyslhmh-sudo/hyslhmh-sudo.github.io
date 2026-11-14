@@ -92,7 +92,7 @@ const ETQ = { complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', 
   grupo: 'Grupo electrógeno', grupo_areas: 'Áreas que cubre', grupo_h: 'Autonomía (horas)', limpieza: 'Tanques: limpieza anual', limpieza_f: 'Última limpieza de tanques', agua_alt: 'Fuente alternativa de agua',
   oxigeno: 'Oxígeno', calef: 'Calefacción y gas', comun: 'Comunicaciones', trab_total: 'Trabajadores', med_total: 'Médicos', enf_total: 'Enfermeros',
   plan: 'Plan de evacuación (LEY · Dto. 351/79, Anexo VII, cap. 18)', extintores: 'Extintores (LEY · Dto. 351/79, Anexo VII, cap. 18)', simulacro: 'Simulacro (MEJORA · ISH OPS)', seg_obs: 'Observaciones de seguridad', antec: 'Eventos anteriores' };
-const num = v => { const n = Number(String(v == null ? '' : v).replace(/\./g, '').replace(',', '.')); return isFinite(n) && String(v).trim() !== '' ? n : null; };
+const num = v => { const t = String(v == null ? '' : v).trim(); if (!t) return null; const n = Number(t.replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : null; };
 const fmt = n => n == null ? '' : n.toLocaleString('es-AR');
 const val = v => v == null || v === '' ? SD : Array.isArray(v) ? (v.length ? E(v.join(', ')) : SD) : typeof v === 'object' ? E(JSON.stringify(v)) : E(String(v));
 let datos = null, abierto = '';
@@ -139,7 +139,7 @@ function pintar() {
   // Tabla agrupada por área
   const areas = [...new Set(L.map(e => e.area))];
   const filas = areas.map(a => (F.area ? '' : `<tr class="grupo"><td colspan="8">${E(a || 's/d (revisar)')}</td></tr>`) + L.filter(e => e.area === a).map(filaHtml).join('')).join('');
-  app.innerHTML = `<div class="aviso"><b>Base orientadora, no es un registro en tiempo real.</b> Las capacidades son estimadas y salen de las hojas LUGARES y CAMAS y de la ficha que cargan los referentes de los hospitales rurales. Lo que falta figura como «s/d (revisar)». No se muestran contactos ni datos de pacientes.</div>
+  app.innerHTML = `<div class="aviso"><b>Base orientadora, no es un registro en tiempo real.</b> Las capacidades son estimadas y salen de las hojas LUGARES y CAMAS y de la ficha del establecimiento (HZT, HMH, HSST, hospitales rurales y puestos sanitarios). Lo que falta figura como «s/d (revisar)». No se muestran contactos ni datos de pacientes.</div>
   <div class="filtros no-imp">
     <label>Área programática<select data-f="area">${opciones('area', 'Todas')}</select></label>
     <label>Tipo<select data-f="tipo">${opciones('tipo', 'Todos')}</select></label>
@@ -150,7 +150,7 @@ function pintar() {
   ${kpis}${bloqCat}
   <div class="tabw"><table><thead><tr><th>Establecimiento</th><th>Tipo</th><th>Localidad</th><th class="n">Camas</th><th>Personal<br><small>trab. · méd. · enf.</small></th><th>Ambulancias</th><th>Grupo electr.</th><th>Ficha</th></tr></thead>
   <tbody>${filas || '<tr><td colspan="8" class="pie">No hay establecimientos con esos filtros.</td></tr>'}</tbody></table></div>
-  <p class="pie">Versión 0 · Datos al ${E(datos.generado)}. Tocá un establecimiento para ver el detalle. Las correcciones se hacen en la ficha del establecimiento (rurales) o en las hojas LUGARES y CAMAS del libro de la app.</p>`;
+  <p class="pie">Versión 0 · Datos al ${E(datos.generado)}. Tocá un establecimiento para ver el detalle. Las correcciones se hacen en la ficha del establecimiento o en las hojas LUGARES y CAMAS del libro de la app.</p>`;
 }
 function filaHtml(e) {
   const f = e.ficha, d = f ? f.datos : {}, s = fichaEstado(f), a = d.ambs;
