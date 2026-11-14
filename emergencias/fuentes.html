@@ -40,6 +40,11 @@ li small{display:block;color:var(--suave);font-size:12.5px;margin-top:2px}
 .det{margin-top:6px;font-size:12.5px;color:var(--suave)}.det summary{cursor:pointer;font-weight:700;color:#2F5BEA;width:max-content}
 .det ul{margin:6px 0 0;padding-left:18px}.det li{padding:4px 0;border:0;font-size:12.5px}
 .det-a{display:inline-block;font-size:11.5px!important;font-weight:700;background:#E4EAFB;color:#172B4D!important;border-radius:999px;padding:1px 8px;text-decoration:none}
+details.gr>summary{list-style:none;cursor:pointer;padding:8px 0 4px}details.gr>summary::-webkit-details-marker{display:none}
+details.gr>summary h2{display:flex;align-items:center;gap:8px;margin:0}
+details.gr>summary h2 .n{background:#E4EAFB;color:#172B4D;border-radius:999px;padding:0 9px;font-size:12px}
+details.gr>summary h2 .fl{margin-left:auto;color:#2F5BEA;transition:transform .2s}details.gr[open]>summary h2 .fl{transform:rotate(180deg)}
+details.gr[open]>summary{margin-bottom:8px}
 .mod-t{display:inline-block;font-size:11px;font-weight:700;color:#172B4D;background:#E4EAFB;border-radius:6px;padding:1px 6px;vertical-align:1px}
 /* 05/11/2026 · Bibliografía: carpeta y subida (solo Administración) */
 .adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--medio);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -108,8 +113,8 @@ const BASE = [
 ].map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
 const ORDEN = ['STAR-H', 'ISH', 'PHR', 'COE', 'Evacuación', 'General', 'Normativa'];
 // 14/11/2026 · Belén: «separar las fuentes en subtemas». Se agrupa por Subtema (hoja FUENTES, col. F); el módulo queda como etiqueta.
-const SUBT = ['Normativa', 'Herramientas OPS/OMS', 'Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas']; // 14/11/2026 · Salud mental (Belén: «agregar carpeta/tema de salud mental y yo cargo»)
-const ICO_S = { Normativa: 'gavel', 'Herramientas OPS/OMS': 'construction', 'Bibliografía de gestión de riesgos': 'menu_book', 'Salud mental': 'psychology', 'Archivos de APTW': 'folder_shared', 'Links a páginas': 'link' };
+const SUBT = ['Normativa', 'Herramientas OPS/OMS', 'Cursos gratuitos', 'Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas']; // 14/11/2026 · Salud mental (Belén: «agregar carpeta/tema de salud mental y yo cargo»)
+const ICO_S = { Normativa: 'gavel', 'Herramientas OPS/OMS': 'construction', 'Cursos gratuitos': 'school', 'Bibliografía de gestión de riesgos': 'menu_book', 'Salud mental': 'psychology', 'Archivos de APTW': 'folder_shared', 'Links a páginas': 'link' };
 const subDe = f => { const t = String(f.subtema || '').trim(); if (t) return t; const m = String(f.modulo || '').trim();
   if (/^normativa$/i.test(m)) return 'Normativa'; if (/^(STAR-H|ISH|PHR|Evacuación)$/i.test(m)) return 'Herramientas OPS/OMS';
   return f.enlace && !f.archivo && !f.archivoId ? 'Links a páginas' : 'Bibliografía de gestión de riesgos'; };
@@ -200,13 +205,18 @@ function notaHtml(n) {
   if (!L.length) return '';
   return `<small>${lineaHtml(L[0])}</small>` + (L.length > 1 ? `<details class="det"><summary>Ver detalle (${L.length - 1})</summary><ul>${L.slice(1).map(l => `<li>${lineaHtml(l)}</li>`).join('')}</ul></details>` : '');
 }
+// 14/11/2026 · Cada subtema se pliega (Belén: que no ocupe tanta vista). «Cursos gratuitos» arranca cerrado; el resto abierto. Se recuerda en este equipo.
+const CERRADOS = ['Cursos gratuitos'];
+const abierto = k => { const v = S.store.get('fuentes.abierto.' + k, null); return v === null ? CERRADOS.indexOf(k) < 0 : !!v; };
+document.addEventListener('toggle', ev => { const d = ev.target; if (d.classList && d.classList.contains('gr')) S.store.set('fuentes.abierto.' + d.dataset.k, d.open); }, true);
+document.addEventListener('click', ev => { const a = ev.target.closest('.subs a'); if (!a) return; const sec = document.querySelector(a.getAttribute('href')); const d = sec && sec.querySelector('details.gr'); if (d) d.open = true; });
 function pintar(lista, nota) {
   actual = lista;
   const g = {}; lista.forEach(f => { const k = subDe(f); (g[k] = g[k] || []).push(f); });
   const claves = Object.keys(g).sort((a, b) => (SUBT.indexOf(a) + 99) % 99 - (SUBT.indexOf(b) + 99) % 99);
   const indice = `<nav class="subs">${claves.map(k => `<a href="#${idS(k)}"><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)} <b>${g[k].length}</b></a>`).join('')}</nav>`;
-  app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}</h2><ol>${g[k].map(f => `<li>${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
-    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></section>`).join('')
+  app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><details class="gr" data-k="${E(k)}"${abierto(k) ? ' open' : ''}><summary><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}<b class="n">${g[k].length}</b><span class="ms fl">expand_more</span></h2></summary><ol>${g[k].map(f => `<li>${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
+    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></details></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
 }
 const guardadas = S.store.get('fuentes', null);
