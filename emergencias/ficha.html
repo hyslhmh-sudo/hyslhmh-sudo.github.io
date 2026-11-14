@@ -212,9 +212,32 @@ const fechaAct = () => srv.actualizado ? 'última carga ' + srv.actualizado : 't
 const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
 const req = s => s.c.filter(c => !c.opt); // los opcionales no cuentan para «Completa»
 const secOk = s => req(s).every(lleno);
+// 14/11/2026 19:35 (Belén: «Personas que requieren asistencia en una emergencia: ya está cargada la planilla de Trelew, revisar»).
+// Solo cantidades del libro de pacientes de la ciudad del establecimiento (acción red_pacientes con «ciudad»; lista cerrada).
+const CIUDAD = { 'Hospital Zonal Trelew': 'Trelew', 'Hospital María Humphreys': 'Trelew', 'Hospital Subzonal Santa Teresita': 'Rawson', 'Hospital Rural Gaiman': 'Gaiman', 'Hospital Rural Dolavon': 'Dolavon', 'Hospital Rural Las Plumas': 'Las Plumas', 'Hospital Rural Paso de Indios': 'Paso de Indios', 'Hospital Rural Camarones': 'Camarones', 'Puesto Sanitario 28 de Julio': '28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino': 'Dique Florentino Ameghino' };
+const GRUPOS_CACHE = {};
+async function cargarGrupos() {
+  const el = document.getElementById('gruposAuto'); if (!el) return;
+  const ciudad = CIUDAD[estab]; if (!ciudad) { el.textContent = 's/d (revisar): no se sabe a qué ciudad corresponde este establecimiento.'; return; }
+  const lista = o => Object.keys(o || {}).sort((a, b) => (parseInt(o[b]) || 0) - (parseInt(o[a]) || 0)).map(k => `${E(k)}: <b>${E(o[k])}</b>`).join(' · ') || 's/d';
+  try {
+    const r = GRUPOS_CACHE[ciudad] || (GRUPOS_CACHE[ciudad] = await S.api('red_pacientes', { ciudad }));
+    if (!r || !r.ok) throw r;
+    const e = (r.establecimientos || []).find(x => String(x.corto).toLowerCase() === ciudad.toLowerCase());
+    if (!e) { el.innerHTML = `Sin libro de pacientes cargado para ${E(ciudad)}: s/d (revisar).`; return; }
+    if (e.error) { el.innerHTML = `No se pudo abrir el libro de pacientes de ${E(ciudad)}: s/d (revisar).`; return; }
+    const sinClasif = (r.necesidad || {})['s/d (revisar)'];
+    el.innerHTML = `<b>${E(ciudad)}: ${E(e.total)} personas registradas</b> (activas; las de baja no se cuentan).<br>Por tipo de necesidad: ${lista(r.necesidad)}<br>Por tipo de patología: ${lista(r.patologia)}`
+      + (sinClasif ? `<br><span style="color:#B35500">Hay registros sin tipo de necesidad o de patología cargado: completarlos en el libro de pacientes.</span>` : '')
+      + `<br><small>Referencia: libro «PACIENTES · ${E(ciudad)} · Necesidades especiales (v0) · CONFIDENCIAL» (carpeta 08), solo cantidades, consultado ${new Date().toLocaleString('es-AR')}. Para quien no es Administración, de 1 a 4 se muestra «&lt;5».</small>`;
+  } catch (x) {
+    el.innerHTML = /lista cerrada|Sin acceso/i.test(String(x && (x.error || x.message) || x)) ? 'Las cantidades las ve solo la lista cerrada de pacientes con necesidades especiales.' : 'No se pudieron leer las cantidades: s/d (revisar).';
+  }
+}
 function campo(c) {
   const v = datos[c.k], id = 'f_' + c.k;
   const lab = `<span>${c.l}${esPre(c.k) ? ` <span class="pre" title="Dato que ya teníamos${FUENTE_PRE[c.k] ? ': ' + E(FUENTE_PRE[c.k]) : ' (libro de la app, hoja LUGARES)'}. Revisalo y cambialo si no es correcto.">Precargado</span>` : ''}</span>`;
+  if (c.t === 'auto' && c.k === 'grupos' && !window.__blanco) { setTimeout(cargarGrupos, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="gruposAuto">Buscando las cantidades…</div></div>`; }
   if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
   if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
   if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
