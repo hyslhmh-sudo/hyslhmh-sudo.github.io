@@ -94,7 +94,9 @@ const SEC = [
   { id: 's4', t: 'Capacidad asistencial', d: 'Con qué cuenta (puede no tener todo)', c: [
     { k: 'camas', l: 'Camas', t: 'auto', x: 'Se trae de la hoja LUGARES (camas de internación y de emergencia).' },
     { k: 'servicios', l: '¿Con qué servicios cuenta?', t: 'm', o: ['Internación', 'Quirófano', 'Sala de partos', 'Laboratorio', 'Rayos', 'Farmacia', 'Ninguno de estos'] },
-    { k: 'amb', l: 'Ambulancias (cantidad)', t: 'n' }, { k: 'amb_estado', l: 'Estado de las ambulancias', t: 't' }, { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
+    { k: 'intern', l: 'Si tiene internación: ¿de qué tipo?', t: 'm', o: ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'] },
+    { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Identificación (n.º interno o dominio)' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
+    { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
   { id: 's5', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
     { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'litros', l: 'Capacidad (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' },
