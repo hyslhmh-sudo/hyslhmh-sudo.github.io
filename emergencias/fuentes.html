@@ -76,6 +76,14 @@ body{background:#F5F7FB}
 .toast{background:#172B4D;color:#F5F7FB;border-left:5px solid #2F5BEA}
 .grupo h2{color:#172B4D}
 li a{color:#172B4D;text-decoration:underline;text-decoration-color:#2F5BEA}
+.visor{position:fixed;inset:0;z-index:50;background:rgba(23,43,77,.92);display:none;flex-direction:column}.visor.abierto{display:flex}
+.vbar{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;background:#172B4D;color:#fff}
+.vbar .vt{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vb{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.14);color:#fff}
+.vb:hover{background:rgba(255,255,255,.26)}
+.vcuerpo{flex:1;overflow:auto;padding:12px 8px 40px;display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-overflow-scrolling:touch}
+.vpag,.vimg{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:100%;height:auto}
+.vmsg{color:#fff;font-size:13.5px;margin:6px 0}.vmsg.mal{background:#FFF6EC;color:#8a3b00;border-radius:10px;padding:10px 14px}
 </style>
 </head>
 <body>
@@ -176,21 +184,58 @@ async function guardarSub() {
   }
 }
 // 14/11/2026 · Todos leen los documentos de Fuentes desde la app: el servidor entrega el archivo a quien inició sesión (el Drive no se comparte).
-async function leer(b) {
-  const id = b.dataset.leer, txt = b.lastChild.textContent;
-  if (!S.sesion.token() || S.DEMO) { alert('Para leer el documento tenés que iniciar sesión.'); return; }
-  const w = window.open('', '_blank');
-  b.disabled = true; b.lastChild.textContent = 'Abriendo…';
+// 14/11/2026 12:18 (Belén: «que se puedan leer todos los documentos sin descargar; descargar solo si el usuario quiere»):
+// «Leer el documento» abre un visor dentro de la app (PDF dibujado página por página con pdf.js; Word, Excel y PowerPoint llegan
+// convertidos a PDF desde el servidor). «Descargar» baja el archivo original, solo si se toca.
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfjsCarga = null;
+const cargarPdfjs = () => pdfjsCarga || (pdfjsCarga = new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+  sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); }; sc.onerror = () => { pdfjsCarga = null; mal(new Error('No se pudo cargar el visor. Revisá la conexión.')); }; document.head.appendChild(sc); }));
+const b64aBytes = d => { const bin = atob(d), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8; };
+function visor() {
+  let v = document.getElementById('visor');
+  if (v) return v;
+  v = document.createElement('div'); v.id = 'visor'; v.className = 'visor'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-modal', 'true');
+  v.innerHTML = '<div class="vbar"><b class="vt"></b><button type="button" class="vb" data-vdesc><span class="ms">download</span>Descargar</button><button type="button" class="vb" data-vcerrar aria-label="Cerrar"><span class="ms">close</span>Cerrar</button></div><div class="vcuerpo"></div>';
+  document.body.appendChild(v);
+  v.addEventListener('click', ev => { if (ev.target.closest('[data-vcerrar]')) cerrarVisor(); if (ev.target.closest('[data-vdesc]')) descargar(v.dataset.id, ev.target.closest('[data-vdesc]')); });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && v.classList.contains('abierto')) cerrarVisor(); });
+  return v;
+}
+function cerrarVisor() { const v = document.getElementById('visor'); if (!v) return; v.classList.remove('abierto'); v.querySelector('.vcuerpo').innerHTML = ''; document.body.style.overflow = ''; }
+async function descargar(id, b) {
+  const t = b.lastChild.textContent; b.disabled = true; b.lastChild.textContent = 'Descargando…';
   try {
     const r = await S.api('fuentes_archivo', { id: id }, 120000);
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo descargar.');
+    const url = URL.createObjectURL(new Blob([b64aBytes(r.datos)], { type: r.tipo })), a = document.createElement('a');
+    a.href = url; a.download = r.nombre; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) { alert(e.message); } finally { b.disabled = false; b.lastChild.textContent = t; }
+}
+async function leer(b) {
+  const id = b.dataset.leer;
+  if (!S.sesion.token() || S.DEMO) { alert('Para leer el documento tenés que iniciar sesión.'); return; }
+  const v = visor(), cu = v.querySelector('.vcuerpo'), tit = b.dataset.tit || 'Documento';
+  v.dataset.id = id; v.querySelector('.vt').textContent = tit; cu.innerHTML = '<p class="vmsg">Abriendo el documento…</p>';
+  v.classList.add('abierto'); document.body.style.overflow = 'hidden';
+  try {
+    const [r, lib] = await Promise.all([S.api('fuentes_archivo', { id: id, ver: true }, 180000), cargarPdfjs().catch(e => e)]);
     if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo abrir el documento.');
-    const bin = atob(r.datos), u8 = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([u8], { type: r.tipo }));
-    if (w) w.location.href = url; else { const a = document.createElement('a'); a.href = url; a.download = r.nombre; a.click(); }
-    setTimeout(() => URL.revokeObjectURL(url), 600000);
-  } catch (e) { if (w) w.close(); alert(/desconocida|disponible/i.test(e.message) ? 'Falta publicar la versión nueva del Apps Script de la app.' : e.message); }
-  finally { b.disabled = false; b.lastChild.textContent = txt; }
+    if (!v.classList.contains('abierto') || v.dataset.id !== id) return;
+    const bytes = b64aBytes(r.datos);
+    if (/^image\//.test(r.tipo)) { const url = URL.createObjectURL(new Blob([bytes], { type: r.tipo })); cu.innerHTML = `<img class="vimg" alt="" src="${url}">`; return; }
+    if (r.tipo !== 'application/pdf') throw new Error('Este tipo de archivo no se puede leer en la app. Usá «Descargar».');
+    if (lib instanceof Error) throw lib;
+    const pdf = await lib.getDocument({ data: bytes }).promise;
+    cu.innerHTML = `<p class="vmsg">${pdf.numPages} ${pdf.numPages === 1 ? 'página' : 'páginas'}</p>`;
+    const ancho = Math.min(cu.clientWidth - 16, 900), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    for (let i = 1; i <= pdf.numPages; i++) {
+      if (!v.classList.contains('abierto') || v.dataset.id !== id) return;
+      const pg = await pdf.getPage(i), vp0 = pg.getViewport({ scale: 1 }), esc = ancho / vp0.width, vp = pg.getViewport({ scale: esc * dpr });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.style.width = (vp.width / dpr) + 'px'; c.className = 'vpag';
+      cu.appendChild(c); await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) { cu.innerHTML = `<p class="vmsg mal">${E(/desconocida|disponible/i.test(e.message) ? 'Falta publicar la versión nueva del Apps Script de la app.' : e.message)}</p>`; }
 }
 document.addEventListener('click', ev => { const l = ev.target.closest('[data-leer]'); if (l) leer(l); if (ev.target.closest('#bSubir')) dlgSubir(); if (ev.target.closest('[data-c]')) document.getElementById('dlg').close(); });
 function actualizar(nota) {
@@ -221,7 +266,7 @@ function pintar(lista, nota) {
   const claves = Object.keys(g).sort((a, b) => (SUBT.indexOf(a) + 99) % 99 - (SUBT.indexOf(b) + 99) % 99);
   const indice = `<nav class="subs">${claves.map(k => `<a href="#${idS(k)}"><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)} <b>${g[k].length}</b></a>`).join('')}</nav>`;
   app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><details class="gr" data-k="${E(k)}"${abierto(k) ? ' open' : ''}><summary><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}<b class="n">${g[k].length}</b><span class="ms fl">expand_more</span></h2></summary><ol>${g[k].map(f => `<li${esDest(f) ? ' class="dest"' : ''}>${esDest(f) ? '<span class="dest-t"><span class="ms">star</span>Destacado</span><br>' : ''}${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
-    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></details></section>`).join('')
+    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}" data-tit="${E(String(f.cita || '').slice(0, 140))}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></details></section>`).join('')
     + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
   // 14/11/2026 · Si se entra con #sub-… (p. ej. desde los boletines del inicio), se abre ese subtema.
   if (/^#sub-/.test(location.hash)) { const sec = document.getElementById(location.hash.slice(1)); const d = sec && sec.querySelector('details.gr'); if (d) { d.open = true; sec.scrollIntoView({ block: 'start' }); } }

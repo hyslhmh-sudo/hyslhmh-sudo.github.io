@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Establecimientos · consolidado · Emergencias y desastres</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* 14/11/2026 · Establecimientos · consolidado (v0). Pedido de Belén: «en 2 · Gestión de la emergencia, información de establecimientos
+   como tarjeta, que entre y me muestre un consolidado de datos». Solo lectura, para todos los usuarios. Datos: LUGARES, CAMAS y la
+   ficha de los rurales (FICHA ESTAB). Sin contactos ni datos de pacientes. Ver claude/cambios-app-emergencias-11.md. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A;--mal:#C62828}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid var(--coral);border-left:6px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.filtros{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:12px 14px;margin-bottom:14px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.filtros label{font-size:12px;font-weight:700;color:var(--suave);display:grid;gap:3px}
+select,input{width:100%;border:1px solid var(--borde);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;background:#fff;color:var(--texto)}
+.kpis{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 14px}
+.kpi b{display:block;font-size:24px;line-height:1.2}.kpi span{font-size:12px;color:var(--suave);font-weight:600}.kpi small{display:block;font-size:11.5px;color:var(--tenue);margin-top:3px}
+.bloque{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:12px 14px;margin-bottom:14px}
+.bloque h2{font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+.cats{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--claro);color:var(--fuerte)}
+.chip.ok{background:#E3F4EC;color:var(--ok)}.chip.falta{background:#FFF0E0;color:#B35500}.chip.mal{background:#FDE7E7;color:var(--mal)}.chip.gris{background:#EEF1F6;color:var(--tenue)}
+.tabw{overflow-x:auto;background:#fff;border:1px solid var(--borde);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{text-align:left;font-size:12px;color:var(--tenue);padding:8px 10px;border-bottom:1.5px solid var(--claro);white-space:nowrap;background:#fff;position:sticky;top:0}
+td{padding:8px 10px;border-bottom:1px solid var(--claro);vertical-align:top}
+tr.fila{cursor:pointer}tr.fila:hover td{background:#F8FAFF}tr.fila.abierta td{background:var(--claro)}
+td.n{text-align:right;white-space:nowrap}
+.nom b{display:block}.nom small{color:var(--tenue);font-size:12px}
+tr.grupo td{background:var(--fondo);font-weight:800;font-size:12.5px;color:var(--suave);text-transform:uppercase;letter-spacing:.02em}
+tr.det td{background:#FBFCFF;padding:12px 14px}
+.dgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.dcaja{background:#fff;border:1px solid var(--claro);border-radius:12px;padding:10px 12px;font-size:13px}
+.dcaja h3{font-size:13px;margin:0 0 6px;color:var(--medio)}
+.dcaja dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px}.dcaja dt{color:var(--tenue);font-weight:600}.dcaja dd{margin:0}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:10px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none}
+.btn.pri{background:var(--medio);color:#fff;border-color:var(--medio)}
+.sd{color:var(--tenue);font-style:italic}
+.pie{font-size:12px;color:var(--tenue)}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
+@media print{.barra .icono,.filtros,.no-imp{display:none}.barra{position:static;background:#fff;color:#000;border-bottom:2px solid #000}.tabw{overflow:visible;border:0}th{position:static}
+tr.fila{break-inside:avoid}tr.det{display:none}body{background:#fff}.kpi,.bloque{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Establecimientos · consolidado<small>versión 0 · solo lectura · base orientadora</small></h1>
+  <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
+</header>
+<main id="app"><p class="pie">Cargando…</p></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const SD = '<span class="sd">s/d (revisar)</span>';
+const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
+// Secciones de la ficha (las mismas de ficha.html), para saber si está completa o parcial.
+const SECC = [['Identificación', ['nombre', 'corto', 'sisa', 'complejidad', 'depende', 'h24', 'guardia', 'ref', 'refkm', 'refmin']],
+  ['Ubicación y acceso', ['dir', 'coord', 'accesos', 'cortes', 'inundable', 'agua_cerca']],
+  ['Población', ['pob_at', 'pob_ciu', 'viv', 'depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob']],
+  ['Capacidad asistencial', ['servicios', 'camas', 'camas_obs', 'cam_guardia', 'arm', 'ambs', 'chofer']],
+  ['Servicios críticos', ['grupo', 'grupo_areas', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
+  ['Edificios a cargo', ['edif']], ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']],
+  ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['Antecedentes', ['antec']]];
+const ETQ = { complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', guardia: 'Tiene guardia', ref: 'Hospital de referencia', refkm: 'Distancia al de referencia (km)', refmin: 'Tiempo de traslado (min)',
+  dir: 'Dirección', coord: 'Coordenadas', accesos: 'Accesos', cortes: 'Se cortan con lluvia o crecida', inundable: 'Zona inundable', agua_cerca: 'Cerca de río, canal o cañadón',
+  pob_at: 'Población atendida (estimada)', pob_ciu: 'Población de la localidad (Censo 2022)', viv: 'Viviendas (Censo 2022)', depto: 'Departamento',
+  servicios: 'Servicios', camas_obs: 'Aclaraciones sobre camas', cam_guardia: 'Camas o camillas de guardia', chofer: 'Chofer las 24 horas',
+  grupo: 'Grupo electrógeno', grupo_areas: 'Áreas que cubre', grupo_h: 'Autonomía (horas)', limpieza: 'Tanques: limpieza anual', limpieza_f: 'Última limpieza de tanques', agua_alt: 'Fuente alternativa de agua',
+  oxigeno: 'Oxígeno', calef: 'Calefacción y gas', comun: 'Comunicaciones', trab_total: 'Trabajadores', med_total: 'Médicos', enf_total: 'Enfermeros',
+  plan: 'Plan de evacuación (LEY · Dto. 351/79, Anexo VII, cap. 18)', extintores: 'Extintores (LEY · Dto. 351/79, Anexo VII, cap. 18)', simulacro: 'Simulacro (MEJORA · ISH OPS)', seg_obs: 'Observaciones de seguridad', antec: 'Eventos anteriores' };
+const num = v => { const n = Number(String(v == null ? '' : v).replace(/\./g, '').replace(',', '.')); return isFinite(n) && String(v).trim() !== '' ? n : null; };
+const fmt = n => n == null ? '' : n.toLocaleString('es-AR');
+const val = v => v == null || v === '' ? SD : Array.isArray(v) ? (v.length ? E(v.join(', ')) : SD) : typeof v === 'object' ? E(JSON.stringify(v)) : E(String(v));
+let datos = null, abierto = '';
+const F = { area: S.store.get('estab.area', 'Área Programática Trelew'), tipo: '', red: '', loc: '', q: '' };
+
+function fichaEstado(f) {
+  if (!f) return null;
+  const c = f.claves || [], n = SECC.filter(s => s[1].some(k => c.indexOf(k) >= 0)).length;
+  return { n: n, tot: SECC.length, txt: !c.length ? 'Sin cargar' : n === SECC.length ? 'Completa' : `Parcial · ${n} de ${SECC.length} secciones`, cls: !c.length ? 'mal' : n === SECC.length ? 'ok' : 'falta' };
+}
+const camasEst = e => { const c = {}; e.camas.forEach(x => { const n = num(x.n); if (n != null) c[x.cat] = (c[x.cat] || 0) + n; }); return c; };
+const ambs = e => (e.ficha && e.ficha.datos.ambs) || null;
+const sumObj = o => Object.keys(o || {}).reduce((a, k) => a + o[k], 0);
+
+function filtrados() {
+  const q = S.sinTilde ? S.sinTilde(F.q) : F.q.toLowerCase();
+  const st = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return datos.establecimientos.filter(e => (!F.area || e.area === F.area) && (!F.tipo || e.tipo === F.tipo) && (!F.red || e.red === F.red) && (!F.loc || e.loc === F.loc)
+    && (!F.q || st(e.nombre + ' ' + e.corto + ' ' + e.loc).indexOf(st(F.q)) >= 0));
+}
+const opciones = (k, todos) => { const L = [...new Set(datos.establecimientos.map(e => e[k]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')); return `<option value="">${todos}</option>` + L.map(x => `<option${F[k] === x ? ' selected' : ''}>${E(x)}</option>`).join(''); };
+
+function pintar() {
+  const L = filtrados();
+  // Totales
+  let camasTot = 0, camasSd = 0; const porCat = {}, amb = {}; let conFicha = 0; const fe = { Completa: 0, Parcial: 0, 'Sin cargar': 0 }; let sinRef = 0, trab = 0, med = 0, enf = 0, conPers = 0;
+  L.forEach(e => {
+    const t = num(e.camasTotal); if (t == null) camasSd++; else camasTot += t;
+    const c = camasEst(e); Object.keys(c).forEach(k => porCat[k] = (porCat[k] || 0) + c[k]);
+    const a = ambs(e); if (a) Object.keys(a).forEach(k => amb[k] = (amb[k] || 0) + a[k]);
+    if (e.ficha) { conFicha++; const s = fichaEstado(e.ficha); fe[/^Parcial/.test(s.txt) ? 'Parcial' : s.txt]++; if (!e.ficha.referente) sinRef++;
+      const d = e.ficha.datos; if (num(d.trab_total) != null || num(d.med_total) != null || num(d.enf_total) != null) { conPers++; trab += num(d.trab_total) || 0; med += num(d.med_total) || 0; enf += num(d.enf_total) || 0; } }
+  });
+  const ambTot = sumObj(amb);
+  const kpis = `<div class="kpis">
+    <div class="kpi"><span>Establecimientos</span><b>${L.length}</b><small>${E(F.area || 'Todas las áreas programáticas')}</small></div>
+    <div class="kpi"><span>Camas (total estimado)</span><b>${fmt(camasTot)}</b><small>${camasSd ? `${camasSd} establecimiento${camasSd > 1 ? 's' : ''} sin dato (s/d)` : 'Todos con dato'}</small></div>
+    <div class="kpi"><span>Ambulancias cargadas en fichas</span><b>${ambTot || '—'}</b><small>${ambTot ? Object.keys(amb).map(k => `${amb[k]} ${E(k.toLowerCase())}`).join(' · ') : 'Todavía sin datos'}</small></div>
+    <div class="kpi"><span>Personal (fichas cargadas)</span><b>${conPers ? fmt(trab) : '—'}</b><small>${conPers ? `${fmt(med)} médicos · ${fmt(enf)} enfermeros · ${conPers} ficha${conPers > 1 ? 's' : ''}` : 'Todavía sin datos'}</small></div>
+    ${conFicha ? `<div class="kpi"><span>Fichas de establecimiento</span><b>${conFicha}</b><small>${fe.Completa} completas · ${fe.Parcial} parciales · ${fe['Sin cargar']} sin cargar${sinRef ? ` · ${sinRef} sin referente` : ''}</small></div>` : ''}
+  </div>`;
+  const cats = TIPOS_INT.filter(k => porCat[k]).map(k => `<span class="chip">${E(k)}: ${fmt(porCat[k])}</span>`).join('') + Object.keys(porCat).filter(k => TIPOS_INT.indexOf(k) < 0).map(k => `<span class="chip gris">${E(k)}: ${fmt(porCat[k])}</span>`).join('');
+  const bloqCat = `<div class="bloque"><h2><span class="ms">bed</span>Camas por tipo de internación <small class="pie">(hoja CAMAS; solo establecimientos con detalle cargado)</small></h2><div class="cats">${cats || '<span class="pie">Sin detalle por tipo para esta selección.</span>'}</div></div>`;
+  // Tabla agrupada por área
+  const areas = [...new Set(L.map(e => e.area))];
+  const filas = areas.map(a => (F.area ? '' : `<tr class="grupo"><td colspan="8">${E(a || 's/d (revisar)')}</td></tr>`) + L.filter(e => e.area === a).map(filaHtml).join('')).join('');
+  app.innerHTML = `<div class="aviso"><b>Base orientadora, no es un registro en tiempo real.</b> Las capacidades son estimadas y salen de las hojas LUGARES y CAMAS y de la ficha que cargan los referentes de los hospitales rurales. Lo que falta figura como «s/d (revisar)». No se muestran contactos ni datos de pacientes.</div>
+  <div class="filtros no-imp">
+    <label>Área programática<select data-f="area">${opciones('area', 'Todas')}</select></label>
+    <label>Tipo<select data-f="tipo">${opciones('tipo', 'Todos')}</select></label>
+    <label>Red<select data-f="red">${opciones('red', 'Todas')}</select></label>
+    <label>Localidad<select data-f="loc">${opciones('loc', 'Todas')}</select></label>
+    <label>Buscar<input data-f="q" type="search" value="${E(F.q)}" placeholder="Nombre o localidad"></label>
+  </div>
+  ${kpis}${bloqCat}
+  <div class="tabw"><table><thead><tr><th>Establecimiento</th><th>Tipo</th><th>Localidad</th><th class="n">Camas</th><th>Personal<br><small>trab. · méd. · enf.</small></th><th>Ambulancias</th><th>Grupo electr.</th><th>Ficha</th></tr></thead>
+  <tbody>${filas || '<tr><td colspan="8" class="pie">No hay establecimientos con esos filtros.</td></tr>'}</tbody></table></div>
+  <p class="pie">Versión 0 · Datos al ${E(datos.generado)}. Tocá un establecimiento para ver el detalle. Las correcciones se hacen en la ficha del establecimiento (rurales) o en las hojas LUGARES y CAMAS del libro de la app.</p>`;
+}
+function filaHtml(e) {
+  const f = e.ficha, d = f ? f.datos : {}, s = fichaEstado(f), a = d.ambs;
+  const pers = f && (d.trab_total || d.med_total || d.enf_total) ? `${val(d.trab_total)} · ${val(d.med_total)} · ${val(d.enf_total)}` : SD;
+  const amb = a && sumObj(a) ? `${a['Funciona'] || 0} de ${sumObj(a)} funcionan` + (a['Fuera de servicio'] ? ` <span class="chip mal">${a['Fuera de servicio']} fuera de servicio</span>` : '') : SD;
+  const ge = !f || !d.grupo ? SD : /^s/i.test(d.grupo) ? 'Sí' + (d.grupo_h ? ` · ${E(d.grupo_h)} h` : '') : E(d.grupo);
+  const fi = !f ? '<span class="chip gris">Sin ficha todavía</span>' : `<span class="chip ${s.cls}">${E(s.txt)}</span>${f.referente ? '' : ' <span class="chip falta">Sin referente</span>'}${f.act ? `<br><small class="pie">${E(f.act)}</small>` : ''}`;
+  const ab = abierto === e.id;
+  return `<tr class="fila${ab ? ' abierta' : ''}" data-id="${E(e.id)}" tabindex="0"><td class="nom"><b>${E(e.corto || e.nombre)}</b><small>${E(e.nombre)}</small></td><td>${val(e.tipo)}</td><td>${val(/^s\/d/.test(e.loc) ? '' : e.loc)}</td>
+    <td class="n">${num(e.camasTotal) == null ? SD : fmt(num(e.camasTotal))}</td><td>${pers}</td><td>${amb}</td><td>${ge}</td><td>${fi}</td></tr>${ab ? detalleHtml(e) : ''}`;
+}
+function detalleHtml(e) {
+  const f = e.ficha, d = f ? f.datos : {};
+  const lim = v => !v || /^s\/d/.test(v) || v === '—' ? SD : E(v);
+  const caj = (t, ico, html) => `<div class="dcaja"><h3><span class="ms" style="font-size:17px">${ico}</span> ${t}</h3>${html}</div>`;
+  const dl = pares => `<dl>${pares.map(p => `<dt>${E(p[0])}</dt><dd>${p[1]}</dd>`).join('')}</dl>`;
+  const ident = caj('Identificación (LUGARES)', 'badge', dl([['Nombre oficial', E(e.nombre)], ['Código SISA', lim(e.sisa)], ['Área programática', lim(e.area)], ['Red', lim(e.red)], ['Depende de', lim(e.depende)], ['Localidad', lim(e.loc)], ['Coordenadas', /^-?\d/.test(e.lat) ? E(e.lat + ', ' + e.lon) : SD], ['Estado', lim(e.estado)]]));
+  const camas = e.camas.length ? `<table><thead><tr><th>Tipo</th><th>Servicio</th><th class="n">Camas</th><th>Fuente</th></tr></thead><tbody>${e.camas.map(c => `<tr><td>${E(c.cat)}</td><td>${E(c.serv)}</td><td class="n">${E(c.n)}</td><td><small>${E(c.fuente)}${c.fecha ? ' · ' + E(c.fecha) : ''}</small></td></tr>`).join('')}</tbody></table>` : `<p>Total estimado: ${num(e.camasTotal) == null ? SD : fmt(num(e.camasTotal))}. Sin detalle por tipo en la hoja CAMAS.</p>`;
+  const cajCamas = caj('Camas (CAMAS)', 'bed', camas + (e.obs ? `<p class="pie" style="margin:6px 0 0">${E(e.obs)}</p>` : ''));
+  let cajFicha = '';
+  if (f) {
+    const est = fichaEstado(f);
+    const extra = [];
+    if (d.arm && sumObj(d.arm)) extra.push(['Respiradores (ARM/AVM)', Object.keys(d.arm).map(k => `${d.arm[k]} ${E(k.toLowerCase())}`).join(' · ')]);
+    if (d.ambs && sumObj(d.ambs)) extra.push(['Ambulancias', Object.keys(d.ambs).map(k => `${d.ambs[k]} ${E(k.toLowerCase())}`).join(' · ')]);
+    if (d.tanques) extra.push(['Tanques y cisternas', `${d.tanques.n} · ${fmt(d.tanques.litros)} litros`]);
+    if (d.edif) extra.push(['Edificios a cargo', Object.keys(d.edif).map(k => `${d.edif[k]} ${E(k)}`).join(' · ')]);
+    if (d.camas && d.camas.length) extra.push(['Camas según la ficha', d.camas.map(c => `${E(c.cat)}: ${E(c.n)}`).join(' · ')]);
+    const pares = Object.keys(ETQ).filter(k => d[k] != null && d[k] !== '').map(k => [ETQ[k], val(d[k])]).concat(extra);
+    const faltan = SECC.filter(s => !s[1].some(k => (f.claves || []).indexOf(k) >= 0)).map(s => s[0]);
+    cajFicha = caj('Ficha del establecimiento', 'apartment', `<p style="margin:0 0 6px"><span class="chip ${est.cls}">${E(est.txt)}</span>${f.referente ? '' : ' <span class="chip falta">Sin referente</span>'}${f.act ? ` <small class="pie">Última carga: ${E(f.act)}</small>` : ''}</p>`
+      + (pares.length ? dl(pares) : '<p class="pie">Todavía no hay datos cargados en la ficha.</p>')
+      + (faltan.length && f.claves.length ? `<p class="pie" style="margin:6px 0 0">Secciones sin datos: ${E(faltan.join(', '))}.</p>` : '')
+      + `<p class="no-imp" style="margin:8px 0 0"><button class="btn pri" type="button" data-ficha="${E(f.est)}"><span class="ms" style="font-size:17px">${f.puede ? 'edit' : 'visibility'}</span>${f.puede ? 'Abrir y completar la ficha' : 'Ver la ficha completa'}</button></p>`);
+  }
+  return `<tr class="det"><td colspan="8"><div class="dgrid">${ident}${cajCamas}${cajFicha}</div></td></tr>`;
+}
+app.addEventListener('change', ev => { const k = ev.target.dataset.f; if (!k) return; F[k] = ev.target.value; if (k === 'area') S.store.set('estab.area', F.area); abierto = ''; pintar(); });
+app.addEventListener('input', ev => { if (ev.target.dataset.f !== 'q') return; F.q = ev.target.value; clearTimeout(app._t); app._t = setTimeout(() => { const p = ev.target.selectionStart; pintar(); const i = app.querySelector('[data-f=q]'); i.focus(); try { i.setSelectionRange(p, p); } catch (e) {} }, 250); });
+const alternar = tr => { abierto = abierto === tr.dataset.id ? '' : tr.dataset.id; pintar(); const n = app.querySelector(`tr.fila[data-id="${abierto}"]`); if (n) n.scrollIntoView({ block: 'nearest' }); };
+app.addEventListener('click', ev => {
+  const fb = ev.target.closest('[data-ficha]'); if (fb) { S.store.set('ficha.estab', fb.dataset.ficha); location.href = 'ficha.html'; return; }
+  const tr = ev.target.closest('tr.fila'); if (tr) alternar(tr);
+});
+app.addEventListener('keydown', ev => { const tr = ev.target.closest('tr.fila'); if (tr && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); alternar(tr); } });
+async function cargar() {
+  const g = S.store.get('estab.cache', null);
+  if (g) { datos = g; pintar(); }
+  try { const r = await S.api('estab_consolidado', {}); if (!r || !r.ok) throw r; datos = r; S.store.set('estab.cache', r); pintar(); }
+  catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } if (!datos) app.innerHTML = `<div class="aviso"><b>No se pudo cargar el consolidado.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`; }
+}
+cargar();
+})();
+</script>
+</body>
+</html>

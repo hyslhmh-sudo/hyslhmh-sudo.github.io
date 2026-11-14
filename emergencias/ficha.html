@@ -73,7 +73,7 @@ body.blanco textarea{min-height:70px;border:1px solid #777}body.blanco select{-w
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Ficha del establecimiento<small>versión 0 · hospitales rurales y puestos sanitarios</small></h1>
+  <h1>Ficha del establecimiento<small>versión 0 · HZT, HMH, HSST, hospitales rurales y puestos sanitarios</small></h1>
   <button class="icono" type="button" onclick="imprimir(false)" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"></main>
@@ -154,7 +154,12 @@ const DEP = {
 };
 const censo = (pob, viv, d) => Object.assign({ pob_ciu: String(pob), viv: String(viv) }, DEP[d]);
 const base = (nombre, corto, sisa, tipo) => ({ nombre, corto, sisa, complejidad: tipo, depende: 'Área Programática Trelew' });
+// 14/11/2026 12:24 (Belén: «falta Rawson y Trelew, yo soy la referente»): HZT, HMH y HSST, con las camas por tipo de la hoja CAMAS.
+const camasDe = o => TIPOS_INT.map(q => o[q] ? { quien: q, n: String(o[q]) } : { quien: q });
 const PRE = {
+  'Hospital Zonal Trelew': Object.assign(base('Hospital Zonal Trelew «Dr. Adolfo Margara»', 'HZT', '10260772129042', 'Hospital zonal'), { camas: camasDe({ 'Salud mental': 30 }), camas_obs: 'Salud mental fuera del edificio del HZT: internación de la Sede ex ADOS 9 + Viviendas asistidas 21 (a confirmar). En el edificio del HZT no hay internación.', ref_tit: 'Belén Pellegrini' }),
+  'Hospital María Humphreys': Object.assign(base('Hospital María Humphreys', 'HMH', '10260772130746', 'Hospital zonal'), { camas: camasDe({ 'Int. general / adultos': 40, 'Terapia intensiva adultos': 8, 'Pediatría': 17, 'Terapia intensiva pediátrica': 5, 'Neonatología': 13, 'Maternidad / obstetricia': 6, 'Urgencias / emergencia con internación': 11 }), camas_obs: 'Pediatría 12 + 5 de observación. UCIP: 5 activas de 8. UCIN: 9 incubadoras + 4 cunas. UMU (Unidad Médica de Urgencias) 11. Obstetricia: 4 UTPR + 2 de alto riesgo.', ref_tit: 'Belén Pellegrini' }),
+  'Hospital Subzonal Santa Teresita': Object.assign(base('Hospital Subzonal Santa Teresita (Rawson)', 'HSST', '10260772129038', 'Hospital subzonal'), { camas: camasDe({ 'Int. general / adultos': 16, 'Terapia intensiva adultos': 5, 'Pediatría': 12, 'Maternidad / obstetricia': 10 }), camas_obs: 'Más 1 cama de preparto, no sumada: a decidir si se cuenta como cama de internación.', ref_tit: 'Belén Pellegrini' }),
   'Hospital Rural Gaiman': Object.assign(base('Hospital Rural Gaiman', 'Gaiman', '10260422129022', 'Hospital rural'), { camas: camasPre(18, 2), ref_tit: 'Víctor Soto' }, censo(7851, 3061, 'Gaiman')),
   'Hospital Rural Dolavon': Object.assign(base('Hospital Rural Dolavon', 'Dolavon', '10260422129029', 'Hospital rural'), { camas: camasPre(13, 2), ref_tit: 'Rocío Belén Henriquez' }, censo(3967, 1646, 'Gaiman')),
   'Hospital Rural Las Plumas': Object.assign(base('Hospital Rural Las Plumas', 'Las Plumas', '10260632129028', 'Hospital rural'), { camas: camasPre(6), ref_tit: 'Patricia Gisel Paterlini' }, censo(589, 253, 'Martires')),
@@ -163,7 +168,7 @@ const PRE = {
   'Puesto Sanitario 28 de Julio': Object.assign(base('Puesto Sanitario 28 de Julio', '28 de Julio', '50260422129194', 'Puesto sanitario'), censo(609, 258, 'Gaiman')),
   'Puesto Sanitario Dique Florentino Ameghino': Object.assign(base('Puesto Sanitario Dique Florentino Ameghino', 'Dique Ameghino', '51260422129332', 'Puesto sanitario'), censo(183, 109, 'Gaiman'))
 };
-const FUENTE_PRE = { camas: 'Informe APTW de camas de hospitales rurales, ene–oct 2026', ref_tit: 'referente designado (COEsp · Participantes)' };
+const FUENTE_PRE = { camas: 'hoja CAMAS de la app (rurales: informe APTW ene–oct 2026; HZT y HMH: Epidemiología HMH 05/11/2026; HSST: dato de Belén 12/11/2026)', camas_obs: 'hoja CAMAS de la app', ref_tit: 'referente designado (COEsp · Participantes)' };
 ['pob_ciu', 'viv'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadro 1.5 por gobierno local');
 ['depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadros por departamento (la densidad solo se publica por departamento)');
 const vacio = v => v == null || (Array.isArray(v) ? !v.some(f => f && typeof f === 'object' ? Object.entries(f).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim()) : String(f).trim()) : String(v).trim() === '');

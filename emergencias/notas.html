@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notas rápidas · Emergencias y desastres</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* 14/11/2026 · Notas rápidas (v0). Pedido de Belén: las carga cualquier usuario, las ven todos, se marca para quién es (Todos o una
+   o varias personas), si es para leer, si requiere respuesta o una acción, y la prioridad (normal o urgente). Sin fotos y sin mails
+   ni avisos automáticos. Todo queda registrado en el libro de la app: hojas NOTAS y NOTAS · MOVIMIENTOS. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A;--mal:#C62828}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:700;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}.icono.nueva{background:var(--medio)}
+main{max-width:860px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid var(--coral);border-left:6px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tab{border:1px solid var(--borde);background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13.5px;font-weight:700;color:var(--fuerte);cursor:pointer}
+.tab.on{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}.tab b{background:var(--coral);color:#fff;border-radius:999px;padding:0 7px;font-size:11.5px;margin-left:4px}
+.sub{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--suave);margin-bottom:12px}
+.sub select{border:1px solid var(--borde);border-radius:10px;padding:6px 8px;font:inherit;font-size:13px;background:#fff}
+.nota{background:#fff;border:1px solid var(--borde);border-left:5px solid var(--medio);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.nota.urg{border-left-color:var(--coral)}.nota.cerrada{opacity:.72;border-left-color:#AEB8C8}.nota.pend{box-shadow:0 0 0 2px #FFD9B0}
+.nota h3{margin:4px 0 4px;font-size:15.5px}
+.nota .txt{white-space:pre-wrap;font-size:14px;margin:0 0 6px}
+.meta{font-size:12px;color:var(--tenue)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--claro);color:var(--fuerte);margin-right:4px}
+.chip.urg{background:#FFE7CF;color:#A84B00}.chip.ok{background:#E3F4EC;color:var(--ok)}.chip.mal{background:#FDE7E7;color:var(--mal)}.chip.gris{background:#EEF1F6;color:var(--tenue)}
+.accion{background:var(--fondo);border-radius:10px;padding:7px 10px;font-size:13.5px;margin:6px 0}
+.acc{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:10px;padding:6px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.btn .ms{font-size:17px}.btn.pri{background:var(--medio);color:#fff;border-color:var(--medio)}.btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}.btn.peligro{color:var(--mal)}
+.btn:disabled{opacity:.55;cursor:default}
+details.quien{font-size:12.5px;margin-top:6px}details.quien summary{cursor:pointer;color:var(--medio);font-weight:700}
+.resp{border-top:1px solid var(--claro);margin-top:8px;padding-top:6px;font-size:13px}.resp p{margin:4px 0;white-space:pre-wrap}
+.inline{display:flex;gap:6px;margin-top:8px}.inline textarea,.inline input{flex:1}
+input,textarea,select{border:1px solid var(--borde);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;background:#fff;color:var(--texto);width:100%}
+textarea{min-height:70px;resize:vertical}
+dialog{border:0;border-radius:18px;padding:0;width:min(640px,96vw);max-height:92vh}dialog::backdrop{background:rgba(23,43,77,.55)}
+.dlg{padding:16px 18px;display:grid;gap:12px;overflow:auto;max-height:92vh}.dlg h2{margin:0;font-size:17px}
+.campo>span{display:block;font-size:12.5px;font-weight:700;color:var(--suave);margin-bottom:4px}.campo small{color:var(--tenue)}
+.radios{display:flex;gap:6px;flex-wrap:wrap}.radios label{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--borde);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer;background:#fff}
+.radios input{width:auto;margin:0}.radios label:has(input:checked){background:var(--claro);border-color:var(--medio);font-weight:700}
+.personas{border:1px solid var(--borde);border-radius:10px;max-height:200px;overflow:auto;padding:6px}
+.personas label{display:flex;align-items:center;gap:8px;padding:4px 6px;font-size:13.5px;border-radius:8px;cursor:pointer}.personas label:hover{background:var(--fondo)}.personas input{width:auto}
+.err{color:var(--mal);font-weight:600;font-size:13px}
+.pie{font-size:12px;color:var(--tenue)}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Notas rápidas<small>versión 0 · visibles para todos los usuarios de la app</small></h1>
+  <button class="icono nueva" type="button" id="bNueva"><span class="ms">add</span>Nueva nota</button>
+</header>
+<main id="app"><p class="pie">Cargando…</p></main>
+<dialog id="dlg"><form class="dlg" id="fNota" method="dialog">
+  <h2 id="dTit">Nueva nota</h2>
+  <div class="aviso" style="margin:0"><b>La ven todos los usuarios de la app.</b> No cargar datos de pacientes ni datos personales. No reemplaza las notas formales ni la convocatoria al COEsp. No se envían mails ni avisos: cada persona la ve al entrar.</div>
+  <label class="campo"><span>Tema</span><input name="tema" maxlength="80" required placeholder="Por ejemplo: Corte de ruta en Las Plumas"></label>
+  <label class="campo"><span>Texto <small id="cuenta">0 / 500</small></span><textarea name="texto" maxlength="500" required></textarea></label>
+  <div class="campo"><span>¿Para quién es?</span><div class="radios"><label><input type="radio" name="paraT" value="todos" checked>Todos</label><label><input type="radio" name="paraT" value="personas">Una o varias personas</label></div>
+    <div id="bloqPers" class="oculto" style="margin-top:6px"><input id="buscaP" type="search" placeholder="Buscar persona" style="margin-bottom:6px"><div class="personas" id="pers"></div><small class="pie" id="nSel">Ninguna elegida</small></div></div>
+  <div class="campo"><span>Tipo</span><div class="radios" id="tipos"></div></div>
+  <div id="bloqAcc" class="oculto" style="display:grid;gap:10px">
+    <label class="campo"><span>Acción que se pide</span><input name="accion" maxlength="300" placeholder="Qué hay que hacer"></label>
+    <label class="campo"><span>Plazo <small>(opcional)</small></span><input name="plazo" type="date"></label>
+  </div>
+  <div class="campo"><span>Prioridad</span><div class="radios"><label><input type="radio" name="prioridad" value="Normal" checked>Normal</label><label><input type="radio" name="prioridad" value="Urgente">Urgente</label></div></div>
+  <label class="campo"><span>Establecimiento o red <small>(opcional)</small></span><input name="lugar" maxlength="120" list="lugares"><datalist id="lugares"></datalist></label>
+  <p class="err oculto" id="dErr"></p>
+  <div class="acc"><button class="btn pri" type="submit" id="dOk"><span class="ms">send</span>Guardar</button><button class="btn" type="button" id="dCancel">Cancelar</button></div>
+</form></dialog>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, E = S.esc, app = document.getElementById('app'), $ = s => document.querySelector(s);
+const enVista = () => !!(S.sesion.enVista && S.sesion.enVista());
+let D = null, vista = S.store.get('notas.vista', 'mias_pend'), filtroEst = 'Abierta', archivo = false, editando = null;
+const nom = id => { const u = (D.usuarios || []).find(x => x.id === id); return u ? u.nombre : 's/d (revisar)'; };
+const esDest = n => n.para === 'todos' || n.para.indexOf(D.yo) >= 0;
+const pendiente = n => n.estado === 'Abierta' && esDest(n) && (!n.lect[D.yo] || (n.tipo === 'Requiere acción' && !n.hechos[D.yo]) || (n.tipo === 'Requiere respuesta' && !n.resp.some(r => r.uid === D.yo)));
+const fechaDma = iso => { const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+const fechaIso = dma => { const m = String(dma || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+const vencido = p => { const i = fechaIso(p); return i && new Date(i + 'T23:59:59') < new Date(); };
+
+function pintar() {
+  const pend = D.notas.filter(pendiente);
+  const L = D.notas.filter(n => vista === 'mias_pend' ? esDest(n) && n.para !== 'todos' || pendiente(n) : vista === 'mias' ? n.autorId === D.yo : true)
+    .filter(n => !filtroEst || n.estado === filtroEst)
+    .sort((a, b) => (pendiente(b) - pendiente(a)) || ((b.prioridad === 'Urgente') - (a.prioridad === 'Urgente')));
+  app.innerHTML = `<div class="aviso"><b>Las notas las ven todos los usuarios.</b> Se puede dirigir a todos o a una o varias personas, que son las que marcan «Leída», «Hecho» o responden. Todo queda registrado (quién, día y hora). No cargar datos de pacientes ni datos personales.${enVista() ? '<br><b>Estás en «Ver como»: solo lectura.</b>' : ''}</div>
+  <div class="tabs"><button class="tab${vista === 'mias_pend' ? ' on' : ''}" data-v="mias_pend">Para mí${pend.length ? `<b>${pend.length}</b>` : ''}</button><button class="tab${vista === 'todas' ? ' on' : ''}" data-v="todas">Todas</button><button class="tab${vista === 'mias' ? ' on' : ''}" data-v="mias">Las que cargué</button></div>
+  <div class="sub"><label>Estado <select id="fEst"><option value="Abierta"${filtroEst === 'Abierta' ? ' selected' : ''}>Abiertas</option><option value="Cerrada"${filtroEst === 'Cerrada' ? ' selected' : ''}>Cerradas</option><option value=""${!filtroEst ? ' selected' : ''}>Todas</option></select></label>
+    <label><input type="checkbox" id="fArch" style="width:auto"${archivo ? ' checked' : ''}> Incluir archivadas (cerradas hace más de 30 días)</label></div>
+  ${L.length ? L.map(notaHtml).join('') : `<p class="pie">${vista === 'mias_pend' ? 'No tenés notas pendientes.' : 'No hay notas con estos filtros.'}</p>`}
+  <p class="pie">Versión 0. Registro completo en el libro de la app (hojas NOTAS y NOTAS · MOVIMIENTOS).</p>`;
+}
+function notaHtml(n) {
+  const dest = esDest(n), leida = !!n.lect[D.yo], hecho = !!n.hechos[D.yo], abierta = n.estado === 'Abierta', ro = enVista();
+  const destinatarios = n.para === 'todos' ? null : n.para;
+  const leyeron = Object.keys(n.lect), hicieron = Object.keys(n.hechos);
+  let resumen;
+  if (destinatarios) {
+    resumen = `Leída por ${destinatarios.filter(id => n.lect[id]).length} de ${destinatarios.length}` + (n.tipo === 'Requiere acción' ? ` · hecho por ${destinatarios.filter(id => n.hechos[id]).length} de ${destinatarios.length}` : '');
+  } else resumen = `Leída por ${leyeron.length}` + (n.tipo === 'Requiere acción' ? ` · hecho por ${hicieron.length}` : '');
+  const lista = (destinatarios || leyeron).map(id => `<li>${E(nom(id))}: ${n.lect[id] ? `leyó ${E(n.lect[id])}` : '<b>sin leer</b>'}${n.tipo === 'Requiere acción' ? (n.hechos[id] ? ` · hecho ${E(n.hechos[id].fecha)}${n.hechos[id].det ? ` («${E(n.hechos[id].det)}»)` : ''}` : ' · acción pendiente') : ''}</li>`).join('');
+  const btn = (que, ico, txt, cls) => `<button class="btn ${cls || ''}" type="button" data-q="${que}" data-id="${E(n.id)}"><span class="ms">${ico}</span>${txt}</button>`;
+  const acciones = ro ? '' : [
+    abierta && dest && !leida ? btn('leido', 'done', 'Marcar leída', 'pri') : '',
+    abierta && dest && n.tipo === 'Requiere acción' ? (hecho ? btn('deshacer', 'undo', 'Deshacer «Hecho»') : btn('hecho', 'task_alt', 'Hecho', 'ok')) : '',
+    abierta ? btn('responder', 'reply', 'Responder') : '',
+    n.puedeEditar && abierta ? btn('editar', 'edit', 'Editar') : '',
+    n.puedeEditar ? (abierta ? btn('cerrar', 'lock', 'Cerrar') : btn('reabrir', 'lock_open', 'Reabrir')) : '',
+    n.puedeEditar ? btn('borrar', 'delete', 'Borrar', 'peligro') : ''
+  ].join('');
+  return `<article class="nota${n.prioridad === 'Urgente' ? ' urg' : ''}${abierta ? '' : ' cerrada'}${pendiente(n) ? ' pend' : ''}" id="n-${E(n.id)}">
+    <div>${n.prioridad === 'Urgente' ? '<span class="chip urg"><span class="ms" style="font-size:14px">priority_high</span>Urgente</span>' : ''}<span class="chip">${E(n.tipo)}</span>${abierta ? '' : '<span class="chip gris">Cerrada</span>'}${pendiente(n) ? '<span class="chip urg">Pendiente para vos</span>' : ''}${n.archivada ? '<span class="chip gris">Archivada</span>' : ''}</div>
+    <h3>${E(n.tema)}</h3><p class="txt">${E(n.texto)}</p>
+    ${n.tipo === 'Requiere acción' ? `<div class="accion"><b>Acción:</b> ${E(n.accion)}${n.plazo ? ` · <b>plazo</b> ${E(n.plazo)}${abierta && vencido(n.plazo) ? ' <span class="chip mal">Vencido</span>' : ''}` : ''}</div>` : ''}
+    <div class="meta">${E(n.id)} · ${E(n.autor)} · ${E(n.fecha)} · para: <b>${E(n.paraNombres)}</b>${n.lugar ? ` · ${E(n.lugar)}` : ''}${n.act && n.act !== n.fecha ? ` · act. ${E(n.act)} (${E(n.actPor)})` : ''}</div>
+    <details class="quien"><summary>${resumen}${n.resp.length ? ` · ${n.resp.length} respuesta${n.resp.length > 1 ? 's' : ''}` : ''}</summary>${lista ? `<ul style="margin:6px 0;padding-left:18px">${lista}</ul>` : '<p class="pie">Nadie la marcó todavía.</p>'}</details>
+    ${n.resp.length ? `<div class="resp">${n.resp.map(r => `<p><b>${E(r.quien)}</b> <span class="meta">${E(r.fecha)}</span><br>${E(r.texto)}</p>`).join('')}</div>` : ''}
+    <div class="acc">${acciones}</div><div class="inline oculto" data-in="${E(n.id)}"></div></article>`;
+}
+async function cargar(msg) {
+  try { const r = await S.api('notas_leer', { archivo: archivo }); if (!r || !r.ok) throw r; D = r; S.store.set('notas.pend', D.notas.filter(pendiente).length); pintar(); if (msg) { const n = document.getElementById('n-' + msg); if (n) n.scrollIntoView({ block: 'center' }); } }
+  catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudieron cargar las notas.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión.')}</div>`; }
+}
+async function marcar(id, que, texto, b) {
+  if (b) b.disabled = true;
+  try { const r = await S.api('notas_marcar', { id: id, que: que, texto: texto || '' }); if (!r || !r.ok) throw r; await cargar(id); }
+  catch (e) { alert((e && (e.error || e.message)) || 'No se pudo guardar.'); if (b) b.disabled = false; }
+}
+function pedirTexto(id, que, ph, okTxt) {
+  const box = app.querySelector(`[data-in="${id}"]`); box.classList.remove('oculto');
+  box.innerHTML = `<textarea maxlength="500" placeholder="${E(ph)}"></textarea><button class="btn pri" type="button" data-ok>${E(okTxt)}</button><button class="btn" type="button" data-no>Cancelar</button>`;
+  box.querySelector('textarea').focus();
+  box.onclick = ev => { if (ev.target.closest('[data-no]')) { box.classList.add('oculto'); box.innerHTML = ''; } const ok = ev.target.closest('[data-ok]'); if (ok) { const t = box.querySelector('textarea').value.trim(); if (que === 'responder' && !t) return; marcar(id, que, t, ok); } };
+}
+app.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-v]'); if (t) { vista = t.dataset.v; S.store.set('notas.vista', vista); pintar(); return; }
+  const b = ev.target.closest('[data-q]'); if (!b) return;
+  const id = b.dataset.id, q = b.dataset.q, n = D.notas.find(x => x.id === id);
+  if (q === 'responder') pedirTexto(id, 'responder', 'Tu respuesta (la ven todos)', 'Enviar respuesta');
+  else if (q === 'hecho') pedirTexto(id, 'hecho', 'Comentario (opcional): qué se hizo', 'Marcar hecho');
+  else if (q === 'editar') abrirDlg(n);
+  else if (q === 'borrar') { if (confirm('¿Borrar la nota «' + n.tema + '»? Deja de verse en la app; en el libro queda registrada como borrada.')) marcar(id, 'borrar', '', b); }
+  else marcar(id, q, '', b);
+});
+app.addEventListener('change', ev => { if (ev.target.id === 'fEst') { filtroEst = ev.target.value; pintar(); } if (ev.target.id === 'fArch') { archivo = ev.target.checked; cargar(); } });
+// Formulario
+const dlg = $('#dlg'), f = $('#fNota');
+function pintarPersonas() {
+  const q = String($('#buscaP').value || '').toLowerCase(), sel = new Set([...f.querySelectorAll('#pers input:checked')].map(i => i.value).concat(editando && editando.para !== 'todos' && !f.dataset.tocado ? editando.para : []));
+  $('#pers').innerHTML = D.usuarios.filter(u => !q || u.nombre.toLowerCase().indexOf(q) >= 0 || sel.has(u.id)).map(u => `<label><input type="checkbox" value="${E(u.id)}"${sel.has(u.id) ? ' checked' : ''}>${E(u.nombre)}${u.id === D.yo ? ' (vos)' : ''}</label>`).join('');
+  f.dataset.tocado = '1'; contarSel();
+}
+const contarSel = () => { const n = f.querySelectorAll('#pers input:checked').length; $('#nSel').textContent = n ? `${n} elegida${n > 1 ? 's' : ''}` : 'Ninguna elegida'; };
+function abrirDlg(n) {
+  if (enVista()) { alert('Estás en «Ver como» (solo lectura).'); return; }
+  editando = n || null; f.reset(); delete f.dataset.tocado; $('#dErr').classList.add('oculto');
+  $('#tipos').innerHTML = D.tipos.map((t, i) => `<label><input type="radio" name="tipo" value="${E(t)}"${(n ? n.tipo === t : !i) ? ' checked' : ''}>${E(t)}</label>`).join('');
+  $('#dTit').textContent = n ? 'Editar nota ' + n.id : 'Nueva nota';
+  if (n) { f.tema.value = n.tema; f.texto.value = n.texto; f.accion.value = n.accion || ''; f.plazo.value = fechaIso(n.plazo); f.lugar.value = n.lugar || '';
+    f.querySelector(`[name=prioridad][value="${n.prioridad}"]`).checked = true; f.querySelector(`[name=paraT][value="${n.para === 'todos' ? 'todos' : 'personas'}"]`).checked = true; }
+  $('#buscaP').value = ''; pintarPersonas(); sync(); $('#cuenta').textContent = f.texto.value.length + ' / 500';
+  const est = S.store.get('estab.cache', null); $('#lugares').innerHTML = est ? est.establecimientos.map(e => `<option value="${E(e.nombre)}">`).join('') : '';
+  dlg.showModal();
+}
+const sync = () => { $('#bloqPers').classList.toggle('oculto', f.paraT.value !== 'personas'); $('#bloqAcc').classList.toggle('oculto', (f.querySelector('[name=tipo]:checked') || {}).value !== 'Requiere acción'); };
+f.addEventListener('change', ev => { sync(); if (ev.target.closest('#pers')) contarSel(); });
+f.texto.addEventListener('input', () => { $('#cuenta').textContent = f.texto.value.length + ' / 500'; });
+$('#buscaP').addEventListener('input', pintarPersonas);
+$('#dCancel').addEventListener('click', () => dlg.close());
+f.addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const err = m => { $('#dErr').textContent = m; $('#dErr').classList.remove('oculto'); };
+  const tipo = (f.querySelector('[name=tipo]:checked') || {}).value;
+  const para = f.paraT.value === 'todos' ? 'todos' : [...f.querySelectorAll('#pers input:checked')].map(i => i.value);
+  if (para !== 'todos' && !para.length) return err('Elegí al menos una persona, o «Todos».');
+  if (tipo === 'Requiere acción' && !f.accion.value.trim()) return err('Escribí qué acción se pide.');
+  const nota = { id: editando ? editando.id : '', tema: f.tema.value, texto: f.texto.value, tipo: tipo, prioridad: f.prioridad.value, para: para, accion: f.accion.value, plazo: fechaDma(f.plazo.value), lugar: f.lugar.value };
+  const b = $('#dOk'); b.disabled = true;
+  try { const r = await S.api('notas_guardar', { nota: nota }); if (!r || !r.ok) throw r; dlg.close(); if (!editando) { vista = 'mias'; S.store.set('notas.vista', vista); } await cargar(r.id); }
+  catch (e) { err((e && (e.error || e.message)) || 'No se pudo guardar.'); } finally { b.disabled = false; }
+});
+$('#bNueva').addEventListener('click', () => { if (D) abrirDlg(); });
+if (enVista()) $('#bNueva').classList.add('oculto');
+cargar();
+})();
+</script>
+</body>
+</html>
