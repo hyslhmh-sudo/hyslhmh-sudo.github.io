@@ -302,6 +302,8 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 #alertasSmn .al-mini a,#alertasSmn .al-pie a{color:var(--hum)!important}
 #agenda .ag-dia{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-dia.hoy{background:var(--hum)!important;color:#fff!important}
 #agenda .ag-chip{background:var(--pat-claro)!important;color:var(--hum)!important}#agenda .ag-chip.int{background:#fff!important;color:var(--hum)!important;border:1px solid var(--pat)}
+/* Herramientas OPS/OMS (STAR-H, ISH, PHR): la descripción completa queda a la vista (Belén, 13/11/2026: «en la tarjeta dejar la info»). */
+.tj-info{align-items:flex-start}.tj-info .d.corto{display:none}.tj-info .d.largo{display:block}.tj-info .info{display:none}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
 </head>
@@ -574,7 +576,7 @@ function pintar() {
   const cerr = m => u && m.flag && u[m.flag] === false;
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
   // con la paleta institucional (Azul Humphreys #0D313F y Azul Patagonia #5894A7). Las de Respuesta van rellenas en Azul Humphreys; mismo tamaño y tipografía.
-  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}">
+  const tarjeta = m => `<div class="tj${m.grupo === 'resp' ? ' tj-resp' : ''}${m.grupo === 'relev' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" title="${E(m.d)}" aria-label="${E(m.t)}">
       <span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
   const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
@@ -607,7 +609,7 @@ function pintar() {
   // 13/11/2026 · Orden por urgencia: Respuesta → COE, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
   const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
   const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" ><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
-  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + fila('relev', 'assignment', 'Relevamientos', admin ? 'tres' : 'una', grande) + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
+  $('#rejilla').innerHTML = recHtml + fila('resp', 'emergency', 'Respuesta', 'dos', grande) + carpeta('gest', 'folder_open', 'COE, documentos y apoyo', chica) + fila('relev', 'assignment', 'Herramientas OPS/OMS', admin ? 'tres' : 'una', grande) + fila('ctrl', 'monitoring', 'Seguimiento', 'una', grande);
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
