@@ -98,7 +98,7 @@ const PEST = [
   // Reuniones, Órganos e integrantes y Accesos: solo Administración, en un grupo aparte al final («Administración»).
   // Los demás ven las próximas 2 reuniones en la pantalla de inicio.
   ['doc', 'Documentos', 'description'], ['acu', 'Acuerdos y tareas', 'task_alt'],
-  ['lug', 'Establecimientos', 'local_hospital'], ['enl', 'Enlaces', 'link'],
+  ['lug', 'Establecimientos', 'local_hospital'], // 14/11/2026 (Belén: «estos enlaces no irían acá»): la pestaña Enlaces se quitó; los enlaces están en Fuentes › Links a páginas.
   ['pac', 'Necesidades especiales', 'accessible'], // lista cerrada: solo cantidades
   ['reu', 'Reuniones', 'event_note', 'adm'], ['org', 'Órganos e integrantes', 'groups', 'adm'], ['acc', 'Accesos', 'key', 'adm']
 ];
@@ -520,7 +520,7 @@ async function generarActa(btn, id) {
 /* ---------- Ayuda ---------- */
 function dlgAyuda() {
   const A = adm();
-  const usu = `<p><b>Para qué sirve.</b> Reúne lo del COEsp de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos y enlaces útiles. Es una base orientadora: no es un registro en tiempo real.</p>
+  const usu = `<p><b>Para qué sirve.</b> Reúne lo del COEsp de Trelew y Área Programática: reuniones, asistencia, acuerdos y tareas, documentos, integrantes, establecimientos. Los enlaces útiles (SMN, rutas, gobierno provincial, etc.) están en Fuentes › Links a páginas. Es una base orientadora: no es un registro en tiempo real.</p>
     <p><b>Qué ves.</b> Solo lo que corresponde a tu participación. Si integrás la parte interna (hospitales y Área Programática), ves también lo del COEsp interno. Si sos integrante externo, ves lo del COEsp completo.</p>
     <p><b>Reuniones.</b> Las próximas dos reuniones aparecen en la pantalla de inicio. Las pestañas Reuniones, Órganos e integrantes y Accesos son de Administración (grupo «Administración», al final de la barra).</p>
     <p><b>Programar una reunión (Administración).</b> «Programar reunión» la guarda como «Programada (convocada)» con fecha, horario, lugar y temas a tratar. Mientras está programada no se muestran los campos de después de la reunión (temas tratados, próxima reunión, otros asistentes, acuerdos, acta y escaneo). Los botones «Todos», «Internos», «Externos» y «Ninguno» tildan los convocados de un solo clic. Aparece en la agenda de la pantalla de inicio de quienes la pueden ver. Si está tildado «Avisar por mail», al guardar sale la convocatoria y el día anterior (24 h antes) el recordatorio, desde belenpellegrini.hys@gmail.com y en copia oculta: COEsp interno, a los integrantes internos del órgano; COEsp externo, a todos sus integrantes; otra reunión, a los convocados que se tilden. Se usan los correos de cada ficha (institucional; si no hay, el personal). Si se cambia la fecha, el horario o el lugar, sale un aviso de cambio. Después de la reunión se edita, se pasa a «Realizada» y se marca la asistencia.</p>
