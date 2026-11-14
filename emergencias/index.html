@@ -10,6 +10,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="COESP">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -245,8 +248,8 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #quien.perfil{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
 #quien.perfil:hover{background:rgba(255,255,255,.22)}
 #quien.perfil .ms{font-size:18px}
-dialog#dlgPerfil{border:0;border-radius:18px;padding:0;width:min(640px,94vw);max-height:88vh;box-shadow:0 20px 60px rgba(23,43,77,.35)}
-dialog#dlgPerfil::backdrop{background:rgba(23,43,77,.45)}
+dialog#dlgPerfil,dialog#dlgInstalar{border:0;border-radius:18px;padding:0;width:min(640px,94vw);max-height:88vh;box-shadow:0 20px 60px rgba(23,43,77,.35)}
+dialog#dlgPerfil::backdrop,dialog#dlgInstalar::backdrop{background:rgba(23,43,77,.45)}
 .pf-cab{background:#172B4D;color:#fff;padding:18px 20px;display:flex;gap:12px;align-items:center}
 .pf-cab b{display:block;font-size:17px}.pf-cab small{opacity:.85;font-size:12.5px}
 .pf-cab .ms{font-size:34px}
@@ -410,8 +413,12 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 <body>
 <header class="barra"><div class="barra-in">
   <h1>Preparación y Respuesta a Emergencias y desastres<small>Comité de crisis El Niño</small></h1>
-  <div class="sesion oculto" id="sesion"><span id="quien"></span><button id="btnSalir">Salir</button></div>
+  <div class="sesion oculto" id="sesion"><span id="quien"></span><button id="btnInstalar" class="oculto" type="button" title="Instalar la app COESP en este equipo"><span class="ms" style="font-size:17px;vertical-align:-3px">install_mobile</span> Instalar la app</button><button id="btnSalir">Salir</button></div>
 </div><div class="sst"><a href="https://earth.nullschool.net/#current/ocean/surface/currents/overlay=sea_surface_temp_anomaly/orthographic=-67.32,-42.53,2855" target="_blank" rel="noopener" title="Imagen: earth.nullschool.net (captura del 13/11/2026). Abre el mapa en tiempo real."><span class="ms">waves</span><span class="largo">Corrientes y anomalía de temperatura del mar ·&nbsp;</span>Ver en tiempo real</a></div></header>
+<dialog id="dlgInstalar" aria-label="Instalar la app">
+  <div class="pf-cab"><span class="ms">install_mobile</span><span><b>Instalar la app COESP</b><small>Queda con su ícono en la pantalla y se abre sin la barra del navegador</small></span><button type="button" id="inCerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+  <div class="pf-cuerpo" id="inCuerpo"></div>
+</dialog>
 <dialog id="dlgPerfil" aria-label="Mi perfil">
   <div class="pf-cab"><span class="ms">account_circle</span><span><b id="pfNombre"></b><small id="pfRol"></small></span><button type="button" id="pfCerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
   <div class="pf-cuerpo" id="pfCuerpo"></div>
@@ -791,6 +798,30 @@ $('#rejilla').addEventListener('click', ev => { const cp = ev.target.closest('[d
 $('#rejilla').addEventListener('keydown', ev => { const cp = ev.target.closest('[data-carpeta]'); if (cp && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); abrirCarpeta(cp); return; } if (ev.target.closest('.info')) return; const t = ev.target.closest('[data-href]'); if (t && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); recordar(t.dataset.k); location.href = t.dataset.href; } });
 $('#btnSalir').addEventListener('click', () => { const fb = document.getElementById('fabNotas'); if (fb) fb.remove(); cerrarDatos(); S.sesion.cerrar(); pintar(); });
 $('#mdSalir').addEventListener('click', () => { const fb = document.getElementById('fabNotas'); if (fb) fb.remove(); cerrarDatos(); S.sesion.cerrar(); pintar(); });
+// 14/11/2026 12:37 (Belén: opción 1, «app instalable»; nombre COESP). Botón «Instalar la app» en la barra, solo si todavía
+// no está instalada. En Android y en la computadora instala con un toque (beforeinstallprompt); si el navegador no lo permite
+// (iPhone, Firefox, Samsung Internet), muestra los pasos. Cada cambio publicado llega solo a la app instalada.
+(function () {
+  const b = $('#btnInstalar'), dlg = $('#dlgInstalar');
+  const instalada = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  let ev = null;
+  const mostrar = () => b.classList.toggle('oculto', instalada());
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; mostrar(); });
+  window.addEventListener('appinstalled', () => { ev = null; b.classList.add('oculto'); try { dlg.close(); } catch (e) {} });
+  const ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1), android = /Android/.test(ua);
+  const pasos = () => ios
+    ? '<ol><li>Abrí la app en <b>Safari</b> (en otros navegadores del iPhone puede no aparecer la opción).</li><li>Tocá el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).</li><li>Elegí <b>«Agregar a inicio»</b> y después <b>«Agregar»</b>.</li></ol>'
+    : android
+    ? '<ol><li>Abrí la app en <b>Chrome</b>.</li><li>Tocá el menú <b>⋮</b> (arriba a la derecha).</li><li>Elegí <b>«Instalar app»</b> o <b>«Agregar a la pantalla principal»</b> y confirmá.</li></ol>'
+    : '<ol><li>Abrí la app en <b>Chrome</b> o <b>Edge</b>.</li><li>En la barra de direcciones, tocá el ícono de <b>instalar</b> (una pantalla con una flecha), o el menú <b>⋮ › «Transmitir, guardar y compartir» › «Instalar»</b>.</li><li>Confirmá con <b>«Instalar»</b>.</li></ol>';
+  b.addEventListener('click', async () => {
+    if (ev) { ev.prompt(); try { const r = await ev.userChoice; if (r && r.outcome === 'accepted') b.classList.add('oculto'); } catch (e) {} ev = null; return; }
+    $('#inCuerpo').innerHTML = pasos() + '<p class="pf-nota">Se instala como <b>COESP</b>. Es la misma app: lo que se publica llega solo, y se sigue ingresando con tu usuario y clave. Si ya la instalaste, abrila desde el ícono.</p>';
+    dlg.showModal();
+  });
+  $('#inCerrar').addEventListener('click', () => dlg.close());
+  mostrar();
+})();
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 pintar();
 })();

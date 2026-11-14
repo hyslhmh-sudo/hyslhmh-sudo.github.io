@@ -1,7 +1,7 @@
 {
-  "name": "Preparación y Respuesta a Emergencias y desastres · Comité de crisis El Niño",
-  "short_name": "Emergencias HySL",
-  "description": "Relevamientos STAR-H, PHR e ISH, COE, fuentes y formularios para imprimir (Higiene y Seguridad Laboral).",
+  "name": "COESP · Centro de Operaciones de Emergencia de la Salud Pública",
+  "short_name": "COESP",
+  "description": "Preparación y respuesta a emergencias y desastres · Comité de crisis El Niño: establecimientos, notas rápidas, alertas, relevamientos, COEsp y fuentes.",
   "lang": "es-AR",
   "start_url": "./index.html",
   "scope": "./",
