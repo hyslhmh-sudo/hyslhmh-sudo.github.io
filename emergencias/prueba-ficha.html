@@ -90,7 +90,13 @@ const SEC = [
     { k: 'accesos', l: 'Accesos principales y alternativos', t: 'a' }, { k: 'cortes', l: '¿Cuáles se cortan con lluvia o crecida?', t: 'a' },
     { k: 'inundable', l: '¿Está en zona inundable?', t: 'sn' }, { k: 'agua_cerca', l: '¿Está cerca de río, canal o cañadón?', t: 'sn' } ] },
   { id: 's3', t: 'Población', d: 'A quiénes atiende', c: [
-    { k: 'pob_at', l: 'Población atendida (estimada)', t: 'n' }, { k: 'pob_ciu', l: 'Población estimada de la localidad', t: 'n' },
+    { k: 'pob_at', l: 'Población atendida (estimada)', t: 'n' },
+    { k: 'pob_ciu', l: 'Población de la localidad (Censo 2022)', t: 'n' }, { k: 'viv', l: 'Viviendas de la localidad (Censo 2022)', t: 'n' },
+    { k: 'depto', l: 'Departamento', t: 't' }, { k: 'pob_depto', l: 'Población del departamento (Censo 2022) y variación desde 2010', t: 't' },
+    { k: 'dens', l: 'Superficie y densidad poblacional del departamento', t: 't' },
+    { k: 'mayores', l: 'Personas mayores en el departamento (65 años y más · 80 años y más)', t: 't' },
+    { k: 'indices', l: 'Índices de envejecimiento y de dependencia potencial del departamento', t: 't' },
+    { k: 'sin_cob', l: 'Personas sin obra social, prepaga ni plan estatal en el departamento (dependen del sistema público)', t: 't' },
     { k: 'grupos', l: 'Personas que requieren asistencia en una emergencia', t: 'auto', x: 'Se completa solo con las cantidades de lo cargado en la ficha de pacientes con necesidades especiales (electrodependientes, oxígeno domiciliario, diálisis, postrados, embarazadas a término). No se vuelve a cargar acá y no se muestran nombres.' } ] },
   { id: 's4', t: 'Capacidad asistencial', d: 'Con qué cuenta (puede no tener todo)', c: [
     { k: 'servicios', l: '¿Con qué servicios cuenta?', t: 'm', o: ['Internación', 'Quirófano', 'Sala de partos', 'Laboratorio', 'Rayos', 'Farmacia', 'Ninguno de estos'] },
@@ -126,17 +132,27 @@ const SEC = [
 // Datos que ya tenemos (libro de la app: LUGARES, CAMAS y COE PARTICIPANTES). El referente los revisa y los puede cambiar.
 const TIPOS_INT = ['General (adultos)', 'Pediatría', 'Maternidad', 'Neonatología', 'Salud mental', 'Otra'];
 const camasPre = (gen, emerg) => { const L = TIPOS_INT.map(q => ({ quien: q })); L[0].n = String(gen); if (emerg) L.splice(5, 0, { quien: 'Emergencia con internación', n: String(emerg) }); return L; };
+// INDEC, Censo 2022: población por gobierno local (cuadro 1.5) y datos por departamento (cuadros 1.5, 2.5, 7.5, 8.5, 9.5, 10.5 y salud 1.5)
+const DEP = {
+  Gaiman: { depto: 'Gaiman', pob_depto: '12.639 (2010: 11.141; +13,4 %)', dens: '11.618,5 km² · 1,1 hab/km²', mayores: '11,8 % · 2,8 %', indices: 'Envejecimiento 52 · dependencia potencial 52', sin_cob: '3.880 de 12.505 (31,0 %)' },
+  Martires: { depto: 'Mártires', pob_depto: '754 (2010: 778; −3,1 %)', dens: '15.637,5 km² · 0,0 hab/km² (menos de 0,05)', mayores: '12,5 % · 2,0 %', indices: 'Envejecimiento 58 · dependencia potencial 52', sin_cob: '226 de 744 (30,4 %)' },
+  PasoIndios: { depto: 'Paso de Indios', pob_depto: '1.886 (2010: 1.867; +1,0 %)', dens: '22.222,4 km² · 0,1 hab/km²', mayores: '11,0 % · 2,1 %', indices: 'Envejecimiento 56 · dependencia potencial 44', sin_cob: '767 de 1.882 (40,8 %)' },
+  FAmeghino: { depto: 'Florentino Ameghino', pob_depto: '1.786 (2010: 1.627; +9,8 %)', dens: '15.860,1 km² · 0,1 hab/km²', mayores: '8,4 % · 1,4 %', indices: 'Envejecimiento 33 · dependencia potencial 52', sin_cob: '723 de 1.782 (40,6 %)' }
+};
+const censo = (pob, viv, d) => Object.assign({ pob_ciu: String(pob), viv: String(viv) }, DEP[d]);
 const base = (nombre, corto, sisa, tipo) => ({ nombre, corto, sisa, complejidad: tipo, depende: 'Área Programática Trelew' });
 const PRE = {
-  'Hospital Rural Gaiman': Object.assign(base('Hospital Rural Gaiman', 'Gaiman', '10260422129022', 'Hospital rural'), { camas: camasPre(18, 2), ref_tit: 'Víctor Soto' }),
-  'Hospital Rural Dolavon': Object.assign(base('Hospital Rural Dolavon', 'Dolavon', '10260422129029', 'Hospital rural'), { camas: camasPre(13, 2), ref_tit: 'Rocío Belén Henriquez' }),
-  'Hospital Rural Las Plumas': Object.assign(base('Hospital Rural Las Plumas', 'Las Plumas', '10260632129028', 'Hospital rural'), { camas: camasPre(6), ref_tit: 'Patricia Gisel Paterlini' }),
-  'Hospital Rural Paso de Indios': Object.assign(base('Hospital Rural Paso de Indios', 'Paso de Indios', '10260702129030', 'Hospital rural'), { camas: camasPre(11) }),
-  'Hospital Rural Camarones': Object.assign(base('Hospital Rural Camarones', 'Camarones', '10260282129013', 'Hospital rural'), { camas: camasPre(6), ref_tit: 'Florencia Mery Ann Müller' }),
-  'Puesto Sanitario 28 de Julio': base('Puesto Sanitario 28 de Julio', '28 de Julio', '50260422129194', 'Puesto sanitario'),
-  'Puesto Sanitario Dique Florentino Ameghino': base('Puesto Sanitario Dique Florentino Ameghino', 'Dique Ameghino', '51260422129332', 'Puesto sanitario')
+  'Hospital Rural Gaiman': Object.assign(base('Hospital Rural Gaiman', 'Gaiman', '10260422129022', 'Hospital rural'), { camas: camasPre(18, 2), ref_tit: 'Víctor Soto' }, censo(7851, 3061, 'Gaiman')),
+  'Hospital Rural Dolavon': Object.assign(base('Hospital Rural Dolavon', 'Dolavon', '10260422129029', 'Hospital rural'), { camas: camasPre(13, 2), ref_tit: 'Rocío Belén Henriquez' }, censo(3967, 1646, 'Gaiman')),
+  'Hospital Rural Las Plumas': Object.assign(base('Hospital Rural Las Plumas', 'Las Plumas', '10260632129028', 'Hospital rural'), { camas: camasPre(6), ref_tit: 'Patricia Gisel Paterlini' }, censo(589, 253, 'Martires')),
+  'Hospital Rural Paso de Indios': Object.assign(base('Hospital Rural Paso de Indios', 'Paso de Indios', '10260702129030', 'Hospital rural'), { camas: camasPre(11) }, censo(1367, 605, 'PasoIndios')),
+  'Hospital Rural Camarones': Object.assign(base('Hospital Rural Camarones', 'Camarones', '10260282129013', 'Hospital rural'), { camas: camasPre(6), ref_tit: 'Florencia Mery Ann Müller' }, censo(1638, 739, 'FAmeghino')),
+  'Puesto Sanitario 28 de Julio': Object.assign(base('Puesto Sanitario 28 de Julio', '28 de Julio', '50260422129194', 'Puesto sanitario'), censo(609, 258, 'Gaiman')),
+  'Puesto Sanitario Dique Florentino Ameghino': Object.assign(base('Puesto Sanitario Dique Florentino Ameghino', 'Dique Ameghino', '51260422129332', 'Puesto sanitario'), censo(183, 109, 'Gaiman'))
 };
 const FUENTE_PRE = { camas: 'Informe APTW de camas de hospitales rurales, ene–oct 2026', ref_tit: 'referente designado (COEsp · Participantes)' };
+['pob_ciu', 'viv'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadro 1.5 por gobierno local');
+['depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadros por departamento (la densidad solo se publica por departamento)');
 const vacio = v => v == null || (Array.isArray(v) ? !v.some(f => f && typeof f === 'object' ? Object.entries(f).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim()) : String(f).trim()) : String(v).trim() === '');
 const esPre = k => { const p = PRE[estab]; return p && p[k] !== undefined && JSON.stringify(p[k]) === JSON.stringify(datos[k]); };
 const clave = e => 'prueba.ficha.' + e;
