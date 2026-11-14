@@ -111,6 +111,20 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #agenda .ag-chip{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:#EEF2F8;color:#33414A;margin-left:6px;vertical-align:middle}
 #agenda .ag-chip.int{background:#E6F4EA;color:#1E5E2E}
 #agenda .vacio{font-size:13px;color:#4B5B73;margin:4px 0 0}
+/* 13/11/2026 · Próximas reuniones y El Niño lado a lado, dos recuadros parejos y compactos (Belén). En pantallas angostas, uno debajo del otro. */
+#arriba{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px;align-items:stretch}
+#arriba>section{flex:1 1 340px;min-width:0;margin:0!important}
+#arriba #agenda{padding:8px 10px;border-radius:14px}
+#arriba #agenda .ag-cab{margin-bottom:4px}
+#arriba #agenda .ag-cab b{font-size:13.5px}#arriba #agenda .ag-cab b .ms{font-size:18px}
+#arriba #agenda .ag-cab a{padding:3px 8px;min-height:0;font-size:12px;border-radius:8px}
+#arriba #agenda .ag-item{gap:8px;padding:5px 0}
+#arriba #agenda .ag-dia{width:42px;border-radius:8px;padding:3px 0}
+#arriba #agenda .ag-dia b{font-size:16px}#arriba #agenda .ag-dia small{font-size:9.5px}
+#arriba #agenda .ag-txt b{font-size:13px}
+#arriba #agenda .ag-txt .m,#arriba #agenda .ag-txt .t{font-size:11.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#arriba #agenda .ag-chip{font-size:10px;padding:1px 6px}
+#arriba #boletines .bo-fila{grid-template-columns:1fr}
 /* 13/11/2026 · Boletines El Niño y embalse en la pantalla principal (amarillo = alerta). Compacto (Belén: «está robando mucho espacio»). */
 #boletines{background:#FFF8E1;border:1px solid #F2D27A;border-radius:14px;padding:8px 10px;margin:0 0 6px}
 #boletines .bo-cab{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}
@@ -225,8 +239,10 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
     <div class="msg oculto" id="msg"></div>
   </form>
   <section id="alertasSmn" class="oculto" aria-label="Alertas del SMN"></section>
-  <section id="agenda" class="oculto" aria-label="Agenda de reuniones"></section>
-  <section id="boletines" class="oculto" aria-label="Boletines El Niño"></section>
+  <div id="arriba">
+    <section id="agenda" class="oculto" aria-label="Agenda de reuniones"></section>
+    <section id="boletines" class="oculto" aria-label="Boletines El Niño"></section>
+  </div>
   <div id="rejilla"></div>
 </main>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral</p></footer>
