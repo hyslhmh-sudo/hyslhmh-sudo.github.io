@@ -464,7 +464,7 @@
   if (typeof document === 'undefined') return;
   document.addEventListener('toggle', function (ev) {
     var d = ev.target;
-    if (!d || d.tagName !== 'DETAILS' || !d.open) return;
+    if (!d || d.tagName !== 'DETAILS' || !d.open || window.__sinAcordeon) return; // __sinAcordeon: para imprimir con todo abierto
     document.querySelectorAll('details[open]').forEach(function (o) {
       if (o !== d && !o.contains(d) && !d.contains(o)) o.open = false;
     });

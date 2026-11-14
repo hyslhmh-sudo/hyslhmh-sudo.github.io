@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PRUEBA · Ficha del establecimiento · Emergencias y desastres</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* 14/11/2026 · VISTA DE PRUEBA (v0) de la ficha del establecimiento para los referentes de los hospitales rurales.
+   No guarda en el libro: lo cargado queda solo en este equipo. Diseño pedido por Belén; ver claude/cambios-app-emergencias-9.md. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:860px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid var(--coral);border-left:6px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:13.5px;margin-bottom:14px}
+.cab{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:14px 16px;margin-bottom:14px;display:grid;gap:10px}
+.cab label{font-size:12.5px;font-weight:700;color:var(--suave)}
+select,input,textarea{width:100%;border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:#fff;color:var(--texto)}
+textarea{min-height:64px;resize:vertical}
+.prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.barrita{flex:1;min-width:160px;height:10px;background:var(--claro);border-radius:999px;overflow:hidden}.barrita i{display:block;height:100%;background:var(--medio)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--claro);color:var(--fuerte)}
+.chip.ok{background:#E3F4EC;color:var(--ok)}.chip.falta{background:#FFF0E0;color:#B35500}
+details.sec{background:#fff;border:1px solid var(--borde);border-left:5px solid var(--medio);border-radius:14px;margin-bottom:10px}
+details.sec>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:center;gap:10px;font-weight:700}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary .n{width:28px;height:28px;border-radius:9px;background:var(--claro);display:grid;place-items:center;font-size:13px;flex:none}
+details.sec>summary .t{flex:1}details.sec>summary .t small{display:block;font-weight:500;font-size:12px;color:var(--suave)}
+details.sec>summary .fl{color:var(--medio);transition:transform .2s}details.sec[open]>summary .fl{transform:rotate(180deg)}
+details.sec[open]>summary{border-bottom:1px solid var(--claro)}
+details.sec.min{border-left-color:var(--coral)}
+.cuerpo{padding:12px 14px 14px;display:grid;gap:12px}
+.campo>span{display:block;font-size:12.5px;font-weight:700;color:var(--suave);margin-bottom:4px}
+.campo>span em{font-style:normal;font-weight:500;color:var(--tenue)}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){.dos{grid-template-columns:1fr}}
+.sn{display:flex;gap:6px;flex-wrap:wrap}.sn label{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--borde);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer;background:#fff}
+.sn input{width:auto;margin:0}.sn label:has(input:checked){background:var(--claro);border-color:var(--medio);font-weight:700}
+.auto{background:var(--fondo);border:1px dashed var(--borde);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--suave)}
+.rep{display:grid;gap:8px}.rep .fila{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));background:var(--fondo);border-radius:10px;padding:8px;position:relative}
+.rep .fila .quitar{position:absolute;top:4px;right:4px;border:0;background:none;color:var(--tenue);cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--medio);border-radius:10px;padding:7px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:var(--fuerte);width:max-content}
+.btn.pri{background:var(--medio);color:#fff}
+.tag{font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:1px}.tag.ley{background:#172B4D;color:#fff}.tag.mej{background:var(--claro);color:var(--fuerte)}
+.pie{font-size:12px;color:var(--tenue)}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;max-width:740px;max-height:56px;object-fit:contain;height:auto}
+@media print{.barra .icono,.aviso,.no-imp{display:none}details.sec{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Ficha del establecimiento<small>VISTA DE PRUEBA · versión 0 · hospitales rurales</small></h1>
+  <button class="icono" type="button" onclick="abrirTodo();window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const ESTAB = ['Hospital Rural Gaiman', 'Hospital Rural Dolavon', 'Hospital Rural Las Plumas', 'Hospital Rural Paso de Indios', 'Hospital Rural Camarones', 'Puesto Sanitario 28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino'];
+const SN = ['Sí', 'No', 'No sabe'];
+// Tipos: t texto · n número · a texto largo · f fecha · sn Sí/No/No sabe · m opciones múltiples · auto dato que se trae de la app · rep lista que se repite
+const SEC = [
+  { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
+    { k: 'nombre', l: 'Nombre oficial', t: 't' }, { k: 'corto', l: 'Nombre corto', t: 't' },
+    { k: 'sisa', l: 'Código SISA o REFES', t: 't' }, { k: 'complejidad', l: 'Nivel de complejidad', t: 't' },
+    { k: 'depende', l: 'Depende de (Área Programática y red)', t: 't' },
+    { k: 'h24', l: '¿Atiende las 24 horas?', t: 'sn' }, { k: 'guardia', l: '¿Tiene guardia?', t: 'sn' },
+    { k: 'ref', l: 'Hospital de referencia al que deriva', t: 't' }, { k: 'refkm', l: 'Distancia al hospital de referencia (km)', t: 'n' }, { k: 'refmin', l: 'Tiempo de traslado (minutos)', t: 'n' } ] },
+  { id: 's2', t: 'Ubicación y acceso', d: 'Clave ante inundaciones', min: true, c: [
+    { k: 'dir', l: 'Dirección', t: 't' }, { k: 'coord', l: 'Coordenadas', t: 'coord' },
+    { k: 'accesos', l: 'Accesos principales y alternativos', t: 'a' }, { k: 'cortes', l: '¿Cuáles se cortan con lluvia o crecida?', t: 'a' },
+    { k: 'inundable', l: '¿Está en zona inundable?', t: 'sn' }, { k: 'agua_cerca', l: '¿Está cerca de río, canal o cañadón?', t: 'sn' } ] },
+  { id: 's3', t: 'Población', d: 'A quiénes atiende', c: [
+    { k: 'pob_at', l: 'Población atendida (estimada)', t: 'n' }, { k: 'pob_ciu', l: 'Población estimada de la localidad', t: 'n' },
+    { k: 'grupos', l: 'Personas que requieren asistencia en una emergencia', t: 'auto', x: 'Se completa solo con las cantidades de lo cargado en la ficha de pacientes con necesidades especiales (electrodependientes, oxígeno domiciliario, diálisis, postrados, embarazadas a término). No se vuelve a cargar acá y no se muestran nombres.' } ] },
+  { id: 's4', t: 'Capacidad asistencial', d: 'Con qué cuenta (puede no tener todo)', c: [
+    { k: 'camas', l: 'Camas', t: 'auto', x: 'Se trae de la hoja LUGARES (camas de internación y de emergencia).' },
+    { k: 'servicios', l: '¿Con qué servicios cuenta?', t: 'm', o: ['Internación', 'Quirófano', 'Sala de partos', 'Laboratorio', 'Rayos', 'Farmacia', 'Ninguno de estos'] },
+    { k: 'amb', l: 'Ambulancias (cantidad)', t: 'n' }, { k: 'amb_estado', l: 'Estado de las ambulancias', t: 't' }, { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
+  { id: 's5', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
+    { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
+    { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'litros', l: 'Capacidad (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' },
+    { k: 'limpieza', l: '¿Se limpian una vez al año?', t: 'sn' }, { k: 'limpieza_f', l: 'Fecha de la última limpieza', t: 'f' }, { k: 'agua_alt', l: 'Fuente alternativa de agua', t: 't' },
+    { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Central', 'Tubos', 'Concentradores', 'No tiene'] },
+    { k: 'calef', l: 'Calefacción y gas: ¿con qué cuenta?', t: 'm', o: ['Gas de red', 'Garrafas o tubos', 'Eléctrica', 'Leña', 'Otro'] },
+    { k: 'comun', l: 'Comunicaciones: ¿con qué cuenta?', t: 'm', o: ['Teléfono fijo', 'Celular', 'Internet', 'Radio', 'Otro'] } ] },
+  { id: 's6', t: 'Edificios a cargo', d: 'CAPS, puestos sanitarios y otros', c: [
+    { k: 'edif', l: 'Edificios', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['CAPS', 'Puesto sanitario', 'Otro'] }, { k: 'nombre', l: 'Nombre' }, { k: 'dir', l: 'Dirección' }, { k: 'coord', l: 'Coordenadas' }, { k: 'horario', l: 'Horario' }, { k: 'resp', l: 'Responsable' }], add: 'Agregar edificio' } ] },
+  { id: 's7', t: 'Personal', d: 'Quiénes responden', min: true, c: [
+    { k: 'dotacion', l: 'Dotación aproximada por turno', t: 'a' }, { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
+    { k: 'cadena', l: 'Cadena de llamadas (orden de aviso)', t: 'a' } ] },
+  { id: 's8', t: 'Contactos de emergencia', d: 'Visibles solo para Administración, el referente y la parte interna del COEsp', min: true, c: [
+    { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Director/a o autoridad', 'Otra autoridad', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Municipalidad', 'Hospital de referencia', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)', 'Radio local'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
+  { id: 's9', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: [
+    { k: 'plan', l: '<span class="tag ley">LEY</span>¿Tiene plan de evacuación? <em>(Dto. 351/79, Anexo VII, cap. 18)</em>', t: 'sn' },
+    { k: 'extintores', l: '<span class="tag ley">LEY</span>¿Tiene extintores? <em>(Dto. 351/79, Anexo VII, cap. 18)</em>', t: 'sn' },
+    { k: 'simulacro', l: '<span class="tag mej">MEJORA</span>¿Se hizo algún simulacro? <em>(buena práctica, ISH de la OPS)</em>', t: 'sn' },
+    { k: 'seg_obs', l: 'Observaciones', t: 't' } ] },
+  { id: 's10', t: 'Antecedentes', d: 'Lo que ya pasó', c: [
+    { k: 'antec', l: 'Eventos anteriores (inundaciones, nevadas, cortes largos de luz o agua): qué pasó y cómo se resolvió', t: 'a' } ] }
+];
+const clave = e => 'prueba.ficha.' + e;
+let estab = S.store.get('prueba.ficha.estab', ESTAB[0]), datos = {};
+const leer = () => { datos = S.store.get(clave(estab), {}) || {}; };
+const guardar = () => { S.store.set(clave(estab), datos); progreso(); };
+const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
+const secOk = s => s.c.every(lleno);
+function campo(c) {
+  const v = datos[c.k], id = 'f_' + c.k;
+  const lab = `<span>${c.l}</span>`;
+  if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
+  if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
+  if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
+  if (c.t === 'a') return `<label class="campo">${lab}<textarea data-k="${c.k}" placeholder="s/d (revisar)">${E(v || '')}</textarea></label>`;
+  if (c.t === 'coord') return `<label class="campo">${lab}<input data-k="${c.k}" value="${E(v || '')}" placeholder="-43.2, -65.5 · s/d (revisar)"></label><div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-gps="${c.k}"><span class="ms">my_location</span>Usar mi ubicación</button>${v ? `<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(v)}"><span class="ms">map</span>Ver en el mapa</a>` : ''}</div>`;
+  if (c.t === 'rep') {
+    let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : [{}]);
+    datos[c.k] = L;
+    return `<div class="campo">${lab}<div class="rep" data-rep="${c.k}">${L.map((f, i) => `<div class="fila">${c.cols.map(col => col.o
+      ? `<select data-r="${c.k}" data-i="${i}" data-c="${col.k}" aria-label="${E(col.l)}"><option value="">${E(col.l)}</option>${col.o.map(o => `<option${f[col.k] === o ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
+      : `<input data-r="${c.k}" data-i="${i}" data-c="${col.k}" ${col.t === 'n' ? 'inputmode="numeric"' : ''} placeholder="${E(col.l)}" value="${E(f[col.k] || '')}">`).join('')}<button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button></div>`).join('')}</div>
+      <button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button></div>`;
+  }
+  return `<label class="campo">${lab}<input data-k="${c.k}" ${c.t === 'n' ? 'inputmode="numeric"' : ''} ${c.t === 'f' ? 'type="date"' : ''} value="${E(v || '')}" placeholder="s/d (revisar)"></label>`;
+}
+function pintar() {
+  leer();
+  app.innerHTML = `<div class="aviso"><b>Vista de prueba.</b> Lo que cargues acá queda solo en este equipo y no llega al libro. Sirve para revisar el diseño antes de ponerlo en la app.</div>
+  <div class="cab"><label for="selEst">Establecimiento</label><select id="selEst">${ESTAB.map(e => `<option${e === estab ? ' selected' : ''}>${E(e)}</option>`).join('')}</select>
+  <div id="prog"></div></div>
+  ${SEC.map((s, i) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${i + 1}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · obligatoria para empezar STAR-H y PHR' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}</div></details>`).join('')}
+  <p class="pie">Versión 0. Lo que no se sabe queda como «s/d (revisar)». Base orientadora: no es un registro en tiempo real.</p>`;
+  progreso();
+}
+function progreso() {
+  const ok = SEC.filter(secOk).length, min = SEC.filter(s => s.min), minOk = min.every(secOk);
+  const p = document.getElementById('prog'); if (!p) return;
+  p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b>
+    <span class="chip ${minOk ? 'ok' : 'falta'}"><span class="ms" style="font-size:16px">${minOk ? 'check_circle' : 'error'}</span>${minOk ? 'Mínimo completo: puede empezar STAR-H y PHR' : 'Falta el mínimo (secciones 1, 2, 7 y 8) para empezar STAR-H y PHR'}</span></div>`;
+  SEC.forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const n = s.c.filter(lleno).length; ch.className = 'chip ' + (n === s.c.length ? 'ok' : 'falta'); ch.textContent = n === s.c.length ? 'Completa' : `${n} de ${s.c.length}`; });
+}
+app.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.id === 'selEst') { estab = t.value; S.store.set('prueba.ficha.estab', estab); pintar(); return; }
+  if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); return guardar(); }
+  if (t.dataset.m) { const k = t.dataset.k; datos[k] = [...app.querySelectorAll(`input[data-m][data-k="${k}"]:checked`)].map(x => x.value); return guardar(); }
+  if (t.dataset.k) { datos[t.dataset.k] = t.value; guardar(); }
+});
+app.addEventListener('input', ev => { const t = ev.target; if (t.dataset.k && !t.dataset.m && t.type !== 'radio') { datos[t.dataset.k] = t.value; guardar(); } else if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); guardar(); } });
+app.addEventListener('click', ev => {
+  const a = ev.target.closest('[data-agregar]'), q = ev.target.closest('[data-quitar]'), g = ev.target.closest('[data-gps]');
+  const reabrir = id => { pintar(); const d = document.getElementById(id); if (d) d.open = true; };
+  if (a) { const k = a.dataset.agregar; (datos[k] = datos[k] || []).push({}); guardar(); reabrir(a.closest('details').id); }
+  if (q) { const k = q.dataset.quitar; datos[k].splice(+q.dataset.i, 1); guardar(); reabrir(q.closest('details').id); }
+  if (g) { if (!navigator.geolocation) return alert('Este equipo no permite tomar la ubicación.'); const id = g.closest('details').id;
+    navigator.geolocation.getCurrentPosition(p => { datos[g.dataset.gps] = p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6); guardar(); reabrir(id); }, () => alert('No se pudo tomar la ubicación. Escribila a mano.')); }
+});
+window.abrirTodo = () => { window.__sinAcordeon = true; document.querySelectorAll('details.sec').forEach(d => d.setAttribute('open', '')); };
+window.addEventListener('afterprint', () => { setTimeout(() => { window.__sinAcordeon = false; }, 500); });
+pintar();
+})();
+</script>
+</body>
+</html>
