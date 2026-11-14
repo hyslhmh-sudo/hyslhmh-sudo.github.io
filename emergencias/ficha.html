@@ -229,7 +229,7 @@ async function cargarGrupos() {
     const sinClasif = (r.necesidad || {})['s/d (revisar)'];
     el.innerHTML = `<b>${E(ciudad)}: ${E(e.total)} personas registradas</b> (activas; las de baja no se cuentan).<br>Por tipo de necesidad: ${lista(r.necesidad)}<br>Por tipo de patología: ${lista(r.patologia)}`
       + (sinClasif ? `<br><span style="color:#B35500">Hay registros sin tipo de necesidad o de patología cargado: completarlos en el libro de pacientes.</span>` : '')
-      + `<br><small>Referencia: libro «PACIENTES · ${E(ciudad)} · Necesidades especiales (v0) · CONFIDENCIAL» (carpeta 08), solo cantidades, consultado ${new Date().toLocaleString('es-AR')}. Para quien no es Administración, de 1 a 4 se muestra «&lt;5».</small>`;
+      + `<br><small>Referencia: libro «PACIENTES · ${E(ciudad)} · Necesidades especiales (v0) · CONFIDENCIAL» (carpeta 08), solo cantidades, consultado ${new Date().toLocaleString('es-AR', { hour12: false })}. Para quien no es Administración, de 1 a 4 se muestra «&lt;5».</small>`;
   } catch (x) {
     el.innerHTML = /lista cerrada|Sin acceso/i.test(String(x && (x.error || x.message) || x)) ? 'Las cantidades las ve solo la lista cerrada de pacientes con necesidades especiales.' : 'No se pudieron leer las cantidades: s/d (revisar).';
   }
