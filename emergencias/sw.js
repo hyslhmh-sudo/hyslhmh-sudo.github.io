@@ -1,8 +1,8 @@
 /* Emergencias HySL (migrada desde /starh) · trabajo sin señal: guarda la app en el dispositivo.
  * Al publicar una versión nueva, cambiar el número de VERSION para que todos la reciban. */
-const VERSION = 'emergencias-v1.23';
+const VERSION = 'emergencias-v1.24';
 const ARCHIVOS = ['./', 'index.html', 'starh.html', 'coe.html', 'control.html', 'fuentes.html', 'ficha.html', 'establecimientos.html', 'notas.html', 'red.html', 'evac.html', 'derivaciones.html', 'plan.html', 'tablero.html', 'phr.html', 'phr-tablero.html', 'imprimir.html', 'ish.html', 'ish-tablero.html', 'guias.js', 'starh.js', 'config.js',
-  'logo-hysl.png', 'banda-sst.jpg', 'enc-trelew.png', 'enc-secretaria.png', 'enc-hsst.png', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
+  'logo-hysl.png', 'banda-sst.jpg', 'enc-trelew.png', 'enc-secretaria.png', 'enc-hsst.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
