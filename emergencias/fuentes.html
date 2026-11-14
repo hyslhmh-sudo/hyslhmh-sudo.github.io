@@ -105,8 +105,8 @@ const BASE = [
 ].map(x => ({ modulo: x[0], cita: x[1], enlace: x[2], nota: x[3] }));
 const ORDEN = ['STAR-H', 'ISH', 'PHR', 'COE', 'Evacuación', 'General', 'Normativa'];
 // 14/11/2026 · Belén: «separar las fuentes en subtemas». Se agrupa por Subtema (hoja FUENTES, col. F); el módulo queda como etiqueta.
-const SUBT = ['Normativa', 'Herramientas OPS/OMS', 'Bibliografía de gestión de riesgos', 'Archivos de APTW', 'Links a páginas'];
-const ICO_S = { Normativa: 'gavel', 'Herramientas OPS/OMS': 'construction', 'Bibliografía de gestión de riesgos': 'menu_book', 'Archivos de APTW': 'folder_shared', 'Links a páginas': 'link' };
+const SUBT = ['Normativa', 'Herramientas OPS/OMS', 'Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas']; // 14/11/2026 · Salud mental (Belén: «agregar carpeta/tema de salud mental y yo cargo»)
+const ICO_S = { Normativa: 'gavel', 'Herramientas OPS/OMS': 'construction', 'Bibliografía de gestión de riesgos': 'menu_book', 'Salud mental': 'psychology', 'Archivos de APTW': 'folder_shared', 'Links a páginas': 'link' };
 const subDe = f => { const t = String(f.subtema || '').trim(); if (t) return t; const m = String(f.modulo || '').trim();
   if (/^normativa$/i.test(m)) return 'Normativa'; if (/^(STAR-H|ISH|PHR|Evacuación)$/i.test(m)) return 'Herramientas OPS/OMS';
   return f.enlace && !f.archivo && !f.archivoId ? 'Links a páginas' : 'Bibliografía de gestión de riesgos'; };
