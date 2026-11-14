@@ -94,6 +94,7 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #boletines .bo-ult span.t{flex:1;min-width:0}#boletines .bo-ult b{display:block;font-size:14.5px}#boletines .bo-ult small{font-size:12.5px;color:#4B5B73}
 #boletines .bo-ult .ab{flex:none;background:#B07D00;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px}
 #boletines ul{list-style:none;margin:8px 0 0;padding:0}#boletines li{padding:6px 2px;border-top:1px solid #F2E3B3;font-size:13px}
+#boletines .bo-emb{margin-top:8px;border-color:#9CC3E6}#boletines .bo-emb .ms{color:#1B6FB0}#boletines .bo-emb .ab{background:#1B6FB0}
 #boletines li a{color:#5C4300;text-decoration:none;font-weight:600}#boletines li span{color:#4B5B73;margin-left:6px}
 .grupo-tit .ms{font-size:19px}
 .fila{display:grid;gap:16px;justify-content:center}
@@ -342,18 +343,30 @@ async function agenda(u, admin) {
 // (hoja DOCUMENTOS, sección «Z · Anexos», título que empieza con «Boletín El Niño» o «Pronóstico climático»): el más nuevo destacado
 // y los dos anteriores. Para sumar uno nuevo alcanza con subirlo a 06.Z.1 y agregar su fila en DOCUMENTOS.
 const BO_CARPETA = 'https://drive.google.com/drive/folders/1XndDynIJ5vz9F_cSDmVs564wnshOJwKv';
+const BO_CARPETA_EMB = 'https://drive.google.com/drive/folders/18ruSXKQYmEAvXkKhBHbRYc8XtjVmPUoc';
 let BO_TK = '';
 // 13/11/2026 · Tablero de control EN REVISIÓN (Belén: «desactivarlo en vista para poder arreglarlo este finde»): solo lo ve Administración.
 // Para volver a mostrarlo a los usuarios habilitados, poner false (acá y en control.html).
 const CONTROL_EN_REVISION = true;
 function boFecha(s) { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : 0; }
 function boletinesHtml(docs) {
-  const L = (docs || []).filter(d => /^Z/.test(d['Sección'] || '') && /^(Bolet[ií]n El Niño|Pronóstico clim[aá]tico)/i.test(d['Título'] || '') && d.Enlace)
-    .sort((a, b) => boFecha(b.Fecha) - boFecha(a.Fecha));
-  if (!L.length) return '';
+  const Z = (docs || []).filter(d => /^Z/.test(d['Sección'] || '') && d.Enlace).sort((a, b) => boFecha(b.Fecha) - boFecha(a.Fecha));
+  const L = Z.filter(d => /^(Bolet[ií]n El Niño|Pronóstico clim[aá]tico)/i.test(d['Título'] || ''));
+  // 13/11/2026 · Último parte del Embalse Florentino Ameghino (IPA): nivel y aportes se leen del título «(nivel 144,86 m · aportes 90,28 m³/s)».
+  const P = Z.filter(d => /^Parte Embalse Florentino Ameghino/i.test(d['Título'] || ''));
+  if (!L.length && !P.length) return '';
+  const num = (t, re) => { const m = String(t || '').match(re); return m ? m[1] : ''; };
+  const nivel = d => num(d['Título'], /nivel\s*([\d.,]+)\s*m/i), aportes = d => num(d['Título'], /aportes\s*([\d.,]+)/i), periodo = d => num(d['Título'], /per[ií]odo\s*([^(]+?)\s*\(/i);
+  let emb = '';
+  if (P.length) {
+    const p = P[0], n1 = parseFloat(nivel(p).replace(',', '.')), n0 = P[1] ? parseFloat(nivel(P[1]).replace(',', '.')) : NaN;
+    const dif = isNaN(n1) || isNaN(n0) ? '' : ` · ${n1 - n0 >= 0 ? '▲ +' : '▼ '}${(n1 - n0).toFixed(2).replace('.', ',')} m respecto del parte anterior`;
+    emb = `<a class="bo-ult bo-emb" href="${E(p.Enlace)}" target="_blank" rel="noopener"><span class="ms">water</span><span class="t"><b>Embalse Florentino Ameghino · nivel ${E(nivel(p) || 's/d')} m</b><small>Aportes ${E(aportes(p) || 's/d')} m³/s${E(dif)} · ${E(periodo(p) || '')} · parte IPA del ${E(p.Fecha || 's/d')}</small></span><span class="ab">Abrir</span></a>`;
+  }
   const u = L[0], resto = L.slice(1, 3);
-  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines</b><a href="red.html"><span class="ms" style="font-size:17px">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">cloud</span>Carpeta</a></div>
-    <a class="bo-ult" href="${E(u.Enlace)}" target="_blank" rel="noopener"><span class="ms">description</span><span class="t"><b>${E(u['Título'])}</b><small>Último publicado · ${E(u.Fecha || 's/d')}</small></span><span class="ab">Abrir</span></a>
+  return `<div class="bo-cab"><b><span class="ms">thunderstorm</span>El Niño · Boletines y embalse</b><a href="red.html"><span class="ms" style="font-size:17px">folder_open</span>Ver todos</a><a href="${E(BO_CARPETA)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">cloud</span>Boletines</a><a href="${E(BO_CARPETA_EMB)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">cloud</span>Embalse</a></div>
+    ${u ? `<a class="bo-ult" href="${E(u.Enlace)}" target="_blank" rel="noopener"><span class="ms">description</span><span class="t"><b>${E(u['Título'])}</b><small>Último boletín publicado · ${E(u.Fecha || 's/d')}</small></span><span class="ab">Abrir</span></a>` : ''}
+    ${emb}
     ${resto.length ? `<ul>${resto.map(d => `<li><a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a><span>${E(d.Fecha || '')}</span></li>`).join('')}</ul>` : ''}`;
 }
 async function boletines(u) {
