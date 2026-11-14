@@ -118,7 +118,7 @@ const SEC = [
     { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
     { k: 'turnos', l: 'Trabajadores por turno (escribir el nombre u horario del turno si es distinto)', t: 'rep', fijo: ['Mañana', 'Tarde', 'Noche'], cols: [{ k: 'quien', l: 'Turno' }, { k: 'trab', l: 'Trabajadores', t: 'n' }, { k: 'med', l: 'Médicos', t: 'n' }, { k: 'enf', l: 'Enfermeros', t: 'n' }], add: 'Agregar turno' },
     { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
-    { k: 'cadena', l: 'Cadena de llamadas (orden de aviso)', t: 'a' } ] },
+    { k: 'cadena', l: 'Cadena de llamadas (orden de aviso) · opcional', t: 'a', opt: true } ] },
   { id: 's8', t: 'Contactos de emergencia', d: 'Visibles solo para Administración, el referente y la parte interna del COEsp', min: true, c: [
     { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Director/a o autoridad', 'Otra autoridad', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Municipalidad', 'Hospital de referencia', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)', 'Radio local'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
   { id: 's9', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: [
@@ -161,7 +161,8 @@ const leer = () => { datos = S.store.get(clave(estab), {}) || {}; const p = PRE[
 const guardar = () => { datos._act = new Date().toISOString(); S.store.set(clave(estab), datos); progreso(); };
 const fechaAct = () => { if (!datos._act) return 'todavía no se cargó nada'; const d = new Date(datos._act); return 'última carga ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); };
 const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
-const secOk = s => s.c.every(lleno);
+const req = s => s.c.filter(c => !c.opt); // los opcionales no cuentan para «Completa»
+const secOk = s => req(s).every(lleno);
 function campo(c) {
   const v = datos[c.k], id = 'f_' + c.k;
   const lab = `<span>${c.l}${esPre(c.k) ? ` <span class="pre" title="Dato que ya teníamos${FUENTE_PRE[c.k] ? ': ' + E(FUENTE_PRE[c.k]) : ' (libro de la app, hoja LUGARES)'}. Revisalo y cambialo si no es correcto.">Precargado</span>` : ''}</span>`;
@@ -195,7 +196,7 @@ function progreso() {
   const p = document.getElementById('prog'); if (!p) return;
   p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b><small>· ${fechaAct()}</small>
     <span class="chip ${minOk ? 'ok' : 'falta'}"><span class="ms" style="font-size:16px">${minOk ? 'check_circle' : 'schedule'}</span>${minOk ? 'Ya están las secciones 1, 2, 7 y 8: alcanza para empezar STAR-H y PHR' : 'Sugerido: empezar por las secciones 1, 2, 7 y 8 (marcadas en naranja)'}</span></div>`;
-  SEC.forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const n = s.c.filter(lleno).length; ch.className = 'chip ' + (n === s.c.length ? 'ok' : 'falta'); ch.textContent = n === s.c.length ? 'Completa' : n ? `En curso · ${n} de ${s.c.length}` : 'Sin empezar'; });
+  SEC.forEach(s => { const ch = document.querySelector(`[data-chip="${s.id}"]`); if (!ch) return; const R = req(s), n = R.filter(lleno).length; ch.className = 'chip ' + (n === R.length ? 'ok' : 'falta'); ch.textContent = n === R.length ? 'Completa' : n ? `En curso · ${n} de ${R.length}` : 'Sin empezar'; });
 }
 app.addEventListener('change', ev => {
   const t = ev.target;
