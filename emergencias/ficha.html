@@ -90,13 +90,15 @@ const SN = ['Sí', 'No', 'No sabe'];
 // Tipos de internación: los mismos de la hoja CAMAS (columna «Categoría») para que la tabla sea homogénea en todos los establecimientos
 const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
 // Tipos: t texto · n número · a texto largo · f fecha · sn Sí/No/No sabe · m opciones múltiples · auto dato que se trae de la app · rep lista que se repite
+// 15/11/2026 10:30 (Belén: «sí, eliminar redundancias»): se sacan la sección «Edificios a cargo» (la reemplazan el recuadro de
+// dependencias y la ficha de cada CAPS; no había nada cargado) y la distancia y el tiempo al hospital de referencia (salen de DISTANCIAS).
 const SEC_HOSP = [
   { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
     { k: 'nombre', l: 'Nombre oficial', t: 't' }, { k: 'corto', l: 'Nombre corto', t: 't' },
     { k: 'sisa', l: 'Código SISA o REFES', t: 't' }, { k: 'complejidad', l: 'Nivel de complejidad', t: 't' },
     { k: 'depende', l: 'Depende de (Área Programática y red)', t: 't' },
     { k: 'h24', l: '¿Atiende las 24 horas?', t: 'sn' }, { k: 'guardia', l: '¿Tiene guardia?', t: 'sn' },
-    { k: 'ref', l: 'Hospital de referencia al que deriva', t: 't' }, { k: 'refkm', l: 'Distancia al hospital de referencia (km)', t: 'n' }, { k: 'refmin', l: 'Tiempo de traslado (minutos)', t: 'n' } ] },
+    { k: 'ref', l: 'Hospital de referencia al que deriva <em>(la distancia y el tiempo no se cargan acá: salen solos de «Transportes y distancias»)</em>', t: 't' } ] },
   { id: 's2', t: 'Ubicación y acceso', d: 'Clave ante inundaciones', min: true, c: [
     { k: 'dir', l: 'Dirección', t: 't' }, { k: 'coord', l: 'Coordenadas', t: 'coord' },
     { k: 'accesos', l: 'Accesos principales y alternativos', t: 'a' }, { k: 'cortes', l: '¿Cuáles se cortan con lluvia o crecida?', t: 'a' },
@@ -126,8 +128,6 @@ const SEC_HOSP = [
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Central', 'Tubos', 'Concentradores', 'No tiene'] },
     { k: 'calef', l: 'Calefacción y gas: ¿con qué cuenta?', t: 'm', o: ['Gas de red', 'Garrafas o tubos', 'Eléctrica', 'Leña', 'Otro'] },
     { k: 'comun', l: 'Comunicaciones: ¿con qué cuenta?', t: 'm', o: ['Teléfono fijo', 'Celular', 'Internet', 'Radio', 'Otro'] } ] },
-  { id: 's6', t: 'Edificios a cargo', d: 'CAPS, puestos sanitarios y otros', c: [
-    { k: 'edif', l: 'Edificios', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['CAPS', 'Puesto sanitario', 'Otro'] }, { k: 'nombre', l: 'Nombre' }, { k: 'dir', l: 'Dirección' }, { k: 'coord', l: 'Coordenadas' }, { k: 'horario', l: 'Horario' }, { k: 'resp', l: 'Responsable' }], add: 'Agregar edificio' } ] },
   { id: 's7', t: 'Personal', d: 'Quiénes responden', min: true, c: [
     { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
     { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
@@ -152,7 +152,7 @@ const SEC_CAPS = [
     { k: 'depende', l: 'Hospital del que depende', t: 't' },
     { k: 'horario', l: 'Días y horario de atención', t: 't' },
     { k: 'ref', l: 'Hospital al que deriva, si no es el mismo del que depende', t: 't', opt: true } ] },
-  { id: 'c2', t: 'Ubicación y acceso', d: 'Clave ante inundaciones', min: true, c: SEC_HOSP[1].c },
+  { id: 'c2', t: 'Ubicación y acceso', d: 'Clave ante inundaciones', min: true, c: SEC_HOSP.find(s => s.id === 's2').c },
   { id: 'c3', t: 'Atención y población', d: 'Qué atención brinda y a quiénes (sin internación)', c: [
     { k: 'servicios', l: '¿Qué atención brinda?', t: 'm', o: ['Medicina general o clínica', 'Pediatría', 'Enfermería', 'Vacunatorio', 'Odontología', 'Obstetricia o control de embarazo', 'Salud mental', 'Trabajo social', 'Farmacia o botiquín', 'Extracción de sangre'] },
     { k: 'camillas', l: 'Camillas (cantidad)', t: 'n' },
@@ -167,7 +167,7 @@ const SEC_CAPS = [
     { k: 'ref_tit', l: 'Responsable del CAPS (coordinador o jefe)', t: 't' }, { k: 'ref_alt', l: 'Reemplazo del responsable', t: 't' } ] },
   { id: 'c6', t: 'Contactos de emergencia', d: 'Visibles solo para Administración y el referente', min: true, c: [
     { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Responsable del CAPS', 'Hospital del que depende', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
-  { id: 'c7', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: SEC_HOSP[8].c },
+  { id: 'c7', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: SEC_HOSP.find(s => s.id === 's9').c },
   { id: 'c8', t: 'En una emergencia', d: 'Qué hace el CAPS y qué pasó antes', c: [
     { k: 'emerg_rol', l: 'Si hay una emergencia en la zona, el CAPS…', t: 'm', o: ['Sigue atendiendo', 'Cierra y deriva al hospital', 'Puede funcionar como punto de vacunación o de atención', 'Puede funcionar como lugar de reunión o albergue', 'No está definido'] },
     campoH('antec') ] }
