@@ -13,7 +13,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--alerta:#F57C00}
 *{box-sizing:border-box}
@@ -587,7 +587,7 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('change', async ev => {
   const s = ev.target; if (!s.dataset || !s.dataset.perm) return;
-  const pid = s.dataset.perm, mod = s.dataset.mod, prev = s.dataset.prev != null ? s.dataset.prev : '';
+  const pid = s.dataset.perm, mod = s.dataset.mod;
   const ant = ((D.accesos || {}).permisos || []).filter(x => x.persona === pid && x.modulo === mod)[0] || {};
   s.disabled = true;
   try {

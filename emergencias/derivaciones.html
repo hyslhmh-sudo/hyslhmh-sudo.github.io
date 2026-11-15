@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;
   --texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--papel:#fff;--radio:12px;
@@ -215,7 +215,7 @@ body{background:#FAF7F7}
 (function () {
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
-let cat = S.store.get('deriv.cat', null), redActual = S.store.get('deriv.loc', ''), q = '', fTipo = '';
+let cat = S.store.get('deriv.cat', null), redActual = S.store.get('deriv.loc', ''), q = '';
 let borrador = null, borradorDep = null, ocupado = false;
 if (cat && (!cat.camas || !cat.arm)) cat = null; // datos guardados de una versión anterior: se vuelven a pedir
 const TODAS = 'Todas las localidades';
@@ -236,8 +236,6 @@ const red = n => cat && cat.redes.find(r => r.nombre === n);
 const camposDe = (r, ficha) => r.campos.filter(c => c.ficha === ficha);
 const secciones = l => { const o = []; l.forEach(c => { let s = o.find(x => x.n === c.seccion); if (!s) o.push(s = { n: c.seccion, c: [] }); s.c.push(c); }); return o; };
 const lleno = v => v != null && String(v).trim() !== '';
-const avance = (obj, l) => l.length ? Math.round(l.filter(c => lleno(obj[c.clave])).length * 100 / l.length) : 0;
-const chipEstado = e => `<span class="chip ${/Completa|Validada/.test(e) ? 'ok' : /En curso/.test(e) ? '' : 'pend'}">${E(e || 'Pendiente')}</span>`;
 
 async function cargar(avisar) {
   if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return render(); }
@@ -298,46 +296,6 @@ function render() {
   if (p[0] === 'datos') return vistaDatos();
   return vistaInst();
 }
-function vistaInicio() {
-  borrador = null;
-  if (!cat.redes.length) { app.innerHTML = '<div class="tarjeta vacio">No hay planillas de evacuación activas (hoja REDES EVAC del libro) o tu acceso no tiene establecimientos asignados.</div>'; return; }
-  if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual);
-  const r = red(redActual); tema(r.nombre);
-  $('#titulo').innerHTML = `Evacuación · ${E(r.nombre)}<small>Fichas por establecimiento y dependencia</small>`;
-  const lc = camposDe(r, 'Establecimiento'), tipos = [...new Set(r.establecimientos.map(e => e.tipo).filter(Boolean))];
-  const l = r.establecimientos.filter(e => (!fTipo || e.tipo === fTipo) && (!q || (e.nombre + ' ' + e.codigo).toLowerCase().indexOf(q.toLowerCase()) >= 0));
-  app.innerHTML = `${redesTabs(r)}${secTabs('fichas')}
-    <div class="buscar"><input id="q" type="search" placeholder="Buscar establecimiento" value="${E(q)}"><select id="fTipo"><option value="">Todos los tipos</option>${tipos.map(t => `<option ${t === fTipo ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></div>
-    <div class="tarjeta datos-donde"><b>Base orientadora para planificar:</b> no es un registro en tiempo real. Las fichas reúnen valores habituales o estimados (ocupación, personal, pacientes por movilidad) que se revisan periódicamente.<br><b>Dónde se guardan los datos:</b> en la planilla EVAC de cada red (Google Sheets), a través del Apps Script del sistema. Lo que se carga acá queda en las hojas ESTABLECIMIENTOS y DEPENDENCIAS, y también se puede cargar o corregir directamente ahí.
-      ${cat.redes.filter(x => x.planilla).map(x => `<br><a href="${E(x.planilla)}" target="_blank" rel="noopener">Abrir planilla EVAC · ${E(x.nombre)}</a>`).join('')}</div>
-    <div class="lista">${l.map(e => { const av = avance(e, lc), nd = r.dependencias.filter(d => d.codigo === e.codigo).length;
-      return `<button class="tarjeta est" data-ir="#/est/${encodeURIComponent(r.nombre)}/${encodeURIComponent(e.codigo)}"><div class="est-cab"><b>${E(e.nombre)}</b>${chipEstado(e.estado)}</div>
-        <div class="barra-prog" aria-label="${av} % completo"><i style="width:${av}%"></i></div>
-        <div class="pie"><span>${E(e.codigo)} · ${E(e.tipo || 's/d')}</span><span>Ficha ${av} % completa</span><span>${nd} dependencia${nd === 1 ? '' : 's'}</span>${e.actualizado ? `<span>Actualizado ${E(e.actualizado)}</span>` : ''}</div></button>`; }).join('') || '<div class="tarjeta vacio">Sin resultados.</div>'}</div>`;
-  const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaInicio(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
-  $('#fTipo').addEventListener('change', ev => { fTipo = ev.target.value; vistaInicio(); });
-}
-function vistaEst(redN, cod) {
-  const r = red(redN), e = r.establecimientos.find(x => x.codigo === cod); if (!e) return ir('#/');
-  tema(r.nombre); redActual = redN;
-  $('#titulo').innerHTML = `${E(e.codigo)} · ${E(e.nombre)}<small>${E(r.nombre)} · Evacuación</small>`;
-  const puede = e.puedeCargar !== false, dis = puede ? '' : 'disabled', lc = camposDe(r, 'Establecimiento');
-  if (!borrador || borrador.codigo !== cod) borrador = { red: redN, codigo: cod, datos: {} };
-  const obj = Object.assign({}, e, borrador.datos);
-  const deps = r.dependencias.filter(d => d.codigo === cod), ld = camposDe(r, 'Dependencia');
-  app.innerHTML = `<button class="volver" data-act="volver"><span class="ms">arrow_back</span>Establecimientos</button>
-    <div class="tarjeta cab"><h2>${E(e.nombre)}</h2><div class="sub">${E(e.codigo)} · ${E(e.tipo || 's/d')} · ficha ${avance(obj, lc)} % completa${e.actualizado ? ' · actualizada ' + E(e.actualizado) + (e.por ? ' por ' + E(e.por) : '') : ''}</div>
-      <div class="acc"><label class="sub">Estado de la ficha <select id="selEstado" ${dis}>${cat.estados.map(s => `<option ${s === (e.estado || 'Pendiente') ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
-        <button class="btn sec mini" data-act="imprimir" data-modo="cargado"><span class="ms" style="font-size:17px">print</span>Imprimir con lo cargado</button>
-        <button class="btn sec mini" data-act="imprimir" data-modo="blanco"><span class="ms" style="font-size:17px">print</span>Imprimir en blanco</button></div></div>
-    <h3>Ficha del establecimiento</h3><div id="fichaEst">${seccionesHTML(lc, obj, dis, 'e_', true)}</div>
-    <h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px">Dependencias (${deps.length})${puede ? '<button class="btn mini" data-act="nuevaDep"><span class="ms" style="font-size:17px">add</span>Agregar dependencia</button>' : ''}</h3>
-    <p class="sub" style="margin:0 2px 8px">Una ficha por servicio, sector o área: internación, terapia, quirófano, guardia, consultorios, administración… Las áreas críticas primero.</p>
-    <div class="lista">${deps.map(d => `<button class="tarjeta dep" data-dep="${E(d.id)}"><span class="ms">meeting_room</span><b>${E(d.nombre)}<span class="sub" style="display:block;font-weight:500">${E([d.uso, d.sector, d.piso ? 'piso ' + d.piso : ''].filter(Boolean).join(' · ') || 's/d')}</span></b>${Number(d.pac_soporte) > 0 ? `<span class="critico" title="Pacientes con soporte vital: requieren el doble de personal para evacuar">${E(d.pac_soporte)} con soporte vital</span>` : ''}${chipEstado(d.estado)}<span class="sub">${avance(d, ld)} %</span></button>`).join('') || '<div class="tarjeta vacio">Todavía no hay dependencias cargadas.</div>'}</div>`;
-  atarCampos($('#fichaEst'), borrador);
-  const se = $('#selEstado'); if (se) se.addEventListener('change', () => { borrador.estado = se.value; avisarCambios(); $('#flot').classList.remove('oculto'); });
-  if (Object.keys(borrador.datos).length || borrador.estado) $('#flot').classList.remove('oculto');
-}
 function ir(h) { if (location.hash !== h) location.hash = h; else render(); }
 
 async function guardar(req, ok) {
@@ -354,7 +312,6 @@ async function guardar(req, ok) {
 function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes"><span class="sub" style="align-self:center;font-weight:700;white-space:nowrap">Emergencia en:</span>${cat.redes.map(x => `<button class="red-tab" data-red="${E(x.nombre)}" aria-pressed="${x.nombre === r.nombre}">${E(x.nombre)}</button>`).join('')}</div>` : ''; }
 // 01/11/2026 · Quien no es Administración ve solo la red de derivación (receptoras, albergues, criterios y planillas modelo), sin cargar.
 function esAdmin() { return !!(cat && cat.usuario && cat.usuario.rol === 'Administración'); }
-const SOLO_RED = ['inst', 'alb', 'pob', 'crit', 'modelos'];
 function secTabs(act) {
   return `<div class="secciones-tabs">${[['inst', '#/inst', 'local_hospital', 'Instituciones receptoras'], ['alb', '#/albergues', 'night_shelter', 'Albergues'], ['pob', '#/poblacion', 'groups', 'Población a cargo'], ['crit', '#/criterios', 'handshake', 'Criterios de derivación'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['datos', '#/datos', 'bar_chart', 'Datos de la red']]
     .map(t => `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>${act !== 'modelos' && act !== 'datos' ? avisoCarga() : ''}`;

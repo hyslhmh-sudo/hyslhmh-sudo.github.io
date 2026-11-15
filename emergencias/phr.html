@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 :root{
   --fuerte:#172B4D; --medio:#2F5BEA; --claro:#E4EAFB; --borde:#C5D1F2;
@@ -220,7 +220,6 @@ function guiaHTML(letra, abierta) {
     <p><b>Qué se evalúa:</b> ${S.esc(g.que)}</p><p><b>Qué pedir o mirar:</b> ${S.esc(g.pedir)}</p>
     <div class="crit"><b style="color:#172B4D">Cumple</b><span>${S.esc(g.c)}</span><b style="color:#172B4D">Parcial</b><span>${S.esc(g.p)}</span><b style="color:#172B4D">No cumple</b><span>${S.esc(g.nc)}</span></div></div></details>`;
 }
-function secNombre(letra) { const s = (cat.secciones || []).find(x => x[0] === letra); return s ? s[1] : letra; }
 
 /* ---------- sincronización ---------- */
 function pintarSync() {

@@ -13,7 +13,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 /* 14/11/2026 · Establecimientos · consolidado (v0). Pedido de Belén: «en 2 · Gestión de la emergencia, información de establecimientos
    como tarjeta, que entre y me muestre un consolidado de datos». Solo lectura, para todos los usuarios. Datos: LUGARES, CAMAS y la
@@ -115,7 +115,6 @@ const ambs = e => (e.ficha && e.ficha.datos.ambs) || null;
 const sumObj = o => Object.keys(o || {}).reduce((a, k) => a + o[k], 0);
 
 function filtrados() {
-  const q = S.sinTilde ? S.sinTilde(F.q) : F.q.toLowerCase();
   const st = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   return datos.establecimientos.filter(e => (!F.area || e.area === F.area) && (!F.tipo || e.tipo === F.tipo) && (!F.red || e.red === F.red) && (!F.loc || e.loc === F.loc)
     && (!F.q || st(e.nombre + ' ' + e.corto + ' ' + e.loc).indexOf(st(F.q)) >= 0));

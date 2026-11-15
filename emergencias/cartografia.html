@@ -14,7 +14,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 /* 15/11/2026 · Cartografía (v0). Paleta del sitio: #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. */
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--carto:#0F7B6C}
@@ -211,16 +211,8 @@ async function abrir(b) {
     await dibujar();
   } catch (e) { cu.innerHTML = `<p class="vmsg mal">${E(/desconocida|disponible/i.test(e.message) ? 'Falta publicar la versión nueva del servidor de la app.' : e.message)}</p>`; }
 }
-async function descargar(id, b) {
-  return; // 15/11/2026 11:21 (Belén): sin descarga para nadie desde la app; el PDF está en Drive › 08 · CARTOGRAFÍA
-  if (!esAdm()) return; // 15/11/2026 (Belén: «la cartografía que no se pueda descargar»): solo Administración
-  const t = b.lastChild.textContent; b.disabled = true; b.lastChild.textContent = 'Descargando…';
-  try {
-    const r = await traer(id);
-    const url = URL.createObjectURL(new Blob([b64aBytes(r.datos)], { type: r.tipo || 'application/pdf' })), a = document.createElement('a');
-    a.href = url; a.download = r.nombre; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
-  } catch (e) { alert(e.message); } finally { b.disabled = false; b.lastChild.textContent = t; }
-}
+// 15/11/2026 11:21 (Belén): sin descarga para nadie desde la app; el PDF está en Drive › 08 · CARTOGRAFÍA.
+function descargar() {}
 
 /* ---------- Administración: subir, corregir, dar de baja ---------- */
 const base64 = a => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(a); });

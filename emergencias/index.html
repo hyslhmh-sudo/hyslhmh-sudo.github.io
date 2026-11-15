@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--naranja:#172B4D;--naranja-claro:#E4EAFB;
   --texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--papel:#fff;--radio:14px;
@@ -456,7 +456,6 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc;
 // clave: flag del usuario que habilita la sección (null = abierta a todos)
-const BLANCO = '#FFFFFF';
 const MODS = [
   // 14/11/2026 · Ficha del establecimiento (Belén: los referentes de los rurales cargan primero «Mis datos» y después la ficha de su establecimiento, por partes).
   { k: 'ficha', grupo: 'prep', t: 'Ficha del establecimiento', r: 'Datos de tu hospital o puesto sanitario. Se completa por partes.', d: 'Identificación, ubicación y acceso, población, capacidad (camas, respiradores, ambulancias), servicios críticos, personal, contactos y seguridad. Se guarda sola en el libro; se puede imprimir en blanco o con lo cargado.', ico: 'apartment', href: 'ficha.html', flag: null, bg: 'linear-gradient(120deg,#172B4D 0%,#2F5BEA 100%)' },
@@ -662,7 +661,7 @@ function boletinesHtml(docs) {
   const P = Z.filter(d => /^Parte Embalse Florentino Ameghino/i.test(d['Título'] || ''));
   if (!L.length && !P.length) return '';
   const num = (t, re) => { const m = String(t || '').match(re); return m ? m[1] : ''; };
-  const nivel = d => num(d['Título'], /nivel\s*([\d.,]+)\s*m/i), aportes = d => num(d['Título'], /aportes\s*([\d.,]+)/i), periodo = d => num(d['Título'], /per[ií]odo\s*([^(]+?)\s*\(/i);
+  const nivel = d => num(d['Título'], /nivel\s*([\d.,]+)\s*m/i), aportes = d => num(d['Título'], /aportes\s*([\d.,]+)/i);
   let emb = '';
   if (P.length) {
     const p = P[0], n1 = parseFloat(nivel(p).replace(',', '.')), n0 = P[1] ? parseFloat(nivel(P[1]).replace(',', '.')) : NaN;
@@ -700,7 +699,7 @@ let SMN_TK = '', SMN_T = 0, RUT_TK = '', RUT_T = 0;
  * Puerto Madryn y la RN 3, y guarda los cambios en la hoja RUTAS DC. Arriba lo cerrado y con extrema precaución; lo demás plegado. */
 const RUT_WEB = 'https://chubut.gob.ar/destacado/1291';
 function rutasHtml(r) {
-  const T = (r && r.tramos) || [], A = (r && r.avisos) || [];
+  const T = (r && r.tramos) || [];
   const de = c => T.filter(t => t.cond === c), cer = de('cerrada'), ext = de('extrema_precaucion'), pre = de('transitar_con_precaucion');
   const otros = T.filter(t => ['cerrada', 'extrema_precaucion', 'transitar_con_precaucion'].indexOf(t.cond) < 0);
   const resumen = !T.length ? 'Sin datos por ahora.' : [cer.length ? cer.length + (cer.length === 1 ? ' tramo cerrado' : ' tramos cerrados') : '', ext.length ? ext.length + ' con extrema precaución' : '', pre.length ? pre.length + ' con precaución' : '', otros.length ? otros.length + ' normales' : ''].filter(Boolean).join(' · ');
@@ -778,7 +777,7 @@ function pintar() {
   // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
   const tarjeta = m => `<div class="tj${m.grupo === 'gem' || m.grupo === 'resil' || m.grupo === 'coesp' ? ' tj-resp' : ''}${m.grupo === 'prep' ? ' tj-info' : ''}${cerr(m) ? ' bloq' : ''}" ${cerr(m) ? 'aria-disabled="true"' : `role="link" tabindex="0" data-href="${m.href}"`} data-k="${m.k}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
       <span class="ms fantasma" aria-hidden="true">${m.ico}</span><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
-  const grande = tarjeta, chica = tarjeta;
+  const grande = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
   const admin = !!(u && u.rol === 'Administración');
   // Sin ingresar: nada. Con usuario que no es Administración: PHR, Derivaciones y albergues · COEsp (04/11/2026),
@@ -796,8 +795,6 @@ function pintar() {
   const g = k => MV.filter(m => m.grupo === k && (m.k === 'control' ? !!(u && (admin || (!CONTROL_EN_REVISION && u.tablero))) : (admin || VIS.indexOf(m.k) >= 0)));
   // 13/11/2026 (Belén: «podría ser una sola tarjeta y al entrar veo las otras»): «COEsp, documentos y apoyo» es una tarjeta que se despliega
   // en el lugar y muestra sus tarjetas chicas. Se recuerda si quedó abierta (en este equipo).
-  const carpeta = (k, ico, tit, fn, bg) => { const L = g(k); if (!L.length) return ''; const ab = false; // 14/11/2026 · Siempre cerrada hasta que se toca (regla de Belén).
-    return `<div class="carpeta${ab ? ' abierta' : ''}" role="button" tabindex="0" aria-expanded="${ab}" data-carpeta="${k}"${bg ? ` style="background:${bg}!important"` : ''}><span class="ico"><span class="ms">${ico}</span></span><span class="t"><b>${E(tit)}</b><span class="d">${E(L.map(m => m.t).join(' · '))}</span></span><span class="ms flecha">expand_more</span></div><div class="fila tres sub${ab ? '' : ' oculto'}" data-sub="${k}">${L.map(fn).join('')}</div>`; };
   // 13/11/2026 22:38 (Belén: «Fuentes lo quiero sacar de subcarpeta y ponerlo como carpeta»): tarjeta propia, del mismo tamaño que las carpetas, que abre la página.
   const enlaceGrande = (m, bg) => `<div class="carpeta" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" aria-label="${E(m.t)}" style="background:${bg}!important"><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}</b><span class="d">${E(m.d)}</span></span><span class="ms flecha">chevron_right</span></div>`;
   const fila = (k, ico, tit, cls, fn) => g(k).length ? `<div class="grupo-tit"><span class="ms">${ico}</span>${tit}</div><div class="fila ${cls}">${g(k).map(fn).join('')}</div>` : '';

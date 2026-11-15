@@ -13,7 +13,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 /* 14/11/2026 · VISTA DE PRUEBA (v0) de la ficha del establecimiento para los referentes de los hospitales rurales.
    No guarda en el libro: lo cargado queda solo en este equipo. Diseño pedido por Belén; ver claude/cambios-app-emergencias-9.md. */
@@ -359,7 +359,7 @@ app.addEventListener('click', ev => {
     navigator.geolocation.getCurrentPosition(p => { datos[g.dataset.gps] = p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6); marcar(g.dataset.gps); srv.datos[g.dataset.gps] = datos[g.dataset.gps]; reabrir(id); }, () => alert('No se pudo tomar la ubicación. Escribila a mano.')); }
 });
 window.abrirTodo = () => { window.__sinAcordeon = true; document.querySelectorAll('details.sec').forEach(d => d.setAttribute('open', '')); };
-window.imprimir = enBlanco => { window.__blanco = !!enBlanco; document.body.classList.toggle('blanco', !!enBlanco); if (enBlanco) pintar(); abrirTodo(); setTimeout(() => window.print(), 150); };
+window.imprimir = enBlanco => { window.__blanco = !!enBlanco; document.body.classList.toggle('blanco', !!enBlanco); if (enBlanco) pintar(); window.abrirTodo(); setTimeout(() => window.print(), 150); };
 window.addEventListener('afterprint', () => { setTimeout(() => { window.__sinAcordeon = false; if (window.__blanco) { window.__blanco = false; document.body.classList.remove('blanco'); pintar(); } }, 500); });
 window.addEventListener('beforeunload', () => { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } });
 { const p0 = pintar; pintar = function () { p0(); pintarDeps(); }; } // la caja de dependencias se vuelve a dibujar cada vez que se repinta la ficha
