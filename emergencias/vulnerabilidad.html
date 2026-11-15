@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vulnerabilidad social por barrio · Emergencias y desastres</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<style>
+/* 15/11/2026 · Vulnerabilidad social y afectación posible por inundación o lluvia · Trelew (v0).
+ * Paleta del sitio: #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. Prioridad 1 en coral (alta prioridad), no en rojo (rojo = emergencia en curso). */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--vul:#8A3FB8;--p1:#F57C00;--p2:#E0A100}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--fuerte);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:#172B4D;color:#F5F7FB;border-bottom:3px solid var(--vul);padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:960px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid #F57C00;border-left-width:6px;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.aviso.lila{background:#F5EEFB;border-color:var(--vul)}
+.ayuda{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda summary{cursor:pointer;font-weight:700}.ayuda p,.ayuda li{margin:.4em 0}
+h2{font-size:16px;margin:20px 2px 8px;display:flex;align-items:center;gap:6px}
+h2 small{font-weight:500;color:var(--suave);font-size:12.5px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px}
+.kpi{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:10px 12px}
+.kpi b{display:block;font-size:22px;color:var(--fuerte)}.kpi span{font-size:12px;color:var(--suave)}
+.fichas{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:10px}
+.ficha{background:#fff;border:1px solid var(--linea);border-left:6px solid var(--p2);border-radius:14px;padding:12px 14px;font-size:13.5px}
+.ficha.p1{border-left-color:var(--p1)}
+.ficha h3{font-size:15.5px;margin:0 0 2px}
+.chip{display:inline-block;font-size:11.5px;font-weight:800;border-radius:999px;padding:1px 9px;margin:2px 4px 2px 0;background:#EEF0F4;color:#4B5B73}
+.chip.p1{background:#FFF0E0;color:#8A4A00}.chip.p2{background:#FFF7D6;color:#6B4E00}
+.grilla{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:8px 0;text-align:center}
+.grilla div{background:var(--fondo);border-radius:10px;padding:6px 2px}.grilla b{display:block;font-size:16px}.grilla span{font-size:11px;color:var(--suave)}
+.fila{display:flex;gap:6px;align-items:flex-start;margin:5px 0}.fila .ms{font-size:18px;color:var(--vul);margin-top:1px}
+.pie{font-size:12px;color:var(--tenue)}
+.accion{background:#F5EEFB;border-radius:10px;padding:8px 10px;margin-top:8px;font-size:13px}
+.ojo{color:#8A4A00;font-weight:600}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.filtros input,.filtros select{border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:#fff}
+.filtros input{flex:1;min-width:200px}
+.tabla-wrap{overflow:auto;background:#fff;border:1px solid var(--linea);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+th{background:#F0F3FA;font-size:11.5px;position:sticky;top:0}
+td.n,th.n{text-align:right;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #2F5BEA;border-radius:10px;padding:8px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;background:#fff;color:#172B4D}
+.vacio{background:#fff;border:1px dashed var(--borde);border-radius:14px;padding:18px;text-align:center;color:var(--suave)}
+details.mas{margin-top:10px}details.mas>summary{cursor:pointer;font-weight:700;font-size:14px;padding:6px 2px}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto;max-height:70px}
+@media (max-width:560px){.grilla{grid-template-columns:repeat(2,1fr)}}
+@media print{.barra .icono,.filtros,.ayuda,.no-imp{display:none!important}.barra{position:static}body{background:#fff}.ficha{break-inside:avoid}details.mas{display:none}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Vulnerabilidad social por barrio · Trelew<small>Para decidir a quién avisar primero ante lluvia o inundación · versión 0</small></h1>
+  <button class="icono no-imp" type="button" id="bImp" title="Imprimir las fichas de prioridad 1 y 2"><span class="ms">print</span></button>
+</header>
+<main id="app"><p class="pie">Cargando…</p></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+/* 15/11/2026 · Belén: «vulnerabilidad social: agregar un poco de este tema, siempre que permita info con propósito»; ok (14:06) a:
+ *  A · ficha de cada barrio prioritario (personas, edades, CAPS y albergue más cercanos, pacientes con necesidades especiales: solo cantidad);
+ *  B · «barrios a mirar primero» cuando hay alerta del SMN por lluvia o tormenta en Trelew (index.html).
+ * Regla: un dato entra solo si cambia una decisión; lo demás queda en la lámina CART-COE-005.
+ * Datos: hoja VULNERABILIDAD del libro de la app (acción vuln_barrios, Red.gs). La ven Administración y quien tenga
+ * «Vulnerabilidad social» en PERMISOS; nunca externos (un orden de barrios puede estigmatizar). MEJORA / buena práctica. */
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const u = S.sesion.token() ? (S.sesion.usuario() || {}) : {};
+const adm = u.rol === 'Administración';
+const vePac = adm || !!((u.niveles || {})['Pacientes con necesidades especiales']);
+// Capacidad estimada de los albergues (base del COE · Derivaciones y albergues, 14/11/2026). A-002 (Trelew Rugby Club) no se propone: zona inundable o de riesgo.
+const ALB_CAP = { 'A-001': '36 personas (estimada)', 'A-003': 's/d (revisar)' };
+let V = S.store.get('vuln.b', null), PAC = null, PAC_ERR = '', ERR = '', filtro = { q: '', p: '' };
+const n = x => (x === '' || x == null || isNaN(Number(x))) ? null : Number(x);
+const fN = x => n(x) == null ? 's/d' : Number(x).toLocaleString('es-AR');
+const pct = x => n(x) == null ? 's/d' : String(Number(x)).replace('.', ',') + ' %';
+const km = x => n(x) == null ? 's/d' : String(Number(x)).replace('.', ',') + ' km';
+const sinT = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const base = b => String(b).split(' · ')[0]; // «Oeste · parte baja (zona 1976)» → «Oeste»
+
+// Pacientes con necesidades especiales del barrio: solo la cantidad, con la misma lista cerrada y el mismo enmascarado («<5») que en Reuniones › Pacientes.
+function pacDe(barrio) {
+  if (!vePac) return null;
+  if (!PAC) return undefined;
+  const k = sinT(base(barrio));
+  const z = (PAC.zonas || []).filter(x => { const p = String(x.zona).split(' · '); return /trelew/i.test(p[0]) && sinT(p.slice(1).join(' · ')) === k; });
+  if (!z.length) return 0;
+  const t = z.reduce((a, x) => a + (typeof x.total === 'number' ? x.total : 0), 0);
+  return z.some(x => typeof x.total !== 'number') ? '<5' : t;
+}
+function pacSinBarrio() {
+  if (!PAC) return 0;
+  return (PAC.zonas || []).filter(x => /trelew/i.test(String(x.zona)) && /s\/d/i.test(String(x.zona).split(' · ').slice(1).join(' '))).reduce((a, x) => a + (typeof x.total === 'number' ? x.total : 0), 0);
+}
+
+function ficha(b) {
+  const p1 = String(b.prioridad) === '1';
+  const enAlta = /^s/i.test(b.caps_alta);
+  const alb = String(b.albergue || ''), cod = (alb.match(/^A-\d+/) || [''])[0];
+  const pc = pacDe(b.barrio);
+  const pacTxt = pc === null ? '<span class="pie">Las cantidades las ve solo la lista cerrada de pacientes.</span>'
+    : pc === undefined ? (PAC_ERR ? `<span class="pie">${E(PAC_ERR)}</span>` : '<span class="pie">Contando…</span>')
+    : pc === 0 ? `ninguno con este barrio cargado${pacSinBarrio() ? ' <span class="ojo">(ver el aviso de pacientes sin barrio)</span>' : ''}.`
+    : `<b>${E(pc)}</b> con este barrio cargado en el libro de pacientes.`;
+  return `<article class="ficha${p1 ? ' p1' : ''}">
+    <h3>${E(b.barrio)}</h3>
+    <span class="chip ${p1 ? 'p1' : 'p2'}">Prioridad ${E(b.prioridad)}</span><span class="chip">Vulnerabilidad ${E(b.vuln)} · afectación ${E(b.expo)}</span>
+    <div class="grilla"><div><b>${fN(b.pob)}</b><span>personas</span></div><div><b>${fN(b.p80)}</b><span>de 80 y más</span></div><div><b>${fN(b.p65)}</b><span>de 65 y más</span></div><div><b>${fN(b.p04)}</b><span>de 0 a 4</span></div></div>
+    <div class="fila"><span class="ms">water</span><span><b>Por qué puede afectarse:</b> ${E(b.factores || '—')}.</span></div>
+    <div class="fila"><span class="ms">home</span><span>NBI ${pct(b.nbi)} · sin cloaca ${pct(b.cloaca)} · hacinamiento ${pct(b.hacin)} · sin obra social ${pct(b.sinos)}.</span></div>
+    <div class="fila"><span class="ms">local_hospital</span><span>CAPS más cercano: <b>${E(b.caps)}</b> (${km(b.caps_km)})${enAlta ? ` <span class="ojo">· está en zona de afectación alta: puede quedar inaccesible.</span> Alternativa fuera de esa zona: <b>${E(b.caps_alt)}</b> (${km(b.caps_alt_km)})` : ''}.</span></div>
+    <div class="fila"><span class="ms">night_shelter</span><span>Albergue más cercano: <b>${E(alb || 's/d')}</b> (${km(b.alb_km)}); capacidad ${E(ALB_CAP[cod] || 's/d (revisar)')}.</span></div>
+    <div class="fila"><span class="ms">accessible</span><span>Pacientes con necesidades especiales: ${pacTxt}</span></div>
+    <div class="accion"><b>Qué permite decidir:</b> a quién avisar primero y a quién ofrecer traslado preventivo (personas de 80 y más, niños de 0 a 4 y pacientes con necesidades especiales de este barrio); qué llevar al albergue (pañales, medicación de adultos mayores, accesibilidad); y a qué CAPS derivar si el más cercano queda afectado.</div>
+    <p class="pie no-imp" style="margin:6px 0 0"><a href="https://www.google.com/maps?q=${n(b.lat)},${n(b.lng)}" target="_blank" rel="noopener">Ver la zona en el mapa</a> (centro aproximado del barrio)</p>
+  </article>`;
+}
+
+function tabla() {
+  const q = sinT(filtro.q);
+  const L = (V.barrios || []).filter(b => (!filtro.p || String(b.prioridad) === filtro.p) && (!q || sinT([b.barrio, b.caps, b.factores].join(' ')).indexOf(q) >= 0));
+  return `<div class="filtros no-imp"><input id="fq" type="search" placeholder="Buscar barrio, CAPS o factor" value="${E(filtro.q)}">
+    <select id="fp"><option value="">Todas las prioridades</option>${['1', '2', '3', '4', 's/d'].map(p => `<option value="${p}" ${filtro.p === p ? 'selected' : ''}>Prioridad ${p}</option>`).join('')}</select></div>
+    <div class="tabla-wrap"><table><thead><tr><th>Barrio</th><th>Prior.</th><th>Vuln. · afect.</th><th class="n">Personas</th><th class="n">80+</th><th class="n">0 a 4</th><th class="n">% NBI</th><th>CAPS más cercano</th><th>Factores de afectación</th></tr></thead><tbody>
+    ${L.map(b => `<tr><td><b>${E(b.barrio)}</b></td><td>${E(b.prioridad)}</td><td>${E(b.cruce)}</td><td class="n">${fN(b.pob)}</td><td class="n">${fN(b.p80)}</td><td class="n">${fN(b.p04)}</td><td class="n">${pct(b.nbi)}</td><td>${E(b.caps)}${/^s/i.test(b.caps_alta) ? ' <span class="ojo">(zona alta)</span>' : ''}</td><td>${E(b.factores)}</td></tr>`).join('') || '<tr><td colspan="9">Sin barrios con ese filtro.</td></tr>'}
+    </tbody></table></div>`;
+}
+
+function ayuda() {
+  return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
+    <p><b>Para qué sirve.</b> Responde dos preguntas del COEsp ante lluvia o inundación: <i>¿a qué barrios ir primero?</i> y <i>¿qué necesita la gente de esos barrios?</i> No es un registro en tiempo real: es una base orientadora para planificar.</p>
+    <p><b>Cómo se arma la prioridad.</b> Se cruzan dos cosas por barrio. <b>Vulnerabilidad social</b> (Censo 2022): hogares con NBI, sin cloaca, con hacinamiento (2 o más personas por cuarto), personas de 65 y más, de 80 y más, de 0 a 4 años y sin obra social; se ordenan los barrios, se promedian y se dividen en tercios (baja, media, alta). <b>Afectación posible</b>: antecedentes de 1976, 1992 y 1998, zona baja por relieve, cercanía a río y canales, agua observada 1984–2021 y escurrimiento desde la meseta. Prioridad 1 = alta y alta; 2 = alta en una y media en la otra; 3 = alta en una y baja en la otra, o media y media; 4 = el resto.</p>
+    <p><b>Pacientes con necesidades especiales.</b> Solo la cantidad por barrio, y solo para la lista cerrada de pacientes (cantidades de 1 a 4 se muestran «<5»). Los nombres y teléfonos están en el libro de cada ciudad, que tiene su custodio: es a quien el COEsp le pide el contacto.</p>
+    <p><b>Quién la ve.</b> Administración y quien tenga «Vulnerabilidad social» en Usuarios y accesos (PERMISOS). Nunca integrantes externos. No compartas capturas: un orden de barrios puede estigmatizar a sus vecinos.</p>
+    <p><b>Correcciones.</b> Los datos salen de QGIS (capa de la lámina CART-COE-005) y se cargan en la hoja VULNERABILIDAD del libro de la app. No se corrigen a mano: si algo está mal, se corrige en QGIS y se vuelve a cargar.</p>
+    ${adm ? '<p><b>Administración.</b> Para dar acceso: Reuniones, acuerdos y documentos › Usuarios y accesos › columna «Vulnerabilidad social», nivel Ver. El servidor rechaza el permiso si la persona es externa.</p>' : ''}
+  </details>`;
+}
+
+function pintar() {
+  if (ERR) { app.innerHTML = ayuda() + `<div class="aviso">${E(ERR)}</div>`; return; }
+  if (!V) { app.innerHTML = '<p class="pie">Cargando…</p>'; return; }
+  const B = V.barrios || [], P1 = B.filter(b => String(b.prioridad) === '1'), P2 = B.filter(b => String(b.prioridad) === '2');
+  const s = (L, k) => L.reduce((a, b) => a + (n(b[k]) || 0), 0);
+  const albs = [...new Set(P1.map(b => String(b.albergue || '')).filter(Boolean))];
+  const caps = [...new Set(B.filter(b => /^s/i.test(b.caps_alta) && ['1', '2'].indexOf(String(b.prioridad)) >= 0).map(b => b.caps))];
+  app.innerHTML = `<div class="aviso lila"><b>MEJORA / buena práctica.</b> Enfoque de gestión del riesgo (OPS/UNDRR); no es una exigencia de la Ley 19.587 ni del Dto. 351/79. Base orientadora: datos del Censo 2022 por radio censal repartidos por superficie en cada barrio (aproximados); no incluye personas en situación de calle. Afectación baja no descarta anegamientos por lluvia.</div>
+    ${ayuda()}
+    <div class="kpis">
+      <div class="kpi"><b>${P1.length}</b><span>barrios en prioridad 1 (vulnerabilidad y afectación altas)</span></div>
+      <div class="kpi"><b>${fN(s(P1, 'pob'))}</b><span>personas en prioridad 1</span></div>
+      <div class="kpi"><b>${fN(s(P1, 'p80'))}</b><span>de 80 y más en prioridad 1</span></div>
+      <div class="kpi"><b>${fN(s(P1, 'p04'))}</b><span>niños de 0 a 4 en prioridad 1</span></div>
+      <div class="kpi"><b>${fN(s(P2, 'pob'))}</b><span>personas en prioridad 2 (${P2.length} barrios)</span></div>
+    </div>
+    ${caps.length ? `<div class="aviso"><b>CAPS que pueden quedar afectados</b> (están en zona de afectación alta y son los más cercanos a barrios de prioridad 1 o 2): ${E(caps.join(', '))}. Dato para elegir los CAPS que siguen abiertos en contingencia.</div>` : ''}
+    ${albs.length ? `<div class="aviso"><b>Albergue más cercano a los barrios de prioridad 1:</b> ${albs.map(a => E(a) + ' (capacidad ' + E(ALB_CAP[(a.match(/^A-\d+/) || [''])[0]] || 's/d (revisar)') + ')').join('; ')}, frente a ${fN(s(P1, 'pob'))} personas en esos barrios. A-002 (Trelew Rugby Club) no se propone porque la base del COE lo marca en zona inundable o de riesgo.</div>` : ''}
+    ${pacSinBarrio() ? `<div class="aviso"><b>${pacSinBarrio()} pacientes con necesidades especiales de Trelew no tienen barrio cargado</b>, así que no se pueden ubicar en estas fichas. Para que sirvan ante una alerta, hay que completar «Barrio o zona» en el libro de pacientes de Trelew.</div>` : ''}
+    <h2><span class="ms" style="color:var(--p1)">priority_high</span>Prioridad 1 <small>vulnerabilidad alta y afectación alta</small></h2>
+    <div class="fichas">${P1.map(ficha).join('') || '<div class="vacio">Sin barrios.</div>'}</div>
+    <h2><span class="ms" style="color:var(--p2)">warning</span>Prioridad 2 <small>alta en una y media en la otra · ${P2.length} barrios</small></h2>
+    <div class="fichas">${P2.map(ficha).join('') || '<div class="vacio">Sin barrios.</div>'}</div>
+    <details class="mas" id="dTodos"${filtro.q || filtro.p ? ' open' : ''}><summary>Todos los barrios (${B.length})</summary>${tabla()}</details>
+    <p class="pie" style="margin-top:14px">Fuente: ${E(V.fuente || 's/d')} Lámina ${E(V.lamina || 'CART-COE-005')}, en Cartografía. Distancias en línea recta desde el centro del barrio.</p>`;
+  const fq = document.getElementById('fq'), fp = document.getElementById('fp');
+  if (fq) fq.addEventListener('input', () => { filtro.q = fq.value; const c = fq.selectionStart; pintar(); const x = document.getElementById('fq'); x.focus(); x.setSelectionRange(c, c); });
+  if (fp) fp.addEventListener('change', () => { filtro.p = fp.value; pintar(); });
+}
+
+async function cargar() {
+  try { const r = await S.api('vuln_barrios', {}, 90000); if (!r || !r.ok) throw r; V = r; ERR = ''; S.store.set('vuln.b', r); }
+  catch (e) {
+    const t = String((e && (e.error || e.message)) || e || '');
+    if (/lista cerrada|sin acceso/i.test(t)) { V = null; S.store.set('vuln.b', null); ERR = 'Esta sección la ven Administración y quienes tengan «Vulnerabilidad social» en Usuarios y accesos. Pedí el acceso a Higiene y Seguridad Laboral.'; }
+    else if (/desconocida/i.test(t)) ERR = 'Falta publicar la versión nueva del servidor (Apps Script).';
+    else if (!V) ERR = 'No se pudo cargar en este momento: ' + t;
+  }
+  pintar();
+  if (vePac && V) {
+    try { const r = await S.api('red_pacientes', { ciudad: 'Trelew' }, 120000); if (!r || !r.ok) throw r; PAC = r; }
+    catch (e) { PAC_ERR = 'No se pudieron contar los pacientes en este momento.'; }
+    pintar();
+  }
+}
+document.getElementById('bImp').addEventListener('click', () => window.print());
+pintar();
+cargar();
+})();
+</script>
+</body>
+</html>

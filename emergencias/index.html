@@ -125,6 +125,9 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 #alertasSmn details p{margin:.4em 0;white-space:pre-line}
 #alertasSmn .al-pie{font-size:12px;color:#4B5B73;margin:2px 4px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 #alertasSmn .al-pie a{color:#1B4FB0;font-weight:700;text-decoration:none}
+#alertasSmn .al-vul{background:#F5EEFB;border:1.5px solid #B98AD6;border-left:7px solid #8A3FB8;border-radius:14px;padding:10px 14px;margin:6px 0;font-size:13.5px;color:#2E1A40}
+#alertasSmn .al-vul .al-cab{display:flex;align-items:center;gap:8px}#alertasSmn .al-vul .al-cab .t{flex:1}#alertasSmn .al-vul .al-cab small{display:block;font-size:12px;color:#5B3F73}
+#alertasSmn .al-vul .al-cab a{display:inline-flex;align-items:center;gap:4px;color:#6A2A99;font-weight:700;text-decoration:none;font-size:13px}#alertasSmn .al-vul p{margin:6px 0 0}
 #alertasSmn .al-ok{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #DCE3EF;border-radius:14px;padding:9px 12px;font-size:13px;color:#3D4B61}
 #alertasSmn .al-ok .ms{color:#2E7D32;font-size:20px}
 #alertasSmn .al-ok.err .ms{color:#B35C00}
@@ -469,6 +472,8 @@ const MODS = [
     t: 'Transportes y distancias', r: 'Ambulancias por hospital, medios privados y especiales, distancias.', d: 'Solo lectura: ambulancias de cada hospital (de su ficha), ambulancias privadas y vehículos de otros organismos (bomberos, fuerzas, Defensa Civil), transportes especiales por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental) y distancias en auto entre todos los lugares. Base orientadora, versión 0.', ico: 'local_shipping', href: 'transportes.html', flag: null }, // 15/11/2026 · Transportes y distancias (v0)
   // 15/11/2026 · Cartografía (Belén: «una carpeta para guardar la cartografía dentro de la app»; todos ven, solo Administración sube). Datos de base: 1 · Preparación.
   { k: 'carto', grupo: 'prep', t: 'Cartografía', r: 'Láminas y mapas: antecedentes, relieve y establecimientos.', d: 'Láminas y mapas del Área Programática Trelew en PDF: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo. Se abren dentro de la app. Cartografía orientadora, versión 0.', ico: 'map', href: 'cartografia.html', flag: null },
+  // 15/11/2026 · Vulnerabilidad social por barrio (Belén: «agregar un poco de este tema, siempre que permita info con propósito»). Lista cerrada: Administración y PERMISOS «Vulnerabilidad social».
+  { k: 'vuln', grupo: 'prep', t: 'Vulnerabilidad social por barrio', r: 'Barrios a mirar primero ante lluvia o inundación (Trelew).', d: 'Fichas de los barrios con vulnerabilidad social y afectación posible altas (Censo 2022 y lámina CART-COE-005): personas de 80 y más y de 0 a 4, CAPS y albergue más cercanos y pacientes con necesidades especiales (solo cantidad). Para decidir a quién avisar primero. Lista cerrada.', ico: 'diversity_3', href: 'vulnerabilidad.html', flag: null },
   { k: 'deriv', grupo: 'gem', t: 'Derivaciones y albergues · COEsp', r: 'Receptoras, albergues y criterios por localidad.', d: 'Información del comité de crisis, por localidad (Trelew, Rawson, Gaiman, Dolavon y Puerto Madryn): instituciones receptoras, albergues, criterios de derivación, planillas modelo y datos de la red (camas y población por barrio).', ico: 'night_shelter', href: 'derivaciones.html', flag: null, bg: 'linear-gradient(120deg,#3A1F7A 0%,#6A4FD8 100%)' },
   { k: 'red', grupo: 'coesp', t: 'Reuniones, acuerdos y documentos', r: 'Actas, acuerdos, documentos y enlaces del COEsp.', d: 'Reuniones con asistencia y acuerdos, documentos, órganos, establecimientos y enlaces.', ico: 'event_note', href: 'red.html', flag: 'red', c: '#172B4D', cc: '#E6EAF2' }, // 06/11/2026 · Rediseño (v0)
   { k: 'anexos', grupo: 'coesp', t: 'Anexos por hospital', r: 'Anexos A a M: parte común y ficha de cada unidad.', d: 'Grilla de los anexos del COEsp (A a M) por unidad: Trelew, Rawson, hospitales rurales y puestos sanitarios. Cada anexo tiene una parte común y una ficha por unidad. Versión 0, en elaboración.', ico: 'grid_view', href: 'anexos.html', flag: null }, // 14/11/2026 · Anexos por hospital (v0)
@@ -481,7 +486,7 @@ const MODS = [
 // Un color distinto por tarjeta dentro de cada sección. Los niveles de alerta del SMN no se tocan.
 const COLOR_TJ = {
   ficha: ['#172B4D', '#2F5BEA'], starh: ['#7A2E0E', '#E8590C'], ish: ['#0B4F6C', '#1689B8'], phr: ['#3B2A7A', '#6A4FD8'], imp: ['#1B5E20', '#2E9E4F'],
-  estab: ['#7A5200', '#E0A100'], deriv: ['#7A1150', '#D6338A'], red: ['#0D4D40', '#14967A'], coe: ['#5B1F7A', '#A33FC4'], anexos: ['#6B2D0B', '#C2571A'], transp: ['#123E7A', '#2A7BD6'], carto: ['#0B4A42', '#0F9D7A'], control: ['#8A4A00', '#F57C00'],
+  estab: ['#7A5200', '#E0A100'], deriv: ['#7A1150', '#D6338A'], red: ['#0D4D40', '#14967A'], coe: ['#5B1F7A', '#A33FC4'], anexos: ['#6B2D0B', '#C2571A'], transp: ['#123E7A', '#2A7BD6'], carto: ['#0B4A42', '#0F9D7A'], vuln: ['#4A1F6B', '#8A3FB8'], control: ['#8A4A00', '#F57C00'],
   evac: ['#8E1B1B', '#D32F2F'], fuentes: ['#2B3A55', '#4B6A9B']
 };
 MODS.forEach(m => { const c = COLOR_TJ[m.k]; if (c) { m.bg = `linear-gradient(120deg,${c[0]} 0%,${c[1]} 100%)`; m.c = c[1]; } });
@@ -738,7 +743,25 @@ function alertasSmnHtml(r, admin) {
     const det = (a.descripcion || a.instruccion) ? `<details><summary>Qué dice el SMN y qué hacer</summary>${a.descripcion ? `<p>${E(a.descripcion)}</p>` : ''}${a.instruccion ? `<p><b>Medidas recomendadas (SMN):</b> ${E(a.instruccion)}</p>` : ''}</details>` : '';
     return `<div class="al ${niv}"><div class="al-cab"><span class="ms">warning</span><span class="t"><b>${E(tit)}${LEMA[a.nivel] ? ' · ' + E(LEMA[a.nivel]) : ''}</b><small>${E(sub)}</small></span><a href="${E(a.web || web)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>SMN</a></div>${det}</div>`;
   }).join('');
-  return aviso + items + pie;
+  return aviso + items + vulnSmnHtml(L) + pie;
+}
+/* 15/11/2026 · B · «Barrios a mirar primero» (Belén, ok 14:06). Solo cuando hay alerta o aviso por lluvia o tormenta que alcanza Trelew,
+ * y solo para Administración y quien tenga «Vulnerabilidad social» en PERMISOS (acción vuln_barrios; nunca externos).
+ * Muestra los barrios de prioridad 1 (vulnerabilidad social y afectación posible altas, lámina CART-COE-005) y la acción que habilita.
+ * MEJORA / buena práctica: la alerta oficial es la del SMN; las decisiones las toma el COEsp. */
+let VULN_PIDIENDO = false;
+function vulnAplica(L) { return L.some(a => /lluvi|tormenta|precipit/i.test(a.evento || '') && /trelew/i.test((a.lugares || []).join(' '))); }
+function vulnSmnHtml(L) {
+  const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
+  if (!u || !vulnAplica(L) || !(u.rol === 'Administración' || (u.niveles || {})['Vulnerabilidad social'])) return '';
+  const V = S.store.get('vuln.b', null);
+  if (!V || !V.barrios) { if (!VULN_PIDIENDO && navigator.onLine) { VULN_PIDIENDO = true; S.api('vuln_barrios', {}, 90000).then(r => { if (r && r.ok) { S.store.set('vuln.b', r); const c = S.store.get('smn.al', null); if (c) $('#alertasSmn').innerHTML = alertasSmnHtml(c); } }).catch(() => { }); }
+    return '<div class="al-ok"><span class="ms">diversity_3</span><span>Buscando los barrios a mirar primero…</span></div>'; }
+  const P1 = V.barrios.filter(b => String(b.prioridad) === '1'), P2 = V.barrios.filter(b => String(b.prioridad) === '2');
+  const sum = k => P1.reduce((a, b) => a + (Number(b[k]) || 0), 0), f = x => Number(x || 0).toLocaleString('es-AR');
+  return `<div class="al-vul"><div class="al-cab"><span class="ms">diversity_3</span><span class="t"><b>Barrios a mirar primero · Trelew</b><small>Vulnerabilidad social y afectación posible altas (prioridad 1)</small></span><a href="vulnerabilidad.html"><span class="ms" style="font-size:17px">arrow_forward</span>Fichas</a></div>
+    <p>${P1.map(b => `<b>${E(b.barrio)}</b> (${f(b.pob)} personas · ${f(b.p80)} de 80+ · ${f(b.p04)} de 0 a 4)`).join(' · ')}. Total: ${f(sum('pob'))} personas.${P2.length ? ` Siguen ${P2.length} barrios en prioridad 2 (en las fichas).` : ''}</p>
+    <p><b>Qué permite decidir:</b> el COEsp puede pedir a los custodios del libro de pacientes que contacten primero a los electrodependientes, dializados y personas con asistencia de esos barrios, y preparar el albergue y el traslado preventivo de quienes no pueden salir solos.</p></div>`;
 }
 async function alertasSmn(u, admin) {
   const box = $('#alertasSmn');
@@ -786,7 +809,7 @@ function pintar() {
   // 14/11/2026 · Ficha del establecimiento: la ven Administración y los referentes de los rurales (establecimiento en ACCESOS).
   const RURALES = ['HOSPITAL RURAL GAIMAN', 'HOSPITAL RURAL DOLAVON', 'HOSPITAL RURAL LAS PLUMAS', 'HOSPITAL RURAL PASO DE INDIOS', 'HOSPITAL RURAL CAMARONES', 'PUESTO SANITARIO 28 DE JULIO', 'PUESTO SANITARIO DIQUE FLORENTINO AMEGHINO'];
   const esReferenteRural = !!(u && (u.estab || []).some(e => RURALES.indexOf(String(e).toUpperCase()) >= 0));
-  const VIS = !u ? [] : ['phr', 'estab', 'transp', 'carto', 'deriv', 'red', 'anexos', 'coe', 'fuentes', 'imp', 'starh', 'ish'].concat(esReferenteRural ? ['ficha'] : []);
+  const VIS = !u ? [] : ['phr', 'estab', 'transp', 'carto', 'deriv', 'red', 'anexos', 'coe', 'fuentes', 'imp', 'starh', 'ish'].concat(esReferenteRural ? ['ficha'] : []).concat(u && (u.niveles || {})['Vulnerabilidad social'] ? ['vuln'] : []); // 15/11/2026 · Vulnerabilidad social: solo con permiso
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COEsp, documentos y apoyo».
   const CTRL_CHICO = { grupo: 'gem', t: 'Tablero de control (en revisión)', c: '#F57C00', cc: '#FFF0E0' };

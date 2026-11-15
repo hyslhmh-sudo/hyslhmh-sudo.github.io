@@ -471,7 +471,7 @@ function vPacientes() {
 
 /* ---------- Accesos (Administración): persona × herramienta, órganos y cuenta ---------- */
 const NIV_OP = ['', 'Ver', 'Comentar', 'Cargar', 'Aprobar'];
-const MOD_CORTO = { 'STAR-H': 'STAR-H', PHR: 'PHR', ISH: 'ISH', 'Derivaciones y albergues': 'Derivaciones', 'Pacientes con necesidades especiales': 'Pacientes', 'Pacientes · listado con datos': 'Listado con datos' };
+const MOD_CORTO = { 'STAR-H': 'STAR-H', PHR: 'PHR', ISH: 'ISH', 'Derivaciones y albergues': 'Derivaciones', 'Pacientes con necesidades especiales': 'Pacientes', 'Pacientes · listado con datos': 'Listado con datos', 'Vulnerabilidad social': 'Vulnerabilidad' };
 function esExterna(pid) {
   const p = (D.personas || []).filter(x => x.id === pid)[0];
   return !!(p && /^extern/i.test(p.tipo)) || (D.integrantes || []).some(i => i.persona === pid && /^extern/i.test(i.parte));
