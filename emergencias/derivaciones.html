@@ -507,7 +507,7 @@ function vistaPob() {
   const tiene = v => String(v || '').trim() !== '' && !/^s\/d/i.test(String(v));
   const pob = l => l.reduce((a, x) => a + num(x.poblacion), 0), sd = l => l.filter(x => !(num(x.poblacion) > 0)).length;
   const dep = l => l.some(x => tiene(x.dependientes)) ? l.reduce((a, x) => a + num(x.dependientes), 0) + (l.some(x => !tiene(x.dependientes)) ? ' + s/d' : '') : 's/d';
-  const enRiesgo = x => /^s[ií]\b/i.test(x.zona_riesgo || '');
+  const enRiesgo = x => /^s[ií](?![a-záéíóú])/i.test(x.zona_riesgo || '');
   const cust = l => pob(l.filter(x => x.custodia === 'Sí')), riesgo = l => pob(l.filter(enRiesgo));
   // Vigencia: el dato se actualiza cada 6 meses desde «Fecha del dato» (dd/mm/aaaa). Sin fecha = a actualizar.
   const VIGENCIA_MESES = 6;
