@@ -125,8 +125,12 @@ function contactosDe(id) {
 }
 
 // 1) Ambulancias de los hospitales (ficha de cada establecimiento)
+// 15/11/2026 07:44 (Belén: «estos comparten el servicio de ambulancia. el equipo directivo»): el HMH y el HZT tienen un solo servicio de
+// ambulancias (mismo equipo directivo). Se muestra una sola tarjeta y se guarda en la ficha del HZT (un solo dato).
+const COMPARTE = { 'Hospital María Humphreys': 'Hospital Zonal Trelew' };
+const conQuien = est => Object.keys(COMPARTE).filter(k => COMPARTE[k] === est);
 function vAmb() {
-  const hs = D.hospitales;
+  const hs = D.hospitales.filter(h => !COMPARTE[h.est]);
   const tot = {}; let n = 0;
   hs.forEach(h => (h.ambs || []).forEach(a => { n++; const e = String(a.estado || '').trim() || 'Sin estado'; tot[e] = (tot[e] || 0) + 1; }));
   const sin = hs.filter(h => !h.ambs).length;
@@ -137,7 +141,8 @@ function vAmb() {
     const l = D.base.lugares.find(x => x.id === h.id);
     const lista = h.ambs === null ? `<p class="sd">Sin cargar en la ficha (${SD}).</p>` : !h.ambs.length ? '<p class="sd">La ficha indica que no hay ambulancias.</p>' :
       h.ambs.map(a => `<div class="amb"><span class="ms" style="color:var(--medio)">ambulance</span><div style="flex:1"><b>${val(a.id)}</b> ${chipEstado(a.estado)}${vacio(a.obs) ? '' : `<div class="fu">${E(a.obs)}</div>`}</div></div>`).join('');
-    const cab = `<h3>${E(h.est)}</h3><div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ambulancias actualizadas el ' + E(h.act) : 'Ambulancias sin cargar'}</div>`;
+    const otros = conQuien(h.est);
+    const cab = `<h3>${E([h.est].concat(otros).join(' y '))}</h3>${otros.length ? '<div class="sub"><b>Servicio de ambulancias compartido</b> (mismo equipo directivo)</div>' : ''}<div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ambulancias actualizadas el ' + E(h.act) : 'Ambulancias sin cargar'}</div>`;
     if (edAmb && edAmb.est === h.est) return `<div class="card">${cab}${editorAmb()}</div>`;
     return `<div class="card">${cab}${lista}
       ${h.puede ? `<button class="btn" type="button" data-amb="${E(h.est)}"><span class="ms">edit</span>Corregir ambulancias</button>` : ''}</div>`;
@@ -289,7 +294,7 @@ function pintar() {
   const cuerpo = tab === 'med' ? vMed() : tab === 'esp' ? vEsp() : tab === 'dis' ? vDis() : vAmb();
   app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
-  <p><b>Ambulancias de los hospitales:</b> son las de la ficha de cada establecimiento. Se corrigen acá con «Corregir ambulancias» (patente, estado y observaciones; «Agregar ambulancia» o el tacho para quitar). Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Las corrige el referente de cada establecimiento y Administración.</p>
+  <p><b>Ambulancias de los hospitales:</b> el HMH y el HZT comparten el servicio de ambulancias (mismo equipo directivo): van en una sola tarjeta y se guardan en la ficha del HZT. Son las de la ficha de cada establecimiento. Se corrigen acá con «Corregir ambulancias» (patente, estado y observaciones; «Agregar ambulancia» o el tacho para quitar). Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Las corrige el referente de cada establecimiento y Administración.</p>
   <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
   <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están en cuatro grupos: establecimientos de salud, albergues (los del COE · Derivaciones y albergues), localidades (punto central de cada una) y recursos de apoyo. Son estimados en auto.</p>

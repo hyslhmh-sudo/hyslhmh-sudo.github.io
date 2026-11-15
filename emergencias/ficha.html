@@ -243,6 +243,8 @@ function campo(c) {
   if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
   if (c.t === 'a') return `<label class="campo">${lab}<textarea data-k="${c.k}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}">${E(v || '')}</textarea></label>`;
   if (c.t === 'coord') return `<label class="campo">${lab}<input data-k="${c.k}" value="${E(v || '')}" placeholder="${window.__blanco ? '' : '-43.2, -65.5 · s/d (revisar)'}"></label><div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-gps="${c.k}"><span class="ms">my_location</span>Usar mi ubicación</button>${v ? `<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(v)}"><span class="ms">map</span>Ver en el mapa</a>` : ''}</div>`;
+  // 15/11/2026 07:44 (Belén): el HMH y el HZT comparten el servicio de ambulancias (mismo equipo directivo): se cargan una sola vez, en el HZT.
+  if (c.k === 'ambs' && estab === 'Hospital María Humphreys') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> Servicio de ambulancias compartido con el Hospital Zonal Trelew (mismo equipo directivo): se carga una sola vez, en la ficha del HZT o en Transportes y distancias.</div></div>`;
   if (c.t === 'rep') {
     let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : (window.__blanco ? [{}, {}, {}] : [{}]));
     datos[c.k] = L;
