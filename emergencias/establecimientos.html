@@ -78,19 +78,19 @@ const S = window.STARH, E = S.esc, app = document.getElementById('app');
 const SD = '<span class="sd">s/d (revisar)</span>';
 const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
 // Secciones de la ficha (las mismas de ficha.html), para saber si está completa o parcial.
-const SECC = [['Identificación', ['nombre', 'corto', 'sisa', 'complejidad', 'depende', 'h24', 'guardia', 'ref', 'refkm', 'refmin']],
+const SECC = [['Identificación', ['nombre', 'corto', 'sisa', 'complejidad', 'depende', 'h24', 'guardia', 'ref']], // 15/11/2026: sin refkm/refmin (salen de DISTANCIAS)
   ['Ubicación y acceso', ['dir', 'coord', 'accesos', 'cortes', 'inundable', 'agua_cerca']],
   ['Población', ['pob_at', 'pob_ciu', 'viv', 'depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob']],
   ['Capacidad asistencial', ['servicios', 'camas', 'camas_obs', 'cam_guardia', 'arm', 'ambs', 'chofer']],
   ['Servicios críticos', ['grupo', 'grupo_areas', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
-  ['Edificios a cargo', ['edif']], ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']],
+  ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']],
   ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['Antecedentes', ['antec']]];
 // 15/11/2026 · Ficha corta del CAPS (8 secciones; mismas claves que ficha.html › SEC_CAPS). El servidor marca ficha.caps.
 const SECC_CAPS = [['Identificación', ['nombre', 'corto', 'sisa', 'depende', 'horario', 'ref']], ['Ubicación y acceso', ['dir', 'coord', 'accesos', 'cortes', 'inundable', 'agua_cerca']],
   ['Atención y población', ['servicios', 'camillas', 'pob_at', 'barrios']], ['Servicios críticos', ['grupo', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
   ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']], ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['En una emergencia', ['emerg_rol', 'antec']]];
 const seccDe = f => (f && f.caps) ? SECC_CAPS : SECC;
-const ETQ = { horario: 'Horario de atención', barrios: 'Barrios o zona que cubre', camillas: 'Camillas', emerg_rol: 'En una emergencia, el CAPS…', complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', guardia: 'Tiene guardia', ref: 'Hospital de referencia', refkm: 'Distancia al de referencia (km)', refmin: 'Tiempo de traslado (min)',
+const ETQ = { horario: 'Horario de atención', barrios: 'Barrios o zona que cubre', camillas: 'Camillas', emerg_rol: 'En una emergencia, el CAPS…', complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', guardia: 'Tiene guardia', ref: 'Hospital de referencia',
   dir: 'Dirección', coord: 'Coordenadas', accesos: 'Accesos', cortes: 'Se cortan con lluvia o crecida', inundable: 'Zona inundable', agua_cerca: 'Cerca de río, canal o cañadón',
   pob_at: 'Población atendida (estimada)', pob_ciu: 'Población de la localidad (Censo 2022)', viv: 'Viviendas (Censo 2022)', depto: 'Departamento',
   servicios: 'Servicios', camas_obs: 'Aclaraciones sobre camas', cam_guardia: 'Camas o camillas de guardia', chofer: 'Chofer las 24 horas',
@@ -183,7 +183,6 @@ function detalleHtml(e) {
     if (d.arm && sumObj(d.arm)) extra.push(['Respiradores (ARM/AVM)', Object.keys(d.arm).map(k => `${d.arm[k]} ${E(k.toLowerCase())}`).join(' · ')]);
     if (d.ambs && sumObj(d.ambs)) extra.push(['Ambulancias', Object.keys(d.ambs).map(k => `${d.ambs[k]} ${E(k.toLowerCase())}`).join(' · ')]);
     if (d.tanques) extra.push(['Tanques y cisternas', `${d.tanques.n} · ${fmt(d.tanques.litros)} litros`]);
-    if (d.edif) extra.push(['Edificios a cargo', Object.keys(d.edif).map(k => `${d.edif[k]} ${E(k)}`).join(' · ')]);
     if (d.camas && d.camas.length) extra.push(['Camas según la ficha', d.camas.map(c => `${E(c.cat)}: ${E(c.n)}`).join(' · ')]);
     const pares = Object.keys(ETQ).filter(k => d[k] != null && d[k] !== '').map(k => [ETQ[k], val(d[k])]).concat(extra);
     const faltan = seccDe(f).filter(s => !s[1].some(k => (f.claves || []).indexOf(k) >= 0)).map(s => s[0]);
