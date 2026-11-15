@@ -63,6 +63,17 @@ th{font-size:12px;color:var(--suave);white-space:nowrap}
 td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .fu{font-size:11px;color:var(--tenue)}
 .pie{font-size:12px;color:var(--tenue);margin-top:12px}
+/* 15/11/2026 · Carga de medios (Administración y referentes) */
+dialog#dlgMedio{border:0;border-radius:18px;padding:0;width:min(640px,96vw);max-height:92vh;box-shadow:0 20px 50px rgba(23,43,77,.35)}
+dialog#dlgMedio::backdrop{background:rgba(23,43,77,.45)}
+#fMedio{padding:16px 18px;overflow:auto;max-height:92vh}#fMedio h2{margin:0 0 4px;font-size:17px;color:var(--fuerte)}
+#fMedio label{display:block;font-size:12.5px;font-weight:700;color:var(--suave);margin-top:10px}
+#fMedio input[type=text],#fMedio select,#fMedio textarea{display:block;width:100%;margin-top:3px;font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:8px 10px;color:var(--texto);background:#fff}
+#fMedio .dos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}@media(max-width:520px){#fMedio .dos{grid-template-columns:1fr}}
+#fMedio .chk{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}#fMedio .chk label{display:flex;align-items:center;gap:6px;margin:0;font-weight:500;color:var(--texto);font-size:13.5px}
+#fMedio .acc{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;position:sticky;bottom:-16px;background:#fff;padding:10px 0}
+.btn.pri{background:var(--fuerte);border-color:var(--fuerte);color:#fff}.btn.pri:hover{background:var(--medio)}
+#mMsg{margin-top:10px}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
 @media print{.barra .icono,.ayuda,.tabs,.filtros,.escs,.btn{display:none}.barra{position:static;background:#fff;color:#000;border-bottom:2px solid #000}body{background:#fff}.card{break-inside:avoid}}
 </style>
@@ -74,6 +85,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
   <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
+<dialog id="dlgMedio"><form id="fMedio" method="dialog"></form></dialog>
 <footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -140,14 +152,62 @@ function tarjetaMedio(m) {
     <div style="margin-top:6px">${escs.length ? escs.map(s => `<span class="chip esc">${E(s)}</span>`).join('') : '<span class="sd">Escenarios: ' + SD + '</span>'}</div>
     ${vacio(m.obs) ? '' : `<div class="fu" style="margin-top:6px">${E(m.obs)}</div>`}
     ${contactosDe(m.organismo)}
-    <div class="fu" style="margin-top:6px">Fuente: ${val(m.fuente)}${vacio(m.actualizado) ? '' : ' · ' + E(m.actualizado)}</div></div>`;
+    <div class="fu" style="margin-top:6px">Fuente: ${val(m.fuente)}${vacio(m.actualizado) ? '' : ' · ' + E(m.actualizado)}${vacio(m.por) ? '' : ' · cargó ' + E(m.por)}</div>
+    ${puedeCorregir(m) ? `<button class="btn" type="button" data-medio="${E(m.id)}"><span class="ms">edit</span>Corregir este medio</button>` : ''}</div>`;
 }
+// 15/11/2026 06:54 (Belén: «yo y referentes cargaríamos»): Administración carga y corrige todos; un referente agrega y corrige los que cargó él.
+const C = () => (D && D.carga) || {};
+const puedeCorregir = m => !!(C().puede && (C().admin || (String(m.por || '').trim() && String(m.por).trim() === String(C().yo || '').trim())));
+const L_TIPO = ['Ambulancia privada', 'Fuerza de seguridad', 'Fuerzas Armadas', 'Bomberos', 'Municipio', 'Provincia', 'ONG o voluntariado', 'Medio aéreo', 'Otro'];
+const L_EQUIPO = ['Sin equipamiento sanitario', 'Traslado simple', 'Soporte básico', 'Soporte avanzado', 'Neonatal (incubadora)', SD];
+const L_H24 = ['Sí', 'No', SD];
+const L_SOLIC = ['Directo al organismo o empresa', 'Por el COEsp', 'Por Defensa Civil', 'Por la Dirección del hospital', SD];
+function abrirMedio(id) {
+  const m = id ? D.base.medios.find(x => x.id === id) : {};
+  const v = k => vacio(m[k]) ? '' : String(m[k]);
+  const sel = (n, L, x) => `<select name="${n}"><option value="">${SD}</option>${L.filter(o => o !== SD).map(o => `<option${o === x ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`;
+  const recs = D.base.recursos.filter(r => r.id);
+  const org = v('organismo'), esR = recs.some(r => r.id === org);
+  const escs = String(m.escenarios || '').toLowerCase().split(';').map(x => x.trim());
+  document.getElementById('fMedio').innerHTML = `<h2>${id ? 'Corregir ' + E(id) : 'Agregar un medio de traslado'}</h2>
+    <div class="fu">Se guarda en la base maestra (hoja MEDIOS DE TRASLADO). Lo que no sepas dejalo vacío: queda «${SD}».</div>
+    <label>Organismo o empresa <select name="orgSel"><option value="">Elegí de la lista…</option>${recs.map(r => `<option value="${E(r.id)}"${r.id === org ? ' selected' : ''}>${E(r.nombre)} (${E(r.id)})</option>`).join('')}<option value="otro"${org && !esR ? ' selected' : ''}>Otro (no está en la lista: escribir el nombre)</option></select></label>
+    <label id="lOtro"${org && !esR ? '' : ' hidden'}>Nombre del organismo o empresa <input type="text" name="orgOtro" value="${org && !esR ? E(org) : ''}" placeholder="Ej.: Ambulancias del Sur S.R.L."></label>
+    <div class="dos"><label>Tipo de medio ${sel('tipo', L_TIPO, v('tipo'))}</label><label>Tipo de vehículo <input type="text" name="vehiculo" value="${E(v('vehiculo'))}" placeholder="ambulancia, camión 6x6, bote, 4x4…"></label></div>
+    <div class="dos"><label>Cantidad <input type="text" name="cantidad" inputmode="numeric" value="${E(v('cantidad'))}"></label><label>Equipamiento sanitario ${sel('equipamiento', L_EQUIPO, v('equipamiento'))}</label></div>
+    <div class="dos"><label>Capacidad en camilla (por vehículo) <input type="text" name="camilla" inputmode="numeric" value="${E(v('camilla'))}"></label><label>Capacidad sentados (por vehículo) <input type="text" name="sentados" inputmode="numeric" value="${E(v('sentados'))}"></label></div>
+    <label>Sirve para (escenarios)</label><div class="chk">${ESCENARIOS.map(x => `<label><input type="checkbox" name="esc" value="${E(x)}"${escs.indexOf(x) >= 0 ? ' checked' : ''}>${E(x)}</label>`).join('')}</div>
+    <div class="dos"><label>Disponible 24 h ${sel('h24', L_H24, v('h24'))}</label><label>Cómo se solicita ${sel('solicitud', L_SOLIC, v('solicitud'))}</label></div>
+    <div class="dos"><label>Convenio o costo <input type="text" name="convenio" value="${E(v('convenio'))}"></label><label>Base o ubicación <input type="text" name="base" value="${E(v('base'))}"></label></div>
+    <label>Observaciones <textarea name="obs" rows="2">${E(v('obs'))}</textarea></label>
+    <label>Fuente del dato <input type="text" name="fuente" value="${E(v('fuente'))}" placeholder="Ej.: llamado al organismo, 15/11/2026"></label>
+    <div id="mMsg"></div>
+    <div class="acc"><button class="btn" type="button" id="mCan">Cancelar</button><button class="btn pri" type="submit" id="mOk" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button></div>`;
+  document.getElementById('dlgMedio').showModal();
+}
+document.getElementById('fMedio').addEventListener('change', ev => { if (ev.target.name === 'orgSel') document.getElementById('lOtro').hidden = ev.target.value !== 'otro'; });
+document.getElementById('fMedio').addEventListener('click', ev => { if (ev.target.closest('#mCan')) document.getElementById('dlgMedio').close(); });
+document.getElementById('fMedio').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const f = ev.target, b = document.getElementById('mOk'), msg = document.getElementById('mMsg');
+  const org = f.orgSel.value === 'otro' ? f.orgOtro.value.trim() : f.orgSel.value;
+  if (!org) { msg.innerHTML = '<div class="aviso">Elegí el organismo o escribí su nombre.</div>'; return; }
+  const medio = { id: b.dataset.id, organismo: org, escenarios: [...f.querySelectorAll('[name=esc]:checked')].map(x => x.value).join('; ') };
+  ['tipo', 'vehiculo', 'cantidad', 'camilla', 'sentados', 'equipamiento', 'h24', 'solicitud', 'convenio', 'base', 'obs', 'fuente'].forEach(k => { medio[k] = f[k].value.trim(); });
+  b.disabled = true; msg.innerHTML = '<div class="fu">Guardando…</div>';
+  try {
+    const r = await S.api('transportes_medio_guardar', { medio: medio }, 60000); if (!r || !r.ok) throw r;
+    document.getElementById('dlgMedio').close();
+    const n = await S.api('transportes_leer', {}); if (n && n.ok) { S.store.set('transp.cache', n); D = n; } pintar();
+  } catch (e) { msg.innerHTML = `<div class="aviso">${E((e && (e.error || e.message)) || 'No se pudo guardar.')}</div>`; }
+  finally { b.disabled = false; }
+});
 function vMed() {
   const tipos = [...new Set(D.base.medios.map(m => m.tipo).filter(Boolean))].sort();
   const ms = D.base.medios.filter(m => !filtro || m.tipo === filtro);
-  return `<div class="filtros"><label>Tipo de medio <select id="fTipo"><option value="">Todos (${D.base.medios.length})</option>${tipos.map(t => `<option${t === filtro ? ' selected' : ''}>${E(t)}</option>`).join('')}</select></label></div>
+  return `<div class="filtros">${C().puede ? '<button class="btn pri" type="button" id="mNuevo" style="margin-top:0"><span class="ms">add</span>Agregar medio</button>' : ''}<label>Tipo de medio <select id="fTipo"><option value="">Todos (${D.base.medios.length})</option>${tipos.map(t => `<option${t === filtro ? ' selected' : ''}>${E(t)}</option>`).join('')}</select></label></div>
   ${ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : '<p class="sd">Sin medios cargados.</p>'}
-  <p class="pie">Fuente: BASE · Establecimientos de salud, hoja MEDIOS DE TRASLADO (la cargan Belén o el COEsp). Las ambulancias propias de los hospitales están en la primera pestaña.</p>`;
+  <p class="pie">Fuente: BASE · Establecimientos de salud, hoja MEDIOS DE TRASLADO (la cargan Administración y los referentes desde acá, con «Agregar medio» o «Corregir este medio»). Las ambulancias propias de los hospitales están en la primera pestaña.</p>`;
 }
 
 // 3) Transportes especiales: filtro por escenario sobre los mismos medios
@@ -156,7 +216,7 @@ function vEsp() {
   const cuenta = s => D.base.medios.filter(m => String(m.escenarios || '').toLowerCase().split(';').map(x => x.trim()).indexOf(s) >= 0).length;
   return `<p style="font-size:13.5px;margin-top:0">Elegí el escenario para ver qué medios sirven.</p>
   <div class="escs">${ESCENARIOS.map(s => `<button type="button" data-esc="${E(s)}" aria-pressed="${s === esc}">${E(s)} · ${cuenta(s)}</button>`).join('')}</div>
-  ${!esc ? '' : ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : `<div class="aviso">No hay medios cargados para «${E(esc)}». Se completa en la hoja MEDIOS DE TRASLADO, columna «Sirve para».</div>`}
+  ${!esc ? '' : ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : `<div class="aviso">No hay medios cargados para «${E(esc)}». Se agrega en la pestaña «Medios privados y de otros organismos», con «Agregar medio» o «Corregir este medio» (casillas «Sirve para»).</div>`}
   <p class="pie">Es la misma lista de la pestaña anterior, filtrada por la columna «Sirve para (escenarios)». No se carga aparte.</p>`;
 }
 
@@ -202,7 +262,7 @@ function pintar() {
   app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
   <p><b>Ambulancias de los hospitales:</b> salen de la ficha de cada establecimiento (las carga su referente). Para corregirlas, tocá «Corregir en la ficha». No se cargan en ningún otro lado.</p>
-  <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Belén o el COEsp en la base maestra (hoja MEDIOS DE TRASLADO). El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
+  <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
   <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están en cuatro grupos: establecimientos de salud, albergues (los del COE · Derivaciones y albergues), localidades (punto central de cada una) y recursos de apoyo. Son estimados en auto.</p>
   <p>Consultado el ${E(D.consultado || '')}.</p></details>
@@ -213,6 +273,8 @@ app.addEventListener('click', ev => {
   const t = ev.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; filtro = ''; S.store.set('transp.tab', tab); pintar(); return; }
   const e = ev.target.closest('[data-esc]'); if (e) { esc = esc === e.dataset.esc ? '' : e.dataset.esc; pintar(); return; }
   if (ev.target.closest('#fInv') && dest) { const t = orig; orig = dest; dest = t; S.store.set('transp.orig', orig); S.store.set('transp.dest', dest); pintar(); return; }
+  if (ev.target.closest('#mNuevo')) { abrirMedio(''); return; }
+  const md = ev.target.closest('[data-medio]'); if (md) { abrirMedio(md.dataset.medio); return; }
   const f = ev.target.closest('[data-ficha]'); if (f) { S.store.set('ficha.estab', f.dataset.ficha); location.href = 'ficha.html'; }
 });
 app.addEventListener('change', ev => {
