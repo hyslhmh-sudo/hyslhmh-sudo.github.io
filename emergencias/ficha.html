@@ -19,6 +19,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
    No guarda en el libro: lo cargado queda solo en este equipo. Diseño pedido por Belén; ver claude/cambios-app-emergencias-9.md. */
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A}
 *{box-sizing:border-box}
+.deps{margin-top:14px;padding:12px 14px;border:1px solid var(--borde);border-radius:12px;background:#fff}.deps h4{margin:0 0 4px;color:var(--fuerte)}.deps .nota{margin:4px 0;color:var(--suave);font-size:13px}.tabla-dep{overflow-x:auto}.tabla-dep table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}.tabla-dep th,.tabla-dep td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--borde);vertical-align:middle}.tabla-dep th{color:var(--suave);font-weight:600}.tabla-dep .btn{padding:4px 10px;font-size:13px}
 html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
 .ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
 .barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
@@ -204,7 +205,7 @@ async function cargar(est) {
   try { const r = await S.api('ficha_leer', { est: est || '' }); if (!r.ok) throw r;
     srv = r; estab = r.est; pend = S.store.get(COLA(), {}) || {};
     if (Object.keys(pend).length && srv.puede) { Object.assign(srv.datos, pend); setTimeout(enviar, 400); }
-    S.store.set('ficha.estab', estab); pintar(); }
+    S.store.set('ficha.estab', estab); pintar(); if (deps) pintarDeps(); else cargarDeps(); }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudo abrir la ficha.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`; }
 }
 window.confirmarPre = () => { const p = PRE[estab] || {}; let n = 0; Object.keys(p).forEach(k => { if (esPre(k)) { marcar(k); n++; } }); estado(n ? 'Guardando ' + n + ' datos precargados…' : 'No hay datos precargados para confirmar.'); };
@@ -259,7 +260,24 @@ function campo(c) {
   }
   return `<label class="campo">${lab}<input data-k="${c.k}" ${c.t === 'n' ? 'inputmode="numeric"' : ''} ${c.t === 'f' ? 'type="date"' : ''} value="${E(v || '')}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}"></label>`;
 }
-const secHtml = (s, n) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${n}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · conviene empezar por esta' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}</div></details>`;
+const secHtml = (s, n) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id}"><summary><span class="n">${n}</span><span class="t">${E(s.t)}<small>${E(s.d)}${s.min ? ' · conviene empezar por esta' : ''}</small></span><span class="chip" data-chip="${s.id}"></span><span class="ms fl">expand_more</span></summary><div class="cuerpo">${s.c.map(campo).join('')}${s.id === 's1' && !window.__blanco ? '<div id="depsBox" class="deps"></div>' : ''}</div></details>`;
+// 15/11/2026 · Dependencias (Belén: «en la ficha deben aparecer sus dependencias, como los CAPS»). Solo lectura: salen de la hoja LUGARES
+// (columna «Depende de»), con la acción estab_consolidado que ya usa la página Establecimientos. No se cargan en la ficha.
+// Regla: los CAPS y dispositivos dependen del hospital de su ciudad; los puestos sanitarios, del hospital de su departamento (tienen su propia ficha).
+let deps = null, depsErr = '';
+const normN = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/«[^»]*»|\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+const esDeEste = d => { const a = normN(d), b = normN(estab); return !!a && !!b && a !== '—' && (a === b || b.indexOf(a) === 0 || a.indexOf(b) === 0); };
+async function cargarDeps() { try { const r = await S.api('estab_consolidado', {}); if (!r || !r.ok) throw r; deps = r.establecimientos || []; depsErr = ''; } catch (e) { if (!deps) depsErr = (e && (e.error || e.message)) || 'sin conexión'; } pintarDeps(); }
+function pintarDeps() {
+  const box = document.getElementById('depsBox'); if (!box) return;
+  const cab = '<h4>Dependencias de este establecimiento</h4><p class="nota">Se completa sola con la hoja LUGARES (columna «Depende de»). No se carga acá: si falta o sobra alguna, se corrige en LUGARES. Los puestos sanitarios tienen su propia ficha.</p>';
+  if (!deps) { box.innerHTML = cab + (depsErr ? `<p class="nota">No se pudo cargar la lista (${E(depsErr)}).</p>` : '<p class="nota">Cargando…</p>'); return; }
+  const L = deps.filter(d => d.id && esDeEste(d.depende)).sort((x, y) => String(x.tipo).localeCompare(String(y.tipo)) || String(x.nombre).localeCompare(String(y.nombre)));
+  if (!L.length) { box.innerHTML = cab + '<p class="nota">No figura ninguna dependencia de este establecimiento en LUGARES.</p>'; return; }
+  const porTipo = {}; L.forEach(d => porTipo[d.tipo || 's/d'] = (porTipo[d.tipo || 's/d'] || 0) + 1);
+  const fichas = srv.establecimientos || ESTAB;
+  box.innerHTML = cab + `<p class="nota"><b>${L.length}</b>: ${Object.keys(porTipo).map(k => `${porTipo[k]} ${E(k)}`).join(' · ')}</p><div class="tabla-dep"><table><thead><tr><th>Tipo</th><th>Nombre</th><th>Localidad</th><th class="no-imp"></th></tr></thead><tbody>${L.map(d => `<tr><td>${E(d.tipo || 's/d (revisar)')}</td><td>${E(d.nombre || d.corto || d.id)}</td><td>${E(d.loc || 's/d (revisar)')}</td><td class="no-imp">${fichas.indexOf(d.nombre) >= 0 ? `<button class="btn" type="button" data-verficha="${E(d.nombre)}">Abrir su ficha</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+}
 function pintar() {
   leer();
   const B = window.__blanco;
@@ -293,6 +311,7 @@ app.addEventListener('change', ev => {
 app.addEventListener('input', ev => { const t = ev.target; if (t.dataset.k && !t.dataset.m && t.type !== 'radio') { datos[t.dataset.k] = t.value; marcar(t.dataset.k); } else if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); marcar(t.dataset.r); } });
 app.addEventListener('click', ev => {
   const a = ev.target.closest('[data-agregar]'), q = ev.target.closest('[data-quitar]'), g = ev.target.closest('[data-gps]');
+  const vf = ev.target.closest('[data-verficha]'); if (vf) { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } cargar(vf.dataset.verficha); window.scrollTo(0, 0); return; }
   const reabrir = id => { pintar(); const d = document.getElementById(id); if (d) d.open = true; };
   if (a) { const k = a.dataset.agregar; (datos[k] = datos[k] || []).push({}); marcar(k); srv.datos[k] = datos[k]; reabrir(a.closest('details').id); }
   if (q) { const k = q.dataset.quitar; datos[k].splice(+q.dataset.i, 1); marcar(k); srv.datos[k] = datos[k]; reabrir(q.closest('details').id); }
@@ -303,6 +322,7 @@ window.abrirTodo = () => { window.__sinAcordeon = true; document.querySelectorAl
 window.imprimir = enBlanco => { window.__blanco = !!enBlanco; document.body.classList.toggle('blanco', !!enBlanco); if (enBlanco) pintar(); abrirTodo(); setTimeout(() => window.print(), 150); };
 window.addEventListener('afterprint', () => { setTimeout(() => { window.__sinAcordeon = false; if (window.__blanco) { window.__blanco = false; document.body.classList.remove('blanco'); pintar(); } }, 500); });
 window.addEventListener('beforeunload', () => { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } });
+{ const p0 = pintar; pintar = function () { p0(); pintarDeps(); }; } // la caja de dependencias se vuelve a dibujar cada vez que se repinta la ficha
 cargar(S.store.get('ficha.estab', ''));
 })();
 </script>
