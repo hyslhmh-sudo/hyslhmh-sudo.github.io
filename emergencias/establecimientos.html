@@ -85,7 +85,12 @@ const SECC = [['Identificación', ['nombre', 'corto', 'sisa', 'complejidad', 'de
   ['Servicios críticos', ['grupo', 'grupo_areas', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
   ['Edificios a cargo', ['edif']], ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']],
   ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['Antecedentes', ['antec']]];
-const ETQ = { complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', guardia: 'Tiene guardia', ref: 'Hospital de referencia', refkm: 'Distancia al de referencia (km)', refmin: 'Tiempo de traslado (min)',
+// 15/11/2026 · Ficha corta del CAPS (8 secciones; mismas claves que ficha.html › SEC_CAPS). El servidor marca ficha.caps.
+const SECC_CAPS = [['Identificación', ['nombre', 'corto', 'sisa', 'depende', 'horario', 'ref']], ['Ubicación y acceso', ['dir', 'coord', 'accesos', 'cortes', 'inundable', 'agua_cerca']],
+  ['Atención y población', ['servicios', 'camillas', 'pob_at', 'barrios']], ['Servicios críticos', ['grupo', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
+  ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']], ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['En una emergencia', ['emerg_rol', 'antec']]];
+const seccDe = f => (f && f.caps) ? SECC_CAPS : SECC;
+const ETQ = { horario: 'Horario de atención', barrios: 'Barrios o zona que cubre', camillas: 'Camillas', emerg_rol: 'En una emergencia, el CAPS…', complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', guardia: 'Tiene guardia', ref: 'Hospital de referencia', refkm: 'Distancia al de referencia (km)', refmin: 'Tiempo de traslado (min)',
   dir: 'Dirección', coord: 'Coordenadas', accesos: 'Accesos', cortes: 'Se cortan con lluvia o crecida', inundable: 'Zona inundable', agua_cerca: 'Cerca de río, canal o cañadón',
   pob_at: 'Población atendida (estimada)', pob_ciu: 'Población de la localidad (Censo 2022)', viv: 'Viviendas (Censo 2022)', depto: 'Departamento',
   servicios: 'Servicios', camas_obs: 'Aclaraciones sobre camas', cam_guardia: 'Camas o camillas de guardia', chofer: 'Chofer las 24 horas',
@@ -102,8 +107,8 @@ const F = { area: AREA, tipo: '', red: '', loc: '', q: '' };
 
 function fichaEstado(f) {
   if (!f) return null;
-  const c = f.claves || [], n = SECC.filter(s => s[1].some(k => c.indexOf(k) >= 0)).length;
-  return { n: n, tot: SECC.length, txt: !c.length ? 'Sin cargar' : n === SECC.length ? 'Completa' : `Parcial · ${n} de ${SECC.length} secciones`, cls: !c.length ? 'mal' : n === SECC.length ? 'ok' : 'falta' };
+  const SC = seccDe(f), c = f.claves || [], n = SC.filter(s => s[1].some(k => c.indexOf(k) >= 0)).length;
+  return { n: n, tot: SC.length, txt: !c.length ? 'Sin cargar' : n === SC.length ? 'Completa' : `Parcial · ${n} de ${SC.length} secciones`, cls: !c.length ? 'mal' : n === SC.length ? 'ok' : 'falta' };
 }
 const camasEst = e => { const c = {}; e.camas.forEach(x => { const n = num(x.n); if (n != null) c[x.cat] = (c[x.cat] || 0) + n; }); return c; };
 const ambs = e => (e.ficha && e.ficha.datos.ambs) || null;
@@ -181,7 +186,7 @@ function detalleHtml(e) {
     if (d.edif) extra.push(['Edificios a cargo', Object.keys(d.edif).map(k => `${d.edif[k]} ${E(k)}`).join(' · ')]);
     if (d.camas && d.camas.length) extra.push(['Camas según la ficha', d.camas.map(c => `${E(c.cat)}: ${E(c.n)}`).join(' · ')]);
     const pares = Object.keys(ETQ).filter(k => d[k] != null && d[k] !== '').map(k => [ETQ[k], val(d[k])]).concat(extra);
-    const faltan = SECC.filter(s => !s[1].some(k => (f.claves || []).indexOf(k) >= 0)).map(s => s[0]);
+    const faltan = seccDe(f).filter(s => !s[1].some(k => (f.claves || []).indexOf(k) >= 0)).map(s => s[0]);
     cajFicha = caj('Ficha del establecimiento', 'apartment', `<p style="margin:0 0 6px"><span class="chip ${est.cls}">${E(est.txt)}</span>${f.referente ? '' : ' <span class="chip falta">Sin referente</span>'}${f.act ? ` <small class="pie">Última carga: ${E(f.act)}</small>` : ''}</p>`
       + (pares.length ? dl(pares) : '<p class="pie">Todavía no hay datos cargados en la ficha.</p>')
       + (faltan.length && f.claves.length ? `<p class="pie" style="margin:6px 0 0">Secciones sin datos: ${E(faltan.join(', '))}.</p>` : '')
