@@ -161,7 +161,7 @@ function filaHtml(e) {
   const f = e.ficha, d = f ? f.datos : {}, s = fichaEstado(f), a = d.ambs;
   const pers = f && (d.trab_total || d.med_total || d.enf_total) ? `${val(d.trab_total)} · ${val(d.med_total)} · ${val(d.enf_total)}` : SD;
   const amb = a && sumObj(a) ? `${a['Funciona'] || 0} de ${sumObj(a)} funcionan` + (a['Fuera de servicio'] ? ` <span class="chip mal">${a['Fuera de servicio']} fuera de servicio</span>` : '') : SD;
-  const ge = !f || !d.grupo ? SD : /^s/i.test(d.grupo) ? 'Sí' + (d.grupo_h ? ` · ${E(d.grupo_h)} h` : '') : E(d.grupo);
+  const ge = !f || !d.grupo ? SD : S.esSi(d.grupo) ? 'Sí' + (d.grupo_h ? ` · ${E(d.grupo_h)} h` : '') : E(d.grupo);
   const fi = !f ? '<span class="chip gris">Sin ficha todavía</span>' : `<span class="chip ${s.cls}">${E(s.txt)}</span>${f.referente ? '' : ' <span class="chip falta">Sin referente</span>'}${f.act ? `<br><small class="pie">${E(f.act)}</small>` : ''}`;
   const ab = abierto === e.id;
   return `<tr class="fila${ab ? ' abierta' : ''}" data-id="${E(e.id)}" tabindex="0"><td class="nom"><b>${E(e.corto || e.nombre)}</b><small>${E(e.nombre)}</small></td><td>${val(e.tipo)}</td><td>${val(/^s\/d/.test(e.loc) ? '' : e.loc)}</td>

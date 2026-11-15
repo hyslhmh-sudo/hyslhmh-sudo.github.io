@@ -113,7 +113,7 @@ function pacSinBarrio() {
 
 function ficha(b) {
   const p1 = String(b.prioridad) === '1';
-  const enAlta = /^s/i.test(b.caps_alta);
+  const enAlta = S.esSi(b.caps_alta);
   const alb = String(b.albergue || ''), cod = (alb.match(/^A-\d+/) || [''])[0];
   const pc = pacDe(b.barrio);
   const pacTxt = pc === null ? '<span class="pie">Las cantidades las ve solo la lista cerrada de pacientes.</span>'
@@ -140,7 +140,7 @@ function tabla() {
   return `<div class="filtros no-imp"><input id="fq" type="search" placeholder="Buscar barrio, CAPS o factor" value="${E(filtro.q)}">
     <select id="fp"><option value="">Todas las prioridades</option>${['1', '2', '3', '4', 's/d'].map(p => `<option value="${p}" ${filtro.p === p ? 'selected' : ''}>Prioridad ${p}</option>`).join('')}</select></div>
     <div class="tabla-wrap"><table><thead><tr><th>Barrio</th><th>Prior.</th><th>Vuln. · afect.</th><th class="n">Personas</th><th class="n">80+</th><th class="n">0 a 4</th><th class="n">% NBI</th><th>CAPS más cercano</th><th>Factores de afectación</th></tr></thead><tbody>
-    ${L.map(b => `<tr><td><b>${E(b.barrio)}</b></td><td>${E(b.prioridad)}</td><td>${E(b.cruce)}</td><td class="n">${fN(b.pob)}</td><td class="n">${fN(b.p80)}</td><td class="n">${fN(b.p04)}</td><td class="n">${pct(b.nbi)}</td><td>${E(b.caps)}${/^s/i.test(b.caps_alta) ? ' <span class="ojo">(zona alta)</span>' : ''}</td><td>${E(b.factores)}</td></tr>`).join('') || '<tr><td colspan="9">Sin barrios con ese filtro.</td></tr>'}
+    ${L.map(b => `<tr><td><b>${E(b.barrio)}</b></td><td>${E(b.prioridad)}</td><td>${E(b.cruce)}</td><td class="n">${fN(b.pob)}</td><td class="n">${fN(b.p80)}</td><td class="n">${fN(b.p04)}</td><td class="n">${pct(b.nbi)}</td><td>${E(b.caps)}${S.esSi(b.caps_alta) ? ' <span class="ojo">(zona alta)</span>' : ''}</td><td>${E(b.factores)}</td></tr>`).join('') || '<tr><td colspan="9">Sin barrios con ese filtro.</td></tr>'}
     </tbody></table></div>`;
 }
 
@@ -161,7 +161,7 @@ function pintar() {
   const B = V.barrios || [], P1 = B.filter(b => String(b.prioridad) === '1'), P2 = B.filter(b => String(b.prioridad) === '2');
   const s = (L, k) => L.reduce((a, b) => a + (n(b[k]) || 0), 0);
   const albs = [...new Set(P1.map(b => String(b.albergue || '')).filter(Boolean))];
-  const caps = [...new Set(B.filter(b => /^s/i.test(b.caps_alta) && ['1', '2'].indexOf(String(b.prioridad)) >= 0).map(b => b.caps))];
+  const caps = [...new Set(B.filter(b => S.esSi(b.caps_alta) && ['1', '2'].indexOf(String(b.prioridad)) >= 0).map(b => b.caps))];
   app.innerHTML = `<div class="aviso lila"><b>MEJORA / buena práctica.</b> Enfoque de gestión del riesgo (OPS/UNDRR). Base orientadora: datos del Censo 2022 por radio censal repartidos por superficie en cada barrio (aproximados); no incluye personas en situación de calle. Afectación baja no descarta anegamientos por lluvia.</div>
     ${ayuda()}
     <div class="kpis">

@@ -157,7 +157,7 @@ function vReuniones() {
         <button class="btn sec chico" data-a="imprimir" data-id="${E(r.ID)}"><span class="ms">print</span>Planilla de asistencia</button>
         ${adm() ? `<button class="btn sec chico" data-a="reuEditar" data-id="${E(r.ID)}"><span class="ms">edit</span>Editar</button><button class="btn sec chico" data-a="acta" data-id="${E(r.ID)}"><span class="ms">description</span>${r['Acta (Doc)'] ? 'Volver a generar el acta' : 'Generar el acta (Doc)'}</button>` : ''}
       </div>
-      <details><summary>${r.Estado === 'Convocada' ? 'Convocados' : 'Asistentes'} (${as.length})</summary><ul class="lst">${as.map(a => `<li>${E(a.Persona)}${a['Institución / función'] ? ' · ' + E(a['Institución / función']) : ''}${a.Presente === 'No' ? ' <span class="chip val">ausente</span>' : ''}</li>`).join('') || '<li class="vacio">Sin datos.</li>'}</ul></details>
+      <details><summary>${r.Estado === 'Convocada' ? 'Convocados' : 'Asistentes'} (${as.length})</summary><ul class="lst">${as.map(a => `<li>${E(a.Persona)}${a['Institución / función'] ? ' · ' + E(a['Institución / función']) : ''}${S.esNo(a.Presente) ? ' <span class="chip val">ausente</span>' : ''}</li>`).join('') || '<li class="vacio">Sin datos.</li>'}</ul></details>
       <details><summary>Acuerdos y tareas (${ac.length})</summary><ul class="lst">${ac.map(a => `<li><b>${E(a.ID)}</b> · ${E(a.Tipo)} · ${E(a.Texto)}${a.Responsable ? ` <span class="meta">· Responsable: ${E(a.Responsable)}</span>` : ''}${a.Plazo ? ` <span class="meta">· Plazo: ${E(a.Plazo)}</span>` : ''} <span class="chip ${/curso|pend/i.test(a.Estado) ? 'val' : 'ok'}">${E(a.Estado)}</span></li>`).join('') || '<li class="vacio">Sin acuerdos.</li>'}</ul></details>
     </div>`;
   }).join('');

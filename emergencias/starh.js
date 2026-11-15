@@ -140,6 +140,13 @@
     return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
   }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  /* 15/11/2026 · Respuestas Sí / No en texto libre (Belén: «revisar códigos para que no vuelva a pasar»).
+   * Las celdas pueden decir «Sí», «Si», «sí: afectación alta…», «Sí (revisar)», «No», «No tiene», «Sin…».
+   * No usar === 'Sí' ni \b después de una vocal con tilde (en JavaScript \b no reconoce letras con tilde). */
+  const LETRA_ = 'a-záéíóúüñ';
+  function esSi(v) { return new RegExp('^\\s*s[ií](?![' + LETRA_ + '])', 'i').test(String(v == null ? '' : v)); }
+  function esNo(v) { return new RegExp('^\\s*(no|sin)(?![' + LETRA_ + '])', 'i').test(String(v == null ? '' : v)); }
+  function esPosible(v) { return /^\s*posible/i.test(String(v == null ? '' : v)); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
   /* =========================================================
@@ -291,7 +298,7 @@
     return { atender: atender, reiniciar() { store.del('demo.db'); } };
   })();
 
-  global.STARH = { DEMO, API, api, store, sesion, calcular, nivelDe, num, fmt, ELNINO, NIVELES_OPS, NIVELES, COLOR_NIVEL, TINTA_NIVEL, temaRed, hoy, uid, esc, Demo };
+  global.STARH = { DEMO, API, api, store, sesion, calcular, nivelDe, num, fmt, ELNINO, NIVELES_OPS, NIVELES, COLOR_NIVEL, TINTA_NIVEL, temaRed, hoy, uid, esc, esSi, esNo, esPosible, Demo };
 })(window);
 
 /* ---------- Navegación visible en todas las pantallas ----------

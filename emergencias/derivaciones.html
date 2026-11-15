@@ -315,7 +315,7 @@ function avisoCarga() {
 }
 function redVista() { if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('deriv.loc', redActual); return red(redActual); }
 const semAcuerdo = v => !v ? '<span class="sem g">Acuerdo s/d</span>' : /formal/i.test(v) ? `<span class="sem v">${E(v)}</span>` : /informal/i.test(v) ? `<span class="sem a">${E(v)}</span>` : /Sin/i.test(v) ? `<span class="sem n">${E(v)}</span>` : `<span class="sem g">${E(v)}</span>`;
-const semGuardia = v => !v ? '' : /^Sí/.test(v) ? '<span class="sem v">Guardia 24 h</span>' : /No tiene/.test(v) ? '<span class="sem n">Sin guardia</span>' : `<span class="sem g">${E(v)}</span>`;
+const semGuardia = v => !v ? '' : S.esSi(v) ? '<span class="sem v">Guardia 24 h</span>' : /No tiene/.test(v) ? '<span class="sem n">Sin guardia</span>' : `<span class="sem g">${E(v)}</span>`;
 const num = v => { const n = Number(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
 const AVISO_EST = '<div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: las camas son una <b>estimación</b> de lo que cada institución podría recibir, no camas disponibles reales. En una emergencia la disponibilidad se confirma con cada institución.</div>';
 
@@ -444,7 +444,7 @@ function vistaInst() {
       ${cat.camas.map(c => { const k = c[0] + '_est', v = grupos.map(g => suma(g.l, k)); return `<tr><td>${E(c[1])}</td>${v.map(x => `<td class="num"><b>${x}</b></td>`).join('')}${grupos.length > 1 ? `<td class="num"><b>${v.reduce((a, b) => a + b, 0)}</b></td>` : ''}</tr>`; }).join('')}
       <tr><td>Instituciones cargadas</td>${grupos.map(g => `<td class="num">${g.l.length}</td>`).join('')}${grupos.length > 1 ? `<td class="num">${grupos.reduce((a, g) => a + g.l.length, 0)}</td>` : ''}</tr>
       <tr><td>Con acuerdo formal firmado</td>${grupos.map(g => `<td class="num">${g.l.filter(x => /formal/i.test(x.acuerdo || '')).length}</td>`).join('')}${grupos.length > 1 ? '<td></td>' : ''}</tr>
-      <tr><td>Reciben pacientes con asistencia respiratoria mecánica</td>${grupos.map(g => `<td class="num">${g.l.filter(x => x.arm === 'Sí').length}</td>`).join('')}${grupos.length > 1 ? '<td></td>' : ''}</tr></table></div>
+      <tr><td>Reciben pacientes con asistencia respiratoria mecánica</td>${grupos.map(g => `<td class="num">${g.l.filter(x => S.esSi(x.arm)).length}</td>`).join('')}${grupos.length > 1 ? '<td></td>' : ''}</tr></table></div>
       <p class="sub" style="margin:6px 0 0">MEJORA / buena práctica (Vítolo, 2026): al menos <b>dos destinos alternativos por tipo de paciente</b>, uno a 50 km o más, con acuerdo firmado y revisado cada año.</p></div>
     ${grupos.map(g => `<h3>${escTit(g.e)}</h3><div class="lista">${filtra(g.l).map(x => { const ce = cat.camas.reduce((a, c) => a + num(x[c[0] + '_est']), 0);
       return `<button class="tarjeta inst" data-inst="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${semGuardia(x.guardia)}</div>
@@ -466,7 +466,7 @@ const TIPOS_FILA = {
 };
 const ESFERA_M2 = 3.5, ESFERA_INODORO = 20;
 const capEsfera = x => { const m = num(x.superficie), i = num(x.inodoros); return { m2: m ? Math.floor(m / ESFERA_M2) : 0, ino: i ? i * ESFERA_INODORO : 0 }; };
-const semSN = (v, si, no) => !v || v === 's/d' ? '' : /^Sí/.test(v) ? `<span class="sem v">${E(si)}</span>` : /^(No|Sin)/.test(v) ? `<span class="sem n">${E(no)}</span>` : `<span class="sem a">${E(v)}</span>`;
+const semSN = (v, si, no) => !v || /^s\/d/i.test(v) ? '' : S.esSi(v) ? `<span class="sem v">${E(si)}</span>` : S.esNo(v) ? `<span class="sem n">${E(no)}</span>` : `<span class="sem a">${E(v)}</span>`;
 function vistaAlb() {
   borrador = null; const r = redVista(), todas = r.nombre === TODAS;
   $('#titulo').innerHTML = `Albergues · ${todas ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}<small>Escuelas, gimnasios y otros edificios · capacidad estimada</small>`;
@@ -479,9 +479,9 @@ function vistaAlb() {
     <div class="buscar"><input id="q" type="search" placeholder="Buscar albergue, tipo o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="alb"><span class="ms">add</span>Agregar albergue en ' + E(r.nombre) + '</button>' : ''}
       <button class="btn sec" data-act="impAlb"><span class="ms">print</span>Imprimir directorio</button></div>
     <div class="kpis">${grupos.map(g => `<div class="tarjeta kpi"><b>${cap(g.l)}</b><span>${g.e.n ? 'personas · escalón ' + g.e.n : 'personas (capacidad estimada)'} (${g.l.length} albergue${g.l.length === 1 ? '' : 's'})</span></div>`).join('')}
-      <div class="tarjeta kpi"><b>${grupos.reduce((a, g) => a + g.l.filter(x => /^Sí/.test(x.necesidades || '')).length, 0)}</b><span>pueden recibir personas con necesidades de salud</span></div></div>
+      <div class="tarjeta kpi"><b>${grupos.reduce((a, g) => a + g.l.filter(x => S.esSi(x.necesidades)).length, 0)}</b><span>pueden recibir personas con necesidades de salud</span></div></div>
     ${grupos.map(g => `<h3>${escTit(g.e)}</h3><div class="lista">${filtra(g.l).map(x => { const c = capEsfera(x);
-      return `<button class="tarjeta inst" data-fila="alb" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${x.zona_riesgo === 'Sí' ? '<span class="sem r">Zona de riesgo</span>' : ''}${semSN(x.necesidades, 'Recibe necesidades de salud', 'Sin apoyos de salud')}</div>
+      return `<button class="tarjeta inst" data-fila="alb" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${S.esSi(x.zona_riesgo) ? '<span class="sem r">Zona de riesgo</span>' : ''}${semSN(x.necesidades, 'Recibe necesidades de salud', 'Sin apoyos de salud')}</div>
         <div class="sub">${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.caps_ref ? ' · centro de salud: ' + E(x.caps_ref) : ''}</div>
         <div class="pie"><span><b>${E(x.capacidad || 's/d')}</b> personas (estimado)</span>${c.m2 ? `<span>por superficie (Esfera): ${c.m2}</span>` : ''}${c.ino ? `<span>por inodoros (Esfera): ${c.ino}</span>` : ''}${semSN(x.energia === 'Red y grupo electrógeno' ? 'Sí' : x.energia === 'Sin energía' ? 'No' : '', 'Grupo electrógeno', 'Sin energía')}${semSN(x.accesible, 'Accesible', 'No accesible')}${semSN(x.calefaccion, 'Calefacción', 'Sin calefacción')}</div></button>`; }).join('')
       || `<div class="tarjeta vacio">Todavía no hay albergues cargados en ${g.e.locs.map(E).join(', ')}.</div>`}</div>`).join('')}`;
@@ -507,8 +507,8 @@ function vistaPob() {
   const tiene = v => String(v || '').trim() !== '' && !/^s\/d/i.test(String(v));
   const pob = l => l.reduce((a, x) => a + num(x.poblacion), 0), sd = l => l.filter(x => !(num(x.poblacion) > 0)).length;
   const dep = l => l.some(x => tiene(x.dependientes)) ? l.reduce((a, x) => a + num(x.dependientes), 0) + (l.some(x => !tiene(x.dependientes)) ? ' + s/d' : '') : 's/d';
-  const enRiesgo = x => /^s[ií](?![a-záéíóú])/i.test(x.zona_riesgo || '');
-  const cust = l => pob(l.filter(x => x.custodia === 'Sí')), riesgo = l => pob(l.filter(enRiesgo));
+  const enRiesgo = x => S.esSi(x.zona_riesgo);
+  const cust = l => pob(l.filter(x => S.esSi(x.custodia))), riesgo = l => pob(l.filter(enRiesgo));
   // Vigencia: el dato se actualiza cada 6 meses desde «Fecha del dato» (dd/mm/aaaa). Sin fecha = a actualizar.
   const VIGENCIA_MESES = 6;
   const fechaDato = x => { const m = String(x.fecha_dato || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
@@ -525,7 +525,7 @@ function vistaPob() {
       ${fila('Total', '', todos, true)}</table></div>
       <p class="sub" style="margin:6px 0 0">«Con custodia» y «En zona de riesgo» suman las personas de esos lugares. Zona de riesgo según la lámina CART-COE-005 (fuera de su área queda s/d). Varones y mujeres, en la ficha de cada lugar.</p>
       ${sinContacto || sinDep || sinPlan ? `<p class="sub" style="margin:6px 0 0;color:#8A4A00"><b>Para completar en el relevamiento:</b> ${[sinContacto ? sinContacto + ' sin contacto las 24 horas' : '', sinDep ? sinDep + ' sin dato de personas con movilidad reducida o dependencia' : '', sinPlan ? sinPlan + ' sin dato de plan de evacuación propio' : ''].filter(Boolean).join(' · ')}.</p>` : ''}</div>
-    ${(grupos.length ? grupos : [{ loc: todas ? 'todas las localidades' : r.nombre, l: [] }]).map(g => `<h3>Lugares en ${E(g.loc)}</h3><div class="lista">${filtra(g.l).map(x => `<button class="tarjeta inst" data-fila="pob" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b><span class="sem g">${E(x.tipo || 's/d')}</span>${x.custodia === 'Sí' ? '<span class="sem a">Traslado con custodia</span>' : ''}${enRiesgo(x) ? '<span class="sem r">Zona de riesgo</span>' : /^posible/i.test(x.zona_riesgo || '') ? '<span class="sem a">Riesgo posible</span>' : ''}${vencido(x) ? '<span class="sem n">A actualizar</span>' : ''}</div>
+    ${(grupos.length ? grupos : [{ loc: todas ? 'todas las localidades' : r.nombre, l: [] }]).map(g => `<h3>Lugares en ${E(g.loc)}</h3><div class="lista">${filtra(g.l).map(x => `<button class="tarjeta inst" data-fila="pob" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b><span class="sem g">${E(x.tipo || 's/d')}</span>${S.esSi(x.custodia) ? '<span class="sem a">Traslado con custodia</span>' : ''}${enRiesgo(x) ? '<span class="sem r">Zona de riesgo</span>' : S.esPosible(x.zona_riesgo) ? '<span class="sem a">Riesgo posible</span>' : ''}${vencido(x) ? '<span class="sem n">A actualizar</span>' : ''}</div>
         <div class="sub">${E([x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.ref_salud ? ' · referencia de salud: ' + E(x.ref_salud) : ''}</div>
         <div class="pie"><span><b>${E(x.poblacion || 's/d')}</b> personas (plazas)</span>${num(x.varones) || num(x.mujeres) ? `<span>${num(x.varones)} varones · ${num(x.mujeres)} mujeres</span>` : ''}${num(x.dependientes) ? `<span>${E(x.dependientes)} necesitan traslado asistido</span>` : ''}${x.tel ? `<span><span class="ms" style="font-size:16px">call</span> ${E(x.tel)}</span>` : ''}${x.plan_evac ? `<span>Plan de evacuación propio: ${E(x.plan_evac)}</span>` : ''}<span>Dato del ${E(x.fecha_dato || 's/d')}</span></div></button>`).join('')
       || `<div class="tarjeta vacio">Todavía no hay lugares cargados en ${E(g.loc)}.</div>`}</div>`).join('')}`;
@@ -576,7 +576,7 @@ function imprimirAlb() {
   const r = redVista();
   $('#imp').innerHTML = `<section class="hoja">${encImp(r)}<div class="kick">COEsp · ALBERGUES</div><h1>Directorio de albergues · ${r.nombre === TODAS ? 'todas las localidades' : 'emergencia en ' + E(r.nombre)}</h1>
     <table><tr><td class="l">Albergue</td><td class="l">Contacto</td><td class="l">Capacidad estimada</td><td class="l">Servicios</td><td class="l">Salud</td></tr>
-    ${gruposImp(r, 'albergues', 5, x => { const c = capEsfera(x); return `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · '))}${x.zona_riesgo === 'Sí' ? '<br><b>En zona de riesgo</b>' : ''}</td><td>${E(x.habilita || '')}<br>${E(x.contacto || '')}<br>${E(x.tel || '')}</td>
+    ${gruposImp(r, 'albergues', 5, x => { const c = capEsfera(x); return `<tr><td><b>${E(x.nombre)}</b><br>${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · '))}${S.esSi(x.zona_riesgo) ? '<br><b>En zona de riesgo</b>' : ''}</td><td>${E(x.habilita || '')}<br>${E(x.contacto || '')}<br>${E(x.tel || '')}</td>
       <td>${E(x.capacidad || 's/d')} personas${c.m2 ? '<br>Superficie: ' + c.m2 : ''}${c.ino ? '<br>Inodoros: ' + c.ino : ''}</td><td>Agua: ${E(x.agua || 's/d')}<br>Energía: ${E(x.energia || 's/d')}<br>Calefacción: ${E(x.calefaccion || 's/d')} · Cocina: ${E(x.cocina || 's/d')}<br>Accesible: ${E(x.accesible || 's/d')}</td>
       <td>${E(x.necesidades || 's/d')}<br>Espacio de salud: ${E(x.espacio_salud || 's/d')} · Aislamiento: ${E(x.aislamiento || 's/d')}<br>Centro de salud: ${E(x.caps_ref || 's/d')}</td></tr>`; })}</table>
     <p style="font-size:7.5pt;color:#4B5B73">Base orientadora para planificar: la habilitación y apertura de cada albergue las decide el COEsp. Capacidad orientativa según Proyecto Esfera (2018): 3,5 m² cubiertos por persona y 1 inodoro cada 20 personas.</p>${pieImp(r)}</section>`;

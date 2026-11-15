@@ -411,7 +411,7 @@ function vistaHospital(redN, codigo) {
       const id = modActual === '1' ? x.id : String(x.n);
       return `<button class="amen" data-it="${S.esc(id)}"><span class="id">${S.esc(modActual === '1' ? x.id.replace('M1-', '') : x.n)}</span><span class="nom">${S.esc(x.item || x.amenaza)}</span>
       ${enCola.has(id) ? '<span class="ms" title="Sin enviar" style="color:#2F5BEA;font-size:18px">cloud_upload</span>' : ''}
-      ${x.nivel ? chip(x.nivel, modActual === '1' ? COLOR_AM : COLOR) : '<span class="chip pend">Pendiente</span>'}${modActual === '1' && x.prepararse === 'Sí' ? '<span class="chip">Prepararse</span>' : ''}</button>`; }).join('')}</div>`).join('')
+      ${x.nivel ? chip(x.nivel, modActual === '1' ? COLOR_AM : COLOR) : '<span class="chip pend">Pendiente</span>'}${modActual === '1' && S.esSi(x.prepararse) ? '<span class="chip">Prepararse</span>' : ''}</button>`; }).join('')}</div>`).join('')
       || `<div class="tarjeta vacio">${filtro === 'pend' ? '¡No quedan pendientes en este módulo!' : 'No hay ítems con este filtro.'}</div>`}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
       <a class="btn sec" style="text-decoration:none" href="imprimir.html?m=ish&red=${encodeURIComponent(redN)}&est=${encodeURIComponent(codigo)}"><span class="ms">print</span>Imprimir formulario</a>
