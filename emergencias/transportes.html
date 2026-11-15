@@ -123,7 +123,7 @@ function vAmb() {
     const l = D.base.lugares.find(x => x.id === h.id);
     const lista = h.ambs === null ? `<p class="sd">Sin cargar en la ficha (${SD}).</p>` : !h.ambs.length ? '<p class="sd">La ficha indica que no hay ambulancias.</p>' :
       h.ambs.map(a => `<div class="amb"><span class="ms" style="color:var(--medio)">ambulance</span><div style="flex:1"><b>${val(a.id)}</b> ${chipEstado(a.estado)}${vacio(a.obs) ? '' : `<div class="fu">${E(a.obs)}</div>`}</div></div>`).join('');
-    return `<div class="card"><h3>${E(h.est)}</h3><div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ficha actualizada el ' + E(h.act) : 'Ficha sin fecha'}</div>${lista}
+    return `<div class="card"><h3>${E(h.est)}</h3><div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ambulancias actualizadas el ' + E(h.act) : 'Ambulancias sin cargar'}</div>${lista}
       <button class="btn" type="button" data-ficha="${E(h.est)}"><span class="ms">edit_note</span>${h.puede ? 'Corregir en la ficha' : 'Ver la ficha'}</button></div>`;
   }).join('')}</div>
   <p class="pie">Fuente: ficha de cada establecimiento (campo «Ambulancias»), cargada por su referente. No se carga en otro lado.</p>`;
