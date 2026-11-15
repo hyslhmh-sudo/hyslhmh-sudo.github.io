@@ -87,7 +87,7 @@ const u = S.sesion.token() ? (S.sesion.usuario() || {}) : {};
 const adm = u.rol === 'Administración';
 const vePac = adm || !!((u.niveles || {})['Pacientes con necesidades especiales']);
 // Capacidad estimada de los albergues (base del COE · Derivaciones y albergues, 14/11/2026). A-002 (Trelew Rugby Club) no se propone: zona inundable o de riesgo.
-const ALB_CAP = { 'A-001': '36 personas (estimada)', 'A-003': 's/d (revisar)' };
+const ALB_CAP = { 'A-001': 'estimada de 36 personas', 'A-003': 's/d (revisar)' };
 let V = S.store.get('vuln.b', null), PAC = null, PAC_ERR = '', ERR = '', filtro = { q: '', p: '' };
 const n = x => (x === '' || x == null || isNaN(Number(x))) ? null : Number(x);
 const fN = x => n(x) == null ? 's/d' : Number(x).toLocaleString('es-AR');
