@@ -7,7 +7,7 @@
 (function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
 if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Transportes y distancias · Gestión de la emergencia</title>
+<title>Transportes y distancias · Preparación</title>
 <meta name="theme-color" content="#123E7A">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,7 +70,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Transportes y distancias<small>Gestión de la emergencia · versión 0 · base orientadora</small></h1>
+  <h1>Transportes y distancias<small>Preparación · versión 0 · base orientadora</small></h1>
   <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
@@ -199,7 +199,7 @@ function vDis() {
 function pintar() {
   if (!D) return;
   const cuerpo = tab === 'med' ? vMed() : tab === 'esp' ? vEsp() : tab === 'dis' ? vDis() : vAmb();
-  app.innerHTML = `<div class="aviso">Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
+  app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
   <p><b>Ambulancias de los hospitales:</b> salen de la ficha de cada establecimiento (las carga su referente). Para corregirlas, tocá «Corregir en la ficha». No se cargan en ningún otro lado.</p>
   <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Belén o el COEsp en la base maestra (hoja MEDIOS DE TRASLADO). El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
