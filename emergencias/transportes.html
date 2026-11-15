@@ -70,6 +70,7 @@ dialog#dlgMedio::backdrop{background:rgba(23,43,77,.45)}
 #fMedio label{display:block;font-size:12.5px;font-weight:700;color:var(--suave);margin-top:10px}
 #fMedio input[type=text],#fMedio select,#fMedio textarea{display:block;width:100%;margin-top:3px;font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:8px 10px;color:var(--texto);background:#fff}
 #fMedio label[hidden]{display:none}
+.amb-ed{display:grid;grid-template-columns:1fr 1fr 1.4fr auto;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--claro)}.amb-ed input,.amb-ed select{font:500 13.5px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:7px 8px;min-width:0;width:100%}@media(max-width:520px){.amb-ed{grid-template-columns:1fr 1fr}}
 #fMedio .dos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}@media(max-width:520px){#fMedio .dos{grid-template-columns:1fr}}
 #fMedio .chk{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}#fMedio .chk label{display:flex;align-items:center;gap:6px;margin:0;font-weight:500;color:var(--texto);font-size:13.5px}
 #fMedio .acc{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;position:sticky;bottom:-16px;background:#fff;padding:10px 0}
@@ -136,10 +137,36 @@ function vAmb() {
     const l = D.base.lugares.find(x => x.id === h.id);
     const lista = h.ambs === null ? `<p class="sd">Sin cargar en la ficha (${SD}).</p>` : !h.ambs.length ? '<p class="sd">La ficha indica que no hay ambulancias.</p>' :
       h.ambs.map(a => `<div class="amb"><span class="ms" style="color:var(--medio)">ambulance</span><div style="flex:1"><b>${val(a.id)}</b> ${chipEstado(a.estado)}${vacio(a.obs) ? '' : `<div class="fu">${E(a.obs)}</div>`}</div></div>`).join('');
-    return `<div class="card"><h3>${E(h.est)}</h3><div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ambulancias actualizadas el ' + E(h.act) : 'Ambulancias sin cargar'}</div>${lista}
-      <button class="btn" type="button" data-ficha="${E(h.est)}"><span class="ms">edit_note</span>${h.puede ? 'Corregir en la ficha' : 'Ver la ficha'}</button></div>`;
+    const cab = `<h3>${E(h.est)}</h3><div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ambulancias actualizadas el ' + E(h.act) : 'Ambulancias sin cargar'}</div>`;
+    if (edAmb && edAmb.est === h.est) return `<div class="card">${cab}${editorAmb()}</div>`;
+    return `<div class="card">${cab}${lista}
+      ${h.puede ? `<button class="btn" type="button" data-amb="${E(h.est)}"><span class="ms">edit</span>Corregir ambulancias</button>` : ''}</div>`;
   }).join('')}</div>
-  <p class="pie">Fuente: ficha de cada establecimiento (campo «Ambulancias»), cargada por su referente. No se carga en otro lado.</p>`;
+  <p class="pie">Fuente: ficha de cada establecimiento (campo «Ambulancias»). Se corrige acá o en la ficha: es el mismo dato. Lo corrige el referente de cada establecimiento y Administración.</p>`;
+}
+// 15/11/2026 07:30 (Belén: «acá se debería ver y corregir solo lo de ambulancia»): se corrigen las ambulancias en la misma tarjeta,
+// sin ir a la ficha completa. Se guarda en el mismo campo «ambs» de la ficha (acción ficha_guardar): un solo dato.
+const EST_AMB = ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'];
+let edAmb = null; // { est, L: [{id, estado, obs}], msg }
+function editorAmb() {
+  const fila = (a, i) => `<div class="amb-ed" data-i="${i}"><input type="text" data-c="id" placeholder="Patente" value="${E(vacio(a.id) ? '' : a.id)}">
+    <select data-c="estado"><option value="">Estado…</option>${EST_AMB.map(o => `<option${o === a.estado ? ' selected' : ''}>${o}</option>`).join('')}</select>
+    <input type="text" data-c="obs" placeholder="Observaciones" value="${E(vacio(a.obs) ? '' : a.obs)}">
+    <button class="btn" type="button" data-quitar="${i}" aria-label="Quitar esta ambulancia" style="margin-top:0"><span class="ms">delete</span></button></div>`;
+  return `<div class="amb-eds">${edAmb.L.length ? edAmb.L.map(fila).join('') : '<p class="sd">Sin ambulancias. Si el establecimiento no tiene, guardá así.</p>'}</div>
+    <button class="btn" type="button" id="ambMas"><span class="ms">add</span>Agregar ambulancia</button>
+    ${edAmb.msg ? `<div class="aviso" style="margin:8px 0 0">${E(edAmb.msg)}</div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" id="ambCan">Cancelar</button><button class="btn pri" type="button" id="ambOk"><span class="ms">save</span>Guardar</button></div>`;
+}
+function leerAmb() { document.querySelectorAll('.amb-ed').forEach(r => { const a = edAmb.L[+r.dataset.i]; r.querySelectorAll('[data-c]').forEach(c => { a[c.dataset.c] = c.value.trim(); }); }); }
+async function guardarAmb() {
+  leerAmb();
+  const L = edAmb.L.filter(a => a.id || a.estado || a.obs).map(a => ({ id: a.id || SD, estado: a.estado || 'No sabe', obs: a.obs || '' }));
+  edAmb.msg = 'Guardando…'; pintar();
+  try {
+    const r = await S.api('ficha_guardar', { est: edAmb.est, cambios: { ambs: L } }, 60000); if (!r || !r.ok) throw r;
+    edAmb = null; const n = await S.api('transportes_leer', {}); if (n && n.ok) { S.store.set('transp.cache', n); D = n; } pintar();
+  } catch (e) { if (edAmb) { edAmb.msg = (e && (e.error || e.message)) || 'No se pudo guardar.'; pintar(); } }
 }
 
 // 2) Medios privados y de otros organismos (BASE · MEDIOS DE TRASLADO)
@@ -262,7 +289,7 @@ function pintar() {
   const cuerpo = tab === 'med' ? vMed() : tab === 'esp' ? vEsp() : tab === 'dis' ? vDis() : vAmb();
   app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
-  <p><b>Ambulancias de los hospitales:</b> salen de la ficha de cada establecimiento (las carga su referente). Para corregirlas, tocá «Corregir en la ficha». No se cargan en ningún otro lado.</p>
+  <p><b>Ambulancias de los hospitales:</b> son las de la ficha de cada establecimiento. Se corrigen acá con «Corregir ambulancias» (patente, estado y observaciones; «Agregar ambulancia» o el tacho para quitar). Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Las corrige el referente de cada establecimiento y Administración.</p>
   <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
   <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están en cuatro grupos: establecimientos de salud, albergues (los del COE · Derivaciones y albergues), localidades (punto central de cada una) y recursos de apoyo. Son estimados en auto.</p>
@@ -274,6 +301,11 @@ app.addEventListener('click', ev => {
   const t = ev.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; filtro = ''; S.store.set('transp.tab', tab); pintar(); return; }
   const e = ev.target.closest('[data-esc]'); if (e) { esc = esc === e.dataset.esc ? '' : e.dataset.esc; pintar(); return; }
   if (ev.target.closest('#fInv') && dest) { const t = orig; orig = dest; dest = t; S.store.set('transp.orig', orig); S.store.set('transp.dest', dest); pintar(); return; }
+  const ea = ev.target.closest('[data-amb]'); if (ea) { const h = D.hospitales.find(x => x.est === ea.dataset.amb); edAmb = { est: h.est, L: JSON.parse(JSON.stringify(h.ambs || [])), msg: '' }; if (!edAmb.L.length) edAmb.L.push({ id: '', estado: '', obs: '' }); pintar(); return; }
+  if (edAmb && ev.target.closest('#ambMas')) { leerAmb(); edAmb.L.push({ id: '', estado: '', obs: '' }); pintar(); return; }
+  const q = ev.target.closest('[data-quitar]'); if (q && edAmb) { leerAmb(); edAmb.L.splice(+q.dataset.quitar, 1); pintar(); return; }
+  if (ev.target.closest('#ambCan')) { edAmb = null; pintar(); return; }
+  if (ev.target.closest('#ambOk')) { guardarAmb(); return; }
   if (ev.target.closest('#mNuevo')) { abrirMedio(''); return; }
   const md = ev.target.closest('[data-medio]'); if (md) { abrirMedio(md.dataset.medio); return; }
   const f = ev.target.closest('[data-ficha]'); if (f) { S.store.set('ficha.estab', f.dataset.ficha); location.href = 'ficha.html'; }
