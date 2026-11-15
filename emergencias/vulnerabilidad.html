@@ -162,7 +162,7 @@ function pintar() {
   const s = (L, k) => L.reduce((a, b) => a + (n(b[k]) || 0), 0);
   const albs = [...new Set(P1.map(b => String(b.albergue || '')).filter(Boolean))];
   const caps = [...new Set(B.filter(b => /^s/i.test(b.caps_alta) && ['1', '2'].indexOf(String(b.prioridad)) >= 0).map(b => b.caps))];
-  app.innerHTML = `<div class="aviso lila"><b>MEJORA / buena práctica.</b> Enfoque de gestión del riesgo (OPS/UNDRR); no es una exigencia de la Ley 19.587 ni del Dto. 351/79. Base orientadora: datos del Censo 2022 por radio censal repartidos por superficie en cada barrio (aproximados); no incluye personas en situación de calle. Afectación baja no descarta anegamientos por lluvia.</div>
+  app.innerHTML = `<div class="aviso lila"><b>MEJORA / buena práctica.</b> Enfoque de gestión del riesgo (OPS/UNDRR). Base orientadora: datos del Censo 2022 por radio censal repartidos por superficie en cada barrio (aproximados); no incluye personas en situación de calle. Afectación baja no descarta anegamientos por lluvia.</div>
     ${ayuda()}
     <div class="kpis">
       <div class="kpi"><b>${P1.length}</b><span>barrios en prioridad 1 (vulnerabilidad y afectación altas)</span></div>
