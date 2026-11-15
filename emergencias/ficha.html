@@ -74,7 +74,7 @@ body.blanco textarea{min-height:70px;border:1px solid #777}body.blanco select{-w
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Ficha del establecimiento<small>versión 0 · HZT, HMH, HSST, hospitales rurales y puestos sanitarios</small></h1>
+  <h1>Ficha del establecimiento<small>versión 0 · HZT, HMH, HSST, hospitales rurales, puestos sanitarios y CAPS</small></h1>
   <button class="icono" type="button" onclick="imprimir(false)" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"></main>
@@ -90,7 +90,7 @@ const SN = ['Sí', 'No', 'No sabe'];
 // Tipos de internación: los mismos de la hoja CAMAS (columna «Categoría») para que la tabla sea homogénea en todos los establecimientos
 const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
 // Tipos: t texto · n número · a texto largo · f fecha · sn Sí/No/No sabe · m opciones múltiples · auto dato que se trae de la app · rep lista que se repite
-const SEC = [
+const SEC_HOSP = [
   { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
     { k: 'nombre', l: 'Nombre oficial', t: 't' }, { k: 'corto', l: 'Nombre corto', t: 't' },
     { k: 'sisa', l: 'Código SISA o REFES', t: 't' }, { k: 'complejidad', l: 'Nivel de complejidad', t: 't' },
@@ -142,6 +142,37 @@ const SEC = [
   { id: 's10', t: 'Antecedentes', d: 'Lo que ya pasó', c: [
     { k: 'antec', l: 'Eventos anteriores (inundaciones, nevadas, cortes largos de luz o agua): qué pasó y cómo se resolvió', t: 'a' } ] }
 ];
+// 15/11/2026 · Ficha corta del CAPS (Belén: «ficha para CAPS sabiendo que no tienen ARM, internación, quirófano y UMU»).
+// Se usa cuando el establecimiento elegido es un CAPS (la lista la manda el servidor desde LUGARES). Repite las claves de la ficha del
+// hospital donde el dato es el mismo, así el consolidado los lee igual. Sin internación, camas, quirófano, respiradores, ambulancias ni UMU.
+const campoH = k => SEC_HOSP.reduce((a, s) => a.concat(s.c), []).find(c => c.k === k);
+const SEC_CAPS = [
+  { id: 'c1', t: 'Identificación', d: 'Quiénes son, de quién dependen y cuándo atienden', min: true, c: [
+    campoH('nombre'), campoH('corto'), campoH('sisa'),
+    { k: 'depende', l: 'Hospital del que depende', t: 't' },
+    { k: 'horario', l: 'Días y horario de atención', t: 't' },
+    { k: 'ref', l: 'Hospital al que deriva, si no es el mismo del que depende', t: 't', opt: true } ] },
+  { id: 'c2', t: 'Ubicación y acceso', d: 'Clave ante inundaciones', min: true, c: SEC_HOSP[1].c },
+  { id: 'c3', t: 'Atención y población', d: 'Qué atención brinda y a quiénes (sin internación)', c: [
+    { k: 'servicios', l: '¿Qué atención brinda?', t: 'm', o: ['Medicina general o clínica', 'Pediatría', 'Enfermería', 'Vacunatorio', 'Odontología', 'Obstetricia o control de embarazo', 'Salud mental', 'Trabajo social', 'Farmacia o botiquín', 'Extracción de sangre'] },
+    { k: 'camillas', l: 'Camillas (cantidad)', t: 'n' },
+    { k: 'pob_at', l: 'Población que atiende (estimada)', t: 'n' },
+    { k: 'barrios', l: 'Barrios o zona que cubre', t: 'a' } ] },
+  { id: 'c4', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
+    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'),
+    { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Tubos', 'Concentradores', 'No tiene'] },
+    campoH('calef'), campoH('comun') ] },
+  { id: 'c5', t: 'Personal', d: 'Quiénes trabajan y quién es el responsable', min: true, c: [
+    { k: 'trab_total', l: 'Total de trabajadores del CAPS', t: 'n' }, campoH('med_total'), campoH('enf_total'),
+    { k: 'ref_tit', l: 'Responsable del CAPS (coordinador o jefe)', t: 't' }, { k: 'ref_alt', l: 'Reemplazo del responsable', t: 't' } ] },
+  { id: 'c6', t: 'Contactos de emergencia', d: 'Visibles solo para Administración y el referente', min: true, c: [
+    { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Responsable del CAPS', 'Hospital del que depende', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
+  { id: 'c7', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: SEC_HOSP[8].c },
+  { id: 'c8', t: 'En una emergencia', d: 'Qué hace el CAPS y qué pasó antes', c: [
+    { k: 'emerg_rol', l: 'Si hay una emergencia en la zona, el CAPS…', t: 'm', o: ['Sigue atendiendo', 'Cierra y deriva al hospital', 'Puede funcionar como punto de vacunación o de atención', 'Puede funcionar como lugar de reunión o albergue', 'No está definido'] },
+    campoH('antec') ] }
+];
+let SEC = SEC_HOSP;
 // Datos que ya tenemos (libro de la app: LUGARES, CAMAS y COE PARTICIPANTES). El referente los revisa y los puede cambiar.
 const camasPre = (gen, emerg) => { const L = TIPOS_INT.map(q => ({ quien: q })); L[0].n = String(gen); if (emerg) L[7].n = String(emerg); return L; };
 // Tipos anteriores de la prueba → tipos homogéneos
@@ -203,7 +234,7 @@ async function enviar() {
 async function cargar(est) {
   app.innerHTML = '<p class="pie">Cargando la ficha…</p>';
   try { const r = await S.api('ficha_leer', { est: est || '' }); if (!r.ok) throw r;
-    srv = r; estab = r.est; pend = S.store.get(COLA(), {}) || {};
+    srv = r; estab = r.est; SEC = (r.caps || []).indexOf(estab) >= 0 ? SEC_CAPS : SEC_HOSP; pend = S.store.get(COLA(), {}) || {};
     if (Object.keys(pend).length && srv.puede) { Object.assign(srv.datos, pend); setTimeout(enviar, 400); }
     S.store.set('ficha.estab', estab); pintar(); if (deps) pintarDeps(); else cargarDeps(); }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudo abrir la ficha.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`; }
@@ -267,7 +298,16 @@ const secHtml = (s, n) => `<details class="sec${s.min ? ' min' : ''}" id="${s.id
 let deps = null, depsErr = '';
 const normN = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/«[^»]*»|\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
 const esDeEste = d => { const a = normN(d), b = normN(estab); return !!a && !!b && a !== '—' && (a === b || b.indexOf(a) === 0 || a.indexOf(b) === 0); };
-async function cargarDeps() { try { const r = await S.api('estab_consolidado', {}); if (!r || !r.ok) throw r; deps = r.establecimientos || []; depsErr = ''; } catch (e) { if (!deps) depsErr = (e && (e.error || e.message)) || 'sin conexión'; } pintarDeps(); }
+async function cargarDeps() { try { const r = await S.api('estab_consolidado', {}); if (!r || !r.ok) throw r; deps = r.establecimientos || []; depsErr = ''; precargaCaps(); } catch (e) { if (!deps) depsErr = (e && (e.error || e.message)) || 'sin conexión'; } pintarDeps(); }
+// Precarga de los CAPS con lo que ya está en LUGARES (nombre, SISA, dependencia y coordenadas). Se ve «Precargado» hasta que se confirma.
+function precargaCaps() {
+  let toca = false;
+  (deps || []).forEach(d => { if (d.tipo !== 'CAPS' || !d.nombre || PRE[d.nombre]) return; const p = { nombre: d.nombre, corto: d.corto || '', depende: d.depende || '' };
+    if (/^\d{8,}$/.test(String(d.sisa || '').trim())) p.sisa = String(d.sisa).trim();
+    if (/^-?\d+\.\d+$/.test(String(d.lat || '')) && /^-?\d+\.\d+$/.test(String(d.lon || ''))) p.coord = d.lat + ', ' + d.lon;
+    PRE[d.nombre] = p; if (d.nombre === estab) toca = true; });
+  if (toca && SEC === SEC_CAPS && !window.__blanco) pintar();
+}
 function pintarDeps() {
   const box = document.getElementById('depsBox'); if (!box) return;
   const cab = '<h4>Dependencias de este establecimiento</h4><p class="nota">Se completa sola con la hoja LUGARES (columna «Depende de»). No se carga acá: si falta o sobra alguna, se corrige en LUGARES. Los puestos sanitarios tienen su propia ficha.</p>';
