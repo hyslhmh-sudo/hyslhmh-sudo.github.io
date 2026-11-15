@@ -165,11 +165,12 @@ function vDis() {
   const idx = {}; D.base.distancias.forEach(d => { idx[d[0] + '|' + d[1]] = d; });
   const par = (a, b) => idx[a + '|' + b] || (idx[b + '|' + a] ? [a, b].concat(idx[b + '|' + a].slice(2)) : null);
   const lugares = D.base.lugares.map(l => ({ id: l.id, n: l.nombre, g: 'Establecimientos de salud', t: l.tipo, loc: l.localidad }))
-    .concat(D.base.recursos.map(r => ({ id: r.id, n: r.nombre, g: 'Recursos de apoyo', t: r.tipo, loc: r.localidad })));
+    .concat(D.base.recursos.map(r => ({ id: r.id, n: r.nombre, g: 'Recursos de apoyo', t: r.tipo, loc: r.localidad })))
+    .concat((D.base.localidades || []).map(r => ({ id: r.id, n: r.nombre, g: 'Localidades', t: 'Localidad (centro)', loc: r.departamento ? 'Depto. ' + r.departamento : '' })));
   if (!lugares.some(l => l.id === orig)) orig = lugares.length ? lugares[0].id : '';
   if (dest === orig || (dest && !lugares.some(l => l.id === dest))) dest = '';
   const opt = (g, sel, sin) => lugares.filter(l => l.g === g && l.id !== sin).map(l => `<option value="${E(l.id)}"${l.id === sel ? ' selected' : ''}>${E(l.n)}</option>`).join('');
-  const grupos = (sel, sin) => ['Establecimientos de salud', 'Recursos de apoyo'].map(g => `<optgroup label="${g}">${opt(g, sel, sin)}</optgroup>`).join('');
+  const grupos = (sel, sin) => ['Establecimientos de salud', 'Localidades', 'Recursos de apoyo'].map(g => `<optgroup label="${g}">${opt(g, sel, sin)}</optgroup>`).join('');
   const q = filtro.toLowerCase();
   const filas = lugares.filter(l => l.id !== orig && (!dest || l.id === dest) && (!q || (l.n + ' ' + l.t + ' ' + l.loc).toLowerCase().indexOf(q) >= 0))
     .map(l => ({ l: l, d: par(orig, l.id) }))
@@ -183,7 +184,7 @@ function vDis() {
     <td class="n">${f.d ? E(f.d[2]) : '<span class="sd">s/d</span>'}</td><td class="n">${f.d ? E(f.d[3]) : '<span class="sd">s/d</span>'}</td>
     <td class="fu">${!f.d ? SD : f.d[5] === 'G' ? 'Google Maps (con tránsito)' : 'OSRM (sin tránsito)'}</td></tr>`).join('')}
   </tbody></table></div>
-  <p class="pie">Distancia y tiempo en auto, ordenados del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15/11/2026, sin tránsito. Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud, hoja DISTANCIAS.</p>`;
+  <p class="pie">Distancia y tiempo en auto, ordenados del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15/11/2026, sin tránsito. Las localidades se miden desde su punto central (OpenStreetMap). Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud, hoja DISTANCIAS.</p>`;
 }
 
 function pintar() {
@@ -194,7 +195,7 @@ function pintar() {
   <p><b>Ambulancias de los hospitales:</b> salen de la ficha de cada establecimiento (las carga su referente). Para corregirlas, tocá «Corregir en la ficha». No se cargan en ningún otro lado.</p>
   <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Belén o el COEsp en la base maestra (hoja MEDIOS DE TRASLADO). El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
-  <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Son estimados en auto.</p>
+  <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. También están las localidades (punto central de cada una). Son estimados en auto.</p>
   <p>Consultado el ${E(D.consultado || '')}.</p></details>
   <div class="tabs" role="tablist">${TABS.map(t => `<button class="tab" role="tab" type="button" data-tab="${t[0]}" aria-selected="${t[0] === tab}"><span class="ms">${t[1]}</span>${E(t[2])}</button>`).join('')}</div>
   <section>${cuerpo}</section>`;
