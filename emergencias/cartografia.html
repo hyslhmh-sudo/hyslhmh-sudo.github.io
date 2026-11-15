@@ -69,7 +69,7 @@ dialog{border:0;border-radius:16px;padding:0;max-width:580px;width:calc(100% - 2
 .vmsg{color:#fff;font-size:13.5px;margin:6px 0}.vmsg.mal{background:#FFF6EC;color:#8a3b00;border-radius:10px;padding:10px 14px}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
 @media (max-width:560px){.dos{grid-template-columns:1fr}}
-@media print{.barra .icono,.adm,.filtros,.ayuda,.acc{display:none}.barra{position:static}}
+@media print{body.sin-imprimir main,body.sin-imprimir .visor{display:none!important}.barra .icono,.adm,.filtros,.ayuda,.acc{display:none}.barra{position:static}}
 </style>
 </head>
 <body>
@@ -100,7 +100,7 @@ function ayuda() {
   return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Láminas en PDF armadas en QGIS para el COEsp y la preparación ante emergencias: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo.</p>
     <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
-    <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). «Descargar» baja el PDF, solo si lo necesitás.</p>
+    <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). Las láminas se ven solo dentro de la app: no se descargan (15/11/2026, decisión de HySL). Si necesitás una copia, pedila a Higiene y Seguridad Laboral.</p>
     <p><b>Correcciones.</b> Una lámina se corrige en QGIS y se vuelve a subir el PDF. El PDF no se edita. Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
     ${esAdm() ? `<p><b>Administración.</b> «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí.</p>` : ''}
   </details>`;
@@ -122,7 +122,7 @@ function tarjeta(x) {
     ${x.descripcion ? `<p>${E(x.descripcion)}</p>` : ''}
     <div class="acc">
       ${x.archivoId ? `<button class="btn" type="button" data-abrir="${E(x.archivoId)}" data-tit="${E(x.codigo + ' · ' + x.titulo)}"><span class="ms">visibility</span>Abrir</button>
-      <button class="btn sec" type="button" data-bajar="${E(x.archivoId)}"><span class="ms">download</span>Descargar</button>` : '<span class="pie">PDF: s/d (revisar)</span>'}
+      ${esAdm() ? `<button class="btn sec" type="button" data-bajar="${E(x.archivoId)}"><span class="ms">download</span>Descargar</button>` : ''}` : '<span class="pie">PDF: s/d (revisar)</span>'}
       ${esAdm() ? `<button class="btn sec" type="button" data-corregir="${E(x.codigo)}"><span class="ms">edit</span>Corregir datos</button>
       <button class="btn peligro" type="button" data-estado="${E(x.codigo)}" data-a="${baja ? 'Vigente' : 'Dada de baja'}"><span class="ms">${baja ? 'restore' : 'archive'}</span>${baja ? 'Volver a dar de alta' : 'Dar de baja'}</button>` : ''}
     </div>
@@ -167,7 +167,7 @@ async function traer(id) { if (cache[id]) return cache[id]; const r = await S.ap
 function visor() {
   let v = document.getElementById('visor'); if (v) return v;
   v = document.createElement('div'); v.id = 'visor'; v.className = 'visor'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-modal', 'true');
-  v.innerHTML = '<div class="vbar"><b class="vt"></b><button type="button" class="vb" data-vmas aria-label="Ampliar"><span class="ms">zoom_in</span></button><button type="button" class="vb" data-vmenos aria-label="Reducir"><span class="ms">zoom_out</span></button><button type="button" class="vb" data-vdesc><span class="ms">download</span>Descargar</button><button type="button" class="vb" data-vcerrar aria-label="Cerrar"><span class="ms">close</span>Cerrar</button></div><div class="vcuerpo"></div>';
+  v.innerHTML = '<div class="vbar"><b class="vt"></b><button type="button" class="vb" data-vmas aria-label="Ampliar"><span class="ms">zoom_in</span></button><button type="button" class="vb" data-vmenos aria-label="Reducir"><span class="ms">zoom_out</span></button>' + (esAdm() ? '<button type="button" class="vb" data-vdesc><span class="ms">download</span>Descargar</button>' : '') + '<button type="button" class="vb" data-vcerrar aria-label="Cerrar"><span class="ms">close</span>Cerrar</button></div><div class="vcuerpo"></div>';
   document.body.appendChild(v);
   v.addEventListener('click', ev => {
     if (ev.target.closest('[data-vcerrar]')) cerrarVisor();
@@ -176,6 +176,7 @@ function visor() {
     if (ev.target.closest('[data-vmenos]')) { v.dataset.zoom = Math.max(1, (+v.dataset.zoom || 1) / 1.5); dibujar(); }
   });
   document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && v.classList.contains('abierto')) cerrarVisor(); });
+  v.addEventListener('contextmenu', ev => { if (!esAdm()) ev.preventDefault(); }); // 15/11/2026 · sin descarga para los demás
   return v;
 }
 function cerrarVisor() { const v = document.getElementById('visor'); if (!v) return; v.classList.remove('abierto'); v.querySelector('.vcuerpo').innerHTML = ''; document.body.style.overflow = ''; }
@@ -207,6 +208,7 @@ async function abrir(b) {
   } catch (e) { cu.innerHTML = `<p class="vmsg mal">${E(/desconocida|disponible/i.test(e.message) ? 'Falta publicar la versión nueva del servidor de la app.' : e.message)}</p>`; }
 }
 async function descargar(id, b) {
+  if (!esAdm()) return; // 15/11/2026 (Belén: «la cartografía que no se pueda descargar»): solo Administración
   const t = b.lastChild.textContent; b.disabled = true; b.lastChild.textContent = 'Descargando…';
   try {
     const r = await traer(id);
@@ -287,6 +289,7 @@ document.addEventListener('click', ev => {
   else if ((b = t.closest('#bGuardarLam'))) guardarLam(b);
   else if (t.closest('[data-c]')) document.getElementById('dlg').close();
 });
+if (!esAdm()) document.body.classList.add('sin-imprimir'); // 15/11/2026 · tampoco se imprime desde el navegador
 notaPie = LISTA.length ? 'Últimos datos guardados en este equipo.' : '';
 pintar();
 actualizar();
