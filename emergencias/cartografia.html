@@ -102,13 +102,17 @@ function ayuda() {
     <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
     <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). Las láminas se ven solo dentro de la app: no se descargan (15/11/2026, decisión de HySL). Si necesitás una copia, pedila a Higiene y Seguridad Laboral.</p>
     <p><b>Correcciones.</b> Una lámina se corrige en QGIS y se vuelve a subir el PDF. El PDF no se edita. Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
-    ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí.</p>` : ''}
+    ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí. «Anexo de fuentes» abre el anexo único con todas las fuentes de datos de la cartografía (solo lo ves y lo abrís vos).</p>` : ''}
   </details>`;
 }
+// 15/11/2026 (Belén: «el anexo lo puedo ver únicamente yo; ponerlo en Cartografía sin que nadie más pueda ver»).
+// Botón solo en la barra de Administración. El documento es privado de Belén en claude.ai: aunque alguien viera el enlace, no lo puede abrir.
+const ANEXO_FUENTES = 'https://claude.ai/artifact/X5xud6Ayfj8zztwqsyjcrH';
 function barraAdm() {
   if (!esAdm()) return '';
   return `<div class="adm"><b>Carpeta 08 · CARTOGRAFÍA<small>Es privada: solo la abrís vos. Los demás leen las láminas desde la app.</small></b>
     ${CARPETA ? `<a class="btn sec" href="${E(CARPETA)}" target="_blank" rel="noopener"><span class="ms">folder_open</span>Abrir la carpeta</a>` : ''}
+    <a class="btn sec" href="${ANEXO_FUENTES}" target="_blank" rel="noopener" title="Anexo de cartografía · fuentes de datos (solo lo abrís vos)"><span class="ms">menu_book</span>Anexo de fuentes</a>
     <button class="btn" type="button" data-nueva><span class="ms">upload_file</span>Subir lámina</button></div>`;
 }
 function tarjeta(x) {
