@@ -268,9 +268,14 @@ function reemplazar(redN, fila) {
 async function actualizarCatalogo(avisar) {
   if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return; }
   try {
+    // 15/11/2026 · Para que cargue más rápido, el servidor ya no repite en cada fila lo que está en establecimientos e ítems
+    // (nombre, red, tipo, sección, ítem y referencia): se completa acá.
+    const completarCat = c => { (c.redes || []).forEach(rd => { const E0 = {}, I0 = {}; (rd.establecimientos || []).forEach(e => E0[e.codigo] = e); (rd.items || []).forEach(i => I0[i.id] = i);
+      (rd.relevamiento || []).forEach(x => { const e = E0[x.codigo] || {}, i = I0[x.id] || {}; if (x.estab === undefined) x.estab = e.nombre || ''; if (x.red === undefined) x.red = rd.nombre; if (x.tipo === undefined) x.tipo = e.tipo || '';
+        if (x.seccion === undefined) x.seccion = i.seccion || ''; if (x.item === undefined) x.item = i.item || ''; if (x.ref === undefined) x.ref = i.ref || ''; }); }); return c; };
     const r = await S.api('phr_catalogo');
     if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); toast(r.error); return ir('#/ingreso'); } throw r; }
-    cat = r; cola.filter(c => c.tipo === 'item').forEach(aplicarLocal); cola.filter(c => c.tipo === 'estado').forEach(aplicarEstadoLocal);
+    cat = completarCat(r); cola.filter(c => c.tipo === 'item').forEach(aplicarLocal); cola.filter(c => c.tipo === 'estado').forEach(aplicarEstadoLocal);
     guardarCat(); if (avisar) toast('Datos actualizados.'); render();
   } catch (e) {
     const m = (e && (e.error || e.message)) || 'No se pudo actualizar.';

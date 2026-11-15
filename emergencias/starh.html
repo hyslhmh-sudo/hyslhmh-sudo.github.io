@@ -287,6 +287,11 @@ async function actualizarCatalogo(avisar) {
   try {
     const r = await S.api('catalogo');
     if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); toast(r.error); return ir('#/ingreso'); } throw r; }
+    // 15/11/2026 · Para que cargue más rápido, el servidor ya no repite en cada evaluación lo que está en establecimientos y amenazas
+    // (nombre, red, origen, grupo y amenaza): se completa acá.
+    (r.redes || []).forEach(rd => { const E0 = {}, A0 = {}; (rd.establecimientos || []).forEach(e => E0[e.codigo] = e); (rd.amenazas || []).forEach(a => A0[a.id] = a);
+      (rd.evaluaciones || []).forEach(x => { const e = E0[x.codigo] || {}, a = A0[x.id] || {}; if (x.estab === undefined) x.estab = e.nombre || ''; if (x.red === undefined) x.red = rd.nombre;
+        if (x.origen === undefined) x.origen = a.origen || ''; if (x.grupo === undefined) x.grupo = a.grupo || ''; if (x.amenaza === undefined) x.amenaza = a.amenaza || ''; }); });
     cat = r;
     // los cambios todavía no enviados se vuelven a aplicar sobre los datos nuevos
     cola.filter(c => c.tipo === 'eval').forEach(aplicarLocal);
