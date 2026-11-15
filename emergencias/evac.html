@@ -233,7 +233,8 @@ const chipEstado = e => `<span class="chip ${/Completa|Validada/.test(e) ? 'ok' 
 async function cargar(avisar) {
   if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return render(); }
   try {
-    const r = await S.api('evac_catalogo');
+    // 15/11/2026 · «Actualizar» (avisar) lee las planillas en el momento, sin la copia de 5 minutos del servidor.
+    const r = await S.api('evac_catalogo', { fresco: !!avisar });
     if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); cat = null; toast(r.error); return render(); } throw r; }
     cat = r; S.store.set('evac.cat', r); if (avisar) toast('Datos actualizados.'); render();
   } catch (e) { const m = (e && (e.error || e.message)) || 'No se pudieron traer los datos.'; if (!cat) app.innerHTML = `<div class="tarjeta vacio">${E(m)}</div>`; else toast(m); }

@@ -283,7 +283,8 @@ function reemplazar(redN, tipo, fila) {
 async function actualizarCatalogo(avisar) {
   if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return; }
   try {
-    const r = await S.api('ish_catalogo');
+    // 15/11/2026 · «Actualizar» (avisar) lee las planillas en el momento, sin la copia de 5 minutos del servidor.
+    const r = await S.api('ish_catalogo', { fresco: !!avisar });
     if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); toast(r.error); return ir('#/ingreso'); } throw r; }
     cat = r; cola.forEach(c => c.tipo === 'estado' ? aplicarEstadoLocal(c) : aplicarLocal(c));
     guardarCat(); if (avisar) toast('Datos actualizados.'); render();

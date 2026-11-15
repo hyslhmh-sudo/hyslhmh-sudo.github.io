@@ -285,7 +285,8 @@ function reemplazarFila(redN, fila) {
 async function actualizarCatalogo(avisar) {
   if (!navigator.onLine) { if (avisar) toast('Sin conexión: se muestran los últimos datos guardados.'); return; }
   try {
-    const r = await S.api('catalogo');
+    // 15/11/2026 · «Actualizar» (avisar) lee las planillas en el momento, sin la copia de 5 minutos del servidor.
+    const r = await S.api('catalogo', { fresco: !!avisar });
     if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); toast(r.error); return ir('#/ingreso'); } throw r; }
     // 15/11/2026 · Para que cargue más rápido, el servidor ya no repite en cada evaluación lo que está en establecimientos y amenazas
     // (nombre, red, origen, grupo y amenaza): se completa acá.
