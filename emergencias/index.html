@@ -406,6 +406,10 @@ dialog#dlgDatos::backdrop{background:rgba(23,43,77,.55)}
 #alertasSmn .al.Naranja{background:#E65100!important}
 #alertasSmn .al.Naranja details summary{color:#fff!important}
 .fila.sub .tj .tj-tab{color:var(--c)!important;border-color:var(--c)!important;background:#fff}
+/* 15/11/2026 · Herramientas OPS/OMS: una tarjeta que se despliega con STAR-H, ISH, PHR y Formularios (Belén). */
+.tj-grupo .flecha{position:relative;align-self:center;font-size:30px;color:#fff;transition:transform .2s}.tj-grupo.abierta .flecha{transform:rotate(180deg)}
+.fila.sub .tj .candado{background:#fff;color:#4B5B73}
+.tj.bloq{cursor:default}.tj.bloq:hover{transform:none}
 .carpeta + .fila.sub + .carpeta,.fila.sub.oculto + .carpeta{margin-top:14px}
 /* Los colores amarillo, naranja y rojo de las alertas del SMN se mantienen: son los niveles oficiales del SMN, no decoración. */
 </style>
@@ -765,10 +769,11 @@ function pintar() {
   if (MD_TK && MD_TK !== S.sesion.token()) cerrarDatos();
   if (otro && !u.vistaDe) revisarDatos(false); // 14/11/2026 · en «Ver como» no se abre «Mis datos» (solo lectura)
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
-  const cerr = m => u && m.flag && u[m.flag] === false;
+  // 15/11/2026 (Belén: «los usuarios deberían ver las tres»): STAR-H e ISH se muestran a todos los que ingresan; sin permiso, con candado y sin enlace.
+  const cerr = m => !!(u && ((m.flag && u[m.flag] === false) || (u.rol !== 'Administración' && ((m.k === 'starh' && !u.starh) || (m.k === 'ish' && !u.ish)))));
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
   // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
-  const tarjeta = m => `<div class="tj${m.grupo === 'gem' || m.grupo === 'resil' || m.grupo === 'coesp' ? ' tj-resp' : ''}${m.grupo === 'prep' ? ' tj-info' : ''}" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
+  const tarjeta = m => `<div class="tj${m.grupo === 'gem' || m.grupo === 'resil' || m.grupo === 'coesp' ? ' tj-resp' : ''}${m.grupo === 'prep' ? ' tj-info' : ''}${cerr(m) ? ' bloq' : ''}" ${cerr(m) ? 'aria-disabled="true"' : `role="link" tabindex="0" data-href="${m.href}"`} data-k="${m.k}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
       <span class="ms fantasma" aria-hidden="true">${m.ico}</span><span class="ico"><span class="ms">${m.ico}</span></span><span class="t"><b>${E(m.t)}${INFO}</b><span class="d corto">${E(m.r || m.d)}</span><span class="d largo">${E(m.d)}</span>${cerr(m) ? candado(m) : ''}${m.tab && !cerr(m) ? `<a class="tj-tab" href="${m.tab}"><span class="ms">monitoring</span>Tablero</a>` : ''}</span></div>`;
   const grande = tarjeta, chica = tarjeta;
   // 03/11/2026 (Belén): sin ingresar no se ve ninguna sección, solo el ingreso.
@@ -779,7 +784,7 @@ function pintar() {
   // 14/11/2026 · Ficha del establecimiento: la ven Administración y los referentes de los rurales (establecimiento en ACCESOS).
   const RURALES = ['HOSPITAL RURAL GAIMAN', 'HOSPITAL RURAL DOLAVON', 'HOSPITAL RURAL LAS PLUMAS', 'HOSPITAL RURAL PASO DE INDIOS', 'HOSPITAL RURAL CAMARONES', 'PUESTO SANITARIO 28 DE JULIO', 'PUESTO SANITARIO DIQUE FLORENTINO AMEGHINO'];
   const esReferenteRural = !!(u && (u.estab || []).some(e => RURALES.indexOf(String(e).toUpperCase()) >= 0));
-  const VIS = !u ? [] : ['phr', 'estab', 'transp', 'deriv', 'red', 'anexos', 'coe', 'fuentes', 'imp'].concat(u.starh ? ['starh'] : []).concat(esReferenteRural ? ['ficha'] : []);
+  const VIS = !u ? [] : ['phr', 'estab', 'transp', 'deriv', 'red', 'anexos', 'coe', 'fuentes', 'imp', 'starh', 'ish'].concat(esReferenteRural ? ['ficha'] : []);
   const OTRO_TXT = { imp: 'Formularios PHR, en blanco o con lo cargado.' };
   // 13/11/2026 · Inicio más compacto (Belén: «más intuitiva, cómoda»): mientras el Tablero de control está en revisión va como tarjeta chica en «COEsp, documentos y apoyo».
   const CTRL_CHICO = { grupo: 'gem', t: 'Tablero de control (en revisión)', c: '#F57C00', cc: '#FFF0E0' };
@@ -808,12 +813,17 @@ function pintar() {
   rutasDc(u); // 14/11/2026 · estado de rutas (Defensa Civil Chubut) para todos los que ingresan
   boletines(u); // después del control de «Habilitado desde»: quien todavía no está habilitado no los ve
   // 13/11/2026 · Orden por urgencia: Respuesta → COEsp, documentos y apoyo → Relevamientos → Seguimiento. Arriba, lo último que usó en este equipo.
-  const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0).slice(0, 3);
+  const rec = recientes().map(k => MV.find(m => m.k === k)).filter(m => m && g(m.grupo).indexOf(m) >= 0 && !cerr(m)).slice(0, 3);
   const recHtml = rec.length ? `<div class="grupo-tit"><span class="ms">history</span>Lo que usaste último</div><div class="recientes">${rec.map(m => `<div class="rec" role="link" tabindex="0" data-href="${m.href}" data-k="${m.k}" ><span class="ms">${m.ico}</span>${E(m.t)}</div>`).join('')}</div>` : '';
   // 14/11/2026 (Belén: «organizar tarjetas según 1. preparación (relevamientos y herramientas OPS), 2. gestión de la emergencia,
   // 3. resiliencia (como lo plantea la OMS), 4. fuentes, bibliografía, links, cursos»). MEJORA / buena práctica: OPS 2025, Hospitales resilientes
   // (antes, durante y después del evento). Las secciones sin tarjetas para el usuario no se muestran.
-  $('#rejilla').innerHTML = recHtml + fila('prep', 'fact_check', '1 · Preparación · relevamientos y herramientas OPS/OMS', 'dos', grande) + fila('gem', 'emergency', '2 · Gestión de la emergencia', 'dos', grande) + fila('resil', 'health_and_safety', '3 · Resiliencia · planes y continuidad', 'dos', grande) + fila('coesp', 'event_note', '4 · COEsp · reuniones, acuerdos y documentos (en elaboración)', 'dos', grande) + (g('fuentes').length ? `<div class="grupo-tit"><span class="ms">menu_book</span>5 · Fuentes · bibliografía, normativa, links y cursos</div>` : '') + g('fuentes').map(m => enlaceGrande(m, m.bg)).join('');
+    // 15/11/2026 (Belén: «las herramientas de OPS/OMS podrían tener una sola tarjeta y clickear y que estén las 3»): STAR-H, ISH, PHR y
+  // Formularios para imprimir van dentro de la tarjeta «Herramientas OPS/OMS», que se despliega en el lugar (cada línea sigue con su tarjeta y su tablero).
+  const OPS = ['starh', 'ish', 'phr', 'imp'], pTop = g('prep').filter(m => OPS.indexOf(m.k) < 0), pOps = g('prep').filter(m => OPS.indexOf(m.k) >= 0);
+  const opsTj = pOps.length ? `<div class="tj tj-info tj-grupo" role="button" tabindex="0" aria-expanded="false" data-carpeta="ops" aria-label="Herramientas OPS/OMS" style="--bg:linear-gradient(120deg,#0F3D3E 0%,#0F9D8A 100%);--c:#0F9D8A;--cc:#E0F4F1"><span class="ms fantasma" aria-hidden="true">public</span><span class="ico"><span class="ms">public</span></span><span class="t"><b>Herramientas OPS/OMS</b><span class="d largo">${E(pOps.map(m => m.t).join(' · '))}. Tocá para ver las herramientas; cada una tiene su carga y su tablero.</span></span><span class="ms flecha">expand_more</span></div>` : '';
+  const prepHtml = (pTop.length || pOps.length) ? `<div class="grupo-tit"><span class="ms">fact_check</span>1 · Preparación · relevamientos y herramientas OPS/OMS</div><div class="fila dos">${pTop.map(grande).join('')}${opsTj}</div>${pOps.length ? `<div class="fila dos sub oculto" data-sub="ops">${pOps.map(grande).join('')}</div>` : ''}` : '';
+  $('#rejilla').innerHTML = recHtml + prepHtml + fila('gem', 'emergency', '2 · Gestión de la emergencia', 'dos', grande) + fila('resil', 'health_and_safety', '3 · Resiliencia · planes y continuidad', 'dos', grande) + fila('coesp', 'event_note', '4 · COEsp · reuniones, acuerdos y documentos (en elaboración)', 'dos', grande) + (g('fuentes').length ? `<div class="grupo-tit"><span class="ms">menu_book</span>5 · Fuentes · bibliografía, normativa, links y cursos</div>` : '') + g('fuentes').map(m => enlaceGrande(m, m.bg)).join('');
 }
 $('#fIng').addEventListener('submit', async ev => {
   ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msg'); b.disabled = true; m.classList.add('oculto');
