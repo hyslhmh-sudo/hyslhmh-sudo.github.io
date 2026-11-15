@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartografía · Emergencias y desastres</title>
+<meta name="description" content="Láminas y mapas del Área Programática Trelew.">
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* 15/11/2026 · Cartografía (v0). Paleta del sitio: #F5F7FB #E4EAFB #2F5BEA #F57C00 #172B4D. */
+:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--carto:#0F7B6C}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:#172B4D;color:#F5F7FB;border-bottom:3px solid var(--carto);padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:900px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid #F57C00;border-left-width:6px;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start}
+.aviso .ms{color:#F57C00}
+.ayuda{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda summary{cursor:pointer;font-weight:700}.ayuda p,.ayuda li{margin:.4em 0}
+.adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--carto);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.adm b{flex:1;min-width:200px;font-size:14px}.adm b small{display:block;font-weight:500;color:var(--suave);font-size:12px}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filtros input,.filtros select{border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:#fff}
+.filtros input{flex:1;min-width:200px}
+.lam{background:#fff;border:1px solid var(--linea);border-left:6px solid var(--carto);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.lam.baja{opacity:.65;border-left-color:#9AA5B5}
+.lam .cod{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#fff;background:var(--carto);border-radius:999px;padding:2px 10px}
+.lam.baja .cod{background:#9AA5B5}
+.lam h2{font-size:16px;margin:6px 0 2px}
+.lam .meta{font-size:12.5px;color:var(--suave);display:flex;flex-wrap:wrap;gap:4px 14px;margin:2px 0 6px}
+.lam .meta span{display:inline-flex;align-items:center;gap:3px}.lam .meta .ms{font-size:16px}
+.lam p{font-size:13.5px;margin:4px 0 8px;color:var(--texto)}
+.acc{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid transparent;border-radius:10px;padding:9px 14px;font:inherit;font-weight:700;font-size:13.5px;cursor:pointer;text-decoration:none;min-height:42px;background:#2F5BEA;color:#fff}
+.btn.sec{background:#fff;color:#172B4D;border-color:#2F5BEA}
+.btn.peligro{background:#fff;color:#172B4D;border-color:#F57C00;box-shadow:inset 4px 0 0 #F57C00}
+.btn:disabled{opacity:.6;cursor:default}
+.est-b{font-size:11.5px;font-weight:800;background:#EEF0F4;color:#4B5B73;border-radius:999px;padding:1px 9px;margin-left:6px}
+.pie{font-size:12px;color:var(--tenue)}
+.vacio{background:#fff;border:1px dashed var(--borde);border-radius:14px;padding:18px;text-align:center;color:var(--suave)}
+dialog{border:0;border-radius:16px;padding:0;max-width:580px;width:calc(100% - 24px);box-shadow:0 20px 60px rgba(23,43,77,.3)}dialog::backdrop{background:rgba(23,43,77,.45)}
+.dlg-cab{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--linea)}.dlg-cab b{flex:1}
+.dlg-c{padding:6px 16px 4px;max-height:70vh;overflow:auto}.dlg-p{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--linea)}
+.campo{display:block;margin:10px 0}.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:4px}
+.campo input,.campo textarea,.campo select{width:100%;border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px}.campo textarea{min-height:80px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.cerrar{background:none;border:0;cursor:pointer;color:var(--fuerte)}
+.msg-s{font-size:13px;color:var(--suave);margin:4px 0 8px}
+.visor{position:fixed;inset:0;z-index:50;background:#2B3A55;display:none;flex-direction:column}.visor.abierto{display:flex}
+.vbar{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px;background:#172B4D;color:#fff}
+.vbar .vt{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vb{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.14);color:#fff}
+.vb:hover{background:rgba(255,255,255,.26)}
+.vcuerpo{flex:1;overflow:auto;padding:12px 8px 40px;display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-overflow-scrolling:touch}
+.vpag{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:100%;height:auto}
+.vmsg{color:#fff;font-size:13.5px;margin:6px 0}.vmsg.mal{background:#FFF6EC;color:#8a3b00;border-radius:10px;padding:10px 14px}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
+@media (max-width:560px){.dos{grid-template-columns:1fr}}
+@media print{.barra .icono,.adm,.filtros,.ayuda,.acc{display:none}.barra{position:static}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Cartografía<small>Láminas y mapas del Área Programática Trelew · versión 0</small></h1>
+</header>
+<main id="app"><p class="pie">Cargando…</p></main>
+<dialog id="dlg"></dialog>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+// 15/11/2026 · Cartografía (Belén: «quiero una carpeta para guardar la cartografía dentro de la app»; tarjeta nueva en el inicio;
+// todos los que ingresan ven y abren las láminas; solo Administración sube, reemplaza o da de baja).
+// Los PDF están en Drive › 08 · CARTOGRAFÍA (carpeta privada, no se comparte): el servidor entrega el archivo a quien inició sesión.
+// La lista se guarda en la hoja CARTOGRAFÍA del libro de la app.
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const MAX_MB = 20;
+const ZONAS = ['Trelew', 'Rawson', 'Trelew–Rawson', 'Valle inferior (VIRCH)', 'Valle completo hasta Paso de Indios', 'Gaiman', 'Dolavon', 'Camarones', 'Área Programática Trelew'];
+const esAdm = () => { const u = S.sesion.token() ? (S.sesion.usuario() || {}) : {}; return u.rol === 'Administración' && !(S.sesion.enVista && S.sesion.enVista()); };
+let LISTA = S.store.get('carto.lista', []), CARPETA = (esAdm() && S.store.get('carto.carpeta', '')) || '', filtro = { q: '', zona: '' }, notaPie = '';
+const sinT = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function ayuda() {
+  return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
+    <p><b>Qué es.</b> Láminas en PDF armadas en QGIS para el COEsp y la preparación ante emergencias: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo.</p>
+    <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
+    <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). «Descargar» baja el PDF, solo si lo necesitás.</p>
+    <p><b>Correcciones.</b> Una lámina se corrige en QGIS y se vuelve a subir el PDF. El PDF no se edita. Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
+    ${esAdm() ? `<p><b>Administración.</b> «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí.</p>` : ''}
+  </details>`;
+}
+function barraAdm() {
+  if (!esAdm()) return '';
+  return `<div class="adm"><b>Carpeta 08 · CARTOGRAFÍA<small>Es privada: solo la abrís vos. Los demás leen las láminas desde la app.</small></b>
+    ${CARPETA ? `<a class="btn sec" href="${E(CARPETA)}" target="_blank" rel="noopener"><span class="ms">folder_open</span>Abrir la carpeta</a>` : ''}
+    <button class="btn" type="button" data-nueva><span class="ms">upload_file</span>Subir lámina</button></div>`;
+}
+function tarjeta(x) {
+  const baja = /baja/i.test(x.estado || '');
+  const meta = [['place', x.zona], ['folder_special', x.proyecto], ['event', x.fecha], ['description', x.hojas ? x.hojas + (String(x.hojas) === '1' ? ' hoja' : ' hojas') : '']]
+    .filter(m => m[1]).map(m => `<span><span class="ms">${m[0]}</span>${E(m[1])}</span>`).join('');
+  return `<article class="lam${baja ? ' baja' : ''}">
+    <span class="cod"><span class="ms" style="font-size:15px">map</span>${E(x.codigo)}</span>${baja ? '<span class="est-b">Dada de baja</span>' : ''}
+    <h2>${E(x.titulo)}</h2>
+    <div class="meta">${meta}</div>
+    ${x.descripcion ? `<p>${E(x.descripcion)}</p>` : ''}
+    <div class="acc">
+      ${x.archivoId ? `<button class="btn" type="button" data-abrir="${E(x.archivoId)}" data-tit="${E(x.codigo + ' · ' + x.titulo)}"><span class="ms">visibility</span>Abrir</button>
+      <button class="btn sec" type="button" data-bajar="${E(x.archivoId)}"><span class="ms">download</span>Descargar</button>` : '<span class="pie">PDF: s/d (revisar)</span>'}
+      ${esAdm() ? `<button class="btn sec" type="button" data-corregir="${E(x.codigo)}"><span class="ms">edit</span>Corregir datos</button>
+      <button class="btn peligro" type="button" data-estado="${E(x.codigo)}" data-a="${baja ? 'Vigente' : 'Dada de baja'}"><span class="ms">${baja ? 'restore' : 'archive'}</span>${baja ? 'Volver a dar de alta' : 'Dar de baja'}</button>` : ''}
+    </div>
+    ${esAdm() && (x.actualizado || x.cargo) ? `<p class="pie" style="margin:8px 0 0">Actualizado ${E(x.actualizado || 's/d')}${x.cargo ? ' · ' + E(x.cargo) : ''}</p>` : ''}
+  </article>`;
+}
+function pintar() {
+  const zonas = LISTA.map(x => x.zona).filter((z, i, a) => z && a.indexOf(z) === i).sort();
+  const q = sinT(filtro.q);
+  const L = LISTA.filter(x => (!filtro.zona || x.zona === filtro.zona) && (!q || sinT([x.codigo, x.titulo, x.zona, x.proyecto, x.descripcion].join(' ')).indexOf(q) >= 0));
+  app.innerHTML = `<div class="aviso"><span class="ms">info</span><span>Cartografía orientadora. Las áreas de antecedentes son aproximadas y no reemplazan el relevamiento en terreno.</span></div>`
+    + ayuda() + barraAdm()
+    + (LISTA.length > 1 ? `<div class="filtros"><input type="search" id="fQ" placeholder="Buscar por código, título o tema" value="${E(filtro.q)}" aria-label="Buscar"><select id="fZ" aria-label="Zona"><option value="">Todas las zonas</option>${zonas.map(z => `<option${z === filtro.zona ? ' selected' : ''}>${E(z)}</option>`).join('')}</select></div>` : '')
+    + (L.length ? L.map(tarjeta).join('') : `<div class="vacio">${LISTA.length ? 'Ninguna lámina coincide con la búsqueda.' : 'Todavía no hay láminas cargadas.'}</div>`)
+    + `<p class="pie">${E(notaPie)}</p>`;
+  const fq = document.getElementById('fQ'), fz = document.getElementById('fZ');
+  if (fq) fq.addEventListener('input', () => { filtro.q = fq.value; const p = fq.selectionStart; pintar(); const n = document.getElementById('fQ'); n.focus(); n.setSelectionRange(p, p); });
+  if (fz) fz.addEventListener('change', () => { filtro.zona = fz.value; pintar(); });
+}
+function actualizar(nota) {
+  if (S.DEMO || !navigator.onLine) { notaPie = 'Sin conexión: últimos datos guardados en este equipo.'; pintar(); return; }
+  S.api('cartografia', {}, 60000).then(r => {
+    if (!r || !r.ok) throw r;
+    LISTA = r.laminas || []; S.store.set('carto.lista', LISTA);
+    if (r.carpeta) { CARPETA = r.carpeta; S.store.set('carto.carpeta', r.carpeta); }
+    notaPie = (nota || 'Actualizado.') + ' La lista está en la hoja CARTOGRAFÍA del libro de la app.'; pintar();
+  }).catch(e => {
+    const m = (e && (e.error || e.message)) || '';
+    notaPie = /desconocida|disponible/i.test(m) ? 'Falta publicar la versión nueva del servidor de la app.' : 'No se pudo actualizar' + (m ? ': ' + m : '.') + ' Se muestran los últimos datos guardados.';
+    pintar();
+  });
+}
+
+/* ---------- Abrir y descargar (el servidor entrega el PDF; la carpeta no se comparte) ---------- */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfjsCarga = null;
+const cargarPdfjs = () => pdfjsCarga || (pdfjsCarga = new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = PDFJS + 'pdf.min.js';
+  sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; ok(window.pdfjsLib); }; sc.onerror = () => { pdfjsCarga = null; mal(new Error('No se pudo cargar el visor. Revisá la conexión.')); }; document.head.appendChild(sc); }));
+const b64aBytes = d => { const bin = atob(d), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return u8; };
+const cache = {};
+async function traer(id) { if (cache[id]) return cache[id]; const r = await S.api('cartografia_archivo', { id: id }, 180000); if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo abrir la lámina.'); return (cache[id] = r); }
+function visor() {
+  let v = document.getElementById('visor'); if (v) return v;
+  v = document.createElement('div'); v.id = 'visor'; v.className = 'visor'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-modal', 'true');
+  v.innerHTML = '<div class="vbar"><b class="vt"></b><button type="button" class="vb" data-vmas aria-label="Ampliar"><span class="ms">zoom_in</span></button><button type="button" class="vb" data-vmenos aria-label="Reducir"><span class="ms">zoom_out</span></button><button type="button" class="vb" data-vdesc><span class="ms">download</span>Descargar</button><button type="button" class="vb" data-vcerrar aria-label="Cerrar"><span class="ms">close</span>Cerrar</button></div><div class="vcuerpo"></div>';
+  document.body.appendChild(v);
+  v.addEventListener('click', ev => {
+    if (ev.target.closest('[data-vcerrar]')) cerrarVisor();
+    if (ev.target.closest('[data-vdesc]')) descargar(v.dataset.id, ev.target.closest('[data-vdesc]'));
+    if (ev.target.closest('[data-vmas]')) { v.dataset.zoom = Math.min(4, (+v.dataset.zoom || 1) * 1.5); dibujar(); }
+    if (ev.target.closest('[data-vmenos]')) { v.dataset.zoom = Math.max(1, (+v.dataset.zoom || 1) / 1.5); dibujar(); }
+  });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && v.classList.contains('abierto')) cerrarVisor(); });
+  return v;
+}
+function cerrarVisor() { const v = document.getElementById('visor'); if (!v) return; v.classList.remove('abierto'); v.querySelector('.vcuerpo').innerHTML = ''; document.body.style.overflow = ''; }
+let pdfActual = null;
+async function dibujar() {
+  const v = visor(), cu = v.querySelector('.vcuerpo'), id = v.dataset.id, z = +v.dataset.zoom || 1;
+  if (!pdfActual) return;
+  cu.innerHTML = `<p class="vmsg">${pdfActual.numPages} ${pdfActual.numPages === 1 ? 'hoja' : 'hojas'}${z > 1 ? ' · ampliado ×' + z.toFixed(1) : ''}</p>`;
+  cu.style.alignItems = z > 1 ? 'flex-start' : 'center';
+  const ancho = Math.min(cu.clientWidth - 16, 1100) * z, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  for (let i = 1; i <= pdfActual.numPages; i++) {
+    if (!v.classList.contains('abierto') || v.dataset.id !== id || (+v.dataset.zoom || 1) !== z) return;
+    const pg = await pdfActual.getPage(i), vp0 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: ancho / vp0.width * dpr });
+    const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; c.style.width = (vp.width / dpr) + 'px'; c.style.maxWidth = 'none'; c.className = 'vpag';
+    cu.appendChild(c); await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+  }
+}
+async function abrir(b) {
+  const id = b.dataset.abrir, v = visor(), cu = v.querySelector('.vcuerpo');
+  v.dataset.id = id; v.dataset.zoom = 1; v.querySelector('.vt').textContent = b.dataset.tit || 'Lámina';
+  cu.innerHTML = '<p class="vmsg">Abriendo la lámina… (la primera vez puede tardar unos segundos)</p>';
+  v.classList.add('abierto'); document.body.style.overflow = 'hidden'; pdfActual = null;
+  try {
+    const [r, lib] = await Promise.all([traer(id), cargarPdfjs().catch(e => e)]);
+    if (lib instanceof Error) throw lib;
+    if (!v.classList.contains('abierto') || v.dataset.id !== id) return;
+    pdfActual = await lib.getDocument({ data: b64aBytes(r.datos) }).promise;
+    await dibujar();
+  } catch (e) { cu.innerHTML = `<p class="vmsg mal">${E(/desconocida|disponible/i.test(e.message) ? 'Falta publicar la versión nueva del servidor de la app.' : e.message)}</p>`; }
+}
+async function descargar(id, b) {
+  const t = b.lastChild.textContent; b.disabled = true; b.lastChild.textContent = 'Descargando…';
+  try {
+    const r = await traer(id);
+    const url = URL.createObjectURL(new Blob([b64aBytes(r.datos)], { type: r.tipo || 'application/pdf' })), a = document.createElement('a');
+    a.href = url; a.download = r.nombre; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) { alert(e.message); } finally { b.disabled = false; b.lastChild.textContent = t; }
+}
+
+/* ---------- Administración: subir, corregir, dar de baja ---------- */
+const base64 = a => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(a); });
+function proxCodigo() {
+  const n = LISTA.map(x => +(String(x.codigo).match(/CART-COE-(\d+)/i) || [])[1] || 0).reduce((a, b) => Math.max(a, b), 0);
+  return 'CART-COE-' + String(n + 1).padStart(3, '0');
+}
+function dlgLamina(x) {
+  const nuevo = !x; x = x || { codigo: proxCodigo(), proyecto: 'Preparación y respuesta a emergencias y desastres · COEsp El Niño 2026-2027', fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }), hojas: '1' };
+  const sdv = s => /^s\/d/i.test(String(s || '')) ? '' : (s || '');
+  const d = document.getElementById('dlg');
+  d.innerHTML = `<div class="dlg-cab"><b>${nuevo ? 'Subir lámina' : 'Corregir ' + E(x.codigo)}</b><button class="cerrar" data-c aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <form class="dlg-c" id="fLam">
+      <label class="campo"><span>PDF de la lámina (hasta ${MAX_MB} MB)${nuevo ? ' *' : ' · solo si querés reemplazarlo'}</span><input type="file" name="archivo" accept="application/pdf,.pdf"></label>
+      <div class="dos">
+        <label class="campo"><span>Código *</span><input name="codigo" value="${E(x.codigo)}"${nuevo ? '' : ' readonly'}></label>
+        <label class="campo"><span>Fecha</span><input name="fecha" value="${E(sdv(x.fecha))}" placeholder="dd/mm/aaaa"></label>
+      </div>
+      <label class="campo"><span>Título *</span><input name="titulo" value="${E(sdv(x.titulo))}"></label>
+      <div class="dos">
+        <label class="campo"><span>Zona</span><input name="zona" list="dlZona" value="${E(sdv(x.zona))}"><datalist id="dlZona">${ZONAS.concat(LISTA.map(l => l.zona)).filter((z, i, a) => z && a.indexOf(z) === i).map(z => `<option value="${E(z)}">`).join('')}</datalist></label>
+        <label class="campo"><span>Cantidad de hojas</span><input name="hojas" inputmode="numeric" value="${E(sdv(x.hojas))}"></label>
+      </div>
+      <label class="campo"><span>Proyecto</span><input name="proyecto" value="${E(sdv(x.proyecto))}"></label>
+      <label class="campo"><span>Descripción corta (qué muestra)</span><textarea name="descripcion">${E(sdv(x.descripcion))}</textarea></label>
+      <p class="msg-s">Lo que quede vacío se guarda como «s/d (revisar)». El PDF queda en la carpeta privada 08 · CARTOGRAFÍA; los demás lo leen desde la app.</p>
+      <p class="msg-s" id="estLam"></p>
+    </form>
+    <div class="dlg-p"><button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" id="bGuardarLam" data-nuevo="${nuevo ? 1 : ''}"><span class="ms">save</span>Guardar</button></div>`;
+  d.showModal();
+}
+async function guardarLam(b) {
+  const f = document.getElementById('fLam'), est = document.getElementById('estLam'), a = f.archivo.files[0], nuevo = !!b.dataset.nuevo;
+  if (!f.codigo.value.trim()) { est.textContent = 'Falta el código.'; return; }
+  if (!f.titulo.value.trim()) { est.textContent = 'Falta el título.'; return; }
+  if (nuevo && !a) { est.textContent = 'Falta el PDF.'; return; }
+  if (a && !/\.pdf$/i.test(a.name) && a.type !== 'application/pdf') { est.textContent = 'La lámina tiene que ser un PDF.'; return; }
+  if (a && a.size > MAX_MB * 1048576) { est.textContent = 'El archivo supera ' + MAX_MB + ' MB.'; return; }
+  if (!navigator.onLine) { est.textContent = 'Para guardar se necesita conexión.'; return; }
+  b.disabled = true; est.textContent = a ? 'Subiendo ' + a.name + '… (puede tardar un poco)' : 'Guardando…';
+  try {
+    const datos = { nuevo: nuevo };
+    ['codigo', 'titulo', 'zona', 'proyecto', 'fecha', 'hojas', 'descripcion'].forEach(k => { datos[k] = f[k].value; });
+    if (a) datos.archivo = { nombre: a.name, tipo: a.type || 'application/pdf', datos: await base64(a) };
+    const r = await S.api('cartografia_guardar', datos, 180000);
+    if (!r || !r.ok) throw r;
+    Object.keys(cache).forEach(k => delete cache[k]);
+    document.getElementById('dlg').close(); actualizar(nuevo ? 'Lámina subida.' : 'Lámina corregida.');
+  } catch (e) {
+    const m = (e && (e.error || e.message)) || 'No se pudo guardar.';
+    est.textContent = /acci[oó]n desconocida/i.test(m) ? 'Falta publicar la versión nueva del servidor de la app.' : m;
+    b.disabled = false;
+  }
+}
+async function cambiarEstado(b) {
+  const cod = b.dataset.estado, a = b.dataset.a;
+  if (!confirm(a === 'Vigente' ? '¿Volver a dar de alta ' + cod + '? Los demás la van a ver de nuevo.' : '¿Dar de baja ' + cod + '? Deja de verse para los demás. No se borra: queda en la hoja y en la carpeta.')) return;
+  b.disabled = true;
+  try { const r = await S.api('cartografia_guardar', { codigo: cod, estado: a, soloEstado: true }, 60000); if (!r || !r.ok) throw r; actualizar(a === 'Vigente' ? 'Lámina dada de alta.' : 'Lámina dada de baja.'); }
+  catch (e) { alert((e && (e.error || e.message)) || 'No se pudo cambiar.'); b.disabled = false; }
+}
+
+document.addEventListener('click', ev => {
+  const t = ev.target;
+  let b;
+  if ((b = t.closest('[data-abrir]'))) abrir(b);
+  else if ((b = t.closest('[data-bajar]'))) descargar(b.dataset.bajar, b);
+  else if (t.closest('[data-nueva]')) dlgLamina(null);
+  else if ((b = t.closest('[data-corregir]'))) dlgLamina(LISTA.find(x => x.codigo === b.dataset.corregir));
+  else if ((b = t.closest('[data-estado]'))) cambiarEstado(b);
+  else if ((b = t.closest('#bGuardarLam'))) guardarLam(b);
+  else if (t.closest('[data-c]')) document.getElementById('dlg').close();
+});
+notaPie = LISTA.length ? 'Últimos datos guardados en este equipo.' : '';
+pintar();
+actualizar();
+})();
+</script>
+</body>
+</html>
