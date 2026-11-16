@@ -252,6 +252,7 @@ function pasa(p) {
 
 /* ---------- 1. Participantes ---------- */
 function vistaPersonas() {
+  // 16/11/2026 19:39 (Belén: «puedo yo, solo yo, entrar a cada ficha por acá?»): Administración ve «Ficha y accesos» en cada participante; los demás, nada.
   const l = cat.personas.filter(pasa).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   $('#vista').innerHTML = filtrosHTML(true) + (l.length ? `<div class="lista">${l.map(p => `<div class="tarjeta per">
     <div class="per-cab"><b>${E(p.nombre)}</b>${chipTipo(p.tipo)}${p.estado === 'Inactivo' ? '<span class="chip inac">Inactivo</span>' : ''}</div>
@@ -261,6 +262,7 @@ function vistaPersonas() {
     ${p.reemplazo ? `<div class="sub"><span class="ms" style="font-size:16px">swap_horiz</span> Reemplazante: <b>${E(per(p.reemplazo).nombre || p.reemplazo)}</b></div>` : ''}${cat.personas.filter(x => x.reemplazo === p.id).map(x => `<div class="sub"><span class="ms" style="font-size:16px">swap_horiz</span> Reemplaza a: <b>${E(x.nombre)}</b></div>`).join('')}
     <div class="proys">${partsDe(p.id).map(x => `<span class="chip proy">${E(x.proyecto)}${x.funcion ? ' · ' + E(x.funcion) : ''}</span>`).join('') || '<span class="sub">Todavía no está en ningún proyecto</span>'}</div>
     ${p.obs ? `<div class="sub">${E(p.obs)}</div>` : ''}
+    ${cat.puedeCargar ? `<div class="acc"><button class="btn sec mini" data-act="ficha" data-id="${E(p.id)}" title="Solo vos ves este botón"><span class="ms" style="font-size:17px">badge</span>Ficha y accesos</button></div>` : ''}
     </div>`).join('')}</div>`
     : `<div class="tarjeta vacio">${cat.personas.length ? 'No hay participantes con estos filtros.' : 'Todavía no hay participantes.'}</div>`);
   atarFiltros(vistaPersonas);
