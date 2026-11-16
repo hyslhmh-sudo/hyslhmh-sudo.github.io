@@ -905,7 +905,8 @@ async function dlgFicha(id) {
       <td><select name="ta${i}">${alcOpts(niv ? alcVal(x) : alcProp, prop)}</select></td></tr>`; };
   const redesCu = cu ? String(cu.redes || '') : '';
   const alcCoe = !cu ? alcProp : /todas|;/i.test(redesCu) || !redesCu ? 'VIRCH' : /rawson/i.test(redesCu) ? 'H:HSST' : alcProp === 'VIRCH' ? 'VIRCH' : alcProp;
-  dlgFicha._ = { id: id, p: p, cu: cu, adm: adm, perms: perms, prs: prs, pl: pl };
+  const TJ = acc.tarjetas.slice(); // copia propia: la ficha no depende de que la lista de cuentas siga cargada
+  dlgFicha._ = { id: id, p: p, cu: cu, adm: adm, perms: perms, prs: prs, pl: pl, tj: TJ };
   abrir(`<div class="dlg-cab"><b>${id ? 'Ficha de ' + E(p.nombre) : 'Agregar persona'}<small style="display:block;font-weight:500;opacity:.85">Datos, proyecto, función en el COEsp y qué ve o edita en la app</small></b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <form class="dlg-cuerpo" id="fFi">
       ${id && (p.estado === 'Inactivo' || (cu && cu.estado === 'Inactivo')) ? '<div class="tarjeta" style="padding:10px 14px;margin-bottom:10px;background:#FFF3C4;color:#5A4500"><b>Dada de baja.</b> No puede entrar a la app y no figura en Participantes. Para volver a habilitarla, «Reactivar» (abajo).</div>' : ''}
@@ -924,7 +925,7 @@ async function dlgFicha(id) {
       ${adm ? '' : `<h4 class="sec-t">4 · Tarjetas: qué ve y qué edita</h4>
       <label class="campo" id="fiExt"><span><input type="checkbox" name="extPac" ${/^s[ií]/i.test(p.extPac || '') ? 'checked' : ''} style="width:auto"> Externo: habilitar el acceso a pacientes</span></label>
       <p class="sub" style="margin:0 0 6px" id="fiExtTxt">Los externos no acceden a pacientes salvo que lo habilites acá. Vulnerabilidad social sigue cerrada para externos.</p>
-      <div class="tabla-fi"><table><thead><tr><th>Tarjeta</th><th>Acceso</th><th>Alcance</th></tr></thead><tbody>${acc.tarjetas.map(filaTarj).join('')}</tbody></table></div>
+      <div class="tabla-fi"><table><thead><tr><th>Tarjeta</th><th>Acceso</th><th>Alcance</th></tr></thead><tbody>${TJ.map(filaTarj).join('')}</tbody></table></div>
       <p class="sub" style="margin:6px 0 0">Todos ingresan al COEsp (participantes) y a la red de derivación. El tablero de control muestra los proyectos tildados arriba. «Red VIRCH» = todo el Área Programática; un hospital = ese hospital y lo que depende de él (CAPS y dispositivos).</p>`}
       <label class="campo"><span>Observaciones</span><textarea name="obs">${E(p.obs || '')}</textarea></label>
     </form>
@@ -933,7 +934,7 @@ async function dlgFicha(id) {
   const sync = () => {
     const ext = f.tipo.value === 'Externo', hab = ext && f.extPac && f.extPac.checked;
     if ($('#fiExt')) { $('#fiExt').style.display = ext ? '' : 'none'; $('#fiExtTxt').style.display = ext ? '' : 'none'; }
-    if (!adm) acc.tarjetas.forEach((m, i) => { const bloq = ext && (esVuln(m) || (esPac(m) && !hab)); const s = f['tn' + i]; s.disabled = bloq; if (bloq) s.value = ''; f['ta' + i].disabled = bloq || !s.value; });
+    if (!adm) TJ.forEach((m, i) => { const bloq = ext && (esVuln(m) || (esPac(m) && !hab)); const s = f['tn' + i]; s.disabled = bloq; if (bloq) s.value = ''; f['ta' + i].disabled = bloq || !s.value; });
     if ($('#fiUsr') && !cu) $('#fiUsr').textContent = (f.apellidos.value.trim() + ' ' + f.nombres.value.trim()).trim() || 's/d';
   };
   f.addEventListener('change', sync); f.addEventListener('input', ev => { if (/^(apellidos|nombres)$/.test(ev.target.name)) sync(); }); sync();
@@ -971,6 +972,9 @@ async function guardarFicha(btn) {
   const paso = t => { est.textContent = t; };
   btn.disabled = true;
   try {
+    // 16/11/2026 19:51 · Error «Cannot read properties of null (reading 'proyectos')»: la lista de cuentas (acc) se había vaciado
+    // mientras la ficha estaba abierta. Ahora se vuelve a traer antes de guardar si hace falta.
+    if (!acc || !acc.tarjetas) { paso('Actualizando cuentas…'); const ra = await S.api('coe_usuarios'); if (!ra.ok) throw ra; acc = ra; }
     // 1 · persona
     paso('Guardando la persona…');
     const r1 = await S.api('coe_persona', { persona: o }); if (!r1.ok) throw r1; const pid = r1.id;
@@ -999,8 +1003,8 @@ async function guardarFicha(btn) {
       // 4 · tarjetas (solo las que cambiaron)
       paso('Guardando las tarjetas…');
       const perms = (acc.permisos || []).filter(x => x.persona === pid);
-      for (let i = 0; i < acc.tarjetas.length; i++) {
-        const m = acc.tarjetas[i], niv = f['tn' + i].value, av = f['ta' + i].value, ant = perms.find(y => y.modulo === m);
+      for (let i = 0; i < D.tj.length; i++) {
+        const m = D.tj[i], niv = f['tn' + i].value, av = f['ta' + i].value, ant = perms.find(y => y.modulo === m);
         let tipo = 'Área', alc = 'Red VIRCH';
         if (/^H:/.test(av)) { tipo = 'Hospital'; alc = av.slice(2); } else if (/^K:/.test(av)) { const k = av.slice(2).split('|'); tipo = k[0]; alc = k.slice(1).join('|'); }
         if (!niv && !ant) continue;
