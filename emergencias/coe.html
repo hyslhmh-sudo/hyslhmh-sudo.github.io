@@ -206,17 +206,23 @@ function render() {
   if (location.hash === '#ayuda') return vistaAyuda();
   const activos = cat.personas.filter(p => p.estado !== 'Inactivo');
   // 05/11/2026 · Quien no es Administración ve solo «Participantes» (quiénes integran el COEsp); ninguna otra pestaña.
-  if (!cat.puedeCargar) vista = 'personas';
-  { const TIT = { personas: 'Participantes', grilla: 'Proyectos y funciones', proyectos: 'Por proyecto', reuniones: 'Reuniones y actas', matriz: 'Matriz operativa', solicitudes: 'Solicitudes a organismos', usuarios: 'Usuarios y accesos' };
+  // 16/11/2026 (Belén: «participantes y usuarios no es lo mismo?»): Participantes es una sola lista, igual para todos y solo para ver.
+  // La gestión (personas y accesos, proyectos y funciones, por proyecto, reuniones, matriz y solicitudes) es solo de Administración
+  // y se entra desde Mi perfil (coe.html#mp-…), no desde pestañas a la vista.
+  const MP = { personas: 'usuarios', grilla: 'grilla', proyectos: 'proyectos', reuniones: 'reuniones', matriz: 'matriz', solicitudes: 'solicitudes' };
+  const mh = (location.hash.match(/^#mp-(\w+)/) || [])[1];
+  vista = cat.puedeCargar && mh && MP[mh] ? MP[mh] : 'personas';
+  { const TIT = { personas: 'Participantes', grilla: 'Proyectos y funciones', proyectos: 'Por proyecto', reuniones: 'Reuniones y actas', matriz: 'Matriz operativa', solicitudes: 'Solicitudes a organismos', usuarios: 'Personas y accesos' };
     $('#titulo').innerHTML = `COEsp · ${TIT[vista] || 'Participantes'}<small>Centro de Operaciones de Emergencia de Salud Pública (OMS)</small>`; document.title = 'COEsp · ' + (TIT[vista] || 'Participantes'); }
-  const tabs = (cat.puedeCargar ? [['personas', 'contacts', 'Participantes'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas'], ['matriz', 'table_chart', 'Matriz operativa'], ['solicitudes', 'outgoing_mail', 'Solicitudes'], ['usuarios', 'manage_accounts', 'Usuarios y accesos']] : [])
+  const tabs = (vista !== 'personas' ? [['personas', 'arrow_back', 'Participantes'], ['usuarios', 'manage_accounts', 'Personas y accesos'], ['grilla', 'table_view', 'Proyectos y funciones'], ['proyectos', 'account_tree', 'Por proyecto'], ['reuniones', 'groups', 'Reuniones y actas'], ['matriz', 'table_chart', 'Matriz operativa'], ['solicitudes', 'outgoing_mail', 'Solicitudes']] : [])
     .map(t => `<button class="tab" data-vista="${t[0]}" aria-pressed="${vista === t[0]}"><span class="ms" style="font-size:18px">${t[1]}</span>${t[2]}</button>`).join('');
+  const mpCab = vista !== 'personas' ? '<p class="sub" style="margin:0 2px 8px"><span class="ms" style="font-size:16px;vertical-align:-3px">lock</span> Mi perfil · gestión del COEsp: solo vos ves estas pantallas.</p>' : '';
   const kpis = `<div class="kpis">
     <div class="tarjeta kpi"><b>${activos.length}</b><span>participantes activos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo !== 'Externo').length}</b><span>actores internos</span></div>
     <div class="tarjeta kpi"><b>${activos.filter(p => p.tipo === 'Externo').length}</b><span>actores externos</span></div>
     <div class="tarjeta kpi"><b>${new Set(cat.participaciones.map(x => x.proyecto)).size}</b><span>proyectos con participantes</span></div></div>`;
-  app.innerHTML = `${tabs ? `<div class="tabs">${tabs}</div>` : ''}${vista === 'usuarios' || vista === 'reuniones' || vista === 'matriz' || vista === 'solicitudes' ? '' : kpis}<div id="vista"></div>
+  app.innerHTML = `${mpCab}${tabs ? `<div class="tabs">${tabs}</div>` : ''}${vista === 'usuarios' || vista === 'reuniones' || vista === 'matriz' || vista === 'solicitudes' ? '' : kpis}<div id="vista"></div>
     <p class="sub">Datos al ${new Date(cat.generado).toLocaleString('es-AR')}. Se guardan en las hojas COEsp PARTICIPANTES y COEsp PROYECTOS del libro${cat.puedeCargar ? '' : ' · Tu acceso es de consulta'}.</p>`;
   { const at = document.querySelector('.tab[aria-pressed="true"]'); if (at) at.scrollIntoView({ inline: 'center', block: 'nearest' }); }
   if (vista === 'usuarios') vistaUsuarios(); else if (vista === 'solicitudes') cargarSol(false); else if (vista === 'matriz') cargarMatriz(false); else if (vista === 'reuniones') vistaReuniones(); else if (vista === 'grilla') vistaGrilla(); else if (vista === 'proyectos') vistaProyectos(); else vistaPersonas();
@@ -228,7 +234,7 @@ function filtrosHTML(conProy) {
     ${conProy ? `<select id="fProy" aria-label="Proyecto">${opts(proyectos(), fProy, 'Todos los proyectos')}</select>` : ''}
     <select id="fRed" aria-label="Red">${opts(cat.listas.redes, fRed, 'Todas las redes')}</select>
     <label class="sub"><input type="checkbox" id="fIn" ${verInactivos ? 'checked' : ''}> inactivos</label>
-    ${cat.puedeCargar ? '<button class="btn" data-act="ficha"><span class="ms">person_add</span>Agregar persona</button>' : ''}</div>`;
+</div>`;
 }
 function atarFiltros(fn) {
   const f = $('#fq'); if (f) f.addEventListener('input', () => { q = f.value; const p = f.selectionStart; fn(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); });
@@ -255,8 +261,8 @@ function vistaPersonas() {
     ${p.reemplazo ? `<div class="sub"><span class="ms" style="font-size:16px">swap_horiz</span> Reemplazante: <b>${E(per(p.reemplazo).nombre || p.reemplazo)}</b></div>` : ''}${cat.personas.filter(x => x.reemplazo === p.id).map(x => `<div class="sub"><span class="ms" style="font-size:16px">swap_horiz</span> Reemplaza a: <b>${E(x.nombre)}</b></div>`).join('')}
     <div class="proys">${partsDe(p.id).map(x => `<span class="chip proy">${E(x.proyecto)}${x.funcion ? ' · ' + E(x.funcion) : ''}</span>`).join('') || '<span class="sub">Todavía no está en ningún proyecto</span>'}</div>
     ${p.obs ? `<div class="sub">${E(p.obs)}</div>` : ''}
-    ${cat.puedeCargar ? `<div class="acc"><button class="btn sec mini" data-act="ficha" data-id="${E(p.id)}"><span class="ms" style="font-size:17px">badge</span>Ficha y accesos</button></div>` : ''}</div>`).join('')}</div>`
-    : `<div class="tarjeta vacio">${cat.personas.length ? 'No hay participantes con estos filtros.' : 'Todavía no hay participantes. ' + (cat.puedeCargar ? 'Empezá con «Agregar persona».' : '')}</div>`);
+    </div>`).join('')}</div>`
+    : `<div class="tarjeta vacio">${cat.personas.length ? 'No hay participantes con estos filtros.' : 'Todavía no hay participantes.'}</div>`);
   atarFiltros(vistaPersonas);
 }
 
@@ -267,14 +273,14 @@ const modoHTML = () => `<div class="opciones" role="group" aria-label="Modo" sty
 function atarModo() { document.querySelectorAll('[data-gmodo]').forEach(b => b.addEventListener('click', () => { gModo = b.dataset.gmodo; S.store.set('coe.gmodo', gModo); vistaGrilla(); })); }
 function vistaCuadro() {
   const pers = cat.personas.filter(pasa).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-  const PR = proyectos(), ed = cat.puedeCargar;
+  const PR = proyectos(), ed = false; // 16/11/2026 · solo para mirar: proyecto y función se asignan en la ficha de cada persona (Mi perfil › Personas y accesos)
   const parDe = (pid, pr) => cat.participaciones.find(x => x.persona === pid && x.proyecto === pr);
   const corto = pr => pr.replace(/^Comité de crisis El Niño /, 'Comité El Niño ');
   $('#vista').innerHTML = filtrosHTML(false) + modoHTML() + `<datalist id="dlFunC">${(cat.listas.funciones || []).map(f => `<option value="${E(f)}">`).join('')}</datalist>
     <div class="tabla-wrap"><table class="cuadro"><thead><tr><th>Participante</th>${PR.map(pr => { const n = pers.filter(p => parDe(p.id, pr)).length; return `<th class="cpr"><span>${E(corto(pr))}</span><small>${n} de ${pers.length}</small>${ed ? `<button class="btn sec mini" data-todos="${E(pr)}" title="Sumar al proyecto a todos los que se ven en la lista">Tildar todos</button>` : ''}</th>`; }).join('')}</tr></thead><tbody>
     ${pers.map(p => `<tr data-p="${E(p.id)}"><td class="nom">${E(p.nombre)}<small>${E([p.institucion, p.red].filter(Boolean).join(' · '))}</small></td>${PR.map(pr => { const x = parDe(p.id, pr); return `<td class="cel${x ? ' si' : ''}"><label><input type="checkbox" data-pr="${E(pr)}" ${x ? 'checked' : ''} ${ed ? '' : 'disabled'} aria-label="${E(p.nombre + ' en ' + pr)}"></label>${x ? (ed ? `<input class="fun" data-fun="${E(x.id)}" list="dlFunC" value="${E(x.funcion || '')}" placeholder="Función">` : `<span class="fun">${E(x.funcion || 's/d')}</span>`) : ''}</td>`; }).join('')}</tr>`).join('') || `<tr><td colspan="${PR.length + 1}" class="vacio">No hay participantes con estos filtros.</td></tr>`}
     </tbody></table></div>
-    ${ed ? '<p class="sub">Tildá para sumar a la persona al proyecto (queda como «Integrante», con la fecha de hoy) y destildá para quitarla. La función se cambia en el casillero que aparece debajo y se guarda al salir. «Tildar todos» suma a todos los que se ven con los filtros de arriba. Fechas y observaciones: modo «Detalle».</p>' : ''}`;
+    ${ed ? '<p class="sub">Tildá para sumar a la persona al proyecto (queda como «Integrante», con la fecha de hoy) y destildá para quitarla. La función se cambia en el casillero que aparece debajo y se guarda al salir. «Tildar todos» suma a todos los que se ven con los filtros de arriba. Fechas y observaciones: modo «Detalle».</p>' : '<p class="sub">Solo para mirar. Para sumar a alguien a un proyecto o cambiar su función, abrí su ficha en «Personas y accesos».</p>'}`;
   atarFiltros(vistaCuadro); atarModo();
   if (!ed) return;
   const marcar = (inp, ok) => { inp.style.outline = ok ? '2px solid #2F5BEA' : '2px solid #C62828'; setTimeout(() => { inp.style.outline = ''; }, 1500); };
@@ -317,7 +323,7 @@ function vistaGrilla() {
   const pers = cat.personas.filter(pasa), ids = new Set(pers.map(p => p.id));
   const filas = cat.participaciones.filter(x => ids.has(x.persona) && (!fProy || x.proyecto === fProy))
     .sort((a, b) => (a.proyecto + per(a.persona).nombre).localeCompare(b.proyecto + per(b.persona).nombre, 'es'));
-  const ed = cat.puedeCargar;
+  const ed = false; // 16/11/2026 · solo para mirar (se asigna en la ficha)
   const dl = `<datalist id="dlFun">${(cat.listas.funciones || []).map(f => `<option value="${E(f)}">`).join('')}</datalist>`;
   const nueva = ed ? `<tr class="nueva" data-fila="">
       <td class="nom"><select data-c="persona"><option value="">Elegí participante…</option>${cat.personas.filter(p => p.estado !== 'Inactivo').sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')).map(p => `<option value="${E(p.id)}">${E(p.nombre)}</option>`).join('')}</select></td>
@@ -338,7 +344,7 @@ function vistaGrilla() {
       <td><button class="btn peligro mini" data-act="quitar" data-id="${E(x.id)}" title="Quitar de este proyecto"><span class="ms" style="font-size:17px">delete</span></button></td></tr>`
       : `<tr><td class="nom">${E(p.nombre || x.persona)}</td><td>${chipTipo(p.tipo)}</td><td>${E(x.proyecto)}</td><td>${E(x.funcion || 's/d')}</td><td>${E(x.desde || '')}</td><td>${E(x.obs || '')}</td><td></td></tr>`; }).join('')}
     ${filas.length ? '' : '<tr><td colspan="7" class="vacio">No hay filas con estos filtros.</td></tr>'}</tbody></table></div>
-    ${ed ? '<p class="sub">Los cambios se guardan solos al salir de cada casillero. El tipo de actor es de la persona (vale para todos sus proyectos); la función es propia de cada proyecto.</p>' : ''}`;
+    ${ed ? '<p class="sub">Los cambios se guardan solos al salir de cada casillero. El tipo de actor es de la persona (vale para todos sus proyectos); la función es propia de cada proyecto.</p>' : '<p class="sub">Solo para mirar. Para sumar a alguien a un proyecto o cambiar su función, abrí su ficha en «Personas y accesos».</p>'}`;
   atarFiltros(vistaGrilla); atarModo();
   if (!ed) return;
   const nv = $('tr.nueva');
@@ -773,24 +779,32 @@ function fichaDe(x) {
 let planillaClaves = null;
 async function traerPlanillaClaves() { if (planillaClaves !== null) return; planillaClaves = ''; try { const r = await S.api('mis_docs'); if (r.ok && r.claves) { planillaClaves = r.claves; if (vista === 'usuarios') vistaUsuarios(); } } catch (e) {} }
 function vistaUsuarios() {
+  // 16/11/2026 · «Personas y accesos» (Mi perfil, solo Administración): una sola lista, persona + su ingreso. Reemplaza «Usuarios y accesos».
   if (!acc) return cargarUsuarios();
   traerPlanillaClaves();
-  const l = acc.usuarios.filter(x => !q || (x.nombre + ' ' + x.dni).toLowerCase().indexOf(q.toLowerCase()) >= 0).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-  $('#vista').innerHTML = `<div class="herr"><input id="fq" type="search" placeholder="Buscar nombre o DNI" value="${E(q)}"><button class="btn" data-act="nuevoUsr"><span class="ms">person_add</span>Nuevo usuario</button></div>
-    <p class="sub" style="margin:0 2px 10px">Elegís qué ve cada persona: rol, redes, establecimientos y módulos. El usuario para ingresar es su nombre y apellido, tal como figura acá (no importan mayúsculas ni tildes); la clave («coe-» y 6 letras y números) se genera acá y se muestra una sola vez para que se la pases. Todo queda en la hoja ACCESOS STAR-H del libro.</p>
+  const NIVT = { Ver: 've', Comentar: 'comenta', Cargar: 'edita', Aprobar: 'aprueba' };
+  const tarjDe = pid => (acc.permisos || []).filter(x => x.persona === pid).map(x => (TARJ_TXT[x.modulo] || x.modulo).split(' · ')[0].replace(/ \(cantidades\)$/, '') + ' ' + (NIVT[x.nivel] || x.nivel) + ' · ' + (/hospital/i.test(x.tipo) ? x.alcance : /[áa]rea|provincia/i.test(x.tipo) ? 'Red VIRCH' : x.alcance));
+  const usados = new Set();
+  const filas = cat.personas.map(p => { const cu = cuentaDe(p); if (cu) usados.add(cu.dni); return { p: p, cu: cu }; })
+    .concat(acc.usuarios.filter(u => !usados.has(u.dni)).map(u => ({ p: null, cu: u })))
+    .filter(r => { const t = ((r.p ? [r.p.nombre, r.p.institucion, r.p.cargo, r.p.dni].join(' ') : '') + ' ' + (r.cu ? r.cu.nombre + ' ' + r.cu.dni : '')).toLowerCase(); return (!q || t.indexOf(q.toLowerCase()) >= 0) && (verInactivos || !r.p || r.p.estado !== 'Inactivo'); })
+    .sort((a, b) => ((a.p || a.cu).nombre).localeCompare((b.p || b.cu).nombre, 'es'));
+  const sinCu = cat.personas.filter(p => p.estado !== 'Inactivo' && !cuentaDe(p)).length;
+  $('#vista').innerHTML = `<div class="herr"><input id="fq" type="search" placeholder="Buscar nombre, institución o DNI" value="${E(q)}"><label class="sub"><input type="checkbox" id="fIn" ${verInactivos ? 'checked' : ''}> inactivos</label><button class="btn" data-act="ficha"><span class="ms">person_add</span>Agregar persona</button></div>
+    <p class="sub" style="margin:0 2px 10px">Una fila por persona con su ingreso a la app. «Ficha y accesos» abre todo junto: datos, proyecto y función en el COEsp, ingreso y tarjetas (qué ve o edita, en Red VIRCH o en un hospital). El usuario es apellidos y nombres; la clave se muestra una sola vez.${sinCu ? ` <b>${sinCu} persona(s) sin ingreso</b>: abrí su ficha y guardala para crearlo.` : ''}</p>
     ${planillaClaves ? `<div class="tarjeta" style="padding:10px 14px;margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="ms">key</span><div style="flex:1;min-width:200px"><b>CONFIDENCIAL · Usuarios y claves de la app</b><span class="sub" style="display:block">Planilla privada en tu Drive (solo vos). Anotá ahí cada clave nueva, porque acá se muestra una sola vez.</span></div><a class="btn sec mini" href="${E(planillaClaves)}" target="_blank" rel="noopener"><span class="ms" style="font-size:17px">open_in_new</span>Abrir la planilla</a></div>` : ''}
-    ${(() => { const fs = l.map(fichaDe).filter(Boolean), ok = fs.filter(f => f.completa).length; return fs.length ? `<div class="tarjeta" style="padding:10px 14px;margin-bottom:10px"><b>Fichas «Mis datos»: ${ok} completas de ${fs.length}</b><span class="sub" style="display:block">Cada usuario la completa al ingresar; acá ves quién la tiene pendiente y qué le falta.</span></div>` : ''; })()}
-    <div class="lista">${l.map(x => { const fi = fichaDe(x); return `<div class="tarjeta per">
-      <div class="per-cab"><b>${E(x.nombre || 's/d')}</b><span class="chip ${x.rol === 'Administración' ? 'ext' : 'int'}">${E(x.rol || 's/d')}</span>${x.estado !== 'Activo' ? '<span class="chip inac">Inactivo</span>' : ''}${x.tieneClave ? '' : '<span class="chip inac">Sin clave</span>'}${fi ? (fi.completa ? '<span class="chip" style="background:#E3F4E8;color:#1E6B35">Ficha completa</span>' : '<span class="chip" style="background:#FFF3C4;color:#5A4500">Ficha pendiente</span>') : ''}</div>
-      ${fi && !fi.completa ? `<div class="sub">Le falta: ${E(fi.faltan.join(', '))}</div>` : ''}
-      <div class="sub">Usuario: ${E(x.nombre || 's/d')}${dniReal(x.dni) ? ' · DNI ' + E(x.dni) : ''} · Redes: ${E(x.redes || 's/d')} · Establecimientos: ${E(x.estab || 's/d')}</div>
-      <div class="proys">${modsDe(x).map(m => `<span class="chip proy">${E(MOD_TXT[m] || m)}</span>`).join('')}</div>
-      ${x.deriv ? `<div class="sub">Carga derivaciones y albergues en: ${E(x.deriv)}</div>` : ''}
-      <div class="sub">Tablero de control: ${x.rol === 'Administración' ? 'todos los proyectos' : E(x.proyectos || 'ninguno')}</div>
-      <div class="sub">${x.claveFecha ? 'Clave generada el ' + E(x.claveFecha) : 'Todavía no tiene clave'}${x.ultimoIngreso ? ' · último ingreso ' + E(x.ultimoIngreso) : ''}</div>
-      <div class="acc">${x.persona ? `<button class="btn sec mini" data-act="ficha" data-id="${E(x.persona)}"><span class="ms" style="font-size:17px">badge</span>Ficha y accesos</button>` : ''}<button class="btn sec mini" data-act="editarUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">tune</span>Qué ve</button>
-        <button class="btn sec mini" data-act="claveUsr" data-dni="${E(x.dni)}"><span class="ms" style="font-size:17px">key</span>${x.tieneClave ? 'Generar clave nueva' : 'Generar clave'}</button></div></div>`; }).join('') || '<div class="tarjeta vacio">No hay usuarios con esa búsqueda.</div>'}</div>`;
-  const f = $('#fq'); f.addEventListener('input', () => { q = f.value; const p = f.selectionStart; vistaUsuarios(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); });
+    <div class="lista">${filas.map(({ p, cu }) => { const fi = cu ? fichaDe(cu) : null, ts = p ? tarjDe(p.id) : [];
+      return `<div class="tarjeta per">
+      <div class="per-cab"><b>${E((p || cu).nombre || 's/d')}</b>${p ? chipTipo(p.tipo) : ''}${p && p.estado === 'Inactivo' ? '<span class="chip inac">Inactivo</span>' : ''}${cu ? `<span class="chip ${cu.rol === 'Administración' ? 'ext' : 'int'}">${E(cu.rol)}</span>${cu.estado !== 'Activo' ? '<span class="chip inac">Ingreso inactivo</span>' : ''}${cu.tieneClave ? '' : '<span class="chip inac">Sin clave</span>'}` : '<span class="chip inac">Sin ingreso</span>'}${fi ? (fi.completa ? '<span class="chip" style="background:#E3F4E8;color:#1E6B35">Mis datos completo</span>' : '<span class="chip" style="background:#FFF3C4;color:#5A4500">Mis datos pendiente</span>') : ''}</div>
+      ${p ? `<div class="sub">${E([p.cargo, p.servicio, p.institucion].filter(Boolean).join(' · ') || 's/d')}</div>` : '<div class="sub">Cuenta sin ficha de participante.</div>'}
+      ${p ? `<div class="proys">${partsDe(p.id).map(x => `<span class="chip proy">${E(x.proyecto)}${x.funcion ? ' · ' + E(x.funcion) : ''}</span>`).join('') || '<span class="sub">Sin proyecto</span>'}</div>` : ''}
+      ${cu && cu.rol !== 'Administración' ? `<div class="sub">Tarjetas: ${ts.length ? E(ts.join(' · ')) : 'ninguna (solo COEsp y red de derivación)'}</div>` : ''}
+      ${fi && !fi.completa ? `<div class="sub">Le falta en «Mis datos»: ${E(fi.faltan.join(', '))}</div>` : ''}
+      ${cu ? `<div class="sub">${cu.claveFecha ? 'Clave generada el ' + E(cu.claveFecha) : 'Todavía no tiene clave'}${cu.ultimoIngreso ? ' · último ingreso ' + E(cu.ultimoIngreso) : ''}</div>` : ''}
+      <div class="acc">${p ? `<button class="btn sec mini" data-act="ficha" data-id="${E(p.id)}"><span class="ms" style="font-size:17px">badge</span>Ficha y accesos</button>` : `<button class="btn sec mini" data-act="editarUsr" data-dni="${E(cu.dni)}"><span class="ms" style="font-size:17px">tune</span>Qué ve</button>`}
+        ${cu ? `<button class="btn sec mini" data-act="claveUsr" data-dni="${E(cu.dni)}"><span class="ms" style="font-size:17px">key</span>${cu.tieneClave ? 'Generar clave nueva' : 'Generar clave'}</button>` : ''}</div></div>`; }).join('') || '<div class="tarjeta vacio">No hay personas con esa búsqueda.</div>'}</div>`;
+  const f = $('#fq'); f.addEventListener('input', () => { q = f.value; const pos = f.selectionStart; vistaUsuarios(); const n = $('#fq'); n.focus(); n.setSelectionRange(pos, pos); });
+  const i = $('#fIn'); if (i) i.addEventListener('change', () => { verInactivos = i.checked; vistaUsuarios(); });
 }
 // 04/11/2026 · Se ingresa con nombre y apellido + clave. Sin DNI, el servidor asigna un número interno (9 cifras, empieza con 9) que no se muestra.
 const dniReal = d => /^9\d{8}$/.test(String(d || '')) ? '' : String(d || '');
@@ -1046,7 +1060,7 @@ function dlgAsignar(id) {
 /* ---------- eventos ---------- */
 document.addEventListener('click', async ev => {
   const t = ev.target.closest('[data-act],[data-vista],[data-tipo]'); if (!t) return;
-  if (t.dataset.vista) { vista = t.dataset.vista; S.store.set('coe.vista', vista); location.hash = ''; render(); return; }
+  if (t.dataset.vista) { const k = { usuarios: 'personas', grilla: 'grilla', proyectos: 'proyectos', reuniones: 'reuniones', matriz: 'matriz', solicitudes: 'solicitudes' }[t.dataset.vista]; location.hash = t.dataset.vista === 'personas' ? '' : '#mp-' + k; render(); return; }
   if (t.dataset.tipo && $('#fPer') && $('#fPer').tipo && $('#fPer').tipo.type === 'hidden') { document.querySelectorAll('[data-tipo]').forEach(b => b.setAttribute('aria-pressed', b === t)); $('#fPer').tipo.value = t.dataset.tipo; return; }
   const a = t.dataset.act;
   if (a === 'cerrar') return cerrar();
@@ -1178,7 +1192,7 @@ function vistaAyuda() {
   app.innerHTML = `<div class="tarjeta ayuda"><h2>Ayuda · COEsp</h2>
     <p>Acá se registran las personas que integran el comité de crisis y el centro de operaciones de emergencia (COEsp), con sus datos y contactos, y en qué proyectos participan y con qué función.</p>
     <p><b>Si tu acceso no es de Administración</b>: ves solo la pestaña <b>Participantes</b>, con quiénes integran el COEsp de tu red, su función y sus contactos institucionales y de emergencia. El avance de las tareas, las reuniones y los acuerdos los ves en el <b>Tablero de control</b> del inicio, si lo tenés habilitado.</p>
-    <ul><li><b>Participantes</b>: una ficha por persona con apellidos, nombres, DNI, título, función o cargo, institución (interna o externa), teléfonos (particular, de la institución y de emergencia), correos (personal e institucional), su rol dentro del COEsp en cada proyecto y su reemplazante. El reemplazante se elige entre los ya cargados o se carga ahí mismo con los mismos datos, y queda como un participante más, enlazado; si se pide, se suma al mismo proyecto como «Alterno». El DNI, el teléfono particular y el correo personal los ve solo Administración; el resto de los usuarios del COEsp ve los datos institucionales y el teléfono de emergencia. Lo que falta se muestra «s/d (revisar)».</li>
+    <ul><li><b>Participantes</b> (16/11/2026: la misma lista para todos, solo para ver; se modifica únicamente desde Mi perfil › Personas y accesos): una ficha por persona con apellidos, nombres, DNI, título, función o cargo, institución (interna o externa), teléfonos (particular, de la institución y de emergencia), correos (personal e institucional), su rol dentro del COEsp en cada proyecto y su reemplazante. El reemplazante se elige entre los ya cargados o se carga ahí mismo con los mismos datos, y queda como un participante más, enlazado; si se pide, se suma al mismo proyecto como «Alterno». El DNI, el teléfono particular y el correo personal los ve solo Administración; el resto de los usuarios del COEsp ve los datos institucionales y el teléfono de emergencia. Lo que falta se muestra «s/d (revisar)».</li>
       <li><b>Proyectos y funciones</b>: modo <b>Cuadro</b> (una fila por persona y una columna por proyecto: tildás para sumarla al proyecto como «Integrante», destildás para quitarla, cambiás la función en el casillero de abajo y «Tildar todos» suma a todos los que se ven con los filtros) o modo <b>Detalle</b>, la grilla para cargar rápido. Cada fila es una persona en un proyecto: tipo de actor, proyecto, función, desde cuándo y observaciones. La misma persona puede tener funciones distintas en cada proyecto. Los cambios se guardan al salir de cada casillero.</li>
       <li><b>Por proyecto</b>: el directorio de cada proyecto, ordenado por función, listo para imprimir.</li>
       <li><b>Tipo de actor</b>: interno (del hospital o de la red) o externo (Protección Civil, bomberos, policía, municipio, proveedores, otros organismos).</li>
@@ -1187,8 +1201,8 @@ function vistaAyuda() {
     <h3>Matriz operativa</h3><p>La matriz de tareas del COEsp de Trelew y Área Programática (eje, actividad, responsables, plazo, producto, indicador, estado, fecha comprometida y brechas). La ven todos los usuarios con acceso al COEsp; solo Administración la modifica con «Editar» o «Agregar tarea». Tocá un estado arriba para filtrar. Se imprime o se baja en Word (apaisada) para llevar a la reunión. Está en la hoja COEsp MATRIZ del libro: también se puede corregir ahí.</p>
     <h3>Solicitudes a organismos</h3><p>Solo para Administración. Una ficha por cada nota que se manda a un organismo (municipio, Provincia, IPA, cooperativas, universidad, etc.): qué se pide, para qué tareas de la matriz, enlace a la nota en Drive, fecha de envío, plazo, estado y respuesta. La app no envía nada: cuando mandás la nota, cargás la fecha de envío y el estado «Enviada». Si se cumple el plazo sin respuesta, la ficha aparece como «Vencida». Tocá un estado arriba para filtrar; se imprime o se baja en Word. Está en la hoja COEsp SOLICITUDES del libro: también se puede cargar ahí.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COEsp PARTICIPANTES (personas), COEsp PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COEsp LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
-    <h3>Agregar persona · ficha única (16/11/2026)</h3><p>Solo Administración. «Agregar persona» (o «Ficha y accesos» en cada participante) abre una sola ficha con cuatro partes: <b>1 · Datos</b> personales y laborales (lo que no sepas queda vacío y la persona lo completa en «Mis datos»; el DNI hace falta para crear el ingreso); <b>2 · Proyecto y función</b>: el COEsp es el grupo de personas y el proyecto es el tema que se trabaja; el vigente (Comité de crisis El Niño 2026-2027) viene tildado y al lado se elige la función (lista general de la OMS, versión 0, que se corrige en la hoja COEsp LISTAS); <b>3 · Ingreso a la app</b>: el usuario es apellidos y nombres; al guardar se crea la cuenta unida a la persona y se ofrece generar la clave; <b>4 · Tarjetas</b>: para cada una, No ve / Ve / Edita y su alcance, Red VIRCH (todo el Área Programática) o un hospital (ese hospital y lo que depende de él). Los externos no acceden a pacientes salvo que tildes «Externo: habilitar el acceso a pacientes»; vulnerabilidad social sigue cerrada para externos. Todos ven el COEsp y la red de derivación.</p>
-    <h3>Usuarios y accesos</h3><p>Solo para Administración. Para cada persona elegís el rol, las redes, los establecimientos y los módulos que ve, y generás su clave (el usuario es su nombre y apellido, tal como figura en el acceso; el DNI es obligatorio; no puede haber dos usuarios con el mismo nombre). La clave se muestra una sola vez: copiala y pasásela. Si se pierde, se genera una nueva y la anterior deja de funcionar. Para dar de baja a alguien, poné su estado en «Inactivo». En «Tablero de control: proyectos que ve» tildás de qué proyectos ve el tablero de seguimiento (en la pantalla de inicio); sin tildar no ve ninguno.</p>
+    <h3>Agregar persona · ficha única (16/11/2026)</h3><p>Solo Administración. En Mi perfil › Personas y accesos, «Agregar persona» (o «Ficha y accesos» en cada persona) abre una sola ficha con cuatro partes: <b>1 · Datos</b> personales y laborales (lo que no sepas queda vacío y la persona lo completa en «Mis datos»; el DNI hace falta para crear el ingreso); <b>2 · Proyecto y función</b>: el COEsp es el grupo de personas y el proyecto es el tema que se trabaja; el vigente (Comité de crisis El Niño 2026-2027) viene tildado y al lado se elige la función (lista general de la OMS, versión 0, que se corrige en la hoja COEsp LISTAS); <b>3 · Ingreso a la app</b>: el usuario es apellidos y nombres; al guardar se crea la cuenta unida a la persona y se ofrece generar la clave; <b>4 · Tarjetas</b>: para cada una, No ve / Ve / Edita y su alcance, Red VIRCH (todo el Área Programática) o un hospital (ese hospital y lo que depende de él). Los externos no acceden a pacientes salvo que tildes «Externo: habilitar el acceso a pacientes»; vulnerabilidad social sigue cerrada para externos. Todos ven el COEsp y la red de derivación.</p>
+    <h3>Personas y accesos (Mi perfil)</h3><p>Solo Administración. Se entra desde Mi perfil (el botón con tu nombre en la pantalla de inicio) › Gestión del COEsp. Una sola lista: cada persona con su ingreso, sus proyectos y sus tarjetas. Ahí se agrega gente («Agregar persona»), se abre la ficha de cada uno y se genera la clave (se muestra una sola vez: anotala en la planilla CONFIDENCIAL). Para dar de baja a alguien, en su ficha poné la cuenta en «Inactivo». Desde Mi perfil también entrás a Proyectos y funciones (solo para mirar), Por proyecto, Reuniones y actas, Matriz operativa y Solicitudes.</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COEsp» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
     <button class="btn sec" onclick="location.hash=''"><span class="ms">arrow_back</span>Volver</button></div>`;
 }

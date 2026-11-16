@@ -507,7 +507,15 @@ async function abrirPerfil() {
   catch (e) { $('#pfCuerpo').innerHTML = `<p class="pf-nota">${E((e && (e.error || e.message)) || 'No se pudo traer la lista. Se necesita conexión.')}</p>`; return; }
   const grupos = [];
   docs.forEach(d => { if (grupos.indexOf(d.g) < 0) grupos.push(d.g); });
-  $('#pfCuerpo').innerHTML = (grupos.map(g => `<h3>${E(g)}</h3>` + docs.filter(d => d.g === g).map(d =>
+  // 16/11/2026 · Gestión del COEsp: solo Administración. Participantes queda igual para todos y solo para ver; lo que se modifica está acá.
+  const GEST = [['coe.html#mp-personas', 'manage_accounts', 'Personas y accesos', 'Agregar personas, ficha de cada una, proyecto y función, tarjetas y claves'],
+    ['coe.html#mp-grilla', 'table_view', 'Proyectos y funciones', 'Quién está en cada proyecto y con qué función (solo para mirar)'],
+    ['coe.html#mp-proyectos', 'account_tree', 'Por proyecto', 'Integrantes agrupados por proyecto'],
+    ['coe.html#mp-reuniones', 'groups', 'Reuniones y actas', 'Actas de reunión del COEsp'],
+    ['coe.html#mp-matriz', 'table_chart', 'Matriz operativa', 'Tareas, responsables y plazos'],
+    ['coe.html#mp-solicitudes', 'outgoing_mail', 'Solicitudes a organismos', 'Borradores y seguimiento']];
+  const gestHTML = '<h3>Gestión del COEsp (solo vos)</h3>' + GEST.map(g => `<a class="pf-link" href="${g[0]}"><span class="ms">${g[1]}</span><span><b>${E(g[2])}</b><span class="d">${E(g[3])}</span></span></a>`).join('');
+  $('#pfCuerpo').innerHTML = gestHTML + (grupos.map(g => `<h3>${E(g)}</h3>` + docs.filter(d => d.g === g).map(d =>
     `<a class="pf-link" href="${E(d.u)}" target="_blank" rel="noopener"><span class="ms">${E(d.i)}</span><span><b>${E(d.t)}</b><span class="d">${E(d.d)}</span></span></a>`).join('')).join('') || '<p class="pf-nota">La hoja MIS DOCUMENTOS está vacía.</p>') +
     '<p class="pf-nota">Solo vos ves esta lista (sale de la hoja MIS DOCUMENTOS del libro). Los documentos están en tu Drive y siguen siendo privados. Todos en versión 0 hasta el alta.</p>';
   verComoArmar();

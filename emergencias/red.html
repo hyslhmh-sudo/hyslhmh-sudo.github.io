@@ -100,7 +100,7 @@ const PEST = [
   ['doc', 'Documentos', 'description'], ['acu', 'Acuerdos y tareas', 'task_alt'],
   ['lug', 'Establecimientos', 'local_hospital'], // 14/11/2026 (Belén: «estos enlaces no irían acá»): la pestaña Enlaces se quitó; los enlaces están en Fuentes › Links a páginas.
   ['pac', 'Necesidades especiales', 'accessible'], // lista cerrada: solo cantidades
-  ['reu', 'Reuniones', 'event_note', 'adm'], ['org', 'Órganos e integrantes', 'groups', 'adm'], ['acc', 'Accesos', 'key', 'adm']
+  ['reu', 'Reuniones', 'event_note', 'adm'], ['org', 'Órganos e integrantes', 'groups', 'adm'] // 16/11/2026 · «Accesos» se sacó: se maneja en Mi perfil › Personas y accesos (ficha única)
 ];
 const SOLO_ADM = ['reu', 'org', 'acc'];
 let D = S.store.get('red.cat', null), pest = (location.hash || '#doc').slice(1), filtro = {};
@@ -132,6 +132,7 @@ function pintar(nota) {
   if (!D) return;
   pintarPest();
   const aviso = nota ? `<div class="aviso">${E(nota)}</div>` : '';
+  if (pest === 'acc') pest = 'doc'; // 16/11/2026 · Accesos pasó a Mi perfil › Personas y accesos
   if ((SOLO_ADM.indexOf(pest) >= 0 && !adm()) || (pest === 'pac' && !adm() && !(D.niveles || {})['Pacientes con necesidades especiales'] && !(D.niveles || {})['Pacientes · listado con datos'])) pest = 'doc';
   if (pest === 'pac' && !PAC && !PAC_CARGANDO && (adm() || (D.niveles || {})['Pacientes con necesidades especiales'])) cargarPac();
   const f = { reu: vReuniones, acu: vAcuerdos, doc: vDocumentos, org: vOrganos, lug: vLugares, enl: vEnlaces, acc: vAccesos, pac: vPacientes }[pest] || vDocumentos;
