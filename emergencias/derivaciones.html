@@ -491,9 +491,9 @@ function vistaAlb() {
  * Alcaidía, comisarías, centros de detención, instituto penitenciario, geriátricos, casas infantiles y casas de madres.
  * Pueden necesitar evacuar o derivar pacientes al hospital: son demanda, no capacidad. NUNCA son albergues ni receptores.
  * Hoja «POBLACION A CARGO» de la planilla de Derivaciones. Sin datos personales: solo cantidades. */
-const TIPOS_POB = ['Alcaidía', 'Comisaría', 'Centro de detención juvenil', 'Instituto penitenciario', 'Geriátrico', 'Casa infantil', 'Casa de madres', 'Vivienda de salud mental', 'Otro'];
+const TIPOS_POB = ['Alcaidía', 'Comisaría', 'Centro de detención juvenil', 'Instituto penitenciario', 'Geriátrico', 'Casa infantil', 'Casa de madres', 'Dispositivo intermedio de Salud Mental Comunitaria', 'Otro'];
 // 15/11/2026 (Belén: «debería decir comisarías, con s; no está COSE; completar bien los nombres»): tipo en plural y, debajo, el nombre de cada lugar.
-const TIPO_PLURAL = { 'Alcaidía': 'Alcaidías', 'Comisaría': 'Comisarías', 'Centro de detención juvenil': 'Centros de detención juvenil', 'Instituto penitenciario': 'Institutos penitenciarios', 'Geriátrico': 'Geriátricos', 'Casa infantil': 'Casas infantiles', 'Casa de madres': 'Casas de madres', 'Vivienda de salud mental': 'Viviendas de salud mental' };
+const TIPO_PLURAL = { 'Alcaidía': 'Alcaidías', 'Comisaría': 'Comisarías', 'Centro de detención juvenil': 'Centros de detención juvenil', 'Instituto penitenciario': 'Institutos penitenciarios', 'Geriátrico': 'Geriátricos', 'Casa infantil': 'Casas infantiles', 'Casa de madres': 'Casas de madres', 'Dispositivo intermedio de Salud Mental Comunitaria': 'Dispositivos intermedios de Salud Mental Comunitaria' };
 function vistaPob() {
   /* 15/11/2026 (Belén: «solo nos importa a efectos de la salud, si pasa algo»; «no es dinámico, pero debería actualizarse cada cierto tiempo»;
    * ok al planteo «demanda sanitaria ante un evento» y vigencia de 6 meses). Sin escalones: es demanda de la localidad donde está.
