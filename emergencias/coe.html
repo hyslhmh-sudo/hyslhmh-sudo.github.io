@@ -862,7 +862,7 @@ const esPac = m => /^pacientes/i.test(m), esVuln = m => /^vulnerabilidad/i.test(
 // Hospital de la persona según su institución (para proponer el alcance «por hospital»); si no es de un hospital, Red VIRCH.
 function hospDe(p) {
   const t = String(p.institucion || '').toUpperCase();
-  const H = (acc && acc.hospitales || []).map(h => h.codigo);
+  const H = hospLista().map(h => h.codigo);
   const hit = H.filter(h => new RegExp('(^|[^A-ZÁÉÍÓÚÑ])' + h.toUpperCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '([^A-ZÁÉÍÓÚÑ]|$)').test(t));
   if (/ZONAL TRELEW/.test(t) && hit.indexOf('HZT') < 0) hit.push('HZT');
   if (/HUMPHREYS/.test(t) && hit.indexOf('HMH') < 0) hit.push('HMH');
@@ -870,9 +870,11 @@ function hospDe(p) {
   return hit;
 }
 const ALC_VIRCH = { tipo: 'Área', alcance: 'Red VIRCH' };
+// 16/11/2026 · Belén: «Sede Área Programática» no es un hospital: no va como opción de alcance.
+const hospLista = () => ((acc && acc.hospitales) || []).filter(x => !/^sede/i.test(x.codigo));
 const alcVal = x => /hospital/i.test(x.tipo || '') ? 'H:' + x.alcance : (/[áa]rea|provincia/i.test(x.tipo || '') || /^todas?$/i.test(x.alcance || '')) ? 'VIRCH' : 'K:' + (x.tipo || '') + '|' + (x.alcance || '');
 function alcOpts(val, prop) {
-  const hs = (acc && acc.hospitales) || [];
+  const hs = hospLista();
   const o = [['VIRCH', 'Red VIRCH (todo el Área Programática)']].concat(hs.map(h => ['H:' + h.codigo, h.codigo === h.nombre ? h.nombre : h.codigo + ' · ' + h.nombre]));
   if (prop && prop.length > 1) o.splice(1, 0, ['H:' + prop.join('; '), prop.join(' + ')]);
   if (val && !o.some(x => x[0] === val)) o.push([val, 'Actual: ' + val.replace(/^K:/, '').replace('|', ' · ')]);
