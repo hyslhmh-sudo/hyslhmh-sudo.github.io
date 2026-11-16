@@ -164,6 +164,9 @@ main{max-width:1040px;margin:22px auto 0!important;padding:0 16px 40px}
 .carpeta.abierta{border-bottom-left-radius:6px;border-bottom-right-radius:6px}
 .fila.sub{margin-top:10px;padding-left:14px;border-left:3px solid #DCE3EF}
 /* 12/11/2026 · Agenda de reuniones programadas */
+/* 16/11/2026 (Belén: «no debería verse nada si no se accede con contraseña»): sin sesión no se ve nada más que el ingreso,
+   aunque una consulta que estaba en curso termine después de salir o de vencer la sesión. */
+body.sin-sesion #alertasSmn,body.sin-sesion #rutasDc,body.sin-sesion #arriba,body.sin-sesion #rejilla,body.sin-sesion #fabNotas{display:none!important}
 #agenda{background:#fff;border:1px solid #DCE3EF;border-radius:16px;padding:14px 16px;margin:0 0 6px}
 #agenda .ag-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 #agenda .ag-cab b{font-size:15px;color:#172B4D;flex:1;display:flex;align-items:center;gap:8px}
@@ -654,7 +657,7 @@ async function agenda(u, admin) {
   if (c && c.tk === S.sesion.token()) { box.innerHTML = agendaHtml(c.L, admin); box.classList.remove('oculto'); }
   if (AG_TK === S.sesion.token() || !navigator.onLine) return;
   AG_TK = S.sesion.token();
-  try { const r = await S.api('red_agenda', {}, 45000); if (!r.ok) throw r; S.store.set('agenda', { tk: AG_TK, L: r.reuniones || [] }); box.innerHTML = agendaHtml(r.reuniones || [], admin); box.classList.remove('oculto'); }
+  try { const r = await S.api('red_agenda', {}, 45000); if (!r.ok) throw r; if (S.sesion.token() !== AG_TK) return; S.store.set('agenda', { tk: AG_TK, L: r.reuniones || [] }); box.innerHTML = agendaHtml(r.reuniones || [], admin); box.classList.remove('oculto'); }
   catch (e) { if (!c) box.classList.add('oculto'); }
 }
 // 13/11/2026 · Boletines El Niño (Belén: «me gustaría que esté en la pantalla principal»). Se toman solos de COEsp › Documentos
@@ -697,7 +700,7 @@ async function boletines(u) {
   if (c) pon(c);
   if (BO_TK === S.sesion.token() || !navigator.onLine) return;
   BO_TK = S.sesion.token();
-  try { const r = await S.api('fuentes', {}, 60000); if (!r.ok) throw r; S.store.set('fuentes.bo', r.fuentes); pon(r.fuentes); }
+  try { const tk0 = S.sesion.token(); const r = await S.api('fuentes', {}, 60000); if (!r.ok) throw r; if (!S.sesion.token() || S.sesion.token() !== tk0) return; S.store.set('fuentes.bo', r.fuentes); pon(r.fuentes); }
   catch (e) { if (!c) box.classList.add('oculto'); }
 }
 // 13/11/2026 · Alertas del SMN (Belén: «que esta app trabaje con smn.gob.ar/alertas»; las ven todos y se guarda el historial).
@@ -731,7 +734,7 @@ async function rutasDc(u) {
   if (c) pon(c);
   if ((RUT_TK === S.sesion.token() && Date.now() - RUT_T < 600000) || !navigator.onLine) return;
   RUT_TK = S.sesion.token(); RUT_T = Date.now();
-  try { const r = await S.api('rutas_estado', {}, 90000); if (!r.ok) throw r; S.store.set('rutas.dc', r); pon(r); }
+  try { const tk0 = S.sesion.token(); const r = await S.api('rutas_estado', {}, 90000); if (!r.ok) throw r; if (!S.sesion.token() || S.sesion.token() !== tk0) return; S.store.set('rutas.dc', r); pon(r); }
   catch (e) { if (!c) pon({ tramos: [], error: 'No se pudo consultar el estado de rutas desde la app en este momento.' }); }
 }
 function alertasSmnHtml(r, admin) {
@@ -779,7 +782,7 @@ async function alertasSmn(u, admin) {
   // Se vuelve a pedir al ingresar, o si pasaron más de 10 minutos desde la última consulta.
   if ((SMN_TK === S.sesion.token() && Date.now() - SMN_T < 600000) || !navigator.onLine) return;
   SMN_TK = S.sesion.token(); SMN_T = Date.now();
-  try { const r = await S.api('smn_alertas', {}, 90000); if (!r.ok) throw r; S.store.set('smn.al', r); pon(r); }
+  try { const tk0 = S.sesion.token(); const r = await S.api('smn_alertas', {}, 90000); if (!r.ok) throw r; if (!S.sesion.token() || S.sesion.token() !== tk0) return; S.store.set('smn.al', r); pon(r); }
   catch (e) { if (!c) pon({ alertas: [], error: 'No se pudo consultar el SMN desde la app en este momento.' }); }
 }
 const INFO = '<button type="button" class="info" aria-label="Más información" title="Más información"><span class="ms">info</span></button>';
@@ -792,6 +795,8 @@ function recientes() { const v = S.store.get('inicio.recientes', []); return Arr
 function recordar(k) { if (!k) return; const v = recientes().filter(x => x !== k); v.unshift(k); S.store.set('inicio.recientes', v.slice(0, 6)); }
 function pintar() {
   const u = S.sesion.token() ? (S.sesion.usuario() || {}) : null;
+  document.body.classList.toggle('sin-sesion', !u);
+  if (!u) ['#alertasSmn', '#rutasDc', '#agenda', '#boletines'].forEach(s => { const b = $(s); if (b) { b.innerHTML = ''; b.classList.add('oculto'); } });
   $('#fIng').classList.toggle('oculto', !!u);
   $('#sesion').classList.toggle('oculto', !u);
   const q = $('#quien'), yo = esBelen(u);
