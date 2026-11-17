@@ -56,6 +56,7 @@ select,input[type=search]{font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.
 .escs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .escs button{border:1.5px solid var(--borde);background:#fff;border-radius:999px;padding:6px 12px;font:600 13px 'Plus Jakarta Sans',sans-serif;color:var(--fuerte);cursor:pointer}
 .escs button[aria-pressed=true]{background:var(--medio);border-color:var(--medio);color:#fff}
+.tabw tr.grp td{background:var(--claro);color:var(--fuerte);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
 .tabw{overflow-x:auto;background:#fff;border:1px solid var(--borde);border-radius:16px}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th,td{padding:7px 10px;border-bottom:1px solid var(--claro);text-align:left;vertical-align:top}
@@ -254,39 +255,63 @@ function vEsp() {
 }
 
 // 4) Distancias (BASE · DISTANCIAS): cualquier origen a cualquier destino
+// 16/11/2026 21:24 (Belén: «ok» a sumar instituciones, albergues y población a cargo del COE · Derivaciones y albergues; «en el buscador
+// de distancias debe estar ordenado por 1. localidad. 2. institucion de salud: publica/privada - 3. albergues 4. asilos 5. etc...»).
+// Los lugares del COE llegan en D.base.coe (ID CR-, CA-, CP-); si tienen id_base, ya están en la BASE y no se duplican.
+const GRUPOS_DIS = ['Localidades', 'Instituciones de salud públicas', 'Instituciones de salud privadas', 'Albergues', 'Geriátricos',
+  'Dispositivos intermedios de Salud Mental Comunitaria', 'Otra población a cargo', 'Recursos de apoyo'];
+let ordenDis = S.store.get('transp.ordenDis') || 'grupo';
+function lugaresDis() {
+  const o = [], pubRx = /cl[ií]nica privada|sanatorio privado|privad/i;
+  (D.base.localidades || []).forEach(r => o.push({ id: r.id, n: r.nombre, g: 'Localidades', t: 'Localidad (centro)', loc: r.departamento ? 'Depto. ' + r.departamento : '' }));
+  D.base.lugares.forEach(l => o.push({ id: l.id, n: l.nombre, g: 'Instituciones de salud públicas', t: l.tipo, loc: l.localidad }));
+  // 15/11/2026 06:05 y 06:13: la columna «albergue» de RECURSOS DE APOYO tiene el ID A- del COE; «recurso» = Sí → aparece en los dos grupos.
+  D.base.recursos.forEach(r => {
+    if (pubRx.test(r.tipo || '')) { o.push({ id: r.id, n: r.nombre, g: 'Instituciones de salud privadas', t: r.tipo, loc: r.localidad }); return; }
+    const alb = /^A-\d+/.test(String(r.albergue || '').trim()), rec = !alb || /^s[ií]/i.test(String(r.recurso || '').trim());
+    const t = alb ? (rec ? 'Albergue y recurso de apoyo · ' : 'Albergue · ') + r.tipo : r.tipo;
+    if (alb) o.push({ id: r.id, n: r.nombre, g: 'Albergues', t: t, loc: r.localidad });
+    if (rec) o.push({ id: r.id, n: r.nombre, g: 'Recursos de apoyo', t: t, loc: r.localidad });
+  });
+  (D.base.coe || []).forEach(c => {
+    let g;
+    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : 'Instituciones de salud públicas'; }
+    else if (c.hoja === 'ALBERGUES') { if (c.id_base) return; g = 'Albergues'; }
+    else g = /geri[aá]tric/i.test(c.tipo) ? 'Geriátricos' : /salud mental/i.test(c.tipo) ? 'Dispositivos intermedios de Salud Mental Comunitaria' : 'Otra población a cargo';
+    // Población a cargo que ya está en la BASE (p. ej. las comisarías): mismo ID de la BASE, aparece también en su grupo.
+    o.push({ id: c.id_base || c.id, n: c.nombre, g: g, t: c.tipo + (c.hoja === 'POBLACION A CARGO' ? ' · población a cargo' : ''), loc: c.localidad, sinCoord: !c.id_base && !c.lat });
+  });
+  const cmp = (a, b) => String(a).localeCompare(String(b), 'es', { sensitivity: 'base' });
+  return o.sort((a, b) => GRUPOS_DIS.indexOf(a.g) - GRUPOS_DIS.indexOf(b.g) || cmp(a.loc, b.loc) || cmp(a.n, b.n));
+}
 function vDis() {
   const idx = {}; D.base.distancias.forEach(d => { idx[d[0] + '|' + d[1]] = d; });
   const par = (a, b) => idx[a + '|' + b] || (idx[b + '|' + a] ? [a, b].concat(idx[b + '|' + a].slice(2)) : null);
-  const lugares = D.base.lugares.map(l => ({ id: l.id, n: l.nombre, g: 'Establecimientos de salud', t: l.tipo, loc: l.localidad }))
-    // 15/11/2026 06:05 (Belén: «base almirante zar también sirve como albergue… los albergues separados de los recursos de apoyo»):
-    // la columna «albergue» de RECURSOS DE APOYO tiene el ID A- del COE · Derivaciones y albergues.
-    // 06:13 (Belén: «la base tb es rec de apoyo»): columna «recurso» = Sí → aparece en los dos grupos (en la tabla, una sola vez).
-    .concat([].concat.apply([], D.base.recursos.map(r => { const alb = /^A-\d+/.test(String(r.albergue || '').trim()), rec = !alb || /^s[ií]/i.test(String(r.recurso || '').trim());
-      const t = alb ? (rec ? 'Albergue y recurso de apoyo · ' : 'Albergue · ') + r.tipo : r.tipo, o = [];
-      if (alb) o.push({ id: r.id, n: r.nombre, g: 'Albergues', t: t, loc: r.localidad });
-      if (rec) o.push({ id: r.id, n: r.nombre, g: 'Recursos de apoyo', t: t, loc: r.localidad });
-      return o; })))
-    .concat((D.base.localidades || []).map(r => ({ id: r.id, n: r.nombre, g: 'Localidades', t: 'Localidad (centro)', loc: r.departamento ? 'Depto. ' + r.departamento : '' })));
-  if (!lugares.some(l => l.id === orig)) orig = lugares.length ? lugares[0].id : '';
+  const lugares = lugaresDis();
+  if (!lugares.some(l => l.id === orig)) orig = lugares.some(l => l.id === 'L-002') ? 'L-002' : lugares.length ? lugares[0].id : '';
   if (dest === orig || (dest && !lugares.some(l => l.id === dest))) dest = '';
   const total = new Set(lugares.map(l => l.id)).size;
-  const opt = (g, sel, sin) => lugares.filter(l => l.g === g && l.id !== sin).map(l => `<option value="${E(l.id)}"${l.id === sel ? ' selected' : ''}>${E(l.n)}</option>`).join('');
-  const grupos = (sel, sin) => ['Establecimientos de salud', 'Albergues', 'Localidades', 'Recursos de apoyo'].map(g => `<optgroup label="${g}">${opt(g, sel, sin)}</optgroup>`).join('');
+  const opt = (g, sel, sin) => lugares.filter(l => l.g === g && l.id !== sin).map(l => `<option value="${E(l.id)}"${l.id === sel ? ' selected' : ''}>${E(l.n)}${l.loc && g !== 'Localidades' ? ' · ' + E(l.loc) : ''}</option>`).join('');
+  const grupos = (sel, sin) => GRUPOS_DIS.map(g => { const h = opt(g, sel, sin); return h ? `<optgroup label="${g}">${h}</optgroup>` : ''; }).join('');
   const q = filtro.toLowerCase();
-  const vistos = {};
-  const filas = lugares.filter(l => !vistos[l.id] && (vistos[l.id] = true)).filter(l => l.id !== orig && (!dest || l.id === dest) && (!q || (l.n + ' ' + l.t + ' ' + l.loc).toLowerCase().indexOf(q) >= 0))
+  const vistos = {}, num = d => d ? parseFloat(String(d[3]).replace(',', '.')) : 1e9;
+  const filas = lugares.filter(l => !vistos[l.id] && (vistos[l.id] = true)).filter(l => l.id !== orig && (!dest || l.id === dest) && (!q || (l.n + ' ' + l.t + ' ' + l.loc + ' ' + l.g).toLowerCase().indexOf(q) >= 0))
     .map(l => ({ l: l, d: par(orig, l.id) }))
-    .sort((a, b) => (a.d ? parseFloat(String(a.d[3]).replace(',', '.')) : 1e9) - (b.d ? parseFloat(String(b.d[3]).replace(',', '.')) : 1e9));
+    .sort((a, b) => ordenDis === 'grupo' ? (GRUPOS_DIS.indexOf(a.l.g) - GRUPOS_DIS.indexOf(b.l.g) || num(a.d) - num(b.d)) : num(a.d) - num(b.d));
+  let gAnt = '';
+  const fila = f => { const enc = ordenDis === 'grupo' && f.l.g !== gAnt ? `<tr class="grp"><td colspan="6">${E(gAnt = f.l.g)}</td></tr>` : '';
+    return enc + `<tr><td>${E(f.l.n)}${f.d && f.d[4] ? `<div class="fu">Por ${E(f.d[4])}</div>` : ''}</td><td>${val(f.l.t)}</td><td>${val(f.l.loc)}</td>
+    <td class="n">${f.d ? E(f.d[2]) : '<span class="sd">s/d</span>'}</td><td class="n">${f.d ? E(f.d[3]) : '<span class="sd">s/d</span>'}</td>
+    <td class="fu">${!f.d ? (f.l.sinCoord ? SD + ' (sin coordenadas)' : SD) : f.d[5] === 'G' ? 'Google Maps (con tránsito)' : 'OSRM (sin tránsito)'}</td></tr>`; };
   return `<div class="filtros"><label>Desde <select id="fOrig">${grupos(orig, '')}</select></label>
     <button class="btn" type="button" id="fInv" style="margin-top:0"${dest ? '' : ' disabled title="Elegí un destino para invertir"'} aria-label="Invertir origen y destino"><span class="ms">swap_horiz</span>Invertir</button>
     <label>Hasta <select id="fDest"><option value="">Todos (${total - 1})</option>${grupos(dest, orig)}</select></label>
-    ${dest ? '' : `<input type="search" id="fBus" placeholder="Buscar destino, tipo o localidad" value="${E(filtro)}">`}</div>
+    ${dest ? '' : `<label>Ordenar <select id="fOrden"><option value="grupo"${ordenDis === 'grupo' ? ' selected' : ''}>Por grupo</option><option value="cerca"${ordenDis === 'cerca' ? ' selected' : ''}>Del más cercano al más lejano</option></select></label>
+    <input type="search" id="fBus" placeholder="Buscar destino, tipo, grupo o localidad" value="${E(filtro)}">`}</div>
   <div class="tabw"><table><thead><tr><th>Hasta</th><th>Tipo</th><th>Localidad</th><th class="n">km</th><th class="n">min</th><th>Fuente</th></tr></thead><tbody>
-  ${filas.map(f => `<tr><td>${E(f.l.n)}${f.d && f.d[4] ? `<div class="fu">Por ${E(f.d[4])}</div>` : ''}</td><td>${val(f.l.t)}</td><td>${val(f.l.loc)}</td>
-    <td class="n">${f.d ? E(f.d[2]) : '<span class="sd">s/d</span>'}</td><td class="n">${f.d ? E(f.d[3]) : '<span class="sd">s/d</span>'}</td>
-    <td class="fu">${!f.d ? SD : f.d[5] === 'G' ? 'Google Maps (con tránsito)' : 'OSRM (sin tránsito)'}</td></tr>`).join('')}
+  ${filas.map(fila).join('')}
   </tbody></table></div>
-  <p class="pie">Distancia y tiempo en auto, ordenados del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15/11/2026, sin tránsito. Las localidades se miden desde su punto central (OpenStreetMap). Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud, hoja DISTANCIAS.</p>`;
+  <p class="pie">Distancia y tiempo en auto. Grupos en este orden: localidades, instituciones de salud públicas y privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo y recursos de apoyo; dentro de cada grupo, del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15 y 16/11/2026, sin tránsito. Las localidades se miden desde su punto central (OpenStreetMap). Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud (hoja DISTANCIAS) y COE · Derivaciones y albergues (receptoras, albergues y población a cargo).</p>`;
 }
 
 function pintar() {
@@ -297,7 +322,7 @@ function pintar() {
   <p><b>Ambulancias de los hospitales:</b> el HMH y el HZT comparten el servicio de ambulancias (mismo equipo directivo): van en una sola tarjeta y se guardan en la ficha del HZT. Son las de la ficha de cada establecimiento. Se corrigen acá con «Corregir ambulancias» (patente, estado y observaciones; «Agregar ambulancia» o el tacho para quitar). Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Las corrige el referente de cada establecimiento y Administración.</p>
   <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
-  <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están en cuatro grupos: establecimientos de salud, albergues (los del COE · Derivaciones y albergues), localidades (punto central de cada una) y recursos de apoyo. Son estimados en auto.</p>
+  <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están ordenados por grupo: localidades (punto central de cada una), instituciones de salud públicas, instituciones de salud privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo (alcaidía, comisarías, centros de detención, casas infantiles, casas de madres) y recursos de apoyo. Las instituciones receptoras, los albergues y la población a cargo salen del COE · Derivaciones y albergues: se cargan una sola vez, ahí. Con «Ordenar» elegís ver la tabla por grupo o toda junta del más cercano al más lejano. Un lugar sin coordenadas figura con «s/d». Son estimados en auto.</p>
   <p>Consultado el ${E(D.consultado || '')}.</p></details>
   <div class="tabs" role="tablist">${TABS.map(t => `<button class="tab" role="tab" type="button" data-tab="${t[0]}" aria-selected="${t[0] === tab}"><span class="ms">${t[1]}</span>${E(t[2])}</button>`).join('')}</div>
   <section>${cuerpo}</section>`;
@@ -319,6 +344,7 @@ app.addEventListener('change', ev => {
   if (ev.target.id === 'fTipo') { filtro = ev.target.value; pintar(); }
   if (ev.target.id === 'fOrig') { orig = ev.target.value; S.store.set('transp.orig', orig); pintar(); }
   if (ev.target.id === 'fDest') { dest = ev.target.value; S.store.set('transp.dest', dest); pintar(); }
+  if (ev.target.id === 'fOrden') { ordenDis = ev.target.value; S.store.set('transp.ordenDis', ordenDis); pintar(); }
 });
 app.addEventListener('input', ev => {
   if (ev.target.id === 'fBus') { filtro = ev.target.value; const p = ev.target.selectionStart; pintar(); const b = document.getElementById('fBus'); if (b) { b.focus(); b.setSelectionRange(p, p); } }
