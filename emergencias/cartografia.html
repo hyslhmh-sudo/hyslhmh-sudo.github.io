@@ -105,7 +105,7 @@ const sinT = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 function ayuda() {
   return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Láminas en PDF armadas en QGIS para el COEsp y la preparación ante emergencias: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo.</p>
-    <p><b>Carpetas.</b> «Planos de Hidroeléctrica Ameghino»: planos del Plan de Acción durante la Emergencia de la represa (julio 2019), con un escenario simulado de 70 m³/s de erogación más una crecida como la de 1992, sin rotura de la presa; no muestran lo que se inundó en 1992. «COEsp · Láminas propias»: las láminas hechas por Higiene y Seguridad Laboral. Tocá el nombre de la carpeta para abrirla; al abrir una se cierra la otra. Al buscar o elegir una zona, los resultados se muestran juntos, con el nombre de su carpeta.</p>
+    <p><b>Carpetas.</b> «Planos de Hidroeléctrica Ameghino»: planos del Plan de Acción durante la Emergencia de la represa (julio 2019), con un escenario simulado de 70 m³/s de erogación más una crecida como la de 1992, sin rotura de la presa; no muestran lo que se inundó en 1992. «COEsp · Láminas propias»: las láminas de elaboración propia. Tocá el nombre de la carpeta para abrirla; al abrir una se cierra la otra. Al buscar o elegir una zona, los resultados se muestran juntos, con el nombre de su carpeta.</p>
     <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. HA-PAE-2019-C1 = Hidroeléctrica Ameghino (HA), Plan de Acción durante la Emergencia (PAE) de 2019, plano C1. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
     <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). Las láminas se ven solo dentro de la app: no se descargan (15/11/2026, decisión de HySL). Si necesitás una copia, pedila a Higiene y Seguridad Laboral.</p>
     <p><b>Correcciones.</b> Una lámina se corrige en QGIS y se vuelve a subir el PDF. El PDF no se edita. Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
@@ -157,7 +157,7 @@ function pintar() {
 // La carpeta sale del código: HA-… = planos de Hidroeléctrica Ameghino; CART-COE-… = láminas propias del COEsp; el resto, «Otras».
 const CARPETAS = [
   { id: 'ha', rx: /^HA-/i, ico: 'water', tit: 'Planos de Hidroeléctrica Ameghino · Modelación de inundación', sub: 'Plan de Acción durante la Emergencia (julio 2019). Escenario simulado: 70 m³/s de erogación + crecida 1992, sin rotura de la presa. Material de terceros.' },
-  { id: 'coe', rx: /^CART-COE-/i, ico: 'map', tit: 'COEsp · Láminas propias', sub: 'Elaboradas en QGIS por Higiene y Seguridad Laboral para el COEsp: antecedentes, relieve, vulnerabilidad social, establecimientos.' },
+  { id: 'coe', rx: /^CART-COE-/i, ico: 'map', tit: 'COEsp · Láminas propias', sub: 'Elaboración propia (QGIS) para el COEsp: antecedentes, relieve, vulnerabilidad social, establecimientos.' },
   { id: 'otras', rx: /./, ico: 'folder', tit: 'Otras láminas', sub: '' }];
 // Regla de la app (Belén, 14/11/2026): los desplegables están cerrados hasta que se tocan y se abre uno por vez (starh.js).
 // Al buscar o filtrar por zona, los resultados se muestran sin desplegables, con el nombre de la carpeta como título.
