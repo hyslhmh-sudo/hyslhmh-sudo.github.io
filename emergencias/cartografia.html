@@ -33,6 +33,12 @@ main{max-width:900px;margin:0 auto;padding:16px 16px 40px}
 .adm{background:#fff;border:1px solid var(--linea);border-left:5px solid var(--carto);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .adm b{flex:1;min-width:200px;font-size:14px}.adm b small{display:block;font-weight:500;color:var(--suave);font-size:12px}
 .filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+details.carpeta,div.carpeta{background:#fff;border:1px solid var(--borde);border-radius:16px;margin:0 0 12px;padding:0 12px}
+details.carpeta>summary,div.carpeta>.cab{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 2px;font-weight:700;font-size:15px}
+details.carpeta>summary::-webkit-details-marker{display:none}
+details.carpeta>summary .ct,div.carpeta .ct{flex:1}details.carpeta>summary small,div.carpeta .cab small{display:block;font-weight:500;font-size:12.5px;color:var(--suave,#4B5B73);margin-top:2px}
+details.carpeta>summary .flecha{transition:transform .2s}details.carpeta[open]>summary .flecha{transform:rotate(180deg)}
+details.carpeta[open],div.carpeta{padding-bottom:12px}
 .filtros input,.filtros select{border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:#fff}
 .filtros input{flex:1;min-width:200px}
 .lam{background:#fff;border:1px solid var(--linea);border-left:6px solid var(--carto);border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -99,7 +105,8 @@ const sinT = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 function ayuda() {
   return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Láminas en PDF armadas en QGIS para el COEsp y la preparación ante emergencias: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo.</p>
-    <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
+    <p><b>Carpetas.</b> «Planos de Hidroeléctrica Ameghino»: planos del Plan de Acción durante la Emergencia de la represa (julio 2019), con un escenario simulado de 70 m³/s de erogación más una crecida como la de 1992, sin rotura de la presa; no muestran lo que se inundó en 1992. «COEsp · Láminas propias»: las láminas hechas por Higiene y Seguridad Laboral. Tocá el nombre de la carpeta para abrirla; al abrir una se cierra la otra. Al buscar o elegir una zona, los resultados se muestran juntos, con el nombre de su carpeta.</p>
+    <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. HA-PAE-2019-C1 = Hidroeléctrica Ameghino (HA), Plan de Acción durante la Emergencia (PAE) de 2019, plano C1. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
     <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). Las láminas se ven solo dentro de la app: no se descargan (15/11/2026, decisión de HySL). Si necesitás una copia, pedila a Higiene y Seguridad Laboral.</p>
     <p><b>Correcciones.</b> Una lámina se corrige en QGIS y se vuelve a subir el PDF. El PDF no se edita. Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
     ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí. «Anexo de fuentes» abre el anexo único con todas las fuentes de datos de la cartografía (solo lo ves y lo abrís vos).</p>` : ''}
@@ -140,12 +147,31 @@ function pintar() {
   app.innerHTML = `<div class="aviso"><span class="ms">info</span><span>Cartografía orientadora. Las áreas de antecedentes son aproximadas y no reemplazan el relevamiento en terreno.</span></div>`
     + ayuda() + barraAdm()
     + (LISTA.length > 1 ? `<div class="filtros"><input type="search" id="fQ" placeholder="Buscar por código, título o tema" value="${E(filtro.q)}" aria-label="Buscar"><select id="fZ" aria-label="Zona"><option value="">Todas las zonas</option>${zonas.map(z => `<option${z === filtro.zona ? ' selected' : ''}>${E(z)}</option>`).join('')}</select></div>` : '')
-    + (L.length ? L.map(tarjeta).join('') : `<div class="vacio">${LISTA.length ? 'Ninguna lámina coincide con la búsqueda.' : 'Todavía no hay láminas cargadas.'}</div>`)
+    + (L.length ? carpetas(L) : `<div class="vacio">${LISTA.length ? 'Ninguna lámina coincide con la búsqueda.' : 'Todavía no hay láminas cargadas.'}</div>`)
     + `<p class="pie">${E(notaPie)}</p>`;
   const fq = document.getElementById('fQ'), fz = document.getElementById('fZ');
   if (fq) fq.addEventListener('input', () => { filtro.q = fq.value; const p = fq.selectionStart; pintar(); const n = document.getElementById('fQ'); n.focus(); n.setSelectionRange(p, p); });
   if (fz) fz.addEventListener('change', () => { filtro.zona = fz.value; pintar(); });
 }
+// 17/11/2026 05:14 (Belén: «en cartografía podés hacer dos carpetas? 1. planos hidroeléctrica ameghino modelación de tal situación 2. coe o algo así»).
+// La carpeta sale del código: HA-… = planos de Hidroeléctrica Ameghino; CART-COE-… = láminas propias del COEsp; el resto, «Otras».
+const CARPETAS = [
+  { id: 'ha', rx: /^HA-/i, ico: 'water', tit: 'Planos de Hidroeléctrica Ameghino · Modelación de inundación', sub: 'Plan de Acción durante la Emergencia (julio 2019). Escenario simulado: 70 m³/s de erogación + crecida 1992, sin rotura de la presa. Material de terceros.' },
+  { id: 'coe', rx: /^CART-COE-/i, ico: 'map', tit: 'COEsp · Láminas propias', sub: 'Elaboradas en QGIS por Higiene y Seguridad Laboral para el COEsp: antecedentes, relieve, vulnerabilidad social, establecimientos.' },
+  { id: 'otras', rx: /./, ico: 'folder', tit: 'Otras láminas', sub: '' }];
+// Regla de la app (Belén, 14/11/2026): los desplegables están cerrados hasta que se tocan y se abre uno por vez (starh.js).
+// Al buscar o filtrar por zona, los resultados se muestran sin desplegables, con el nombre de la carpeta como título.
+function carpetas(L) {
+  const usadas = {}, busca = !!(filtro.q || filtro.zona);
+  return CARPETAS.map(c => {
+    const l = L.filter(x => !usadas[x.codigo] && c.rx.test(String(x.codigo || '')) && (usadas[x.codigo] = 1));
+    if (!l.length) return '';
+    const cab = `<span class="ms">${busca ? 'folder_open' : 'folder'}</span><span class="ct">${E(c.tit)}<small>${l.length} ${l.length === 1 ? 'lámina' : 'láminas'}${c.sub ? ' · ' + E(c.sub) : ''}</small></span>`;
+    return busca ? `<div class="carpeta"><div class="cab">${cab}</div>${l.map(tarjeta).join('')}</div>`
+      : `<details class="carpeta"><summary>${cab}<span class="ms flecha">expand_more</span></summary>${l.map(tarjeta).join('')}</details>`;
+  }).join('');
+}
+document.addEventListener('toggle', ev => { const d = ev.target; if (!d.matches || !d.matches('details.carpeta')) return; const i = d.querySelector('summary .ms'); if (i) i.textContent = d.open ? 'folder_open' : 'folder'; }, true);
 function actualizar(nota) {
   if (S.DEMO || !navigator.onLine) { notaPie = 'Sin conexión: últimos datos guardados en este equipo.'; pintar(); return; }
   S.api('cartografia', {}, 60000).then(r => {
