@@ -144,8 +144,7 @@ function pintar() {
   const zonas = LISTA.map(x => x.zona).filter((z, i, a) => z && a.indexOf(z) === i).sort();
   const q = sinT(filtro.q);
   const L = LISTA.filter(x => (!filtro.zona || x.zona === filtro.zona) && (!q || sinT([x.codigo, x.titulo, x.zona, x.proyecto, x.descripcion].join(' ')).indexOf(q) >= 0));
-  app.innerHTML = `<div class="aviso"><span class="ms">info</span><span>Cartografía orientadora. Las áreas de antecedentes son aproximadas y no reemplazan el relevamiento en terreno.</span></div>`
-    + ayuda() + barraAdm()
+  app.innerHTML = ayuda() + barraAdm()
     + (LISTA.length > 1 ? `<div class="filtros"><input type="search" id="fQ" placeholder="Buscar por código, título o tema" value="${E(filtro.q)}" aria-label="Buscar"><select id="fZ" aria-label="Zona"><option value="">Todas las zonas</option>${zonas.map(z => `<option${z === filtro.zona ? ' selected' : ''}>${E(z)}</option>`).join('')}</select></div>` : '')
     + (L.length ? carpetas(L) : `<div class="vacio">${LISTA.length ? 'Ninguna lámina coincide con la búsqueda.' : 'Todavía no hay láminas cargadas.'}</div>`)
     + `<p class="pie">${E(notaPie)}</p>`;
@@ -157,7 +156,7 @@ function pintar() {
 // La carpeta sale del código: HA-… = planos de Hidroeléctrica Ameghino; CART-COE-… = láminas propias del COEsp; el resto, «Otras».
 const CARPETAS = [
   { id: 'ha', rx: /^HA-/i, ico: 'water', tit: 'Planos de Hidroeléctrica Ameghino · Modelación de inundación', sub: 'Plan de Acción durante la Emergencia (julio 2019). Escenario simulado: 70 m³/s de erogación + crecida 1992, sin rotura de la presa. Material de terceros.' },
-  { id: 'coe', rx: /^CART-COE-/i, ico: 'map', tit: 'COEsp · Láminas propias', sub: 'Elaboración propia (QGIS) para el COEsp: antecedentes, relieve, vulnerabilidad social, establecimientos.' },
+  { id: 'coe', rx: /^CART-COE-/i, ico: 'map', tit: 'COEsp · Láminas propias', sub: 'Elaboración propia (QGIS) para el COEsp: antecedentes, relieve, vulnerabilidad social, establecimientos.', aviso: 'Cartografía orientadora. Las áreas de antecedentes son aproximadas y no reemplazan el relevamiento en terreno.' },
   { id: 'otras', rx: /./, ico: 'folder', tit: 'Otras láminas', sub: '' }];
 // Regla de la app (Belén, 14/11/2026): los desplegables están cerrados hasta que se tocan y se abre uno por vez (starh.js).
 // Al buscar o filtrar por zona, los resultados se muestran sin desplegables, con el nombre de la carpeta como título.
@@ -167,8 +166,10 @@ function carpetas(L) {
     const l = L.filter(x => !usadas[x.codigo] && c.rx.test(String(x.codigo || '')) && (usadas[x.codigo] = 1));
     if (!l.length) return '';
     const cab = `<span class="ms">${busca ? 'folder_open' : 'folder'}</span><span class="ct">${E(c.tit)}<small>${l.length} ${l.length === 1 ? 'lámina' : 'láminas'}${c.sub ? ' · ' + E(c.sub) : ''}</small></span>`;
-    return busca ? `<div class="carpeta"><div class="cab">${cab}</div>${l.map(tarjeta).join('')}</div>`
-      : `<details class="carpeta"><summary>${cab}<span class="ms flecha">expand_more</span></summary>${l.map(tarjeta).join('')}</details>`;
+    // 17/11/2026 05:21 (Belén: «Cartografía orientadora… no reemplazan el relevamiento en terreno. — esto solo en la elaboración propia»).
+    const av = c.aviso ? `<div class="aviso"><span class="ms">info</span><span>${E(c.aviso)}</span></div>` : '';
+    return busca ? `<div class="carpeta"><div class="cab">${cab}</div>${av}${l.map(tarjeta).join('')}</div>`
+      : `<details class="carpeta"><summary>${cab}<span class="ms flecha">expand_more</span></summary>${av}${l.map(tarjeta).join('')}</details>`;
   }).join('');
 }
 document.addEventListener('toggle', ev => { const d = ev.target; if (!d.matches || !d.matches('details.carpeta')) return; const i = d.querySelector('summary .ms'); if (i) i.textContent = d.open ? 'folder_open' : 'folder'; }, true);
