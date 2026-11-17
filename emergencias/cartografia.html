@@ -39,6 +39,15 @@ details.carpeta>summary::-webkit-details-marker{display:none}
 details.carpeta>summary .ct,div.carpeta .ct{flex:1}details.carpeta>summary small,div.carpeta .cab small{display:block;font-weight:500;font-size:12.5px;color:var(--suave,#4B5B73);margin-top:2px}
 details.carpeta>summary .flecha{transition:transform .2s}details.carpeta[open]>summary .flecha{transform:rotate(180deg)}
 details.carpeta[open],div.carpeta{padding-bottom:12px}
+/* 17/11/2026 05:23 (Belén: «las dos tarjetas deberían tener colores»): cada carpeta con su color. */
+.carpeta.c-ha{--c1:#0B4F7A;--c2:#1F8FC9;--ct:#E6F3FB;border-color:#B9DCF0}
+.carpeta.c-coe{--c1:#0B5A50;--c2:#0F7B6C;--ct:#E3F4F1;border-color:#B3DDD5}
+.carpeta.c-otras{--c1:#4B5B73;--c2:#6B7A90;--ct:#F1F3F7}
+.carpeta[class*=" c-"]{background:var(--ct);overflow:hidden}
+.carpeta[class*=" c-"]>summary,.carpeta[class*=" c-"]>.cab{background:linear-gradient(120deg,var(--c1),var(--c2));color:#fff;margin:0 -12px 12px;padding:14px 14px}
+.carpeta[class*=" c-"]>summary small,.carpeta[class*=" c-"]>.cab small{color:rgba(255,255,255,.88)}
+details.carpeta[class*=" c-"]:not([open])>summary{margin-bottom:0}
+
 .filtros input,.filtros select{border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:#fff}
 .filtros input{flex:1;min-width:200px}
 .lam{background:#fff;border:1px solid var(--linea);border-left:6px solid var(--carto);border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -168,8 +177,8 @@ function carpetas(L) {
     const cab = `<span class="ms">${busca ? 'folder_open' : 'folder'}</span><span class="ct">${E(c.tit)}<small>${l.length} ${l.length === 1 ? 'lámina' : 'láminas'}${c.sub ? ' · ' + E(c.sub) : ''}</small></span>`;
     // 17/11/2026 05:21 (Belén: «Cartografía orientadora… no reemplazan el relevamiento en terreno. — esto solo en la elaboración propia»).
     const av = c.aviso ? `<div class="aviso"><span class="ms">info</span><span>${E(c.aviso)}</span></div>` : '';
-    return busca ? `<div class="carpeta"><div class="cab">${cab}</div>${av}${l.map(tarjeta).join('')}</div>`
-      : `<details class="carpeta"><summary>${cab}<span class="ms flecha">expand_more</span></summary>${av}${l.map(tarjeta).join('')}</details>`;
+    return busca ? `<div class="carpeta c-${c.id}"><div class="cab">${cab}</div>${av}${l.map(tarjeta).join('')}</div>`
+      : `<details class="carpeta c-${c.id}"><summary>${cab}<span class="ms flecha">expand_more</span></summary>${av}${l.map(tarjeta).join('')}</details>`;
   }).join('');
 }
 document.addEventListener('toggle', ev => { const d = ev.target; if (!d.matches || !d.matches('details.carpeta')) return; const i = d.querySelector('summary .ms'); if (i) i.textContent = d.open ? 'folder_open' : 'folder'; }, true);
