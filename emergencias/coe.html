@@ -997,7 +997,9 @@ async function guardarFicha(btn) {
       const ac = f.alcCoe.value, redes = ac === 'VIRCH' ? 'Red Trelew; Red Rawson' : /HSST/i.test(ac) ? 'Red Rawson' : 'Red Trelew';
       const proysTab = tild.map(x => x.pr).filter(pr => (acc.proyectos || []).some(y => y.toLowerCase() === pr.toLowerCase()));
       const cu = D.cu;
-      const u = { dni: cu ? cu.dni : dni, nombre: cu ? cu.nombre : (o.apellidos + ' ' + o.nombres), rol: cu ? cu.rol : 'Consulta', estado: o.estado, obs: cu ? (cu.obs || '') : 'Alta desde la ficha única · ' + hoy,
+      // 17/11/2026 · Si se corrigen apellidos o nombres en la ficha, el usuario de ingreso se corrige igual (antes quedaba el nombre viejo).
+      // La clave no cambia: se cifra con el DNI, no con el nombre.
+      const u = { dni: cu ? cu.dni : dni, nombre: (o.apellidos + ' ' + o.nombres).replace(/\s+/g, ' ').trim(), rol: cu ? cu.rol : 'Consulta', estado: o.estado, obs: cu ? (cu.obs || '') : 'Alta desde la ficha única · ' + hoy,
         modulos: 'COE', redes: redes, estab: cu ? (cu.estab || '') : '', proyectos: cu && /^todos$/i.test(cu.proyectos || '') ? 'Todos' : proysTab.join('; '), persona: pid };
       const r3 = await S.api('coe_usuario', { usuario: u }); if (!r3.ok) throw r3;
       // 4 · tarjetas (solo las que cambiaron)
