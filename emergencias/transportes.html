@@ -204,7 +204,7 @@ const puedeCorregir = m => !!(C().puede && (C().admin || (String(m.por || '').tr
 const L_TIPO = ['Vehículo de apoyo de HMH y HZT', 'Ambulancia privada', 'Fuerza de seguridad', 'Fuerzas Armadas', 'Bomberos', 'Municipio', 'Provincia', 'ONG o voluntariado', 'Medio aéreo', 'Otro'];
 const L_EQUIPO = ['Sin equipamiento sanitario', 'Traslado simple', 'Soporte básico', 'Soporte avanzado', 'Neonatal (incubadora)', SD];
 const L_H24 = ['Sí', 'No', SD];
-const L_SOLIC = ['Directo al organismo o empresa', 'Por el COEsp', 'Por Defensa Civil', 'Por la Dirección del hospital', SD];
+const L_SOLIC = ['Por radio: el operador del 107 (radio del HZT) lo pide al servicio de choferes', 'Directo al organismo o empresa', 'Por el COEsp', 'Por Defensa Civil', 'Por la Dirección del hospital', SD];
 function abrirMedio(id) {
   const m = id ? D.base.medios.find(x => x.id === id) : {};
   const v = k => vacio(m[k]) ? '' : String(m[k]);
