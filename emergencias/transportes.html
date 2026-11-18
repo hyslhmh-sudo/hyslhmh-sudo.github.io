@@ -136,7 +136,7 @@ function vAmb() {
   const tot = {}; let n = 0;
   hs.forEach(h => (h.ambs || []).forEach(a => { n++; const e = String(a.estado || '').trim() || 'Sin estado'; tot[e] = (tot[e] || 0) + 1; }));
   const sin = hs.filter(h => !h.ambs).length;
-  return `<div class="card" style="margin-bottom:12px"><h3>Total del Área Programática</h3>
+  return `${faltaPub ? '<div class="aviso">Para corregir ambulancias y vehículos falta publicar la versión nueva del servidor. Avisale a Higiene y Seguridad Laboral. Mientras tanto se pueden cargar desde la ficha del establecimiento.</div>' : ''}<div class="card" style="margin-bottom:12px"><h3>Total del Área Programática</h3>
     <div class="resumen"><span class="chip e-ns">${n} ambulancia${n === 1 ? '' : 's'} cargada${n === 1 ? '' : 's'}</span>${Object.keys(tot).map(e => chipEstado(e).replace('</span>', ` · ${tot[e]}</span>`)).join('')}</div>
     <div class="sub">${sin ? `${sin} establecimiento${sin === 1 ? '' : 's'} sin ambulancias cargadas en la ficha.` : 'Todos los establecimientos tienen la lista cargada.'}</div></div>
   <div class="grid">${hs.map(h => {
@@ -168,6 +168,7 @@ function itemVeh(a, ico, cols) {
   return `<div class="amb"><span class="ms" style="color:var(--medio)">${ico}</span><div style="flex:1"><b>${val(a.id)}</b>${vacio(a.marca) ? '' : ' · ' + E(a.marca)}${vacio(a.anio) ? '' : ' · ' + E(a.anio)} ${chipEstado(a.estado)}${det ? `<div class="fu">${det}</div>` : ''}${vacio(a.obs) ? '' : `<div class="fu">${E(a.obs)}</div>`}</div></div>`;
 }
 let edAmb = null; // { est, L: ambulancias, M: vehículos de apoyo, msg }
+let faltaPub = false; // 18/11/2026 · si el servidor todavía no devuelve «movs», no se abre el editor (se perderían marca, año, etc.)
 function editorAmb() {
   const ctl = (lista, cols) => (a, i) => `<div class="amb-ed" data-l="${lista}" data-i="${i}">${cols.map(c => `<label class="${c.w ? 'w' : ''}"><small>${E(c.l)}</small>${c.o
     ? `<select data-c="${c.k}"><option value="">Elegí…</option>${c.o.concat(a[c.k] && c.o.indexOf(a[c.k]) < 0 && !vacio(a[c.k]) ? [a[c.k]] : []).map(o => `<option${o === a[c.k] ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
@@ -359,7 +360,7 @@ app.addEventListener('click', ev => {
   const t = ev.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; filtro = ''; S.store.set('transp.tab', tab); pintar(); return; }
   const e = ev.target.closest('[data-esc]'); if (e) { esc = esc === e.dataset.esc ? '' : e.dataset.esc; pintar(); return; }
   if (ev.target.closest('#fInv') && dest) { const t = orig; orig = dest; dest = t; S.store.set('transp.orig', orig); S.store.set('transp.dest', dest); pintar(); return; }
-  const ea = ev.target.closest('[data-amb]'); if (ea) { const h = D.hospitales.find(x => x.est === ea.dataset.amb); edAmb = { est: h.est, L: JSON.parse(JSON.stringify(h.ambs || [])), M: JSON.parse(JSON.stringify(h.movs || [])), msg: '' }; if (!edAmb.L.length) edAmb.L.push({}); pintar(); return; }
+  const ea = ev.target.closest('[data-amb]'); if (ea) { const h = D.hospitales.find(x => x.est === ea.dataset.amb); if (!('movs' in h)) { faltaPub = true; pintar(); return; } edAmb = { est: h.est, L: JSON.parse(JSON.stringify(h.ambs || [])), M: JSON.parse(JSON.stringify(h.movs || [])), msg: '' }; if (!edAmb.L.length) edAmb.L.push({}); pintar(); return; }
   const ms = ev.target.closest('[data-mas]'); if (edAmb && ms) { leerAmb(); edAmb[ms.dataset.mas].push({}); pintar(); return; }
   const q = ev.target.closest('[data-quitar]'); if (q && edAmb) { leerAmb(); const [l, i] = q.dataset.quitar.split(':'); edAmb[l].splice(+i, 1); pintar(); return; }
   if (ev.target.closest('#ambCan')) { edAmb = null; pintar(); return; }
