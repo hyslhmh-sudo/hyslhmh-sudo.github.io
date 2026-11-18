@@ -168,9 +168,11 @@ body{background:#FAF7F7}
 .secciones-tabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
 .stab{border:1px solid #F3DADA;background:#fff;border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center;color:#8E1B1B}
 .stab[aria-pressed="true"]{background:#8E1B1B;color:#fff;border-color:#8E1B1B}
-.sem{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.sem{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;max-width:100%}
 .sem.v{background:#C8E6C9;color:#1B5E20}.sem.a{background:#FFF3C4;color:#5D4500}.sem.n{background:#FFD8B0;color:#7A3300}.sem.r{background:#D32F2F;color:#fff}.sem.g{background:#EEF2F7;color:#4B5B73}
-.inst{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%}
+.inst{padding:14px;display:grid;gap:7px;cursor:pointer;text-align:left;width:100%;min-width:0;overflow-wrap:anywhere}
+/* 18/11/2026 (Belén: «revisar y ajustar ancho»): ninguna tarjeta puede pasar el ancho de la pantalla; los textos largos se cortan en renglones. */
+.lista>*{min-width:0}.inst .sub{overflow-wrap:anywhere}
 .inst b{font-size:15px;color:#172B4D}
 .camas{display:flex;gap:6px;flex-wrap:wrap}
 .cama{font-size:12px;background:#F5F7FB;border:1px solid #DCE3EF;border-radius:8px;padding:3px 7px}
@@ -466,6 +468,12 @@ const TIPOS_FILA = {
 };
 const ESFERA_M2 = 3.5, ESFERA_INODORO = 20;
 const capEsfera = x => { const m = num(x.superficie), i = num(x.inodoros); return { m2: m ? Math.floor(m / ESFERA_M2) : 0, ino: i ? i * ESFERA_INODORO : 0 }; };
+/* 18/11/2026: la accesibilidad que manda Educación viene en texto largo («Ingreso sin ayuda: SI · Rampas: SI · Sanitarios accesibles: NO…»).
+ * En la tarjeta va un resumen corto; el detalle queda en la ficha. Cuenta ingreso sin ayuda, rampas y sanitarios accesibles. */
+const semAcc = v => { const t = String(v || ''); if (!/ingreso sin ayuda|rampas|sanitarios accesibles/i.test(t)) return semSN(v, 'Accesible', 'No accesible');
+  const ks = ['Ingreso sin ayuda', 'Rampas', 'Sanitarios accesibles'].map(k => (t.match(new RegExp(k + ':\\s*([^·]+)', 'i')) || [])[1] || '').map(x => x.trim().toUpperCase());
+  const si = ks.filter(x => x === 'SI' || x === 'SÍ').length, no = ks.filter(x => x === 'NO').length;
+  return si === 3 ? '<span class="sem v">Accesible</span>' : no === 3 ? '<span class="sem n">No accesible</span>' : si ? '<span class="sem a">Accesibilidad parcial</span>' : '<span class="sem g">Accesibilidad s/d</span>'; };
 const semSN = (v, si, no) => !v || /^s\/d/i.test(v) ? '' : S.esSi(v) ? `<span class="sem v">${E(si)}</span>` : S.esNo(v) ? `<span class="sem n">${E(no)}</span>` : `<span class="sem a">${E(v)}</span>`;
 function vistaAlb() {
   borrador = null; const r = redVista(), todas = r.nombre === TODAS;
@@ -483,7 +491,7 @@ function vistaAlb() {
     ${grupos.map(g => `<h3>${escTit(g.e)}</h3><div class="lista">${filtra(g.l).map(x => { const c = capEsfera(x);
       return `<button class="tarjeta inst" data-fila="alb" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${S.esSi(x.zona_riesgo) ? '<span class="sem r">Zona de riesgo</span>' : ''}${semSN(x.necesidades, 'Recibe necesidades de salud', 'Sin apoyos de salud')}</div>
         <div class="sub">${E([x.tipo, x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.caps_ref ? ' · centro de salud: ' + E(x.caps_ref) : ''}</div>
-        <div class="pie"><span><b>${E(x.capacidad || 's/d')}</b> personas (estimado)</span>${c.m2 ? `<span>por superficie (Esfera): ${c.m2}</span>` : ''}${c.ino ? `<span>por inodoros (Esfera): ${c.ino}</span>` : ''}${semSN(x.energia === 'Red y grupo electrógeno' ? 'Sí' : x.energia === 'Sin energía' ? 'No' : '', 'Grupo electrógeno', 'Sin energía')}${semSN(x.accesible, 'Accesible', 'No accesible')}${semSN(x.calefaccion, 'Calefacción', 'Sin calefacción')}</div></button>`; }).join('')
+        <div class="pie"><span><b>${E(x.capacidad || 's/d')}</b> personas (estimado)</span>${c.m2 ? `<span>por superficie (Esfera): ${c.m2}</span>` : ''}${c.ino ? `<span>por inodoros (Esfera): ${c.ino}</span>` : ''}${semSN(x.energia === 'Red y grupo electrógeno' ? 'Sí' : x.energia === 'Sin energía' ? 'No' : '', 'Grupo electrógeno', 'Sin energía')}${semAcc(x.accesible)}${semSN(x.calefaccion, 'Calefacción', 'Sin calefacción')}</div></button>`; }).join('')
       || `<div class="tarjeta vacio">Todavía no hay albergues cargados en ${g.e.locs.map(E).join(', ')}.</div>`}</div>`).join('')}`;
   const qi = $('#q'); qi.addEventListener('input', () => { q = qi.value; const p = qi.selectionStart; vistaAlb(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
 }
