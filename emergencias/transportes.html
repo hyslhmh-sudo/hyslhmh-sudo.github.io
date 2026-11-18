@@ -97,7 +97,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 'use strict';
 const S = window.STARH, E = S.esc, app = document.getElementById('app');
 const SD = 's/d (revisar)';
-const TABS = [['amb', 'local_hospital', 'Ambulancias de los hospitales'], ['med', 'airport_shuttle', 'Medios privados y de otros organismos'],
+const TABS = [['amb', 'local_hospital', 'Ambulancias de los hospitales'], ['med', 'airport_shuttle', 'Medios de traslado'],
   ['esp', 'flood', 'Transportes especiales'], ['dis', 'route', 'Distancias']];
 const ESCENARIOS = ['inundación o anegamiento', 'barro o ripio', 'nieve o hielo', 'zona sin acceso por ruta (aéreo)', 'traslado bariátrico',
   'neonatal (incubadora)', 'aislamiento infeccioso', 'salud mental'];
@@ -175,11 +175,20 @@ async function guardarAmb() {
   } catch (e) { if (edAmb) { edAmb.msg = (e && (e.error || e.message)) || 'No se pudo guardar.'; pintar(); } }
 }
 
-// 2) Medios privados y de otros organismos (BASE · MEDIOS DE TRASLADO)
+// 2) Medios de traslado (BASE · MEDIOS DE TRASLADO): vehículos de apoyo de HMH y HZT, privados y de otros organismos.
+// 18/11/2026 05:01 (Belén: «crear esa categoría- usar estado: muy bueno - bueno- regular - malo - fuera de servicio - incluir modelo/marca»):
+// tipo «Vehículo de apoyo de HMH y HZT» y columnas marca, patente, anio y estado (servidor: MEDIO_CAMPOS).
+const L_ESTADO_V = ['Muy bueno', 'Bueno', 'Regular', 'Malo', 'Fuera de servicio'];
+function chipVeh(e) {
+  const t = String(e || '').trim(); if (!t || /^s\/d/i.test(t)) return '';
+  const c = /^(muy bueno|bueno)$/i.test(t) ? 'e-ok' : /^regular$/i.test(t) ? 'e-pr' : /^malo$|fuera/i.test(t) ? 'e-fs' : 'e-ns';
+  return `<span class="chip ${c}">${E(t)}</span>`;
+}
 function tarjetaMedio(m) {
   const escs = String(m.escenarios || '').split(';').map(s => s.trim()).filter(s => s && !vacio(s));
   return `<div class="card"><h3>${E(m.organismo_nombre || nombreDe(m.organismo) || m.organismo)}</h3>
     <div class="sub">${E(m.id)} · ${val(m.tipo)} · ${val(m.vehiculo)}</div>
+    ${vacio(m.marca) && vacio(m.patente) && vacio(m.estado) ? '' : `<div style="margin:4px 0"><b>${vacio(m.marca) ? '' : E(m.marca)}</b>${vacio(m.patente) ? '' : ' · ' + E(m.patente)}${vacio(m.anio) ? '' : ' · ' + E(m.anio)} ${chipVeh(m.estado)}</div>`}
     <dl><dt>Cantidad</dt><dd>${val(m.cantidad)}</dd><dt>Camilla / sentados</dt><dd>${val(m.camilla)} / ${val(m.sentados)}</dd>
     <dt>Equipamiento</dt><dd>${val(m.equipamiento)}</dd><dt>Disponible 24 h</dt><dd>${val(m.h24)}</dd>
     <dt>Cómo se solicita</dt><dd>${val(m.solicitud)}</dd><dt>Convenio o costo</dt><dd>${val(m.convenio)}</dd><dt>Base</dt><dd>${val(m.base)}</dd></dl>
@@ -192,7 +201,7 @@ function tarjetaMedio(m) {
 // 15/11/2026 06:54 (Belén: «yo y referentes cargaríamos»): Administración carga y corrige todos; un referente agrega y corrige los que cargó él.
 const C = () => (D && D.carga) || {};
 const puedeCorregir = m => !!(C().puede && (C().admin || (String(m.por || '').trim() && String(m.por).trim() === String(C().yo || '').trim())));
-const L_TIPO = ['Ambulancia privada', 'Fuerza de seguridad', 'Fuerzas Armadas', 'Bomberos', 'Municipio', 'Provincia', 'ONG o voluntariado', 'Medio aéreo', 'Otro'];
+const L_TIPO = ['Vehículo de apoyo de HMH y HZT', 'Ambulancia privada', 'Fuerza de seguridad', 'Fuerzas Armadas', 'Bomberos', 'Municipio', 'Provincia', 'ONG o voluntariado', 'Medio aéreo', 'Otro'];
 const L_EQUIPO = ['Sin equipamiento sanitario', 'Traslado simple', 'Soporte básico', 'Soporte avanzado', 'Neonatal (incubadora)', SD];
 const L_H24 = ['Sí', 'No', SD];
 const L_SOLIC = ['Directo al organismo o empresa', 'Por el COEsp', 'Por Defensa Civil', 'Por la Dirección del hospital', SD];
@@ -208,6 +217,8 @@ function abrirMedio(id) {
     <label>Organismo o empresa <select name="orgSel"><option value="">Elegí de la lista…</option>${recs.map(r => `<option value="${E(r.id)}"${r.id === org ? ' selected' : ''}>${E(r.nombre)} (${E(r.id)})</option>`).join('')}<option value="otro"${org && !esR ? ' selected' : ''}>Otro (no está en la lista: escribir el nombre)</option></select></label>
     <label id="lOtro"${org && !esR ? '' : ' hidden'}>Nombre del organismo o empresa <input type="text" name="orgOtro" value="${org && !esR ? E(org) : ''}" placeholder="Ej.: Ambulancias del Sur S.R.L."></label>
     <div class="dos"><label>Tipo de medio ${sel('tipo', L_TIPO, v('tipo'))}</label><label>Tipo de vehículo <input type="text" name="vehiculo" value="${E(v('vehiculo'))}" placeholder="ambulancia, camión 6x6, bote, 4x4…"></label></div>
+    <div class="dos"><label>Marca y modelo <input type="text" name="marca" value="${E(v('marca'))}" placeholder="Ej.: Renault Kangoo"></label><label>Patente <input type="text" name="patente" value="${E(v('patente'))}"></label></div>
+    <div class="dos"><label>Año <input type="text" name="anio" inputmode="numeric" value="${E(v('anio'))}"></label><label>Estado ${sel('estado', L_ESTADO_V, v('estado'))}</label></div>
     <div class="dos"><label>Cantidad <input type="text" name="cantidad" inputmode="numeric" value="${E(v('cantidad'))}"></label><label>Equipamiento sanitario ${sel('equipamiento', L_EQUIPO, v('equipamiento'))}</label></div>
     <div class="dos"><label>Capacidad en camilla (por vehículo) <input type="text" name="camilla" inputmode="numeric" value="${E(v('camilla'))}"></label><label>Capacidad sentados (por vehículo) <input type="text" name="sentados" inputmode="numeric" value="${E(v('sentados'))}"></label></div>
     <label>Sirve para (escenarios)</label><div class="chk">${ESCENARIOS.map(x => `<label><input type="checkbox" name="esc" value="${E(x)}"${escs.indexOf(x) >= 0 ? ' checked' : ''}>${E(x)}</label>`).join('')}</div>
@@ -227,7 +238,7 @@ document.getElementById('fMedio').addEventListener('submit', async ev => {
   const org = f.orgSel.value === 'otro' ? f.orgOtro.value.trim() : f.orgSel.value;
   if (!org) { msg.innerHTML = '<div class="aviso">Elegí el organismo o escribí su nombre.</div>'; return; }
   const medio = { id: b.dataset.id, organismo: org, escenarios: [...f.querySelectorAll('[name=esc]:checked')].map(x => x.value).join('; ') };
-  ['tipo', 'vehiculo', 'cantidad', 'camilla', 'sentados', 'equipamiento', 'h24', 'solicitud', 'convenio', 'base', 'obs', 'fuente'].forEach(k => { medio[k] = f[k].value.trim(); });
+  ['tipo', 'vehiculo', 'marca', 'patente', 'anio', 'estado', 'cantidad', 'camilla', 'sentados', 'equipamiento', 'h24', 'solicitud', 'convenio', 'base', 'obs', 'fuente'].forEach(k => { medio[k] = f[k].value.trim(); });
   b.disabled = true; msg.innerHTML = '<div class="fu">Guardando…</div>';
   try {
     const r = await S.api('transportes_medio_guardar', { medio: medio }, 60000); if (!r || !r.ok) throw r;
@@ -250,7 +261,7 @@ function vEsp() {
   const cuenta = s => D.base.medios.filter(m => String(m.escenarios || '').toLowerCase().split(';').map(x => x.trim()).indexOf(s) >= 0).length;
   return `<p style="font-size:13.5px;margin-top:0">Elegí el escenario para ver qué medios sirven.</p>
   <div class="escs">${ESCENARIOS.map(s => `<button type="button" data-esc="${E(s)}" aria-pressed="${s === esc}">${E(s)} · ${cuenta(s)}</button>`).join('')}</div>
-  ${!esc ? '' : ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : `<div class="aviso">No hay medios cargados para «${E(esc)}». Se agrega en la pestaña «Medios privados y de otros organismos», con «Agregar medio» o «Corregir este medio» (casillas «Sirve para»).</div>`}
+  ${!esc ? '' : ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : `<div class="aviso">No hay medios cargados para «${E(esc)}». Se agrega en la pestaña «Medios de traslado», con «Agregar medio» o «Corregir este medio» (casillas «Sirve para»).</div>`}
   <p class="pie">Es la misma lista de la pestaña anterior, filtrada por la columna «Sirve para (escenarios)». No se carga aparte.</p>`;
 }
 
@@ -320,7 +331,7 @@ function pintar() {
   app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
   <p><b>Ambulancias de los hospitales:</b> el HMH y el HZT comparten el servicio de ambulancias (mismo equipo directivo): van en una sola tarjeta y se guardan en la ficha del HZT. Son las de la ficha de cada establecimiento. Se corrigen acá con «Corregir ambulancias» (patente, estado y observaciones; «Agregar ambulancia» o el tacho para quitar). Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Las corrige el referente de cada establecimiento y Administración.</p>
-  <p><b>Medios privados y de otros organismos:</b> ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
+  <p><b>Medios de traslado:</b> vehículos de apoyo de HMH y HZT (utilitarios, camionetas, Pichi Anai y Mantenimiento, con marca y modelo, patente, año y estado: Muy bueno, Bueno, Regular, Malo o Fuera de servicio), ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
   <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están ordenados por grupo: localidades (punto central de cada una), instituciones de salud públicas, instituciones de salud privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo (alcaidía, comisarías, centros de detención, casas infantiles, casas de madres) y recursos de apoyo. Las instituciones receptoras, los albergues y la población a cargo salen del COE · Derivaciones y albergues: se cargan una sola vez, ahí. Con «Ordenar» elegís ver la tabla por grupo o toda junta del más cercano al más lejano. Un lugar sin coordenadas figura con «s/d». Son estimados en auto.</p>
   <p>Consultado el ${E(D.consultado || '')}.</p></details>
