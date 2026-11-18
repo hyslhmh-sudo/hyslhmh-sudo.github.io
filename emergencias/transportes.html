@@ -71,7 +71,7 @@ dialog#dlgMedio::backdrop{background:rgba(23,43,77,.45)}
 #fMedio label{display:block;font-size:12.5px;font-weight:700;color:var(--suave);margin-top:10px}
 #fMedio input[type=text],#fMedio select,#fMedio textarea{display:block;width:100%;margin-top:3px;font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:8px 10px;color:var(--texto);background:#fff}
 #fMedio label[hidden]{display:none}
-.amb-ed{display:grid;grid-template-columns:1fr 1.3fr auto;gap:6px;align-items:center;padding:6px 0;border-top:1px solid var(--claro)}.amb-ed input,.amb-ed select{font:500 13.5px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:7px 8px;min-width:0;width:100%}.amb-ed [data-c=obs]{grid-column:1/3;grid-row:2}.amb-ed [data-quitar]{grid-column:3;grid-row:1}
+.amb-ed{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 8px;align-items:end;padding:8px;margin:6px 0;border-radius:10px;background:var(--fondo)}.amb-ed label{display:block;margin:0}.amb-ed label small{display:block;font-size:11px;font-weight:700;color:var(--tenue);margin-bottom:2px}.amb-ed label.w{grid-column:1/-1}.amb-ed input,.amb-ed select{font:500 13.5px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:7px 8px;min-width:0;width:100%}.amb-ed [data-quitar]{justify-self:start}
 #fMedio .dos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}@media(max-width:520px){#fMedio .dos{grid-template-columns:1fr}}
 #fMedio .chk{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:4px}#fMedio .chk label{display:flex;align-items:center;gap:6px;margin:0;font-weight:500;color:var(--texto);font-size:13.5px}
 #fMedio .acc{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;position:sticky;bottom:-16px;background:#fff;padding:10px 0}
@@ -97,7 +97,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 'use strict';
 const S = window.STARH, E = S.esc, app = document.getElementById('app');
 const SD = 's/d (revisar)';
-const TABS = [['amb', 'local_hospital', 'Ambulancias de los hospitales'], ['med', 'airport_shuttle', 'Medios de traslado'],
+const TABS = [['amb', 'local_hospital', 'Ambulancias y móviles de los hospitales'], ['med', 'airport_shuttle', 'Medios de traslado'],
   ['esp', 'flood', 'Transportes especiales'], ['dis', 'route', 'Distancias']];
 const ESCENARIOS = ['inundación o anegamiento', 'barro o ripio', 'nieve o hielo', 'zona sin acceso por ruta (aéreo)', 'traslado bariátrico',
   'neonatal (incubadora)', 'aislamiento infeccioso', 'salud mental'];
@@ -107,7 +107,8 @@ const vacio = v => !String(v == null ? '' : v).trim() || /^s\/d/i.test(String(v)
 const val = v => vacio(v) ? `<span class="sd">${E(String(v || '').trim() || SD)}</span>` : E(v);
 function chipEstado(e) {
   const t = String(e || '').trim() || 'Sin estado';
-  const c = /^funciona$/i.test(t) ? 'e-ok' : /problema/i.test(t) ? 'e-pr' : /fuera/i.test(t) ? 'e-fs' : 'e-ns';
+  // 18/11/2026 · escala única (Muy bueno, Bueno, Regular, Malo, Fuera de servicio); se siguen leyendo los estados viejos (Funciona…).
+  const c = /^(funciona|muy bueno|bueno)$/i.test(t) ? 'e-ok' : /problema|^regular$/i.test(t) ? 'e-pr' : /fuera|^malo$/i.test(t) ? 'e-fs' : 'e-ns';
   return `<span class="chip ${c}">${E(t)}</span>`;
 }
 const tel = t => vacio(t) ? val(t) : `<a href="tel:${E(String(t).replace(/[^\d+]/g, ''))}">${E(t)}</a>`;
@@ -141,36 +142,52 @@ function vAmb() {
   <div class="grid">${hs.map(h => {
     const l = D.base.lugares.find(x => x.id === h.id);
     const lista = h.ambs === null ? `<p class="sd">Sin cargar en la ficha (${SD}).</p>` : !h.ambs.length ? '<p class="sd">La ficha indica que no hay ambulancias.</p>' :
-      h.ambs.map(a => `<div class="amb"><span class="ms" style="color:var(--medio)">ambulance</span><div style="flex:1"><b>${val(a.id)}</b> ${chipEstado(a.estado)}${vacio(a.obs) ? '' : `<div class="fu">${E(a.obs)}</div>`}</div></div>`).join('');
+      h.ambs.map(a => itemVeh(a, 'ambulance', COLS_AMB)).join('');
+    const listaM = h.movs === null || !h.movs ? '' : !h.movs.length ? '' : `<div class="sub" style="margin-top:8px"><b>Vehículos de apoyo</b></div>${h.movs.map(a => itemVeh(a, 'airport_shuttle', COLS_MOV)).join('')}`;
     const otros = conQuien(h.est);
     const cab = `<h3>${E([h.est].concat(otros).join(' y '))}</h3>${otros.length ? '<div class="sub"><b>Servicio de ambulancias compartido</b> (mismo equipo directivo)</div>' : ''}<div class="sub">${l && !vacio(l.localidad) ? E(l.localidad) + ' · ' : ''}${h.act ? 'Ambulancias actualizadas el ' + E(h.act) : 'Ambulancias sin cargar'}</div>`;
     if (edAmb && edAmb.est === h.est) return `<div class="card">${cab}${editorAmb()}</div>`;
-    return `<div class="card">${cab}${lista}
-      ${h.puede ? `<button class="btn" type="button" data-amb="${E(h.est)}"><span class="ms">edit</span>Corregir ambulancias</button>` : ''}</div>`;
+    return `<div class="card">${cab}${lista}${listaM}
+      ${h.puede ? `<button class="btn" type="button" data-amb="${E(h.est)}"><span class="ms">edit</span>Corregir ambulancias y vehículos</button>` : ''}</div>`;
   }).join('')}</div>
-  <p class="pie">Fuente: ficha de cada establecimiento (campo «Ambulancias»). Se corrige acá o en la ficha: es el mismo dato. Lo corrige el referente de cada establecimiento y Administración.</p>`;
+  <p class="pie">Fuente: ficha de cada establecimiento (campos «Ambulancias» y «Vehículos de apoyo»). Se corrige acá o en la ficha: es el mismo dato. Lo corrige el referente de cada establecimiento y Administración. Estado: Muy bueno, Bueno, Regular, Malo o Fuera de servicio.</p>`;
 }
 // 15/11/2026 07:30 (Belén: «acá se debería ver y corregir solo lo de ambulancia»): se corrigen las ambulancias en la misma tarjeta,
 // sin ir a la ficha completa. Se guarda en el mismo campo «ambs» de la ficha (acción ficha_guardar): un solo dato.
-const EST_AMB = ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'];
-let edAmb = null; // { est, L: [{id, estado, obs}], msg }
+// 18/11/2026 · Belén: «que todos los hospitales deban cargar el estado igual que las ambulancias y móviles de Trelew». Mismas columnas que la ficha.
+const EST_VEH = ['Muy bueno', 'Bueno', 'Regular', 'Malo', 'Fuera de servicio', 'No sabe'], SNN = ['Sí', 'No', 'No sabe'];
+const COLS_AMB = [{ k: 'id', l: 'Patente' }, { k: 'marca', l: 'Marca y modelo' }, { k: 'anio', l: 'Año', n: 1 }, { k: 'estado', l: 'Estado', o: EST_VEH }, { k: 'uso', l: '¿En uso?', o: SNN },
+  { k: 'equip', l: 'Equipamiento', o: ['Traslado simple', 'Soporte básico', 'Soporte avanzado', 'Solo apoyo (no traslada pacientes)', 'No sabe'] },
+  { k: 'camilla', l: 'Pacientes en camilla', n: 1 }, { k: 'sentados', l: 'Personas sentadas', n: 1 }, { k: 'barro', l: '¿Apta para barro, ripio o anegamiento?', o: SNN }, { k: 'obs', l: 'Observaciones', w: 1 }];
+const COLS_MOV = [{ k: 'id', l: 'Patente' }, { k: 'marca', l: 'Marca y modelo' }, { k: 'anio', l: 'Año', n: 1 }, { k: 'funcion', l: 'Función', o: ['Apoyo', 'Mantenimiento', 'Servicio o programa específico', 'Otro'] },
+  { k: 'estado', l: 'Estado', o: EST_VEH }, { k: 'uso', l: '¿En uso?', o: SNN }, { k: 'emerg', l: '¿Se puede usar en una emergencia?', o: SNN }, { k: 'h24', l: '¿Disponible las 24 h?', o: SNN },
+  { k: 'sentados', l: 'Personas sentadas', n: 1 }, { k: 'camilla', l: '¿Puede llevar camilla?', o: SNN }, { k: 'obs', l: 'Observaciones', w: 1 }];
+// Un vehículo en la tarjeta: patente, marca · año, estado y el resto de los datos cargados.
+function itemVeh(a, ico, cols) {
+  const det = cols.filter(c => ['id', 'marca', 'anio', 'estado', 'obs'].indexOf(c.k) < 0 && !vacio(a[c.k])).map(c => `${E(c.l.replace(/[¿?]/g, ''))}: <b>${E(a[c.k])}</b>`).join(' · ');
+  return `<div class="amb"><span class="ms" style="color:var(--medio)">${ico}</span><div style="flex:1"><b>${val(a.id)}</b>${vacio(a.marca) ? '' : ' · ' + E(a.marca)}${vacio(a.anio) ? '' : ' · ' + E(a.anio)} ${chipEstado(a.estado)}${det ? `<div class="fu">${det}</div>` : ''}${vacio(a.obs) ? '' : `<div class="fu">${E(a.obs)}</div>`}</div></div>`;
+}
+let edAmb = null; // { est, L: ambulancias, M: vehículos de apoyo, msg }
 function editorAmb() {
-  const fila = (a, i) => `<div class="amb-ed" data-i="${i}"><input type="text" data-c="id" placeholder="Patente" value="${E(vacio(a.id) ? '' : a.id)}">
-    <select data-c="estado"><option value="">Estado…</option>${EST_AMB.map(o => `<option${o === a.estado ? ' selected' : ''}>${o}</option>`).join('')}</select>
-    <input type="text" data-c="obs" placeholder="Observaciones" value="${E(vacio(a.obs) ? '' : a.obs)}">
-    <button class="btn" type="button" data-quitar="${i}" aria-label="Quitar esta ambulancia" style="margin-top:0"><span class="ms">delete</span></button></div>`;
-  return `<div class="amb-eds">${edAmb.L.length ? edAmb.L.map(fila).join('') : '<p class="sd">Sin ambulancias. Si el establecimiento no tiene, guardá así.</p>'}</div>
-    <button class="btn" type="button" id="ambMas"><span class="ms">add</span>Agregar ambulancia</button>
+  const ctl = (lista, cols) => (a, i) => `<div class="amb-ed" data-l="${lista}" data-i="${i}">${cols.map(c => `<label class="${c.w ? 'w' : ''}"><small>${E(c.l)}</small>${c.o
+    ? `<select data-c="${c.k}"><option value="">Elegí…</option>${c.o.concat(a[c.k] && c.o.indexOf(a[c.k]) < 0 && !vacio(a[c.k]) ? [a[c.k]] : []).map(o => `<option${o === a[c.k] ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
+    : `<input type="text" data-c="${c.k}" ${c.n ? 'inputmode="numeric"' : ''} value="${E(vacio(a[c.k]) ? '' : a[c.k])}">`}</label>`).join('')}
+    <button class="btn" type="button" data-quitar="${lista}:${i}" aria-label="Quitar" style="margin-top:0"><span class="ms">delete</span>Quitar</button></div>`;
+  return `<div class="sub" style="margin-top:6px"><b>Ambulancias</b></div><div class="amb-eds">${edAmb.L.length ? edAmb.L.map(ctl('L', COLS_AMB)).join('') : '<p class="sd">Sin ambulancias. Si el establecimiento no tiene, guardá así.</p>'}</div>
+    <button class="btn" type="button" data-mas="L"><span class="ms">add</span>Agregar ambulancia</button>
+    <div class="sub" style="margin-top:12px"><b>Vehículos de apoyo</b> (utilitarios, camionetas, de mantenimiento u otros que no son ambulancias)</div><div class="amb-eds">${edAmb.M.length ? edAmb.M.map(ctl('M', COLS_MOV)).join('') : '<p class="sd">Sin vehículos de apoyo cargados.</p>'}</div>
+    <button class="btn" type="button" data-mas="M"><span class="ms">add</span>Agregar vehículo de apoyo</button>
     ${edAmb.msg ? `<div class="aviso" style="margin:8px 0 0">${E(edAmb.msg)}</div>` : ''}
     <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" type="button" id="ambCan">Cancelar</button><button class="btn pri" type="button" id="ambOk"><span class="ms">save</span>Guardar</button></div>`;
 }
-function leerAmb() { document.querySelectorAll('.amb-ed').forEach(r => { const a = edAmb.L[+r.dataset.i]; r.querySelectorAll('[data-c]').forEach(c => { a[c.dataset.c] = c.value.trim(); }); }); }
+function leerAmb() { document.querySelectorAll('.amb-ed').forEach(r => { const a = edAmb[r.dataset.l][+r.dataset.i]; r.querySelectorAll('[data-c]').forEach(c => { a[c.dataset.c] = c.value.trim(); }); }); }
 async function guardarAmb() {
   leerAmb();
-  const L = edAmb.L.filter(a => a.id || a.estado || a.obs).map(a => ({ id: a.id || SD, estado: a.estado || 'No sabe', obs: a.obs || '' }));
+  const limpio = (L, cols) => L.filter(a => cols.some(c => String(a[c.k] || '').trim())).map(a => { const o = {}; cols.forEach(c => { o[c.k] = String(a[c.k] || '').trim() || (c.k === 'id' ? SD : c.k === 'estado' ? 'No sabe' : ''); }); return o; });
+  const L = limpio(edAmb.L, COLS_AMB), M = limpio(edAmb.M, COLS_MOV);
   edAmb.msg = 'Guardando…'; pintar();
   try {
-    const r = await S.api('ficha_guardar', { est: edAmb.est, cambios: { ambs: L } }, 60000); if (!r || !r.ok) throw r;
+    const r = await S.api('ficha_guardar', { est: edAmb.est, cambios: { ambs: L, movs: M } }, 60000); if (!r || !r.ok) throw r;
     edAmb = null; const n = await S.api('transportes_leer', {}); if (n && n.ok) { S.store.set('transp.cache', n); D = n; } pintar();
   } catch (e) { if (edAmb) { edAmb.msg = (e && (e.error || e.message)) || 'No se pudo guardar.'; pintar(); } }
 }
@@ -201,7 +218,7 @@ function tarjetaMedio(m) {
 // 15/11/2026 06:54 (Belén: «yo y referentes cargaríamos»): Administración carga y corrige todos; un referente agrega y corrige los que cargó él.
 const C = () => (D && D.carga) || {};
 const puedeCorregir = m => !!(C().puede && (C().admin || (String(m.por || '').trim() && String(m.por).trim() === String(C().yo || '').trim())));
-const L_TIPO = ['Vehículo de apoyo de HMH y HZT', 'Ambulancia privada', 'Fuerza de seguridad', 'Fuerzas Armadas', 'Bomberos', 'Municipio', 'Provincia', 'ONG o voluntariado', 'Medio aéreo', 'Otro'];
+const L_TIPO = ['Ambulancia privada', 'Fuerza de seguridad', 'Fuerzas Armadas', 'Bomberos', 'Municipio', 'Provincia', 'ONG o voluntariado', 'Medio aéreo', 'Otro'];
 const L_EQUIPO = ['Sin equipamiento sanitario', 'Traslado simple', 'Soporte básico', 'Soporte avanzado', 'Neonatal (incubadora)', SD];
 const L_H24 = ['Sí', 'No', SD];
 const L_SOLIC = ['Por radio: el operador del 107 (radio del HZT) lo pide al servicio de choferes', 'Directo al organismo o empresa', 'Por el COEsp', 'Por Defensa Civil', 'Por la Dirección del hospital', SD];
@@ -330,8 +347,8 @@ function pintar() {
   const cuerpo = tab === 'med' ? vMed() : tab === 'esp' ? vEsp() : tab === 'dis' ? vDis() : vAmb();
   app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
-  <p><b>Ambulancias de los hospitales:</b> el HMH y el HZT comparten el servicio de ambulancias (mismo equipo directivo): van en una sola tarjeta y se guardan en la ficha del HZT. Son las de la ficha de cada establecimiento. Se corrigen acá con «Corregir ambulancias» (patente, estado y observaciones; «Agregar ambulancia» o el tacho para quitar). Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Las corrige el referente de cada establecimiento y Administración.</p>
-  <p><b>Medios de traslado:</b> vehículos de apoyo de HMH y HZT (utilitarios, camionetas, Pichi Anai y Mantenimiento, con marca y modelo, patente, año y estado: Muy bueno, Bueno, Regular, Malo o Fuera de servicio), ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
+  <p><b>Ambulancias y móviles de los hospitales:</b> cada hospital carga, en su ficha o acá con «Corregir ambulancias y vehículos», sus ambulancias (patente, marca y modelo, año, estado, si está en uso, equipamiento, pacientes en camilla, personas sentadas, si es apta para barro, ripio o anegamiento y observaciones) y sus vehículos de apoyo (patente, marca y modelo, año, función, estado, si está en uso, si se puede usar en una emergencia, si está disponible las 24 h, personas sentadas, si puede llevar camilla y observaciones). El estado es el mismo para todos: Muy bueno, Bueno, Regular, Malo o Fuera de servicio. El HMH y el HZT comparten el servicio (mismo equipo directivo): van en una sola tarjeta y se guardan en la ficha del HZT. Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Lo corrige el referente de cada establecimiento y Administración.</p>
+  <p><b>Medios de traslado:</b> medios que no son de los hospitales públicos (con marca y modelo, patente, año y estado si se conocen): ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>
   <p><b>Transportes especiales:</b> es la misma lista, filtrada por escenario (inundación, barro, nieve, sin acceso por ruta, bariátrico, neonatal, aislamiento, salud mental).</p>
   <p><b>Distancias:</b> elegí el lugar de salida («Desde»). Con «Hasta» en «Todos» se ordenan todos los destinos del más cercano al más lejano; si elegís un destino, ves solo ese par, y «Invertir» cambia el sentido. Los lugares están ordenados por grupo: localidades (punto central de cada una), instituciones de salud públicas, instituciones de salud privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo (alcaidía, comisarías, centros de detención, casas infantiles, casas de madres) y recursos de apoyo. Las instituciones receptoras, los albergues y la población a cargo salen del COE · Derivaciones y albergues: se cargan una sola vez, ahí. Con «Ordenar» elegís ver la tabla por grupo o toda junta del más cercano al más lejano. Un lugar sin coordenadas figura con «s/d». Son estimados en auto.</p>
   <p>Consultado el ${E(D.consultado || '')}.</p></details>
@@ -342,9 +359,9 @@ app.addEventListener('click', ev => {
   const t = ev.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; filtro = ''; S.store.set('transp.tab', tab); pintar(); return; }
   const e = ev.target.closest('[data-esc]'); if (e) { esc = esc === e.dataset.esc ? '' : e.dataset.esc; pintar(); return; }
   if (ev.target.closest('#fInv') && dest) { const t = orig; orig = dest; dest = t; S.store.set('transp.orig', orig); S.store.set('transp.dest', dest); pintar(); return; }
-  const ea = ev.target.closest('[data-amb]'); if (ea) { const h = D.hospitales.find(x => x.est === ea.dataset.amb); edAmb = { est: h.est, L: JSON.parse(JSON.stringify(h.ambs || [])), msg: '' }; if (!edAmb.L.length) edAmb.L.push({ id: '', estado: '', obs: '' }); pintar(); return; }
-  if (edAmb && ev.target.closest('#ambMas')) { leerAmb(); edAmb.L.push({ id: '', estado: '', obs: '' }); pintar(); return; }
-  const q = ev.target.closest('[data-quitar]'); if (q && edAmb) { leerAmb(); edAmb.L.splice(+q.dataset.quitar, 1); pintar(); return; }
+  const ea = ev.target.closest('[data-amb]'); if (ea) { const h = D.hospitales.find(x => x.est === ea.dataset.amb); edAmb = { est: h.est, L: JSON.parse(JSON.stringify(h.ambs || [])), M: JSON.parse(JSON.stringify(h.movs || [])), msg: '' }; if (!edAmb.L.length) edAmb.L.push({}); pintar(); return; }
+  const ms = ev.target.closest('[data-mas]'); if (edAmb && ms) { leerAmb(); edAmb[ms.dataset.mas].push({}); pintar(); return; }
+  const q = ev.target.closest('[data-quitar]'); if (q && edAmb) { leerAmb(); const [l, i] = q.dataset.quitar.split(':'); edAmb[l].splice(+i, 1); pintar(); return; }
   if (ev.target.closest('#ambCan')) { edAmb = null; pintar(); return; }
   if (ev.target.closest('#ambOk')) { guardarAmb(); return; }
   if (ev.target.closest('#mNuevo')) { abrirMedio(''); return; }

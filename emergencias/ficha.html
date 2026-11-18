@@ -58,6 +58,7 @@ details.sec.min{border-left-color:var(--coral)}
 .tab td.nomfijo{font-weight:600;padding-right:12px}
 .estadoG{font-size:12px;color:var(--tenue);min-height:16px;margin-top:4px}.estadoG.mal{color:#C62828;font-weight:600}
 .ayuda{display:block;color:var(--tenue);font-size:12px;margin:-2px 0 6px}
+.rep .rc{display:block;margin:0}.rep .rc small{display:block;font-size:11px;font-weight:700;color:var(--tenue);margin:0 0 2px;line-height:1.2}
 .rep .fila .quitar{position:absolute;top:4px;right:4px;border:0;background:none;color:var(--tenue);cursor:pointer}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--medio);border-radius:10px;padding:7px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;background:#fff;color:var(--fuerte);width:max-content}
 .btn.pri{background:var(--medio);color:#fff}
@@ -92,6 +93,14 @@ const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pedia
 // Tipos: t texto · n número · a texto largo · f fecha · sn Sí/No/No sabe · m opciones múltiples · auto dato que se trae de la app · rep lista que se repite
 // 15/11/2026 10:30 (Belén: «sí, eliminar redundancias»): se sacan la sección «Edificios a cargo» (la reemplazan el recuadro de
 // dependencias y la ficha de cada CAPS; no había nada cargado) y la distancia y el tiempo al hospital de referencia (salen de DISTANCIAS).
+// 18/11/2026 · Columnas de ambulancias y vehículos de apoyo (las mismas en la ficha y en Transportes y distancias).
+const EST_VEH = ['Muy bueno', 'Bueno', 'Regular', 'Malo', 'Fuera de servicio', 'No sabe'], SNN = ['Sí', 'No', 'No sabe'];
+const COLS_AMB = [{ k: 'id', l: 'Patente' }, { k: 'marca', l: 'Marca y modelo' }, { k: 'anio', l: 'Año', t: 'n' }, { k: 'estado', l: 'Estado', o: EST_VEH }, { k: 'uso', l: '¿En uso?', o: SNN },
+  { k: 'equip', l: 'Equipamiento', o: ['Traslado simple', 'Soporte básico', 'Soporte avanzado', 'Solo apoyo (no traslada pacientes)', 'No sabe'] },
+  { k: 'camilla', l: 'Pacientes en camilla', t: 'n' }, { k: 'sentados', l: 'Personas sentadas', t: 'n' }, { k: 'barro', l: '¿Apta para barro, ripio o anegamiento?', o: SNN }, { k: 'obs', l: 'Observaciones' }];
+const COLS_MOV = [{ k: 'id', l: 'Patente' }, { k: 'marca', l: 'Marca y modelo' }, { k: 'anio', l: 'Año', t: 'n' }, { k: 'funcion', l: 'Función', o: ['Apoyo', 'Mantenimiento', 'Servicio o programa específico', 'Otro'] },
+  { k: 'estado', l: 'Estado', o: EST_VEH }, { k: 'uso', l: '¿En uso?', o: SNN }, { k: 'emerg', l: '¿Se puede usar en una emergencia?', o: SNN }, { k: 'h24', l: '¿Disponible las 24 h?', o: SNN },
+  { k: 'sentados', l: 'Personas sentadas', t: 'n' }, { k: 'camilla', l: '¿Puede llevar camilla?', o: SNN }, { k: 'obs', l: 'Observaciones' }];
 const SEC_HOSP = [
   { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
     { k: 'nombre', l: 'Nombre oficial', t: 't' }, { k: 'corto', l: 'Nombre corto', t: 't' },
@@ -119,7 +128,10 @@ const SEC_HOSP = [
     { k: 'camas_obs', l: 'Aclaraciones sobre las camas (por ejemplo, qué es «Otra» o camas que cambian de uso)', t: 't', opt: true },
     { k: 'cam_guardia', l: 'Camas o camillas de guardia (cantidad)', t: 'n' },
     { k: 'arm', l: 'Respiradores (ARM / AVM): uno por fila, con su estado. Si no tiene, dejar vacío', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Fijo', 'De traslado', 'No sabe'] }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar respirador' },
-    { k: 'ambs', l: 'Ambulancias (una fila por ambulancia, con su estado)', t: 'rep', cols: [{ k: 'id', l: 'Patente' }, { k: 'estado', l: 'Estado', o: ['Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'] }, { k: 'obs', l: 'Observaciones' }], add: 'Agregar ambulancia' },
+    // 18/11/2026 · Belén: «que todos los hospitales deban cargar el estado igual que las ambulancias y móviles de Trelew»: una sola escala de estado
+    // (Muy bueno, Bueno, Regular, Malo, Fuera de servicio) y «¿En uso?» aparte; vehículos de apoyo en la ficha (campo «movs»).
+    { k: 'ambs', l: 'Ambulancias (una fila por ambulancia)', t: 'rep', cols: COLS_AMB, add: 'Agregar ambulancia' },
+    { k: 'movs', l: 'Vehículos de apoyo (utilitarios, camionetas, de mantenimiento u otros que no son ambulancias): uno por fila', t: 'rep', cols: COLS_MOV, add: 'Agregar vehículo' },
     { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
   { id: 's5', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
@@ -276,7 +288,7 @@ function campo(c) {
   if (c.t === 'a') return `<label class="campo">${lab}<textarea data-k="${c.k}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}">${E(v || '')}</textarea></label>`;
   if (c.t === 'coord') return `<label class="campo">${lab}<input data-k="${c.k}" value="${E(v || '')}" placeholder="${window.__blanco ? '' : '-43.2, -65.5 · s/d (revisar)'}"></label><div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" data-gps="${c.k}"><span class="ms">my_location</span>Usar mi ubicación</button>${v ? `<a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${encodeURIComponent(v)}"><span class="ms">map</span>Ver en el mapa</a>` : ''}</div>`;
   // 15/11/2026 07:44 (Belén): el HMH y el HZT comparten el servicio de ambulancias (mismo equipo directivo): se cargan una sola vez, en el HZT.
-  if (c.k === 'ambs' && estab === 'Hospital María Humphreys') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> Servicio de ambulancias compartido con el Hospital Zonal Trelew (mismo equipo directivo): se carga una sola vez, en la ficha del HZT o en Transportes y distancias.</div></div>`;
+  if ((c.k === 'ambs' || c.k === 'movs') && estab === 'Hospital María Humphreys') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> Servicio de ambulancias y móviles compartido con el Hospital Zonal Trelew (mismo equipo directivo): se carga una sola vez, en la ficha del HZT o en Transportes y distancias.</div></div>`;
   if (c.t === 'rep') {
     let L = Array.isArray(v) && v.length ? v : (c.fijo ? c.fijo.map(q => ({ quien: q })) : (window.__blanco ? [{}, {}, {}] : [{}]));
     datos[c.k] = L;
@@ -284,9 +296,10 @@ function campo(c) {
       ? (c.fija ? `<td class="nomfijo">${E(f.quien || '')}</td>` : `<td><input class="nom" data-r="${c.k}" data-i="${i}" data-c="quien" value="${E(f.quien || '')}" aria-label="${E(col.l)}"></td>`)
       : `<td><input class="num" data-r="${c.k}" data-i="${i}" data-c="${col.k}" inputmode="numeric" value="${E(f[col.k] || '')}" aria-label="${E(col.l + ' · ' + (f.quien || ''))}"></td>`).join('')}${c.fija ? '' : `<td class="no-imp"><button class="quitar" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar fila"><span class="ms" style="font-size:18px">close</span></button></td>`}</tr>`).join('')}</tbody></table></div>
       ${c.fija ? '' : `<button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button>`}</div>`;
-    return `<div class="campo">${lab}<div class="rep" data-rep="${c.k}">${L.map((f, i) => `<div class="fila">${c.cols.map(col => col.o
-      ? `<select data-r="${c.k}" data-i="${i}" data-c="${col.k}" aria-label="${E(col.l)}"><option value="">${E(col.l)}</option>${col.o.map(o => `<option${f[col.k] === o ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
-      : `<input data-r="${c.k}" data-i="${i}" data-c="${col.k}" ${col.t === 'n' ? 'inputmode="numeric"' : ''} placeholder="${E(col.l)}" value="${E(f[col.k] || '')}">`).join('')}<button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button></div>`).join('')}</div>
+    // 18/11/2026 · cada dato lleva su nombre arriba (antes solo el texto de ayuda, que desaparece al escribir).
+    return `<div class="campo">${lab}<div class="rep" data-rep="${c.k}">${L.map((f, i) => `<div class="fila">${c.cols.map(col => `<label class="rc"><small>${E(col.l)}</small>${col.o
+      ? `<select data-r="${c.k}" data-i="${i}" data-c="${col.k}" aria-label="${E(col.l)}"><option value="">Elegí…</option>${col.o.concat(f[col.k] && col.o.indexOf(f[col.k]) < 0 ? [f[col.k]] : []).map(o => `<option${f[col.k] === o ? ' selected' : ''}>${E(o)}</option>`).join('')}</select>`
+      : `<input data-r="${c.k}" data-i="${i}" data-c="${col.k}" ${col.t === 'n' ? 'inputmode="numeric"' : ''} placeholder="${E(col.l)}" value="${E(f[col.k] || '')}">`}</label>`).join('')}<button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button></div>`).join('')}</div>
       <button class="btn no-imp" type="button" data-agregar="${c.k}"><span class="ms">add</span>${E(c.add)}</button></div>`;
   }
   return `<label class="campo">${lab}<input data-k="${c.k}" ${c.t === 'n' ? 'inputmode="numeric"' : ''} ${c.t === 'f' ? 'type="date"' : ''} value="${E(v || '')}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}"></label>`;
