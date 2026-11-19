@@ -84,6 +84,27 @@ dialog{border:0;border-radius:16px;padding:0;max-width:580px;width:calc(100% - 2
 .vpag{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:100%;height:auto}
 .vmsg{color:#fff;font-size:13.5px;margin:6px 0}.vmsg.mal{background:#FFF6EC;color:#8a3b00;border-radius:10px;padding:10px 14px}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
+/* 19/11/2026 · Mapa interactivo de capas (Belén: «el 3! … armar en cartografía»). */
+.mapa-card{display:flex;gap:14px;align-items:center;background:linear-gradient(120deg,#0B4F7A,#0F7B6C);color:#fff;border-radius:16px;padding:16px 18px;margin:0 0 14px;cursor:pointer;border:0;width:100%;text-align:left;font:inherit}
+.mapa-card .ms{font-size:40px;opacity:.9}.mapa-card b{display:block;font-size:16px}.mapa-card small{display:block;font-size:12.5px;opacity:.9;font-weight:500}
+.mapa-card .ir{margin-left:auto;font-size:26px}
+.mvis{position:fixed;inset:0;z-index:60;background:#fff;display:none;flex-direction:column}.mvis.abierto{display:flex}
+.mcuerpo{flex:1;display:flex;min-height:0;position:relative}
+#mapaLeaf{flex:1;min-width:0;background:#E9EEF5}
+.mpanel{width:300px;max-width:85vw;background:#fff;border-left:1px solid var(--borde);overflow:auto;padding:10px 12px 30px;font-size:13px}
+.mpanel h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--suave);margin:14px 0 4px}
+.mcapa{display:flex;align-items:flex-start;gap:8px;padding:6px 2px;border-bottom:1px solid #EEF1F6;cursor:pointer}
+.mcapa input{margin-top:3px;width:18px;height:18px;accent-color:#0F7B6C}
+.mcapa .nm{flex:1}.mcapa .nm small{display:block;color:var(--tenue);font-size:11.5px}
+.sw{display:inline-block;width:16px;height:16px;border-radius:4px;margin-top:2px;flex:none;border:1px solid rgba(0,0,0,.15)}
+.sw.pt{border-radius:50%}.sw.ln{height:4px;margin-top:8px;border:0}
+.sub{margin:2px 0 4px 26px;font-size:11.5px;color:var(--suave)}.sub div{display:flex;align-items:center;gap:6px;margin:2px 0}
+.mnota{font-size:11.5px;color:var(--suave);margin-top:14px;line-height:1.45}
+.mpanel.oculto{display:none}
+.leaflet-popup-content{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12.5px;margin:10px 12px}
+.leaflet-popup-content b.pt{display:block;font-size:13.5px;margin-bottom:4px;color:#172B4D}
+.leaflet-popup-content table{border-collapse:collapse}.leaflet-popup-content td{padding:1px 6px 1px 0;vertical-align:top}.leaflet-popup-content td:first-child{color:#6B7A90;white-space:nowrap}
+@media (max-width:700px){.mpanel{position:absolute;right:0;top:0;bottom:0;z-index:1000;box-shadow:-6px 0 20px rgba(0,0,0,.2)}}
 @media (max-width:560px){.dos{grid-template-columns:1fr}}
 @media print{body.sin-imprimir main,body.sin-imprimir .visor{display:none!important}.barra .icono,.adm,.filtros,.ayuda,.acc{display:none}.barra{position:static}}
 </style>
@@ -116,10 +137,11 @@ function ayuda() {
   return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Láminas en PDF armadas en QGIS para el COEsp y la preparación ante emergencias: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo.</p>
     <p><b>Carpetas.</b> «Planos de Hidroeléctrica Ameghino»: planos del Plan de Acción durante la Emergencia de la represa (julio 2019), con un escenario simulado de 70 m³/s de erogación más una crecida como la de 1992, sin rotura de la presa; no muestran lo que se inundó en 1992. «COEsp · Láminas propias»: las láminas de elaboración propia. «Epidemiología HMH · Mapas»: mapas de Epidemiología del HMH con la Municipalidad de Trelew (material de terceros; algunos son imágenes, no PDF). Tocá el nombre de la carpeta para abrirla; al abrir una se cierra la otra. Al buscar o elegir una zona, los resultados se muestran juntos, con el nombre de su carpeta.</p>
+    <p><b>Mapa interactivo.</b> Arriba de las carpetas, «Mapa interactivo de capas» abre un mapa de Trelew donde cada uno prende y apaga capas (inundación de 1998, escurrimiento de lluvia, sistema pluvial, centros de salud, policía, centros vecinales, escuelas, calles y caminos). Se puede acercar con dos dedos o la ruedita del mouse y tocar cada elemento para ver sus datos. Las capas son de la Municipalidad de Trelew (Secretaría de Planificación y Desarrollo Urbano, 18/11/2026): material de terceros, orientador.</p>
     <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. HA-PAE-2019-C1 = Hidroeléctrica Ameghino (HA), Plan de Acción durante la Emergencia (PAE) de 2019, plano C1. EPI-HMH-2026-01 = Epidemiología (EPI) del HMH, año 2026, mapa 01. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
     <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). Las láminas se ven solo dentro de la app: no se descargan (15/11/2026, decisión de HySL). Si necesitás una copia, pedila a Higiene y Seguridad Laboral.</p>
     <p><b>Correcciones.</b> Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
-    ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). Una imagen (JPG o PNG) se carga copiándola a 08 · CARTOGRAFÍA y agregando su fila en la hoja CARTOGRAFÍA; la app la muestra igual que un PDF. En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí. «Anexo de fuentes» abre el anexo único con todas las fuentes de datos de la cartografía (solo lo ves y lo abrís vos).</p>` : ''}
+    ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). Una imagen (JPG o PNG) se carga copiándola a 08 · CARTOGRAFÍA y agregando su fila en la hoja CARTOGRAFÍA; la app la muestra igual que un PDF. En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí. Capas del mapa interactivo: van en la hoja CARTOGRAFÍA con código CAPA-… (no se listan como láminas) y el archivo GeoJSON en 08 · CARTOGRAFÍA › «Capas del mapa interactivo»; para sacar una del mapa, «Dada de baja» en la hoja. «Anexo de fuentes» abre el anexo único con todas las fuentes de datos de la cartografía (solo lo ves y lo abrís vos).</p>` : ''}
   </details>`;
 }
 // 15/11/2026 (Belén: «el anexo lo puedo ver únicamente yo; ponerlo en Cartografía sin que nadie más pueda ver»).
@@ -150,17 +172,22 @@ function tarjeta(x) {
     ${esAdm() && (x.actualizado || x.cargo) ? `<p class="pie" style="margin:8px 0 0">Actualizado ${E(x.actualizado || 's/d')}${x.cargo ? ' · ' + E(x.cargo) : ''}</p>` : ''}
   </article>`;
 }
+// 19/11/2026: las filas CAPA-… de la hoja CARTOGRAFÍA son capas del mapa interactivo, no láminas: no se listan.
+const esCapa = x => /^CAPA-/i.test(String(x.codigo || ''));
 function pintar() {
+  const TODO = LISTA, CAPAS = TODO.filter(x => esCapa(x) && !/baja/i.test(x.estado || '') && x.archivoId);
+  { const LISTA = TODO.filter(x => !esCapa(x));
   const zonas = LISTA.map(x => x.zona).filter((z, i, a) => z && a.indexOf(z) === i).sort();
   const q = sinT(filtro.q);
   const L = LISTA.filter(x => (!filtro.zona || x.zona === filtro.zona) && (!q || sinT([x.codigo, x.titulo, x.zona, x.proyecto, x.descripcion].join(' ')).indexOf(q) >= 0));
-  app.innerHTML = ayuda() + barraAdm()
+  app.innerHTML = ayuda() + barraAdm() + (CAPAS.length ? tarjetaMapa(CAPAS) : '')
     + (LISTA.length > 1 ? `<div class="filtros"><input type="search" id="fQ" placeholder="Buscar por código, título o tema" value="${E(filtro.q)}" aria-label="Buscar"><select id="fZ" aria-label="Zona"><option value="">Todas las zonas</option>${zonas.map(z => `<option${z === filtro.zona ? ' selected' : ''}>${E(z)}</option>`).join('')}</select></div>` : '')
     + (L.length ? carpetas(L) : `<div class="vacio">${LISTA.length ? 'Ninguna lámina coincide con la búsqueda.' : 'Todavía no hay láminas cargadas.'}</div>`)
     + `<p class="pie">${E(notaPie)}</p>`;
   const fq = document.getElementById('fQ'), fz = document.getElementById('fZ');
   if (fq) fq.addEventListener('input', () => { filtro.q = fq.value; const p = fq.selectionStart; pintar(); const n = document.getElementById('fQ'); n.focus(); n.setSelectionRange(p, p); });
   if (fz) fz.addEventListener('change', () => { filtro.zona = fz.value; pintar(); });
+  }
 }
 // 17/11/2026 05:14 (Belén: «en cartografía podés hacer dos carpetas? 1. planos hidroeléctrica ameghino modelación de tal situación 2. coe o algo así»).
 // La carpeta sale del código: HA-… = planos de Hidroeléctrica Ameghino; CART-COE-… = láminas propias del COEsp; el resto, «Otras».
@@ -327,10 +354,114 @@ async function cambiarEstado(b) {
   catch (e) { alert((e && (e.error || e.message)) || 'No se pudo cambiar.'); b.disabled = false; }
 }
 
+/* ---------- Mapa interactivo de capas (19/11/2026) ----------
+   Las capas son GeoJSON en Drive › 08 · CARTOGRAFÍA › «Capas del mapa interactivo»; el servidor las entrega
+   a quien inició sesión (cartografia_archivo), igual que las láminas. El estilo de cada capa sale de su código. */
+const LEAF = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
+let leafCarga = null;
+const cargarLeaflet = () => leafCarga || (leafCarga = new Promise((ok, mal) => {
+  const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = LEAF + 'leaflet.min.css'; document.head.appendChild(l);
+  const sc = document.createElement('script'); sc.src = LEAF + 'leaflet.min.js'; sc.onload = () => ok(window.L);
+  sc.onerror = () => { leafCarga = null; mal(new Error('No se pudo cargar el mapa. Revisá la conexión.')); }; document.head.appendChild(sc); }));
+const ESC = [['Nivel 1', '#9ECAE1', 1], ['Nivel 2', '#6BAED6', 1.5], ['Nivel 3', '#3182BD', 2.2], ['Nivel 4', '#08519C', 3.2], ['Nivel 5', '#08306B', 4.5]];
+const VIAS = [['Ruta Nacional', '#D32F2F', 3.5], ['Ruta Provincial', '#F57C00', 3], ['Camino rural principal', '#8D6E63', 2], ['Camino rural secundario', '#BCAAA4', 1.3]];
+const CAPAEST = {
+  '01': { g: 'Agua y antecedentes', c: '#1F6FD1', t: 'area', on: 1, op: .35, nota: '8 áreas anegadas en 1998' },
+  '02': { g: 'Agua y antecedentes', c: '#3182BD', t: 'linea', on: 1, nivel: 1 },
+  '03': { g: 'Agua y antecedentes', c: '#00838F', t: 'linea', w: 2.5, nota: 'Red de drenaje, límites de sistema y cámaras' },
+  '04': { g: 'Salud y seguridad', c: '#C62828', t: 'punto', r: 8, on: 1 },
+  '05': { g: 'Salud y seguridad', c: '#1A237E', t: 'punto', r: 6, nota: 'Comisarías y jurisdicciones' },
+  '06': { g: 'Comunidad', c: '#F57C00', t: 'punto', r: 5 },
+  '07': { g: 'Comunidad', c: '#6A1B9A', t: 'punto', r: 5 },
+  '08': { g: 'Educación', c: '#2E7D32', t: 'area', op: .3 },
+  '09': { g: 'Educación', c: '#A5D6A7', t: 'punto', r: 5 }, '10': { g: 'Educación', c: '#66BB6A', t: 'punto', r: 5 },
+  '11': { g: 'Educación', c: '#43A047', t: 'punto', r: 5 }, '12': { g: 'Educación', c: '#2E7D32', t: 'punto', r: 5 },
+  '13': { g: 'Educación', c: '#1B5E20', t: 'punto', r: 5 }, '14': { g: 'Educación', c: '#00897B', t: 'punto', r: 5 },
+  '15': { g: 'Calles y caminos', c: '#757575', t: 'linea', w: 1 }, '16': { g: 'Calles y caminos', c: '#424242', t: 'linea', w: 1.6 },
+  '17': { g: 'Calles y caminos', c: '#8D6E63', t: 'linea', vias: 1 }};
+const GRUPOS = ['Agua y antecedentes', 'Salud y seguridad', 'Comunidad', 'Educación', 'Calles y caminos', 'Otras capas'];
+const estDe = x => CAPAEST[(String(x.codigo).match(/(\d+)\s*$/) || [])[1]] || { g: 'Otras capas', c: '#6B7A90', t: 'linea' };
+function tarjetaMapa(C) {
+  return `<button type="button" class="mapa-card" data-mapa><span class="ms">layers</span><span><b>Mapa interactivo de capas · Trelew</b>
+    <small>${C.length} capas para prender y apagar: inundación de 1998, escurrimiento de lluvia, sistema pluvial, salud, policía, escuelas, calles y caminos. Fuente: Municipalidad de Trelew.</small></span><span class="ms ir">chevron_right</span></button>`;
+}
+let MAPA = null; const CAPAOBJ = {};
+function mvis() {
+  let v = document.getElementById('mvis'); if (v) return v;
+  v = document.createElement('div'); v.id = 'mvis'; v.className = 'mvis'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-modal', 'true');
+  v.innerHTML = '<div class="vbar"><b class="vt">Mapa interactivo de capas · Trelew</b><button type="button" class="vb" data-mcapas><span class="ms">layers</span>Capas</button><button type="button" class="vb" data-mcerrar><span class="ms">close</span>Cerrar</button></div><div class="mcuerpo"><div id="mapaLeaf"></div><div class="mpanel" id="mpanel"></div></div>';
+  document.body.appendChild(v);
+  v.addEventListener('click', ev => {
+    if (ev.target.closest('[data-mcerrar]')) { v.classList.remove('abierto'); document.body.style.overflow = ''; }
+    if (ev.target.closest('[data-mcapas]')) document.getElementById('mpanel').classList.toggle('oculto');
+  });
+  v.addEventListener('change', ev => { const i = ev.target.closest('input[data-capa]'); if (i) prender(i.dataset.capa, i.checked); });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && v.classList.contains('abierto')) { v.classList.remove('abierto'); document.body.style.overflow = ''; } });
+  return v;
+}
+const OCULTOS = /^(CIRC|SECTOR|DIVISION|PARCELA|_nombre)$/i;
+function popupDe(p, capa) {
+  const tk = ['NOMBRE', 'nombre', 'JURIDICCION', 'SISTEMA', 'descripcion'].find(k => p[k]);
+  const tit = tk ? p[tk] : (p._nombre || capa.titulo);
+  const filas = Object.keys(p).filter(k => !OCULTOS.test(k) && k !== tk && p[k] !== '').map(k => `<tr><td>${E(k.charAt(0) + k.slice(1).toLowerCase())}</td><td>${E(p[k])}</td></tr>`).join('');
+  const sub = p._nombre && p._nombre !== tit ? `<div style="color:#6B7A90;font-size:11.5px;margin-bottom:4px">${E(p._nombre)}</div>` : '';
+  return `<b class="pt">${E(tit)}</b>${sub}${filas ? '<table>' + filas + '</table>' : ''}<div style="color:#6B7A90;font-size:11px;margin-top:6px">${E(capa.titulo)} · Municipalidad de Trelew</div>`;
+}
+function estiloLinea(st, p) {
+  if (st.nivel) { const n = +((String(p.descripcion || '').match(/Nivel\s*(\d)/) || [])[1] || 1), e = ESC[Math.min(5, Math.max(1, n)) - 1]; return { color: e[1], weight: e[2], opacity: .9 }; }
+  if (st.vias) { const e = VIAS.find(v => v[0] === p.TIPO) || VIAS[3]; return { color: e[1], weight: e[2], opacity: .9 }; }
+  return { color: st.c, weight: st.w || 1.5, opacity: .85 };
+}
+async function prender(cod, si) {
+  const capa = LISTA.find(x => x.codigo === cod), st = estDe(capa), Lf = window.L, o = CAPAOBJ[cod] || (CAPAOBJ[cod] = {}), lab = document.querySelector(`[data-est="${cod}"]`);
+  if (!si) { if (o.capa) MAPA.removeLayer(o.capa); return; }
+  if (o.capa) { o.capa.addTo(MAPA); return; }
+  if (lab) lab.textContent = 'Cargando…';
+  try {
+    const r = await traer(capa.archivoId), gj = JSON.parse(new TextDecoder('utf-8').decode(b64aBytes(r.datos)));
+    o.capa = Lf.geoJSON(gj, {
+      pane: st.t === 'punto' ? 'puntos' : st.t === 'area' ? 'areas' : 'lineas',
+      style: f => f.geometry.type.indexOf('Polygon') >= 0
+        ? { color: st.c, weight: cod.endsWith('03') || cod.endsWith('05') ? 1.5 : 1, dashArray: cod.endsWith('03') || cod.endsWith('05') ? '5 4' : null, fillColor: st.c, fillOpacity: cod.endsWith('03') || cod.endsWith('05') ? .04 : (st.op || .3) }
+        : estiloLinea(st, f.properties || {}),
+      pointToLayer: (f, ll) => Lf.circleMarker(ll, { pane: 'puntos', radius: cod.endsWith('03') ? 2.5 : (st.r || 5), color: '#fff', weight: cod.endsWith('03') ? 0 : 1.5, fillColor: st.c, fillOpacity: .95 }),
+      onEachFeature: (f, l) => l.bindPopup(() => popupDe(f.properties || {}, capa), { maxWidth: 300 })
+    });
+    const el = document.querySelector(`input[data-capa="${cod}"]`);
+    if (el && el.checked) o.capa.addTo(MAPA);
+    if (lab) lab.textContent = gj.features.length + ' elementos';
+  } catch (e) { if (lab) lab.textContent = 'No se pudo cargar: ' + ((e && e.message) || 'error'); }
+}
+function panelCapas(C) {
+  return GRUPOS.map(g => {
+    const l = C.filter(x => estDe(x).g === g); if (!l.length) return '';
+    return `<h3>${E(g)}</h3>` + l.map(x => { const st = estDe(x);
+      const sub = st.nivel ? '<div class="sub">' + ESC.map(e => `<div><span class="sw ln" style="background:${e[1]};height:${Math.max(2, e[2])}px"></span>${E(e[0])}</div>`).join('') + '<div style="color:#6B7A90">1 = aporte de ladera · 5 = colector principal</div></div>'
+        : st.vias ? '<div class="sub">' + VIAS.map(e => `<div><span class="sw ln" style="background:${e[1]}"></span>${E(e[0])}</div>`).join('') + '</div>' : '';
+      return `<label class="mcapa"><input type="checkbox" data-capa="${E(x.codigo)}"${st.on ? ' checked' : ''}><span class="sw ${st.t === 'punto' ? 'pt' : st.t === 'linea' ? 'ln' : ''}" style="background:${st.c}${st.t === 'area' ? ';opacity:.7' : ''}"></span><span class="nm">${E(x.titulo)}<small data-est="${E(x.codigo)}">${E(st.nota || '')}</small></span></label>${sub}`; }).join('');
+  }).join('') + `<p class="mnota"><b>Fuente de las capas:</b> Municipalidad de Trelew, Secretaría de Planificación y Desarrollo Urbano, Programa Ordenamiento Territorial (18/11/2026). Material de terceros, orientador: no reemplaza el relevamiento en terreno.<br><b>Mapa base:</b> © colaboradores de OpenStreetMap.<br>Tocá un punto, una línea o un área para ver sus datos.</p>`;
+}
+async function abrirMapa() {
+  const v = mvis(), C = LISTA.filter(x => esCapa(x) && !/baja/i.test(x.estado || '') && x.archivoId);
+  v.classList.add('abierto'); document.body.style.overflow = 'hidden';
+  if (window.innerWidth < 700) document.getElementById('mpanel').classList.add('oculto');
+  if (MAPA) { MAPA.invalidateSize(); return; }
+  document.getElementById('mpanel').innerHTML = '<p class="pie">Cargando el mapa…</p>';
+  let Lf; try { Lf = await cargarLeaflet(); } catch (e) { document.getElementById('mpanel').innerHTML = `<p class="vmsg mal">${E(e.message)}</p>`; return; }
+  MAPA = Lf.map('mapaLeaf', { preferCanvas: true, zoomControl: true }).setView([-43.252, -65.31], 13);
+  [['areas', 410], ['lineas', 420], ['puntos', 440]].forEach(([n, z]) => { MAPA.createPane(n).style.zIndex = z; });
+  Lf.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(MAPA);
+  Lf.control.scale({ imperial: false }).addTo(MAPA);
+  document.getElementById('mpanel').innerHTML = panelCapas(C);
+  setTimeout(() => MAPA.invalidateSize(), 100);
+  C.filter(x => estDe(x).on).forEach(x => prender(x.codigo, true));
+}
+
 document.addEventListener('click', ev => {
   const t = ev.target;
   let b;
-  if ((b = t.closest('[data-abrir]'))) abrir(b);
+  if (t.closest('[data-mapa]')) abrirMapa();
+  else if ((b = t.closest('[data-abrir]'))) abrir(b);
   else if ((b = t.closest('[data-bajar]'))) descargar(b.dataset.bajar, b);
   else if (t.closest('[data-nueva]')) dlgLamina(null);
   else if ((b = t.closest('[data-corregir]'))) dlgLamina(LISTA.find(x => x.codigo === b.dataset.corregir));
