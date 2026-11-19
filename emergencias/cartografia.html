@@ -230,7 +230,8 @@ const tipoImagen = r => { const t = String(r.tipo || r.mime || ''); if (/^image\
 async function dibujar() {
   const v = visor(), cu = v.querySelector('.vcuerpo'), id = v.dataset.id, z = +v.dataset.zoom || 1;
   if (imgActual) {
-    const ancho = Math.min(cu.clientWidth - 16, 1100) * z;
+    // El visor puede no tener medida todavía al abrir: si es así, se usa el ancho de la ventana.
+    const base = cu.clientWidth > 100 ? cu.clientWidth : (window.innerWidth || 800), ancho = Math.max(240, Math.min(base - 16, 1100)) * z;
     cu.style.alignItems = z > 1 ? 'flex-start' : 'center';
     cu.innerHTML = `<p class="vmsg">Imagen${z > 1 ? ' · ampliado ×' + z.toFixed(1) : ''}</p>`;
     const im = document.createElement('img'); im.src = imgActual; im.alt = v.querySelector('.vt').textContent; im.className = 'vpag'; im.draggable = false;
