@@ -205,6 +205,23 @@ function tarjetaPE() {
     <span class="acc">${hmh ? '<a class="btn mini" href="plan.html#/p/HMH"><span class="ms">open_in_new</span>Abrir el Plan de Evacuación</a>' : '<span class="sub">Se arma en 2027 con la misma estructura que el del HMH.</span>'}</span>
   </div>`;
 }
+const GRUPOS = [
+  ['Base', 'Base común', 'Lo que es igual para cualquier emergencia, una sola vez: organización, comunicaciones, recuperación y continuidad operacional (servicios críticos, tiempos máximos de interrupción y recursos mínimos).'],
+  ['Amenaza', 'Planes por amenaza', 'Qué hacer ante cada amenaza. Para evacuar o recibir muchas víctimas remiten a las respuestas que se repiten.'],
+  ['Respuesta', 'Respuestas que se repiten', 'Se escriben una sola vez y las citan los planes por amenaza (la evacuación está dentro del Plan de Evacuación).']
+];
+function tipoDe(p) { const t = String(p.Tipo || '').trim(); return t || (p.Clave === 'PGC' ? 'Base' : p.Clave === 'PC-05' || p.Clave === 'PC-03' ? 'Respuesta' : 'Amenaza'); }
+function tarjetaPlan(p) {
+      const pa = participantes(p), d = datos.datos[p.Clave] || { filas: 0, sd: 0 };
+      return `<button class="tarjeta pc" data-ir="#/p/${encodeURIComponent(p.Clave)}">
+        <span class="ms fondo" aria-hidden="true">${ICONO[p.Clave] || 'emergency'}</span>
+        <span class="cab-pc"><span class="cod">${celda(p['Código'])}</span><span style="flex:1"></span><span class="est-chip ${claseEst(p.Estado)}">${E(p.Estado || 's/d')}</span></span>
+        <span class="nom">${E(p.Plan)}</span>
+        ${p.Observaciones ? `<span class="nota">${E(p.Observaciones.replace(/\s*Incluye sus dependencias \(hoja DEPENDENCIAS\)\./, ''))}</span>` : ''}
+        <span class="meta"><span>Responsable<b>${celda(p.Responsable)}</b></span><span>Fecha<b>${celda(p.Fecha)}</b></span>
+          <span>Orden de redacción<b>${celda(p['Orden de redacción'])}</b></span><span>Participantes (COE)<b>${pa == null ? '<span class="sdv">s/d</span>' : pa.length ? pa.length : '<span class="sdv">ninguno todavía</span>'}</b></span>
+          <span>Datos del plan<b>${d.filas} ${d.sd ? `<span class="sdv">${d.sd} s/d</span>` : ''}</b></span><span>Bloques de texto<b>${p.Clave === 'PGC' ? (datos.bloques.BASE || 0) + ' BASE' : (datos.bloques[p.Clave] || 0)}</b></span></span>
+      </button>`; }
 function vistaLista() {
   const planes = datos.planes.filter(p => EN_PE_PLAN.indexOf(p.Clave) < 0);
   const cuenta = e => planes.filter(p => p.Estado === e).length;
@@ -217,17 +234,7 @@ function vistaLista() {
     <div class="kpis"><div class="tarjeta kpi"><b>${planes.length}</b><span>documentos</span></div><div class="tarjeta kpi"><b>${cuenta('Sin empezar')}</b><span>sin empezar</span></div><div class="tarjeta kpi"><b>${cuenta('En redacción') + cuenta('Propuesto') + cuenta('Aprobado')}</b><span>en redacción, propuestos o aprobados</span></div></div>
     <div class="filtros"><span class="sub" style="font-weight:700">Ver:</span>${['Todos'].concat(ESTADOS).map(e => `<button class="fbtn" data-filtro="${E(e)}" aria-pressed="${filtro === e}">${E(e)}</button>`).join('')}
       <span style="flex:1"></span><label class="sub" for="selOrd" style="font-weight:700">Ordenar</label><select id="selOrd"><option value="redaccion" ${orden === 'redaccion' ? 'selected' : ''}>Por orden de redacción</option><option value="codigo" ${orden === 'codigo' ? 'selected' : ''}>Por código</option></select></div>
-    <div class="grilla">${l.length ? l.map(p => {
-      const pa = participantes(p), d = datos.datos[p.Clave] || { filas: 0, sd: 0 };
-      return `<button class="tarjeta pc" data-ir="#/p/${encodeURIComponent(p.Clave)}">
-        <span class="ms fondo" aria-hidden="true">${ICONO[p.Clave] || 'emergency'}</span>
-        <span class="cab-pc"><span class="cod">${celda(p['Código'])}</span><span style="flex:1"></span><span class="est-chip ${claseEst(p.Estado)}">${E(p.Estado || 's/d')}</span></span>
-        <span class="nom">${E(p.Plan)}</span>
-        ${p.Observaciones ? `<span class="nota">${E(p.Observaciones.replace(/\s*Incluye sus dependencias \(hoja DEPENDENCIAS\)\./, ''))}</span>` : ''}
-        <span class="meta"><span>Responsable<b>${celda(p.Responsable)}</b></span><span>Fecha<b>${celda(p.Fecha)}</b></span>
-          <span>Orden de redacción<b>${celda(p['Orden de redacción'])}</b></span><span>Participantes (COE)<b>${pa == null ? '<span class="sdv">s/d</span>' : pa.length ? pa.length : '<span class="sdv">ninguno todavía</span>'}</b></span>
-          <span>Datos del plan<b>${d.filas} ${d.sd ? `<span class="sdv">${d.sd} s/d</span>` : ''}</b></span><span>Bloques de texto<b>${p.Clave === 'PGC' ? (datos.bloques.BASE || 0) + ' BASE' : (datos.bloques[p.Clave] || 0)}</b></span></span>
-      </button>`; }).join('') : '<div class="tarjeta vacio">No hay planes con ese estado.</div>'}</div>
+    ${l.length ? GRUPOS.map(g => { const lg = l.filter(p => tipoDe(p) === g[0]); return lg.length ? `<h3 style="margin:14px 2px 4px">${g[1]}</h3><p class="sub" style="margin:0 2px 8px">${g[2]}</p><div class="grilla">${lg.map(tarjetaPlan).join('')}</div>` : ''; }).join('') : '<div class="tarjeta vacio">No hay planes con ese estado.</div>'}
     <p class="sub" style="margin-top:12px">Cada plan es del hospital elegido arriba e incluye sus dependencias (ver «2 · Datos del hospital»). Los participantes salen de COE › «Por proyecto» y se asignan desde ahí.</p>`;
   GC.enlazar(c => { est = c; cargar(false); });
 }
