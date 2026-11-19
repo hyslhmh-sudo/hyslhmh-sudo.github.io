@@ -382,9 +382,9 @@ const CAPAEST = {
   '17': { g: 'Calles y caminos', c: '#8D6E63', t: 'linea', vias: 1 }};
 // 19/11/2026 06:40 (Belén: «no veo la opción de pac»): pacientes de Epidemiología sin datos personales, ubicación aproximada.
 const CAPAEST_COD = {
-  'CAPA-EPI-01': { g: 'Pac. dependientes (base Epidemiología 19.11.2026)', c: '#1E5AA8', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' },
-  'CAPA-EPI-02': { g: 'Pac. dependientes (base Epidemiología 19.11.2026)', c: '#D32F2F', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' }};
-const GRUPOS = ['Pac. dependientes (base Epidemiología 19.11.2026)', 'Agua y antecedentes', 'Salud y seguridad', 'Comunidad', 'Educación', 'Calles y caminos', 'Otras capas'];
+  'CAPA-EPI-01': { g: 'Pac dependientes (base Epidemiología 19.11.2026)', c: '#1E5AA8', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' },
+  'CAPA-EPI-02': { g: 'Pac dependientes (base Epidemiología 19.11.2026)', c: '#D32F2F', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' }};
+const GRUPOS = ['Pac dependientes (base Epidemiología 19.11.2026)', 'Agua y antecedentes', 'Salud y seguridad', 'Comunidad', 'Educación', 'Calles y caminos', 'Otras capas'];
 const estDe = x => CAPAEST_COD[String(x.codigo).toUpperCase()] || CAPAEST[(String(x.codigo).match(/(\d+)\s*$/) || [])[1]] || { g: 'Otras capas', c: '#6B7A90', t: 'linea' };
 function tarjetaMapa(C) {
   return `<button type="button" class="mapa-card" data-mapa><span class="ms">layers</span><span><b>Mapa interactivo de capas · Trelew</b>
