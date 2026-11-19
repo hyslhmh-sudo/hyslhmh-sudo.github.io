@@ -42,6 +42,7 @@ details.carpeta[open],div.carpeta{padding-bottom:12px}
 /* 17/11/2026 05:23 (Belén: «las dos tarjetas deberían tener colores»): cada carpeta con su color. */
 .carpeta.c-ha{--c1:#0B4F7A;--c2:#1F8FC9;--ct:#E6F3FB;border-color:#B9DCF0}
 .carpeta.c-coe{--c1:#0B5A50;--c2:#0F7B6C;--ct:#E3F4F1;border-color:#B3DDD5}
+.carpeta.c-epi{--c1:#7A1F3D;--c2:#B23A5E;--ct:#FBEAF0;border-color:#EBC2D0}
 .carpeta.c-otras{--c1:#4B5B73;--c2:#6B7A90;--ct:#F1F3F7}
 .carpeta[class*=" c-"]{background:var(--ct);overflow:hidden}
 .carpeta[class*=" c-"]>summary,.carpeta[class*=" c-"]>.cab{background:linear-gradient(120deg,var(--c1),var(--c2));color:#fff;margin:0 -12px 12px;padding:14px 14px}
@@ -114,11 +115,11 @@ const sinT = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLow
 function ayuda() {
   return `<details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Láminas en PDF armadas en QGIS para el COEsp y la preparación ante emergencias: antecedentes de inundación, relieve (curvas de nivel), establecimientos de salud y recursos de apoyo.</p>
-    <p><b>Carpetas.</b> «Planos de Hidroeléctrica Ameghino»: planos del Plan de Acción durante la Emergencia de la represa (julio 2019), con un escenario simulado de 70 m³/s de erogación más una crecida como la de 1992, sin rotura de la presa; no muestran lo que se inundó en 1992. «COEsp · Láminas propias»: las láminas de elaboración propia. Tocá el nombre de la carpeta para abrirla; al abrir una se cierra la otra. Al buscar o elegir una zona, los resultados se muestran juntos, con el nombre de su carpeta.</p>
-    <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. HA-PAE-2019-C1 = Hidroeléctrica Ameghino (HA), Plan de Acción durante la Emergencia (PAE) de 2019, plano C1. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
+    <p><b>Carpetas.</b> «Planos de Hidroeléctrica Ameghino»: planos del Plan de Acción durante la Emergencia de la represa (julio 2019), con un escenario simulado de 70 m³/s de erogación más una crecida como la de 1992, sin rotura de la presa; no muestran lo que se inundó en 1992. «COEsp · Láminas propias»: las láminas de elaboración propia. «Epidemiología HMH · Mapas»: mapas de Epidemiología del HMH con la Municipalidad de Trelew (material de terceros; algunos son imágenes, no PDF). Tocá el nombre de la carpeta para abrirla; al abrir una se cierra la otra. Al buscar o elegir una zona, los resultados se muestran juntos, con el nombre de su carpeta.</p>
+    <p><b>Cómo se lee el código.</b> CART-COE-001 = cartografía (CART), para el COEsp (COE), número 001. HA-PAE-2019-C1 = Hidroeléctrica Ameghino (HA), Plan de Acción durante la Emergencia (PAE) de 2019, plano C1. EPI-HMH-2026-01 = Epidemiología (EPI) del HMH, año 2026, mapa 01. Cada lámina dice en su rótulo la fecha, el proyecto, quién la elaboró y la escala.</p>
     <p><b>Cómo se usa.</b> Tocá «Abrir» para ver la lámina dentro de la app (se puede ampliar en el teléfono). Las láminas se ven solo dentro de la app: no se descargan (15/11/2026, decisión de HySL). Si necesitás una copia, pedila a Higiene y Seguridad Laboral.</p>
     <p><b>Correcciones.</b> Si ves un error, avisá a Higiene y Seguridad Laboral.</p>
-    ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí. «Anexo de fuentes» abre el anexo único con todas las fuentes de datos de la cartografía (solo lo ves y lo abrís vos).</p>` : ''}
+    ${esAdm() ? `<p><b>Administración.</b> Las láminas no se descargan desde la app (tampoco Administración): el PDF está en la carpeta 08 · CARTOGRAFÍA. «Subir lámina» agrega una nueva (PDF hasta ${MAX_MB} MB). Una imagen (JPG o PNG) se carga copiándola a 08 · CARTOGRAFÍA y agregando su fila en la hoja CARTOGRAFÍA; la app la muestra igual que un PDF. En cada lámina: «Corregir datos» (y, si querés, reemplazar el PDF: el anterior queda en la carpeta con la marca «reemplazado») y «Dar de baja» (no se borra: deja de verse para los demás). La lista está en la hoja CARTOGRAFÍA del libro de la app; también se puede corregir ahí. «Anexo de fuentes» abre el anexo único con todas las fuentes de datos de la cartografía (solo lo ves y lo abrís vos).</p>` : ''}
   </details>`;
 }
 // 15/11/2026 (Belén: «el anexo lo puedo ver únicamente yo; ponerlo en Cartografía sin que nadie más pueda ver»).
@@ -142,7 +143,7 @@ function tarjeta(x) {
     ${x.descripcion ? `<p>${E(x.descripcion)}</p>` : ''}
     <div class="acc">
       ${x.archivoId ? `<button class="btn" type="button" data-abrir="${E(x.archivoId)}" data-tit="${E(x.codigo + ' · ' + x.titulo)}"><span class="ms">visibility</span>Abrir</button>
-      ` : '<span class="pie">PDF: s/d (revisar)</span>'}
+      ` : '<span class="pie">Archivo: s/d (revisar)</span>'}
       ${esAdm() ? `<button class="btn sec" type="button" data-corregir="${E(x.codigo)}"><span class="ms">edit</span>Corregir datos</button>
       <button class="btn peligro" type="button" data-estado="${E(x.codigo)}" data-a="${baja ? 'Vigente' : 'Dada de baja'}"><span class="ms">${baja ? 'restore' : 'archive'}</span>${baja ? 'Volver a dar de alta' : 'Dar de baja'}</button>` : ''}
     </div>
@@ -166,6 +167,8 @@ function pintar() {
 const CARPETAS = [
   { id: 'ha', rx: /^HA-/i, ico: 'water', tit: 'Planos de Hidroeléctrica Ameghino · Modelación de inundación', sub: 'Plan de Acción durante la Emergencia (julio 2019). Escenario simulado: 70 m³/s de erogación + crecida 1992, sin rotura de la presa. Material de terceros.' },
   { id: 'coe', rx: /^CART-COE-/i, ico: 'map', tit: 'COEsp · Láminas propias', sub: 'Elaboración propia (QGIS) para el COEsp: antecedentes, relieve, vulnerabilidad social, establecimientos.', aviso: 'Cartografía orientadora. Las áreas de antecedentes son aproximadas y no reemplazan el relevamiento en terreno.' },
+  // 19/11/2026 (Belén): mapa de Epidemiología HMH (JPG) «visible para todos»; el original queda bloqueado en 00 · FUENTES ORIGINALES.
+  { id: 'epi', rx: /^EPI-/i, ico: 'monitor_heart', tit: 'Epidemiología HMH · Mapas', sub: 'Material de terceros: Epidemiología HMH y Dirección de Organización Territorial (Municipalidad de Trelew).' },
   { id: 'otras', rx: /./, ico: 'folder', tit: 'Otras láminas', sub: '' }];
 // Regla de la app (Belén, 14/11/2026): los desplegables están cerrados hasta que se tocan y se abre uno por vez (starh.js).
 // Al buscar o filtrar por zona, los resultados se muestran sin desplegables, con el nombre de la carpeta como título.
@@ -220,9 +223,19 @@ function visor() {
   return v;
 }
 function cerrarVisor() { const v = document.getElementById('visor'); if (!v) return; v.classList.remove('abierto'); v.querySelector('.vcuerpo').innerHTML = ''; document.body.style.overflow = ''; }
-let pdfActual = null;
+let pdfActual = null, imgActual = null;
+// 19/11/2026: además de PDF, el visor muestra imágenes (JPG, PNG, WEBP). El tipo se reconoce por el contenido.
+const tipoImagen = r => { const t = String(r.tipo || r.mime || ''); if (/^image\//i.test(t)) return t;
+  const d = String(r.datos || '').slice(0, 12); return /^\/9j\//.test(d) ? 'image/jpeg' : /^iVBOR/.test(d) ? 'image/png' : /^UklGR/.test(d) ? 'image/webp' : ''; };
 async function dibujar() {
   const v = visor(), cu = v.querySelector('.vcuerpo'), id = v.dataset.id, z = +v.dataset.zoom || 1;
+  if (imgActual) {
+    const ancho = Math.min(cu.clientWidth - 16, 1100) * z;
+    cu.style.alignItems = z > 1 ? 'flex-start' : 'center';
+    cu.innerHTML = `<p class="vmsg">Imagen${z > 1 ? ' · ampliado ×' + z.toFixed(1) : ''}</p>`;
+    const im = document.createElement('img'); im.src = imgActual; im.alt = v.querySelector('.vt').textContent; im.className = 'vpag'; im.draggable = false;
+    im.style.width = ancho + 'px'; im.style.maxWidth = 'none'; cu.appendChild(im); return;
+  }
   if (!pdfActual) return;
   cu.innerHTML = `<p class="vmsg">${pdfActual.numPages} ${pdfActual.numPages === 1 ? 'hoja' : 'hojas'}${z > 1 ? ' · ampliado ×' + z.toFixed(1) : ''}</p>`;
   cu.style.alignItems = z > 1 ? 'flex-start' : 'center';
@@ -238,9 +251,11 @@ async function abrir(b) {
   const id = b.dataset.abrir, v = visor(), cu = v.querySelector('.vcuerpo');
   v.dataset.id = id; v.dataset.zoom = 1; v.querySelector('.vt').textContent = b.dataset.tit || 'Lámina';
   cu.innerHTML = '<p class="vmsg">Abriendo la lámina… (la primera vez puede tardar unos segundos)</p>';
-  v.classList.add('abierto'); document.body.style.overflow = 'hidden'; pdfActual = null;
+  v.classList.add('abierto'); document.body.style.overflow = 'hidden'; pdfActual = null; imgActual = null;
   try {
-    const [r, lib] = await Promise.all([traer(id), cargarPdfjs().catch(e => e)]);
+    const r0 = await traer(id), ti = tipoImagen(r0);
+    if (ti) { if (!v.classList.contains('abierto') || v.dataset.id !== id) return; imgActual = 'data:' + ti + ';base64,' + r0.datos; await dibujar(); return; }
+    const [r, lib] = await Promise.all([r0, cargarPdfjs().catch(e => e)]);
     if (lib instanceof Error) throw lib;
     if (!v.classList.contains('abierto') || v.dataset.id !== id) return;
     pdfActual = await lib.getDocument({ data: b64aBytes(r.datos) }).promise;
