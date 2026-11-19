@@ -295,12 +295,12 @@ function vEsp() {
 const GRUPOS_DIS = ['Localidades', 'Hospitales públicos', 'CAPS y centros de salud', 'Puestos sanitarios', 'Otros servicios de salud pública',
   'Instituciones de salud privadas', 'Albergues', 'Geriátricos', 'Dispositivos intermedios de Salud Mental Comunitaria', 'Otra población a cargo', 'Recursos de apoyo'];
 const PRIMEROS = ['L-002', 'L-001', 'L-003'];
-const grupoPub = t => /hospital/i.test(t || '') ? 'Hospitales públicos' : /\bcaps\b|centro de salud|centro integral|prosate|salud integral/i.test(t || '') ? 'CAPS y centros de salud' : /puesto/i.test(t || '') ? 'Puestos sanitarios' : 'Otros servicios de salud pública';
+const grupoPub = (t, n) => /^\s*hospital/i.test(t || '') || /^\s*hospital/i.test(n || '') ? 'Hospitales públicos' : /\bcaps\b|centro de salud|centro integral|prosate|salud integral/i.test(t || '') ? 'CAPS y centros de salud' : /puesto/i.test(t || '') ? 'Puestos sanitarios' : 'Otros servicios de salud pública';
 let ordenDis = S.store.get('transp.ordenDis2') || 'grupo';
 function lugaresDis() {
   const o = [], pubRx = /cl[ií]nica privada|sanatorio privado|privad/i;
   (D.base.localidades || []).forEach(r => o.push({ id: r.id, n: r.nombre, g: 'Localidades', t: 'Localidad (centro)', loc: r.departamento ? 'Depto. ' + r.departamento : '' }));
-  D.base.lugares.forEach(l => o.push({ id: l.id, n: l.nombre, g: grupoPub(l.tipo), t: l.tipo, loc: l.localidad }));
+  D.base.lugares.forEach(l => o.push({ id: l.id, n: l.nombre, g: grupoPub(l.tipo, l.nombre), t: l.tipo, loc: l.localidad }));
   // 15/11/2026 06:05 y 06:13: la columna «albergue» de RECURSOS DE APOYO tiene el ID A- del COE; «recurso» = Sí → aparece en los dos grupos.
   D.base.recursos.forEach(r => {
     if (pubRx.test(r.tipo || '')) { o.push({ id: r.id, n: r.nombre, g: 'Instituciones de salud privadas', t: r.tipo, loc: r.localidad }); return; }
@@ -311,7 +311,7 @@ function lugaresDis() {
   });
   (D.base.coe || []).forEach(c => {
     let g;
-    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : grupoPub((c.tipo || '') + ' ' + (c.nombre || '')); }
+    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : grupoPub(c.tipo, c.nombre); }
     else if (c.hoja === 'ALBERGUES') { if (c.id_base) return; g = 'Albergues'; }
     else g = /geri[aá]tric/i.test(c.tipo) ? 'Geriátricos' : /salud mental/i.test(c.tipo) ? 'Dispositivos intermedios de Salud Mental Comunitaria' : 'Otra población a cargo';
     // Población a cargo que ya está en la BASE (p. ej. las comisarías): mismo ID de la BASE, aparece también en su grupo.
