@@ -142,7 +142,7 @@ const REGLA = '<div class="regla"><b>REGLA DE EDICIÓN (v1):</b> lo que se corri
 const ESTADOS = ['Sin empezar', 'En redacción', 'Propuesto', 'Aprobado'];
 const ICONO = { PGC: 'account_tree', 'PC-01': 'local_fire_department', 'PC-02': 'power_off', 'PC-03': 'directions_run', 'PC-04': 'flood', 'PC-05': 'personal_injury', 'PC-06': 'coronavirus', 'PC-07': 'water_drop', 'PC-08': 'delete', 'PC-09': 'sync', 'PC-MP': 'science' };
 const EN_PE = ['PC-01', 'PC-03'];
-let cat = null, est = S.store.get('pc.est', ''), datos = null, coe = null, filtro = 'Todos', orden = S.store.get('pc.orden', 'redaccion'), hojaDatos = null;
+let cat = null, est = S.store.get('pc.est', ''), datos = null, coe = null, filtro = 'Todos', orden = S.store.get('pc.orden', 'redaccion'), hojas = {}, editHoja = null;
 
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3400); }
 function ruta() { return (location.hash || '#/').slice(1).split('/').filter(Boolean).map(decodeURIComponent); }
@@ -160,7 +160,7 @@ async function cargar(avisar) {
     if (!est || !cat.planes.some(p => p.codigo === est)) est = cat.planes[0].codigo;
     const [d, c] = await Promise.all([S.api('plan_pc', { codigo: est }, 90000), coe ? Promise.resolve(coe) : S.api('coe_catalogo')]);
     if (!d.ok) throw d;
-    datos = d; coe = c && c.ok ? c : null; hojaDatos = null;
+    datos = d; coe = c && c.ok ? c : null; hojas = {};
     S.store.set('pc.est', est); S.store.set('pc.cache.' + est, d);
     if (avisar) toast('Datos actualizados.');
   } catch (e) {
@@ -199,7 +199,7 @@ function vistaLista() {
   app.innerHTML = tabs() + REGLA + `
     <div class="acc" style="margin-bottom:12px;justify-content:space-between">
       <label class="estsel"><span class="sub" style="font-weight:700;display:block;margin-bottom:4px">Establecimiento</span>
-        <select id="selEst">${cat.planes.map(p => `<option value="${E(p.codigo)}" ${p.codigo === est ? 'selected' : ''}>${E(p.codigo)} · ${E(p.nombre)}</option>`).join('')}<option disabled>HZT, HSST y CAPS · se suman en 2027</option></select></label>
+        <select id="selEst">${cat.planes.map(p => `<option value="${E(p.codigo)}" ${p.codigo === est ? 'selected' : ''}>${E(p.codigo)} · ${E(p.nombre)}</option>`).join('')}</select></label>
     </div>
     <div class="kpis"><div class="tarjeta kpi"><b>${planes.length}</b><span>documentos</span></div><div class="tarjeta kpi"><b>${cuenta('Sin empezar')}</b><span>sin empezar</span></div><div class="tarjeta kpi"><b>${cuenta('En redacción') + cuenta('Propuesto')}</b><span>en redacción o propuestos</span></div></div>
     ${datos.avisoTextos ? `<div class="regla" style="background:#FFF;border-color:#F5C2BE">Textos: ${E(datos.avisoTextos)}</div>` : ''}
@@ -216,7 +216,17 @@ function vistaLista() {
           <span>Orden de redacción<b>${celda(p['Orden de redacción'])}</b></span><span>Participantes (COE)<b>${pa == null ? '<span class="sdv">s/d</span>' : pa.length ? pa.length : '<span class="sdv">ninguno todavía</span>'}</b></span>
           <span>Datos del plan<b>${d.filas} ${d.sd ? `<span class="sdv">${d.sd} s/d</span>` : ''}</b></span><span>Bloques de texto<b>${p.Clave === 'PGC' ? (datos.bloques.BASE || 0) + ' BASE' : (datos.bloques[p.Clave] || 0)}</b></span></span>
       </button>`; }).join('') : '<div class="tarjeta vacio">No hay planes con ese estado.</div>'}</div>
-    <p class="sub" style="margin-top:12px">Los participantes salen de COE › «Por proyecto» y se asignan desde ahí; esta pestaña solo los muestra. Solo Administración ve y carga esta pestaña.</p>`;
+    ${seccionDependencias()}
+    <p class="sub" style="margin-top:12px">Cada plan es por hospital e incluye sus dependencias. Los participantes salen de COE › «Por proyecto» y se asignan desde ahí; esta pestaña solo los muestra. Solo Administración ve y carga esta pestaña.</p>`;
+}
+
+/* 19/11/2026 · Dependencias del hospital (hoja DEPENDENCIAS): las incluyen todos sus planes. */
+function seccionDependencias() {
+  const l = datos.dependencias || [];
+  const col = ['Dependencia', 'Tipo', 'Dirección', 'Plantas', 'Planes que aplican'];
+  return `<section class="tarjeta secc" style="margin-top:14px" aria-labelledby="hdep"><div class="acc" style="margin-bottom:6px"><h3 id="hdep" style="flex:1;margin:0">Dependencias que incluyen los planes · ${l.length}</h3><button class="btn mini" data-act="nuevaFila" data-hoja="DEPENDENCIAS"><span class="ms">add</span>Agregar dependencia</button></div>
+    <p class="sub">Tomadas de la BASE · Establecimientos de salud. Tocá una fila para completar sus datos (por ejemplo, qué planes le aplican).</p>
+    <div class="tabla-wrap"><table class="tabla"><thead><tr>${col.map(c => `<th>${E(c)}</th>`).join('')}</tr></thead><tbody>${l.length ? l.map(x => `<tr class="clic" data-hoja="DEPENDENCIAS" data-fila="${x.fila}">${col.map(c => `<td>${celda(x[c])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${col.length}" class="vacio">Este hospital no tiene dependencias cargadas.</td></tr>`}</tbody></table></div></section>`;
 }
 
 async function vistaPlan(clave) {
@@ -225,7 +235,7 @@ async function vistaPlan(clave) {
   const fechaISO = (() => { const m = String(p.Fecha || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; })();
   app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Planes de contingencia</button>${REGLA}
     <div class="tarjeta cab"><div class="cab-pc"><span class="cod" style="font-weight:800;color:#8E1B1B">${celda(p['Código'])}</span><span class="est-chip ${claseEst(p.Estado)}">${E(p.Estado || 's/d')}</span></div><h2>${E(p.Plan)}</h2>
-      ${enPE ? '<div class="sub">Este plan se trabaja dentro del Plan de Evacuación y Autoprotección. <a href="plan.html" style="color:#8E1B1B;font-weight:700">Ir al Plan de Evacuación</a></div>' : ''}</div>
+      <div class="sub">${E(est)} · incluye ${(datos.dependencias || []).length} dependencias.${enPE ? ' Este plan se trabaja dentro del Plan de Evacuación y Autoprotección' + (est === 'HMH' ? '.' : ' (2027).') + ' <a href="plan.html" style="color:#8E1B1B;font-weight:700">Ir al Plan de Evacuación</a>' : ''}</div></div>
     <section class="tarjeta secc" aria-labelledby="h1"><h3 id="h1">1 · Ficha del plan</h3>
       <div class="dos">
         <label class="campo"><span>Estado</span><select data-col="Estado" data-orig="${E(p.Estado)}">${ESTADOS.map(e => `<option ${e === p.Estado ? 'selected' : ''}>${e}</option>`).join('')}</select></label>
@@ -259,27 +269,33 @@ async function vistaPlan(clave) {
 async function pintarDatos(clave) {
   const caja = $('#tdatos'); if (!caja) return;
   try {
-    if (!hojaDatos) { const r = await S.api('plan_hoja', { codigo: est, hoja: 'DATOS POR PLAN' }); if (!r.ok) throw r; hojaDatos = r; }
+    await leerHoja('DATOS POR PLAN');
   } catch (e) { caja.innerHTML = `<div class="vacio">${E((e && (e.error || e.message)) || 'No se pudo leer.')}</div>`; return; }
-  const d = hojaDatos, jp = d.cab.indexOf('Plan'), fs = d.filas.filter(f => String(f.valores[jp]).trim() === clave);
+  const d = hojas['DATOS POR PLAN'], jp = d.cab.indexOf('Plan'), fs = d.filas.filter(f => String(f.valores[jp]).trim() === clave);
   const vis = ['Dato', 'Valor', 'Estado', 'Fuente'].map(c => d.cab.indexOf(c)).filter(j => j >= 0);
-  caja.innerHTML = `<div class="acc" style="margin-bottom:8px"><span class="sub" style="flex:1">${fs.length} ${fs.length === 1 ? 'dato' : 'datos'}.</span><button class="btn mini" data-act="nuevoDato" data-plan="${E(clave)}"><span class="ms">add</span>Agregar dato</button></div>
-    <div class="tabla-wrap"><table class="tabla"><thead><tr>${vis.map(j => `<th>${E(d.cab[j])}</th>`).join('')}</tr></thead><tbody>${fs.length ? fs.map(f => `<tr class="clic" data-fila="${f.fila}">${vis.map(j => `<td>${celda(f.valores[j])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${vis.length}" class="vacio">Sin datos cargados para este plan.</td></tr>`}</tbody></table></div>`;
+  caja.innerHTML = `<div class="acc" style="margin-bottom:8px"><span class="sub" style="flex:1">${fs.length} ${fs.length === 1 ? 'dato' : 'datos'}.</span><button class="btn mini" data-act="nuevaFila" data-hoja="DATOS POR PLAN" data-plan="${E(clave)}"><span class="ms">add</span>Agregar dato</button></div>
+    <div class="tabla-wrap"><table class="tabla"><thead><tr>${vis.map(j => `<th>${E(d.cab[j])}</th>`).join('')}</tr></thead><tbody>${fs.length ? fs.map(f => `<tr class="clic" data-hoja="DATOS POR PLAN" data-fila="${f.fila}">${vis.map(j => `<td>${celda(f.valores[j])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${vis.length}" class="vacio">Sin datos cargados para este plan.</td></tr>`}</tbody></table></div>`;
 }
 
-function abrirDato(fila, plan) {
-  const d = hojaDatos, f = fila ? d.filas.find(x => x.fila === fila) : null;
+async function leerHoja(hoja) {
+  if (!hojas[hoja]) { const r = await S.api('plan_hoja', { codigo: est, hoja: hoja }); if (!r.ok) throw r; hojas[hoja] = r; }
+  return hojas[hoja];
+}
+async function abrirFila(hoja, fila, plan) {
+  let d; try { d = await leerHoja(hoja); } catch (e) { toast((e && (e.error || e.message)) || 'No se pudo leer.'); return; }
+  editHoja = hoja;
+  const f = fila ? d.filas.find(x => x.fila === fila) : null;
   const campos = d.cab.map((c, j) => {
     if (!c) return '';
-    const v = f ? f.valores[j] : (c === 'Plan' ? plan : c === 'Valor' ? 's/d (revisar)' : c === 'Estado' ? 's/d' : '');
-    if (c === 'Estado') return `<label class="campo"><span>Estado</span><select data-col="Estado" data-orig="${f ? E(v) : ''}">${['s/d', 'A confirmar', 'Confirmado'].map(o => `<option ${o === v ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`;
+    const v = f ? f.valores[j] : (c === 'Plan' ? plan || '' : c === 'Estado' ? (hoja === 'DEPENDENCIAS' ? 'A confirmar' : 's/d') : /^(Valor|Plantas|Mantenimiento permanente|Planes que aplican)$/.test(c) ? 's/d (revisar)' : '');
+    if (c === 'Estado' && hoja === 'DATOS POR PLAN') return `<label class="campo"><span>Estado</span><select data-col="Estado" data-orig="${f ? E(v) : ''}">${['s/d', 'A confirmar', 'Confirmado'].map(o => `<option ${o === v ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`;
     const largo = /observaciones|fuente/i.test(c);
-    const attrs = `data-col="${E(c)}" data-orig="${f ? E(v) : ''}" ${c === 'Plan' ? 'readonly' : ''}`;
+    const attrs = `data-col="${E(c)}" data-orig="${f ? E(v) : ''}" ${c === 'Plan' && hoja === 'DATOS POR PLAN' && plan ? 'readonly' : ''}`;
     return `<label class="campo"><span>${E(c)}</span>${largo ? `<textarea ${attrs}>${E(v)}</textarea>` : `<input ${attrs} value="${E(v)}">`}${c === 'Variable' ? '<small>Entre llaves, por ejemplo {autonomia_generador}. Es el nombre que usa el texto del plan.</small>' : ''}</label>`;
   }).join('');
-  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>Datos del plan · ${f ? 'fila ' + f.fila : 'dato nuevo'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>${hoja === 'DEPENDENCIAS' ? 'Dependencia' : 'Datos del plan'} · ${f ? 'fila ' + f.fila : 'fila nueva'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="dlg-cuerpo"><p class="sub">Si un dato falta, escribí «s/d (revisar)». No lo dejes vacío cuando ya lo buscaste.</p>${campos}</div>
-    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cerrar</button><button class="btn" data-act="guardarDato" data-fila="${f ? f.fila : ''}"><span class="ms">save</span>Guardar</button></div></div>`;
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cerrar</button><button class="btn" data-act="guardarFila" data-fila="${f ? f.fila : ''}"><span class="ms">save</span>Guardar</button></div></div>`;
   $('#dlg').classList.remove('oculto');
 }
 function cerrarDlg() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; }
@@ -304,12 +320,12 @@ document.addEventListener('click', async ev => {
   const t = ev.target.closest('[data-ir],[data-act],[data-filtro],tr.clic'); if (!t) return;
   if (t.dataset.ir) return ir(t.dataset.ir);
   if (t.dataset.filtro) { filtro = t.dataset.filtro; return vistaLista(); }
-  if (t.matches('tr.clic')) return abrirDato(Number(t.dataset.fila));
+  if (t.matches('tr.clic')) return abrirFila(t.dataset.hoja, Number(t.dataset.fila));
   const a = t.dataset.act, clave = ruta()[1];
   if (a === 'cerrar') return cerrarDlg();
-  if (a === 'nuevoDato') return abrirDato(null, t.dataset.plan);
+  if (a === 'nuevaFila') return abrirFila(t.dataset.hoja, null, t.dataset.plan);
   if (a === 'guardarFicha') { if (await guardar('PLANES DE CONTINGENCIA', t.dataset.fila, app, t)) await cargar(false); return; }
-  if (a === 'guardarDato') { if (await guardar('DATOS POR PLAN', t.dataset.fila, $('#dlg'), t)) { cerrarDlg(); hojaDatos = null; await cargar(false); } return; }
+  if (a === 'guardarFila') { if (await guardar(editHoja, t.dataset.fila, $('#dlg'), t)) { cerrarDlg(); hojas = {}; await cargar(false); } return; }
 });
 document.addEventListener('change', ev => {
   if (ev.target.id === 'selEst') { est = ev.target.value; cargar(false); }
@@ -328,12 +344,12 @@ function vistaAyuda() {
       <li>Tocá una tarjeta para abrir el plan. En «Ficha del plan» cambiás estado, responsable, fecha y observaciones y tocás «Guardar ficha».</li>
       <li>«Quiénes participan» sale de COE › «Por proyecto». Para sumar o sacar personas, hacelo en el COE: acá solo se ve.</li>
       <li>«Datos del plan» son los datos propios de ese plan (por ejemplo, la autonomía del grupo electrógeno). Tocá una fila para cargarla o «Agregar dato». Si falta, «s/d (revisar)».</li>
-      <li>Incendio (PC-HMH-01) y Evacuación (PC-HMH-03) se trabajan dentro del Plan de Evacuación y Autoprotección.</li></ol>
+      <li>Incendio (PC-01) y Evacuación (PC-03) se trabajan dentro del Plan de Evacuación y Autoprotección de cada hospital.</li><li>Cada plan es por hospital (HMH, HZT, HSST) e incluye sus dependencias: CAPS y dispositivos, en la tabla «Dependencias». Elegí el hospital arriba.</li></ol>
     <h3>Para la administradora</h3>
-    <ul><li>Todo vive en la planilla «PLAN · HMH»: hoja PLANES DE CONTINGENCIA (una fila por plan; la columna «Proyecto COE» tiene que coincidir con el nombre del proyecto en COE LISTAS) y hoja DATOS POR PLAN. Si falta la app, se carga ahí mismo.</li>
+    <ul><li>Cada hospital tiene su planilla «PLAN · …» (HMH, HZT, HSST), registrada en la hoja PLANES del libro de la app: hoja PLANES DE CONTINGENCIA (una fila por plan; la columna «Proyecto COE» tiene que coincidir con el nombre del proyecto en COE LISTAS) hoja DATOS POR PLAN (Plan = PGC para los datos generales del hospital) y hoja DEPENDENCIAS. Si falta la app, se carga ahí mismo.</li>
       <li>Los textos se escriben en TEXTOS de «PLAN · Texto común», con la columna «Plan» (BASE, PC-01, PC-02…). El borrador del Plan de Evacuación toma solo BASE, PC-01 y PC-03. La hoja DOCUMENTOS de «PLAN · Texto común» dice qué bloques arman cada documento.</li>
       <li>El botón «Generar borrador» de cada plan se habilita cuando ese plan tenga bloques propios. No se escribe ningún texto hasta tu aprobación.</li>
-      <li>HZT, HSST y los CAPS se suman en 2027 con la misma estructura (una fila en PLANES y las mismas hojas en su planilla PLAN).</li></ul>
+      <li>Los proyectos del COE existen solo para los planes del HMH (PC-HMH-…); en HZT y HSST «Proyecto COE» queda en s/d hasta crearlos en COE LISTAS.</li></ul>
     <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79; OPS (2023) y OMS (2011) como MEJORA / buena práctica. La app es una base orientadora, no un registro en tiempo real. Todo queda en versión 0 hasta el alta.</p></div>`;
 }
 
