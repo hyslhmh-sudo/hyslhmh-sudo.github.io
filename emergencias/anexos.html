@@ -42,11 +42,20 @@ a.doc{display:inline-flex;align-items:center;justify-content:center;width:34px;h
 a.doc:hover{background:var(--medio);color:#fff}
 a.doc.comun{background:#E3F4EC;color:var(--ok)}a.doc.comun:hover{background:var(--ok);color:#fff}
 .vacio{color:#B9C3D6}
+/* 19/11/2026 · botón «Actualizar» (solo Administración): renueva las tablas de datos del Doc y lo abre */
+.celda{display:inline-flex;flex-direction:column;align-items:center;gap:3px}
+button.act{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--borde);background:#fff;color:var(--medio);border-radius:8px;padding:2px 6px;font:600 10.5px 'Plus Jakarta Sans',sans-serif;cursor:pointer;white-space:nowrap}
+button.act .ms{font-size:14px}button.act:hover{background:var(--medio);color:#fff;border-color:var(--medio)}
+button.act[disabled]{opacity:.6;cursor:wait}button.act.crear{border-style:dashed}
+.girando .ms{animation:gira 1s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
+.fecha{font-size:10px;color:var(--tenue);white-space:nowrap}
+.msj{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--fuerte);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;z-index:20;max-width:92vw;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+.msj.err{background:#B3261E}
 .leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--suave);margin:12px 2px 0}
 .leyenda b{color:var(--fuerte)}
 .pie{font-size:12px;color:var(--tenue)}
 footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
-@media print{.barra .icono,.ayuda{display:none}.barra{position:static;background:#fff;color:#000;border-bottom:2px solid #000}.tabw{overflow:visible;border:0}body{background:#fff}}
+@media print{.barra .icono,.ayuda,button.act,.msj{display:none}.barra{position:static;background:#fff;color:#000;border-bottom:2px solid #000}.tabw{overflow:visible;border:0}body{background:#fff}}
 </style>
 </head>
 <body>
@@ -69,29 +78,50 @@ const SECC = [['A', 'Administrativos'], ['B', 'Derivación y traslados'], ['C', 
 const UNID = [['COMÚN', 'Parte común (vale para todas las unidades)'], ['TW', 'Hospital Zonal Trelew, Hospital María Humphreys y dependencias'],
   ['RW', 'Hospital Subzonal Santa Teresita y dependencias (Rawson)'], ['GA', 'Hospital Rural Gaiman'], ['DO', 'Hospital Rural Dolavon'], ['LP', 'Hospital Rural Las Plumas'],
   ['PI', 'Hospital Rural Paso de Indios'], ['CA', 'Hospital Rural Camarones'], ['JU', 'Puesto Sanitario 28 de Julio'], ['DA', 'Puesto Sanitario Dique Florentino Ameghino']];
-function pintar(filas) {
+let ULT = { filas: [], admin: false, conDatos: [] }, OCUPADO = false;
+function pintar(r) {
+  ULT = r; const filas = r.filas || [], admin = !!r.admin, con = r.conDatos || [];
   const idx = {}; filas.forEach(f => { idx[f.sec + '|' + f.unidad] = f; });
   const cab = '<tr><th class="sec">Anexo</th>' + UNID.map(u => `<th><abbr title="${E(u[1])}">${E(u[0] === 'COMÚN' ? 'Común' : u[0])}</abbr></th>`).join('') + '</tr>';
   const cuerpo = SECC.map(s => {
-    const n = UNID.filter(u => idx[s[0] + '|' + u[0]]).length;
-    return `<tr><td class="sec"><b>${s[0]}</b>${E(s[1])}<small>${n ? n + ' documento' + (n > 1 ? 's' : '') : 'Sin documentos todavía'}</small></td>` + UNID.map(u => {
-      const f = idx[s[0] + '|' + u[0]];
-      if (!f || !f.url) return '<td><span class="vacio">—</span></td>';
-      const tit = `${f.titulo || ''} · ${u[1]} · versión ${f.version || '0'} · ${f.estado || 's/d'}${f.act ? ' · ' + f.act : ''}`;
-      return `<td><a class="doc${u[0] === 'COMÚN' ? ' comun' : ''}" href="${E(f.url)}" target="_blank" rel="noopener" title="${E(tit)}" aria-label="${E(tit)}"><span class="ms">description</span></a></td>`;
+    const n = UNID.filter(u => idx[s[0] + '|' + u[0]] && idx[s[0] + '|' + u[0]].url).length;
+    return `<tr><td class="sec"><b>${s[0]}</b>${E(s[1])}<small>${n ? n + ' documento' + (n > 1 ? 's' : '') : (admin && con.indexOf(s[0]) >= 0 ? 'Con datos en la app: tocá «Crear»' : 'Sin documentos todavía')}</small></td>` + UNID.map(u => {
+      const f = idx[s[0] + '|' + u[0]], puede = admin && con.indexOf(s[0]) >= 0;
+      const btn = puede ? `<button type="button" class="act${f && f.url ? '' : ' crear'}" data-sec="${s[0]}" data-uni="${E(u[0])}" title="${f && f.url ? 'Actualizar las tablas de datos con lo cargado hoy y abrir el Doc' : 'Crear el Doc con los datos de la app y abrirlo'}"><span class="ms">${f && f.url ? 'sync' : 'add'}</span>${f && f.url ? 'Actualizar' : 'Crear'}</button>` : '';
+      if (!f || !f.url) return `<td>${btn || '<span class="vacio">—</span>'}</td>`;
+      const tit = `${f.titulo || ''} · ${u[1]} · versión ${f.version || '0'} · ${f.estado || 's/d'}${f.act ? ' · actualizado ' + f.act : ''}`;
+      return `<td><span class="celda"><a class="doc${u[0] === 'COMÚN' ? ' comun' : ''}" href="${E(f.url)}" target="_blank" rel="noopener" title="${E(tit)}" aria-label="${E(tit)}"><span class="ms">description</span></a>${btn}${f.act ? `<span class="fecha">${E(String(f.act).split(' ')[0])}</span>` : ''}</span></td>`;
     }).join('') + '</tr>';
   }).join('');
-  app.innerHTML = `<div class="aviso">Documentos en versión 0, en elaboración. Cada anexo tiene una <b>parte común</b> (vale para todas las unidades) y una <b>ficha por unidad</b> con lo propio de cada hospital o puesto sanitario.</div>
+  app.innerHTML = `<div class="aviso">Documentos en versión 0, en elaboración. Cada anexo tiene una <b>parte común</b> (vale para todas las unidades) y una <b>ficha por unidad</b> con lo propio de cada hospital o puesto sanitario.${admin ? ' Antes de ver o imprimir, tocá <b>«Actualizar»</b>: las tablas se renuevan con lo cargado hoy en la app.' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
-  <p>Tocá un ícono para abrir el documento en Google Docs (se abre en otra pestaña). El ícono verde es la parte común; el azul, la ficha de la unidad. Una raya significa que ese documento todavía no está hecho.</p>
+  <p>Tocá un ícono para abrir el documento en Google Docs (se abre en otra pestaña). El ícono verde es la parte común; el azul, la ficha de la unidad. Una raya significa que ese documento todavía no está hecho. Debajo de cada ícono figura la fecha de la última actualización.</p>
   <p>Para abrir los documentos necesitás permiso en Drive. Si no podés abrir alguno, pedíselo a la administración de la app.</p>
-  <p>Las correcciones del texto común se hacen en la parte común y valen para todas las unidades; lo propio de cada establecimiento se corrige en su ficha.</p></details>
+  <p>Las tablas que están entre los renglones grises «⟦…⟧» salen de la app (establecimientos, camas, receptoras, albergues, medios de traslado, contactos, pacientes —solo cantidades— y población a cargo). Esos datos se corrigen en la app o en su planilla, no en el Doc. El resto del texto se puede corregir en el Doc y no se pierde.</p>
+  ${admin ? `<p><b>Administración · Actualizar:</b> el botón «Actualizar» de cada documento borra lo que hay entre las marcas ⟦…⟧ y lo vuelve a escribir con los datos de hoy; después abre el Doc para ver o imprimir. Tarda entre 10 y 30 segundos. «Crear» arma el Doc por primera vez (anexos con datos en la app: B, C, D, E, F, G e I) y lo guarda en su carpeta 06.x del Drive. No se generan PDF ni se envían correos. Si el navegador bloquea la pestaña nueva, el Doc queda actualizado igual: tocá su ícono. Si tocás «Actualizar» en un Doc viejo del Anexo B (sin marcas), la parte de datos se ubica por el título de su punto y desde ahí queda con marcas.</p>` : ''}</details>
   <div class="tabw"><table><thead>${cab}</thead><tbody>${cuerpo}</tbody></table></div>
   <div class="leyenda">${UNID.map(u => `<span><b>${E(u[0] === 'COMÚN' ? 'Común' : u[0])}</b> · ${E(u[1])}</span>`).join('')}</div>`;
 }
+function aviso(txt, err) { let m = document.querySelector('.msj'); if (!m) { m = document.createElement('div'); m.className = 'msj'; document.body.appendChild(m); }
+  m.className = 'msj' + (err ? ' err' : ''); m.textContent = txt; clearTimeout(aviso.t); aviso.t = setTimeout(() => m.remove(), err ? 9000 : 5000); }
+app.addEventListener('click', async ev => {
+  const b = ev.target.closest('button.act'); if (!b || OCUPADO) return;
+  const sec = b.dataset.sec, uni = b.dataset.uni, nombre = 'Anexo ' + sec + ' · ' + (uni === 'COMÚN' ? 'parte común' : uni);
+  // La pestaña se abre ya (con el clic), para que el navegador no la bloquee; se completa cuando termina la actualización.
+  let w = null; try { w = window.open('', '_blank'); if (w) w.document.write('<p style="font-family:sans-serif;padding:24px">Actualizando ' + nombre + ' con los datos de la app…</p>'); } catch (e) { w = null; }
+  OCUPADO = true; app.querySelectorAll('button.act').forEach(x => x.disabled = true); b.classList.add('girando');
+  aviso('Actualizando ' + nombre + '… (entre 10 y 30 segundos)');
+  try {
+    const r = await S.api('anexo_actualizar', { sec: sec, unidad: uni }, 330000); if (!r || !r.ok) throw r;
+    if (w && !w.closed) w.location.href = r.url; else window.open(r.url, '_blank');
+    aviso(nombre + (r.creado ? ' creado' : ' actualizado') + ' (' + r.act + ').');
+    try { const l = await S.api('anexos_leer', {}); if (l && l.ok) { S.store.set('anexos.cache', l); ULT = l; } } catch (e) {}
+  } catch (e) { if (w && !w.closed) w.close(); aviso('No se pudo actualizar: ' + ((e && (e.error || e.message)) || 'probá de nuevo en un rato') + '.', true); }
+  finally { OCUPADO = false; pintar(ULT); }
+});
 (async function () {
-  const c = S.store.get('anexos.cache'); if (c && c.filas) pintar(c.filas);
-  try { const r = await S.api('anexos_leer', {}); if (!r || !r.ok) throw r; S.store.set('anexos.cache', r); pintar(r.filas || []); }
+  const c = S.store.get('anexos.cache'); if (c && c.filas) pintar(c);
+  try { const r = await S.api('anexos_leer', {}); if (!r || !r.ok) throw r; S.store.set('anexos.cache', r); pintar(r); }
   catch (e) { if (!c) app.innerHTML = '<div class="aviso">No se pudieron leer los anexos. Probá de nuevo en un rato.</div>'; }
 })();
 })();
