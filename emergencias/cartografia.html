@@ -379,11 +379,15 @@ const CAPAEST = {
   '13': { g: 'Educación', c: '#1B5E20', t: 'punto', r: 5 }, '14': { g: 'Educación', c: '#00897B', t: 'punto', r: 5 },
   '15': { g: 'Calles y caminos', c: '#757575', t: 'linea', w: 1 }, '16': { g: 'Calles y caminos', c: '#424242', t: 'linea', w: 1.6 },
   '17': { g: 'Calles y caminos', c: '#8D6E63', t: 'linea', vias: 1 }};
-const GRUPOS = ['Agua y antecedentes', 'Salud y seguridad', 'Comunidad', 'Educación', 'Calles y caminos', 'Otras capas'];
-const estDe = x => CAPAEST[(String(x.codigo).match(/(\d+)\s*$/) || [])[1]] || { g: 'Otras capas', c: '#6B7A90', t: 'linea' };
+// 19/11/2026 06:40 (Belén: «no veo la opción de pac»): pacientes de Epidemiología sin datos personales, ubicación aproximada.
+const CAPAEST_COD = {
+  'CAPA-EPI-01': { g: 'Epidemiología · sin datos personales', c: '#1E5AA8', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' },
+  'CAPA-EPI-02': { g: 'Epidemiología · sin datos personales', c: '#D32F2F', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' }};
+const GRUPOS = ['Epidemiología · sin datos personales', 'Agua y antecedentes', 'Salud y seguridad', 'Comunidad', 'Educación', 'Calles y caminos', 'Otras capas'];
+const estDe = x => CAPAEST_COD[String(x.codigo).toUpperCase()] || CAPAEST[(String(x.codigo).match(/(\d+)\s*$/) || [])[1]] || { g: 'Otras capas', c: '#6B7A90', t: 'linea' };
 function tarjetaMapa(C) {
   return `<button type="button" class="mapa-card" data-mapa><span class="ms">layers</span><span><b>Mapa interactivo de capas · Trelew</b>
-    <small>${C.length} capas para prender y apagar: inundación de 1998, escurrimiento de lluvia, sistema pluvial, salud, policía, escuelas, calles y caminos. Fuente: Municipalidad de Trelew.</small></span><span class="ms ir">chevron_right</span></button>`;
+    <small>${C.length} capas para prender y apagar: personas electrodependientes y en diálisis, inundación de 1998, escurrimiento de lluvia, sistema pluvial, salud, policía, escuelas, calles y caminos. Fuente: Municipalidad de Trelew.</small></span><span class="ms ir">chevron_right</span></button>`;
 }
 let MAPA = null; const CAPAOBJ = {};
 function mvis() {
@@ -401,11 +405,11 @@ function mvis() {
 }
 const OCULTOS = /^(CIRC|SECTOR|DIVISION|PARCELA|_nombre)$/i;
 function popupDe(p, capa) {
-  const tk = ['NOMBRE', 'nombre', 'JURIDICCION', 'SISTEMA', 'descripcion'].find(k => p[k]);
+  const tk = ['Tipo', 'NOMBRE', 'nombre', 'JURIDICCION', 'SISTEMA', 'descripcion'].find(k => p[k]);
   const tit = tk ? p[tk] : (p._nombre || capa.titulo);
   const filas = Object.keys(p).filter(k => !OCULTOS.test(k) && k !== tk && p[k] !== '').map(k => `<tr><td>${E(k.charAt(0) + k.slice(1).toLowerCase())}</td><td>${E(p[k])}</td></tr>`).join('');
   const sub = p._nombre && p._nombre !== tit ? `<div style="color:#6B7A90;font-size:11.5px;margin-bottom:4px">${E(p._nombre)}</div>` : '';
-  return `<b class="pt">${E(tit)}</b>${sub}${filas ? '<table>' + filas + '</table>' : ''}<div style="color:#6B7A90;font-size:11px;margin-top:6px">${E(capa.titulo)} · Municipalidad de Trelew</div>`;
+  return `<b class="pt">${E(tit)}</b>${sub}${filas ? '<table>' + filas + '</table>' : ''}<div style="color:#6B7A90;font-size:11px;margin-top:6px">${E(capa.titulo)} · ${E(estDe(capa).fte || 'Municipalidad de Trelew')}</div>`;
 }
 function estiloLinea(st, p) {
   if (st.nivel) { const n = +((String(p.descripcion || '').match(/Nivel\s*(\d)/) || [])[1] || 1), e = ESC[Math.min(5, Math.max(1, n)) - 1]; return { color: e[1], weight: e[2], opacity: .9 }; }
@@ -439,7 +443,7 @@ function panelCapas(C) {
       const sub = st.nivel ? '<div class="sub">' + ESC.map(e => `<div><span class="sw ln" style="background:${e[1]};height:${Math.max(2, e[2])}px"></span>${E(e[0])}</div>`).join('') + '<div style="color:#6B7A90">1 = aporte de ladera · 5 = colector principal</div></div>'
         : st.vias ? '<div class="sub">' + VIAS.map(e => `<div><span class="sw ln" style="background:${e[1]}"></span>${E(e[0])}</div>`).join('') + '</div>' : '';
       return `<label class="mcapa"><input type="checkbox" data-capa="${E(x.codigo)}"${st.on ? ' checked' : ''}><span class="sw ${st.t === 'punto' ? 'pt' : st.t === 'linea' ? 'ln' : ''}" style="background:${st.c}${st.t === 'area' ? ';opacity:.7' : ''}"></span><span class="nm">${E(x.titulo)}<small data-est="${E(x.codigo)}">${E(st.nota || '')}</small></span></label>${sub}`; }).join('');
-  }).join('') + `<p class="mnota"><b>Fuente de las capas:</b> Municipalidad de Trelew, Secretaría de Planificación y Desarrollo Urbano, Programa Ordenamiento Territorial (18/11/2026). Material de terceros, orientador: no reemplaza el relevamiento en terreno.<br><b>Mapa base:</b> © colaboradores de OpenStreetMap.<br>Tocá un punto, una línea o un área para ver sus datos.</p>`;
+  }).join('') + `<p class="mnota"><b>Fuente de las capas:</b> Municipalidad de Trelew, Secretaría de Planificación y Desarrollo Urbano, Programa Ordenamiento Territorial (18/11/2026). Material de terceros, orientador: no reemplaza el relevamiento en terreno.<br><b>Epidemiología:</b> personas electrodependientes y en diálisis, sin nombre, DNI, domicilio ni teléfono; ubicación aproximada tomada del mapa de Epidemiología HMH y la Dirección de Organización Territorial (nov. 2026, pendiente revisión de domicilios). Solo aparecen las personas que figuran en ese mapa.<br><b>Mapa base:</b> © colaboradores de OpenStreetMap.<br>Tocá un punto, una línea o un área para ver sus datos.</p>`;
 }
 async function abrirMapa() {
   const v = mvis(), C = LISTA.filter(x => esCapa(x) && !/baja/i.test(x.estado || '') && x.archivoId);
