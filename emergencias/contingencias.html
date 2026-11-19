@@ -224,7 +224,7 @@ function vistaLista() {
 function seccionDependencias() {
   const l = datos.dependencias || [];
   const col = ['Dependencia', 'Tipo', 'Dirección', 'Plantas', 'Planes que aplican'];
-  return `<section class="tarjeta secc" style="margin-top:14px" aria-labelledby="hdep"><div class="acc" style="margin-bottom:6px"><h3 id="hdep" style="flex:1;margin:0">Dependencias que incluyen los planes · ${l.length}</h3><button class="btn mini" data-act="nuevaFila" data-hoja="DEPENDENCIAS"><span class="ms">add</span>Agregar dependencia</button></div>
+  return `<section class="tarjeta secc" style="margin-top:14px" aria-labelledby="hdep"><div class="acc" style="margin-bottom:6px"><h3 id="hdep" style="flex:1;margin:0">Dependencias que incluyen los planes · ${l.length}</h3><button class="btn sec mini" data-act="csvDep"><span class="ms">download</span>CSV</button><button class="btn mini" data-act="nuevaFila" data-hoja="DEPENDENCIAS"><span class="ms">add</span>Agregar dependencia</button></div>
     <p class="sub">Tomadas de la BASE · Establecimientos de salud. Tocá una fila para completar sus datos (por ejemplo, qué planes le aplican).</p>
     <div class="tabla-wrap"><table class="tabla"><thead><tr>${col.map(c => `<th>${E(c)}</th>`).join('')}</tr></thead><tbody>${l.length ? l.map(x => `<tr class="clic" data-hoja="DEPENDENCIAS" data-fila="${x.fila}">${col.map(c => `<td>${celda(x[c])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${col.length}" class="vacio">Este hospital no tiene dependencias cargadas.</td></tr>`}</tbody></table></div></section>`;
 }
@@ -259,11 +259,53 @@ async function vistaPlan(clave) {
       <div class="kpis" style="margin-bottom:6px"><div class="tarjeta kpi"><b>${bl}</b><span>${clave === 'PGC' ? 'bloques BASE en TEXTOS' : 'bloques en TEXTOS con «Plan» = ' + E(clave)}</span></div><div class="tarjeta kpi"><b>${pr}</b><span>textos propios del establecimiento</span></div><div class="tarjeta kpi"><b>${datos.bloques.BASE || 0}</b><span>bloques BASE que puede reutilizar</span></div></div>
       <p class="sub">Cada bloque lleva su etiqueta LEY o MEJORA y su cita. ${bl || enPE ? '' : 'Todavía no se escribió ningún texto de este plan.'}</p>
     </section>
-    <section class="tarjeta secc" aria-labelledby="h5"><h3 id="h5">5 · Borrador en Google Docs</h3>
-      ${enPE ? '<p class="sub">Sale dentro del borrador del Plan de Evacuación y Autoprotección (BASE + PC-01 + PC-03).</p><a class="btn sec mini" href="plan.html">Ir al Plan de Evacuación</a>'
-             : `<p class="sub">Se arma con el mismo generador del Plan de Evacuación (portada, regla de edición, índice, LEY/MEJORA con cita al pie, logo HySL en el pie). Sin PDF hasta la aprobación final.</p><button class="btn" disabled><span class="ms">auto_awesome</span>Generar borrador</button><p class="sub">Se habilita cuando el plan tenga bloques propios en TEXTOS.</p>`}
+    <section class="tarjeta secc" aria-labelledby="h5"><h3 id="h5">5 · Descargar</h3>
+      <p class="sub">Todo sale con los datos de este momento. No se genera PDF (queda para tu aprobación final). Lo que corrijas en lo descargado no vuelve a la app: corregí en la app o por el chat.</p>
+      <div class="acc" style="margin-bottom:8px">
+        <button class="btn" data-act="docPlan" data-clave="${E(clave)}"><span class="ms">description</span>Doc del plan (Google Docs / Word)</button>
+        <a class="btn sec" href="${E(xlsxUrl())}" target="_blank" rel="noopener"><span class="ms">table_view</span>Planilla del hospital (Excel)</a>
+        <button class="btn sec" data-act="csvPlan" data-clave="${E(clave)}"><span class="ms">download</span>Datos de este plan (CSV)</button>
+      </div>
+      <div id="docRes" class="sub">${enPE ? 'Este plan también sale completo dentro del borrador del Plan de Evacuación y Autoprotección.' : ''}</div>
     </section>`;
   pintarDatos(clave);
+}
+
+function planActual() { return cat.planes.find(x => x.codigo === est) || {}; }
+function xlsxUrl() { const u = String(planActual().planilla || ''); const m = u.match(/\/d\/([-\w]{20,})/); return m ? 'https://docs.google.com/spreadsheets/d/' + m[1] + '/export?format=xlsx' : '#'; }
+function bajarCsv(nombre, filas) {
+  const txt = '\ufeff' + filas.map(f => f.map(v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' })); a.download = nombre + '.csv';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+async function csvPlan(clave) {
+  const p = datos.planes.find(x => x.Clave === clave); if (!p) return;
+  let d; try { d = await leerHoja('DATOS POR PLAN'); } catch (e) { toast('No se pudieron leer los datos.'); return; }
+  const jp = d.cab.indexOf('Plan'), filas = [['Sección', 'Campo', 'Valor', 'Estado', 'Fuente']];
+  [['Código', p['Código']], ['Plan', p.Plan], ['Establecimiento', est], ['Estado', p.Estado], ['Responsable', p.Responsable], ['Fecha', p.Fecha], ['Orden de redacción', p['Orden de redacción']], ['Proyecto COE', p['Proyecto COE']], ['Observaciones', p.Observaciones], ['Versión', '0']].forEach(x => filas.push(['Ficha del plan', x[0], x[1], '', '']));
+  const val = (f, c) => { const j = d.cab.indexOf(c); return j >= 0 ? f.valores[j] : ''; };
+  d.filas.filter(f => ['PGC', clave].indexOf(String(f.valores[jp]).trim()) >= 0).forEach(f => filas.push([String(f.valores[jp]).trim() === 'PGC' ? 'Datos del establecimiento' : 'Datos del plan', val(f, 'Dato'), val(f, 'Valor'), val(f, 'Estado'), val(f, 'Fuente')]));
+  (datos.dependencias || []).forEach(x => filas.push(['Dependencias', x.Dependencia, [x.Tipo, x['Dirección'], 'Plantas: ' + (x.Plantas || 's/d'), 'Planes: ' + (x['Planes que aplican'] || 's/d')].join(' · '), x.Estado || '', 'BASE · Establecimientos de salud']));
+  bajarCsv((p['Código'] && !esSd(p['Código']) ? p['Código'] : est + ' ' + clave) + ' · ' + p.Plan + ' · datos v0', filas);
+}
+function confirmarDoc(clave) {
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>Doc del plan</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo">${REGLA}<p class="sub">Se arma un Google Doc (versión 0) con la ficha del plan, los datos del establecimiento y del plan, las dependencias y el texto que tenga el plan, con el logo HySL al pie. Queda en la carpeta 05.3 · PLANES DE CONTINGENCIA y el Doc anterior de este plan va a la papelera. Tarda alrededor de un minuto. No se genera PDF.</p></div>
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="docPlanOk" data-clave="${E(clave)}"><span class="ms">description</span>Generar ahora</button></div></div>`;
+  $('#dlg').classList.remove('oculto');
+}
+async function docPlan(clave) {
+  cerrarDlg();
+  const caja = $('#docRes'); if (caja) caja.innerHTML = 'Generando el Doc… puede tardar hasta dos minutos. No cierres esta pantalla.';
+  try {
+    const r = await S.api('plan_pc_doc', { codigo: est, clave: clave }, 180000); if (!r.ok) throw r;
+    const docx = 'https://docs.google.com/document/d/' + r.id + '/export?format=docx';
+    if ($('#docRes')) $('#docRes').innerHTML = `<b>Listo (${E(r.fecha)}).</b> ${r.bloques ? r.bloques + ' bloques de texto.' : 'Todavía sin texto propio.'}${r.anteriorAPapelera ? ' El Doc anterior fue a la papelera.' : ''}<div class="acc" style="margin-top:6px"><a class="btn sec mini" href="${E(r.url)}" target="_blank" rel="noopener"><span class="ms">open_in_new</span>Abrir en Google Docs</a><a class="btn sec mini" href="${E(docx)}" target="_blank" rel="noopener"><span class="ms">download</span>Descargar Word (.docx)</a></div>`;
+    toast('Doc generado.');
+  } catch (e) {
+    const msg = (e && (e.error || e.message)) || '';
+    if ($('#docRes')) $('#docRes').textContent = /abort/i.test(msg) || !msg ? 'La respuesta tardó demasiado. Puede que el Doc se siga generando: en un par de minutos buscalo en la carpeta 05.3.' : msg;
+  }
 }
 
 async function pintarDatos(clave) {
@@ -323,6 +365,10 @@ document.addEventListener('click', async ev => {
   if (t.matches('tr.clic')) return abrirFila(t.dataset.hoja, Number(t.dataset.fila));
   const a = t.dataset.act, clave = ruta()[1];
   if (a === 'cerrar') return cerrarDlg();
+  if (a === 'docPlan') return confirmarDoc(t.dataset.clave);
+  if (a === 'docPlanOk') return docPlan(t.dataset.clave);
+  if (a === 'csvPlan') return csvPlan(t.dataset.clave);
+  if (a === 'csvDep') return bajarCsv(est + ' · Dependencias · v0', [['ID BASE', 'Dependencia', 'Tipo', 'Código SISA', 'Dirección', 'Localidad', 'Plantas', 'Mantenimiento permanente', 'Planes que aplican', 'Estado', 'Observaciones']].concat((datos.dependencias || []).map(x => ['ID BASE', 'Dependencia', 'Tipo', 'Código SISA', 'Dirección', 'Localidad', 'Plantas', 'Mantenimiento permanente', 'Planes que aplican', 'Estado', 'Observaciones'].map(c => x[c]))));
   if (a === 'nuevaFila') return abrirFila(t.dataset.hoja, null, t.dataset.plan);
   if (a === 'guardarFicha') { if (await guardar('PLANES DE CONTINGENCIA', t.dataset.fila, app, t)) await cargar(false); return; }
   if (a === 'guardarFila') { if (await guardar(editHoja, t.dataset.fila, $('#dlg'), t)) { cerrarDlg(); hojas = {}; await cargar(false); } return; }
@@ -348,7 +394,7 @@ function vistaAyuda() {
     <h3>Para la administradora</h3>
     <ul><li>Cada hospital tiene su planilla «PLAN · …» (HMH, HZT, HSST), registrada en la hoja PLANES del libro de la app: hoja PLANES DE CONTINGENCIA (una fila por plan; la columna «Proyecto COE» tiene que coincidir con el nombre del proyecto en COE LISTAS) hoja DATOS POR PLAN (Plan = PGC para los datos generales del hospital) y hoja DEPENDENCIAS. Si falta la app, se carga ahí mismo.</li>
       <li>Los textos se escriben en TEXTOS de «PLAN · Texto común», con la columna «Plan» (BASE, PC-01, PC-02…). El borrador del Plan de Evacuación toma solo BASE, PC-01 y PC-03. La hoja DOCUMENTOS de «PLAN · Texto común» dice qué bloques arman cada documento.</li>
-      <li>El botón «Generar borrador» de cada plan se habilita cuando ese plan tenga bloques propios. No se escribe ningún texto hasta tu aprobación.</li>
+      <li>Descargar (en cada plan): «Doc del plan» arma un Google Doc v0 (también se baja en Word) con ficha, datos, dependencias y el texto que tenga el plan; queda uno solo por plan en 05.3. «Planilla del hospital» baja la planilla completa en Excel. «Datos de este plan» baja un CSV que abre en Sheets o Excel. Nunca se genera PDF.</li>
       <li>Los proyectos del COE existen solo para los planes del HMH (PC-HMH-…); en HZT y HSST «Proyecto COE» queda en s/d hasta crearlos en COE LISTAS.</li></ul>
     <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79; OPS (2023) y OMS (2011) como MEJORA / buena práctica. La app es una base orientadora, no un registro en tiempo real. Todo queda en versión 0 hasta el alta.</p></div>`;
 }
