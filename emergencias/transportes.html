@@ -52,6 +52,8 @@ dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 0 0;font-
 .contacto{background:var(--fondo);border-radius:10px;padding:6px 10px;margin-top:8px;font-size:13px}
 .contacto a{color:var(--medio)}
 .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+/* 18/11/2026: los selectores de lugares tienen nombres largos; nunca pasan el ancho de la pantalla. */
+.filtros label{display:flex;gap:6px;align-items:center;min-width:0;max-width:100%;flex:1 1 300px}.filtros select{min-width:0;width:100%}
 select,input[type=search]{font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);max-width:100%}
 .escs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .escs button{border:1.5px solid var(--borde);background:#fff;border-radius:999px;padding:6px 12px;font:600 13px 'Plus Jakarta Sans',sans-serif;color:var(--fuerte);cursor:pointer}
@@ -309,7 +311,7 @@ function lugaresDis() {
   });
   (D.base.coe || []).forEach(c => {
     let g;
-    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : grupoPub(c.tipo || 'Hospital'); }
+    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : grupoPub((c.tipo || '') + ' ' + (c.nombre || '')); }
     else if (c.hoja === 'ALBERGUES') { if (c.id_base) return; g = 'Albergues'; }
     else g = /geri[aá]tric/i.test(c.tipo) ? 'Geriátricos' : /salud mental/i.test(c.tipo) ? 'Dispositivos intermedios de Salud Mental Comunitaria' : 'Otra población a cargo';
     // Población a cargo que ya está en la BASE (p. ej. las comisarías): mismo ID de la BASE, aparece también en su grupo.
