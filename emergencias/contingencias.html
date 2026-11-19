@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* 01/11/2026 · Por ahora la app solo comparte PHR: esta pantalla es solo para Administración.
+   Sin sesión de Administración se vuelve al inicio sin mostrar nada. (Los datos además los bloquea el servidor.) */
+(function(){var ok=false;try{var u=JSON.parse(localStorage.getItem(localStorage.getItem('starh.vista.token')?'starh.vista.usuario':'starh.usuario')||'null');ok=!!(u&&u.rol==='Administración'&&localStorage.getItem('starh.token'));}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planes de contingencia</title>
+<meta name="description" content="Planes de contingencia por establecimiento: estado, datos y textos de cada plan.">
+<meta name="theme-color" content="#8E1B1B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<style>
+:root{--fuerte:#7A2E0E;--medio:#C2410C;--claro:#FFEDD5;--borde:#F3C9A8;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#F4E2D4;--fondo:#FBF8F5;--papel:#fff;--radio:12px;
+  --sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga';user-select:none}
+.oculto{display:none!important}
+.barra{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#7A2E0E 0%,#C2410C 100%);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px;display:flex;align-items:center;gap:6px;border-bottom:3px solid #FDBA74}
+.barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.88}
+.icono{background:transparent;border:0;color:#fff;height:40px;min-width:40px;padding:0 8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:980px;margin:0 auto;padding:14px 16px 110px}
+.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
+h2{font-size:18px;margin:4px 0 10px;color:var(--fuerte)}
+h3{font-size:15px;margin:16px 2px 8px;color:var(--fuerte)}
+.sub{color:var(--suave);font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--medio);color:#fff;min-height:44px;text-decoration:none}
+.btn.sec{background:#fff;color:var(--fuerte);border-color:var(--medio)}
+.btn.mini{min-height:32px;padding:5px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:default}
+.lista{display:grid;gap:10px}
+.est{padding:14px;display:grid;gap:6px;cursor:pointer;text-align:left;width:100%}
+.est:hover{border-color:var(--medio)}
+.est b{font-size:15px;color:var(--texto)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
+.chip.sd{background:#EEF2F7;color:#4B5B73}
+.chip.ok{background:#DCFCE7;color:#14532D}
+.volver{display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:var(--fuerte);font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:6px}
+.cab{padding:14px 16px;margin-bottom:12px;display:grid;gap:8px}.cab h2{margin:0}
+.acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.regla{background:#FFF8E6;border:1.5px solid #F2C14E;border-radius:12px;padding:10px 13px;font-size:13px;color:#3D2E00;margin-bottom:12px}
+.regla b{color:#5A3E00}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.tab{border:1px solid var(--linea);background:#fff;border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;color:var(--fuerte)}
+.tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
+.tabla-wrap{overflow-x:auto;border:1px solid var(--linea);border-radius:12px;background:#fff}
+.tabla{width:100%;border-collapse:collapse;font-size:13px}
+.tabla th,.tabla td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
+.tabla th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#4B5B73;background:#FDF6F0;white-space:nowrap}
+.tabla tr.clic{cursor:pointer}.tabla tr.clic:hover td{background:#FFF7F0}
+.sdv{color:#7A5B00;background:#FFF3C4;border-radius:6px;padding:1px 5px;font-size:12px}
+.campo{display:block;margin:10px 0}
+.campo>span{display:block;font-size:12.5px;font-weight:700;color:var(--texto);margin-bottom:4px}
+.campo>small{display:block;font-size:11.5px;color:var(--tenue);margin-top:3px}
+.campo input,.campo textarea{width:100%;border:1px solid var(--borde);border-radius:10px;padding:9px 11px;background:#fff}
+.campo textarea{min-height:60px;resize:vertical}
+.campo input:focus,.campo textarea:focus{outline:none;border-color:var(--medio);box-shadow:0 0 0 3px var(--claro)}
+.campo .calc{background:#F5F7FB;border:1px dashed #C5D1F2;border-radius:10px;padding:9px 11px;color:var(--suave);font-size:14px}
+.cambiado{border-color:var(--medio)!important;background:#FFF7F0!important}
+.dlg{position:fixed;inset:0;z-index:40;background:rgba(20,30,35,.45);display:flex;justify-content:center;align-items:flex-end}
+.dlg-in{background:var(--fondo);width:100%;max-width:760px;max-height:100%;height:100%;display:flex;flex-direction:column}
+@media (min-width:800px){.dlg{align-items:center;padding:24px}.dlg-in{height:auto;max-height:94vh;border-radius:16px;overflow:hidden}}
+.dlg-cab{background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;display:flex;align-items:center;gap:8px}
+.dlg-cab b{flex:1}
+.dlg-cuerpo{overflow-y:auto;padding:12px 16px;flex:1}
+.dlg-pie{background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);background:#172B4D;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px);border-left:5px solid var(--medio)}
+.vacio{padding:26px;text-align:center;color:var(--suave)}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:24px 22px}
+.msg{margin-top:10px;font-size:13.5px;padding:9px 11px;border-radius:10px;background:#fff;border:1.5px solid #F57C00}
+.ayuda{padding:16px 18px}.ayuda p,.ayuda li{font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.kpi{padding:12px}.kpi b{display:block;font-size:22px;color:var(--texto)}.kpi span{font-size:12px;color:var(--suave)}
+@media (max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
+footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
+
+/* Gestión de contingencias: tonos rojos (como evac.html) */
+:root{--fuerte:#8E1B1B;--medio:#D32F2F;--claro:#FDECEA;--borde:#F5C2BE;--linea:#F3DADA;--fondo:#FAF7F7}
+.barra,.dlg-cab{background:linear-gradient(135deg,#8E1B1B 0%,#C62828 100%);border-bottom:3px solid #FF8A80}
+.btn{background:#D32F2F}.btn.sec{background:#fff;color:#8E1B1B;border-color:#D32F2F}
+.tabla th{background:#FDF5F5}.tabla tr.clic:hover td{background:#FFF7F6}
+.secciones-tabs{display:flex;gap:6px;overflow-x:auto;margin:0 0 12px;padding-bottom:2px}
+.stab{border:1px solid #F3DADA;background:#fff;border-radius:12px;padding:9px 13px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;display:inline-flex;gap:6px;align-items:center;color:#8E1B1B;text-decoration:none}
+.stab[aria-current="page"]{background:#8E1B1B;color:#fff;border-color:#8E1B1B}
+.filtros{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px}
+.fbtn{border:1px solid #F3DADA;background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;min-height:40px;color:#3A3533}
+.fbtn[aria-pressed="true"]{background:#8E1B1B;color:#fff;border-color:#8E1B1B}
+.filtros select,.estsel select{border:1px solid #E9C9C6;border-radius:10px;padding:8px 10px;background:#fff;min-height:40px;font-weight:600}
+.grilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.pc{position:relative;overflow:hidden;padding:14px;display:grid;gap:8px;text-align:left;width:100%;cursor:pointer;border:1px solid #F3DADA}
+.pc:hover{border-color:#D32F2F}
+.pc .cod{font-size:12.5px;font-weight:800;color:#8E1B1B;letter-spacing:.02em}
+.pc .nom{font-size:16.5px;font-weight:800;color:var(--texto);line-height:1.25}
+.pc .nota{font-size:12.5px;color:var(--suave)}
+.pc .meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-top:1px solid #F3DADA;padding-top:8px;font-size:12.5px}
+.pc .meta span{display:block;color:var(--tenue);font-weight:600}.pc .meta b{font-weight:700}
+.pc .fondo{position:absolute;right:-10px;bottom:-18px;font-size:96px;opacity:.06;color:#8E1B1B;pointer-events:none}
+.est-chip{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.e0{background:#EEF2F7;color:#4B5B73}.e1{background:#FFE6CC;color:#7A3300}.e2{background:#DCEBFA;color:#0F3D6E}.e3{background:#C8E6C9;color:#1B5E20}
+.cab-pc{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.secc{padding:14px 16px;margin-bottom:12px}
+.secc h3{margin:0 0 8px}
+.dos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+@media (max-width:640px){.dos{grid-template-columns:1fr}.pc .meta{grid-template-columns:1fr 1fr}}
+.campo select{width:100%;border:1px solid #E9C9C6;border-radius:10px;padding:9px 11px;background:#fff}
+.persona{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid #F3DADA;font-size:13.5px}.persona:last-child{border-bottom:0}
+.persona small{color:var(--tenue)}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="evac.html" aria-label="Volver a Gestión de contingencias"><span class="ms">arrow_back</span></a>
+  <h1 id="titulo">Planes de contingencia<small>Gestión de contingencias · versión 0</small></h1>
+  <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
+  <button class="icono" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
+</header>
+<main id="app"></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Planes de contingencia · versión 0</p></footer>
+<div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+/* 19/11/2026 · Pestaña «Planes de contingencia» de Gestión de contingencias (solo Administración).
+   Lee y escribe en la planilla PLAN del establecimiento: hojas PLANES DE CONTINGENCIA (una fila por plan) y
+   DATOS POR PLAN (datos propios de cada plan). Los participantes salen de COE › Por proyecto (columna «Proyecto COE»);
+   acá solo se ven. Los textos se cuentan en TEXTOS de «PLAN · Texto común» por la columna «Plan».
+   El borrador de cada plan se habilita cuando el plan tenga bloques propios en TEXTOS (todavía no hay ninguno). */
+const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
+const REGLA = '<div class="regla"><b>REGLA DE EDICIÓN (v1):</b> lo que se corrige en el Doc generado no vuelve a la app. El texto común se corrige en TEXTOS de «PLAN · Texto común» y vale para todos; lo propio del establecimiento va en sus datos (Datos del plan) o en Textos propios. El Doc se toca a mano solo en la revisión final, antes del PDF.</div>';
+const ESTADOS = ['Sin empezar', 'En redacción', 'Propuesto', 'Aprobado'];
+const ICONO = { PGC: 'account_tree', 'PC-01': 'local_fire_department', 'PC-02': 'power_off', 'PC-03': 'directions_run', 'PC-04': 'flood', 'PC-05': 'personal_injury', 'PC-06': 'coronavirus', 'PC-07': 'water_drop', 'PC-08': 'delete', 'PC-09': 'sync', 'PC-MP': 'science' };
+const EN_PE = ['PC-01', 'PC-03'];
+let cat = null, est = S.store.get('pc.est', ''), datos = null, coe = null, filtro = 'Todos', orden = S.store.get('pc.orden', 'redaccion'), hojaDatos = null;
+
+function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3400); }
+function ruta() { return (location.hash || '#/').slice(1).split('/').filter(Boolean).map(decodeURIComponent); }
+function ir(h) { location.hash = h; }
+const esSd = v => /^s\/d/i.test(String(v || '').trim());
+const celda = v => esSd(v) ? '<span class="sdv">' + E(v) + '</span>' : E(v);
+const claseEst = e => 'e' + Math.max(0, ESTADOS.indexOf(e));
+const nOrden = p => { const n = parseInt(p['Orden de redacción'], 10); return p.Clave === 'PGC' ? 0 : isNaN(n) ? (EN_PE.indexOf(p.Clave) >= 0 ? 200 : 100) : n; };
+
+async function cargar(avisar) {
+  app.innerHTML = '<div class="vacio">Cargando…</div>';
+  try {
+    if (!cat) { const c = await S.api('plan_catalogo'); if (!c.ok) throw c; cat = c; }
+    if (!cat.planes.length) { app.innerHTML = REGLA + '<div class="tarjeta vacio">No hay establecimientos con plan (hoja PLANES).</div>'; return; }
+    if (!est || !cat.planes.some(p => p.codigo === est)) est = cat.planes[0].codigo;
+    const [d, c] = await Promise.all([S.api('plan_pc', { codigo: est }, 90000), coe ? Promise.resolve(coe) : S.api('coe_catalogo')]);
+    if (!d.ok) throw d;
+    datos = d; coe = c && c.ok ? c : null; hojaDatos = null;
+    S.store.set('pc.est', est); S.store.set('pc.cache.' + est, d);
+    if (avisar) toast('Datos actualizados.');
+  } catch (e) {
+    if (e && e.sesion) { S.sesion.cerrar(); location.replace('index.html'); return; }
+    const g = S.store.get('pc.cache.' + est, null);
+    if (!g) { app.innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || 'No se pudo leer.')}</div>`; return; }
+    datos = g; toast('Sin conexión: se muestra lo último guardado.');
+  }
+  render();
+}
+
+function participantes(p) {
+  const proy = String(p['Proyecto COE'] || '').trim();
+  if (!coe || !proy || esSd(proy)) return null;
+  const pers = {}; (coe.personas || []).forEach(x => pers[x.id] = x);
+  return (coe.participaciones || []).filter(x => x.proyecto === proy).map(x => ({ p: pers[x.persona] || { nombre: x.persona }, funcion: x.funcion }));
+}
+
+function render() {
+  const r = ruta();
+  if (r[0] === 'ayuda') return vistaAyuda();
+  if (!datos) return;
+  if (r[0] === 'p' && r[1]) return vistaPlan(r[1]);
+  vistaLista();
+}
+
+function tabs() {
+  return `<nav class="secciones-tabs" aria-label="Gestión de contingencias"><a class="stab" href="evac.html"><span class="ms" style="font-size:18px">domain</span>Fichas de evacuación</a><a class="stab" href="evac.html#/modelos"><span class="ms" style="font-size:18px">description</span>Planillas modelo</a><a class="stab" href="plan.html"><span class="ms" style="font-size:18px">assignment</span>Plan de Evacuación y Autoprotección</a><a class="stab" href="contingencias.html" aria-current="page"><span class="ms" style="font-size:18px">emergency</span>Planes de contingencia</a><a class="stab" href="derivaciones.html"><span class="ms" style="font-size:18px">night_shelter</span>Derivaciones y albergues · COEsp</a></nav>`;
+}
+
+function vistaLista() {
+  const planes = datos.planes.slice();
+  const cuenta = e => planes.filter(p => p.Estado === e).length;
+  const l = planes.filter(p => filtro === 'Todos' || p.Estado === filtro)
+    .sort((a, b) => orden === 'codigo' ? String(a['Código']).localeCompare(String(b['Código'])) : nOrden(a) - nOrden(b));
+  app.innerHTML = tabs() + REGLA + `
+    <div class="acc" style="margin-bottom:12px;justify-content:space-between">
+      <label class="estsel"><span class="sub" style="font-weight:700;display:block;margin-bottom:4px">Establecimiento</span>
+        <select id="selEst">${cat.planes.map(p => `<option value="${E(p.codigo)}" ${p.codigo === est ? 'selected' : ''}>${E(p.codigo)} · ${E(p.nombre)}</option>`).join('')}<option disabled>HZT, HSST y CAPS · se suman en 2027</option></select></label>
+    </div>
+    <div class="kpis"><div class="tarjeta kpi"><b>${planes.length}</b><span>documentos</span></div><div class="tarjeta kpi"><b>${cuenta('Sin empezar')}</b><span>sin empezar</span></div><div class="tarjeta kpi"><b>${cuenta('En redacción') + cuenta('Propuesto')}</b><span>en redacción o propuestos</span></div></div>
+    ${datos.avisoTextos ? `<div class="regla" style="background:#FFF;border-color:#F5C2BE">Textos: ${E(datos.avisoTextos)}</div>` : ''}
+    <div class="filtros"><span class="sub" style="font-weight:700">Ver:</span>${['Todos'].concat(ESTADOS).map(e => `<button class="fbtn" data-filtro="${E(e)}" aria-pressed="${filtro === e}">${E(e)}</button>`).join('')}
+      <span style="flex:1"></span><label class="sub" for="selOrd" style="font-weight:700">Ordenar</label><select id="selOrd"><option value="redaccion" ${orden === 'redaccion' ? 'selected' : ''}>Por orden de redacción</option><option value="codigo" ${orden === 'codigo' ? 'selected' : ''}>Por código</option></select></div>
+    <div class="grilla">${l.length ? l.map(p => {
+      const pa = participantes(p), d = datos.datos[p.Clave] || { filas: 0, sd: 0 };
+      return `<button class="tarjeta pc" data-ir="#/p/${encodeURIComponent(p.Clave)}">
+        <span class="ms fondo" aria-hidden="true">${ICONO[p.Clave] || 'emergency'}</span>
+        <span class="cab-pc"><span class="cod">${celda(p['Código'])}</span><span style="flex:1"></span><span class="est-chip ${claseEst(p.Estado)}">${E(p.Estado || 's/d')}</span></span>
+        <span class="nom">${E(p.Plan)}</span>
+        ${p.Observaciones ? `<span class="nota">${E(p.Observaciones)}</span>` : ''}
+        <span class="meta"><span>Responsable<b>${celda(p.Responsable)}</b></span><span>Fecha<b>${celda(p.Fecha)}</b></span>
+          <span>Orden de redacción<b>${celda(p['Orden de redacción'])}</b></span><span>Participantes (COE)<b>${pa == null ? '<span class="sdv">s/d</span>' : pa.length ? pa.length : '<span class="sdv">ninguno todavía</span>'}</b></span>
+          <span>Datos del plan<b>${d.filas} ${d.sd ? `<span class="sdv">${d.sd} s/d</span>` : ''}</b></span><span>Bloques de texto<b>${p.Clave === 'PGC' ? (datos.bloques.BASE || 0) + ' BASE' : (datos.bloques[p.Clave] || 0)}</b></span></span>
+      </button>`; }).join('') : '<div class="tarjeta vacio">No hay planes con ese estado.</div>'}</div>
+    <p class="sub" style="margin-top:12px">Los participantes salen de COE › «Por proyecto» y se asignan desde ahí; esta pestaña solo los muestra. Solo Administración ve y carga esta pestaña.</p>`;
+}
+
+async function vistaPlan(clave) {
+  const p = datos.planes.find(x => x.Clave === clave); if (!p) return ir('#/');
+  const enPE = EN_PE.indexOf(clave) >= 0, pa = participantes(p), bl = clave === 'PGC' ? (datos.bloques.BASE || 0) : (datos.bloques[clave] || 0), pr = datos.propios[clave] || 0;
+  const fechaISO = (() => { const m = String(p.Fecha || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; })();
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Planes de contingencia</button>${REGLA}
+    <div class="tarjeta cab"><div class="cab-pc"><span class="cod" style="font-weight:800;color:#8E1B1B">${celda(p['Código'])}</span><span class="est-chip ${claseEst(p.Estado)}">${E(p.Estado || 's/d')}</span></div><h2>${E(p.Plan)}</h2>
+      ${enPE ? '<div class="sub">Este plan se trabaja dentro del Plan de Evacuación y Autoprotección. <a href="plan.html" style="color:#8E1B1B;font-weight:700">Ir al Plan de Evacuación</a></div>' : ''}</div>
+    <section class="tarjeta secc" aria-labelledby="h1"><h3 id="h1">1 · Ficha del plan</h3>
+      <div class="dos">
+        <label class="campo"><span>Estado</span><select data-col="Estado" data-orig="${E(p.Estado)}">${ESTADOS.map(e => `<option ${e === p.Estado ? 'selected' : ''}>${e}</option>`).join('')}</select></label>
+        <label class="campo"><span>Responsable</span><input data-col="Responsable" data-orig="${E(p.Responsable)}" value="${E(p.Responsable)}"><small>Si todavía no hay, dejá «s/d (revisar)».</small></label>
+        <label class="campo"><span>Fecha (dd/mm/aaaa)</span><input type="date" min="2026-01-01" max="2027-12-31" data-fecha="1" data-orig="${E(fechaISO)}" value="${E(fechaISO)}"><small>${fechaISO ? '' : 'Hoy: ' + celda(p.Fecha)}</small></label>
+        <label class="campo"><span>Orden de redacción</span><input data-col="Orden de redacción" data-orig="${E(p['Orden de redacción'])}" value="${E(p['Orden de redacción'])}"></label>
+      </div>
+      <label class="campo"><span>Observaciones</span><textarea data-col="Observaciones" data-orig="${E(p.Observaciones)}">${E(p.Observaciones)}</textarea></label>
+      <div class="acc"><button class="btn" data-act="guardarFicha" data-fila="${p.fila}"><span class="ms">save</span>Guardar ficha</button><span class="sub">Versión 0 hasta el alta.</span></div>
+    </section>
+    <section class="tarjeta secc" aria-labelledby="h2"><h3 id="h2">2 · Quiénes participan</h3>
+      <p class="sub">Se toma de COE › «Por proyecto», proyecto «${E(p['Proyecto COE'] || 's/d')}». Acá solo se ve.</p>
+      ${pa == null ? '<p class="sub"><span class="sdv">s/d (revisar)</span> Este plan no tiene proyecto en COE LISTAS.</p>' : pa.length ? pa.map(x => `<div class="persona"><b>${E(x.p.nombre)}</b><small>${E([x.funcion, x.p.institucion, x.p.tipo].filter(Boolean).join(' · '))}</small></div>`).join('') : '<p class="sub">Todavía no hay personas asignadas a este proyecto.</p>'}
+      <div class="acc" style="margin-top:8px"><a class="btn sec mini" href="coe.html"><span class="ms">group_add</span>Asignar personas en el COE</a></div>
+    </section>
+    <section class="tarjeta secc" aria-labelledby="h3"><h3 id="h3">3 · Datos del plan</h3>
+      <p class="sub">Hoja DATOS POR PLAN de la planilla del plan. Tocá una fila para cargarla. Si falta un dato, «s/d (revisar)».</p>
+      <div id="tdatos"><div class="vacio">Leyendo…</div></div>
+    </section>
+    <section class="tarjeta secc" aria-labelledby="h4"><h3 id="h4">4 · Textos del plan</h3>
+      <div class="kpis" style="margin-bottom:6px"><div class="tarjeta kpi"><b>${bl}</b><span>${clave === 'PGC' ? 'bloques BASE en TEXTOS' : 'bloques en TEXTOS con «Plan» = ' + E(clave)}</span></div><div class="tarjeta kpi"><b>${pr}</b><span>textos propios del establecimiento</span></div><div class="tarjeta kpi"><b>${datos.bloques.BASE || 0}</b><span>bloques BASE que puede reutilizar</span></div></div>
+      <p class="sub">Cada bloque lleva su etiqueta LEY o MEJORA y su cita. ${bl || enPE ? '' : 'Todavía no se escribió ningún texto de este plan.'}</p>
+    </section>
+    <section class="tarjeta secc" aria-labelledby="h5"><h3 id="h5">5 · Borrador en Google Docs</h3>
+      ${enPE ? '<p class="sub">Sale dentro del borrador del Plan de Evacuación y Autoprotección (BASE + PC-01 + PC-03).</p><a class="btn sec mini" href="plan.html">Ir al Plan de Evacuación</a>'
+             : `<p class="sub">Se arma con el mismo generador del Plan de Evacuación (portada, regla de edición, índice, LEY/MEJORA con cita al pie, logo HySL en el pie). Sin PDF hasta la aprobación final.</p><button class="btn" disabled><span class="ms">auto_awesome</span>Generar borrador</button><p class="sub">Se habilita cuando el plan tenga bloques propios en TEXTOS.</p>`}
+    </section>`;
+  pintarDatos(clave);
+}
+
+async function pintarDatos(clave) {
+  const caja = $('#tdatos'); if (!caja) return;
+  try {
+    if (!hojaDatos) { const r = await S.api('plan_hoja', { codigo: est, hoja: 'DATOS POR PLAN' }); if (!r.ok) throw r; hojaDatos = r; }
+  } catch (e) { caja.innerHTML = `<div class="vacio">${E((e && (e.error || e.message)) || 'No se pudo leer.')}</div>`; return; }
+  const d = hojaDatos, jp = d.cab.indexOf('Plan'), fs = d.filas.filter(f => String(f.valores[jp]).trim() === clave);
+  const vis = ['Dato', 'Valor', 'Estado', 'Fuente'].map(c => d.cab.indexOf(c)).filter(j => j >= 0);
+  caja.innerHTML = `<div class="acc" style="margin-bottom:8px"><span class="sub" style="flex:1">${fs.length} ${fs.length === 1 ? 'dato' : 'datos'}.</span><button class="btn mini" data-act="nuevoDato" data-plan="${E(clave)}"><span class="ms">add</span>Agregar dato</button></div>
+    <div class="tabla-wrap"><table class="tabla"><thead><tr>${vis.map(j => `<th>${E(d.cab[j])}</th>`).join('')}</tr></thead><tbody>${fs.length ? fs.map(f => `<tr class="clic" data-fila="${f.fila}">${vis.map(j => `<td>${celda(f.valores[j])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${vis.length}" class="vacio">Sin datos cargados para este plan.</td></tr>`}</tbody></table></div>`;
+}
+
+function abrirDato(fila, plan) {
+  const d = hojaDatos, f = fila ? d.filas.find(x => x.fila === fila) : null;
+  const campos = d.cab.map((c, j) => {
+    if (!c) return '';
+    const v = f ? f.valores[j] : (c === 'Plan' ? plan : c === 'Valor' ? 's/d (revisar)' : c === 'Estado' ? 's/d' : '');
+    if (c === 'Estado') return `<label class="campo"><span>Estado</span><select data-col="Estado" data-orig="${f ? E(v) : ''}">${['s/d', 'A confirmar', 'Confirmado'].map(o => `<option ${o === v ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`;
+    const largo = /observaciones|fuente/i.test(c);
+    const attrs = `data-col="${E(c)}" data-orig="${f ? E(v) : ''}" ${c === 'Plan' ? 'readonly' : ''}`;
+    return `<label class="campo"><span>${E(c)}</span>${largo ? `<textarea ${attrs}>${E(v)}</textarea>` : `<input ${attrs} value="${E(v)}">`}${c === 'Variable' ? '<small>Entre llaves, por ejemplo {autonomia_generador}. Es el nombre que usa el texto del plan.</small>' : ''}</label>`;
+  }).join('');
+  $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>Datos del plan · ${f ? 'fila ' + f.fila : 'dato nuevo'}</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
+    <div class="dlg-cuerpo"><p class="sub">Si un dato falta, escribí «s/d (revisar)». No lo dejes vacío cuando ya lo buscaste.</p>${campos}</div>
+    <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cerrar</button><button class="btn" data-act="guardarDato" data-fila="${f ? f.fila : ''}"><span class="ms">save</span>Guardar</button></div></div>`;
+  $('#dlg').classList.remove('oculto');
+}
+function cerrarDlg() { $('#dlg').classList.add('oculto'); $('#dlg').innerHTML = ''; }
+
+function cambiosEn(raiz) {
+  const v = {}; let n = 0;
+  raiz.querySelectorAll('[data-col]').forEach(el => { if (el.value !== el.dataset.orig) { v[el.dataset.col] = el.value; n++; } });
+  const fe = raiz.querySelector('[data-fecha]');
+  if (fe && fe.value !== fe.dataset.orig) { const m = fe.value.match(/^(\d{4})-(\d{2})-(\d{2})$/); v['Fecha'] = m ? `'${m[3]}/${m[2]}/${m[1]}` : 's/d (revisar)'; n++; }
+  return n ? v : null;
+}
+async function guardar(hoja, fila, raiz, btn) {
+  const valores = cambiosEn(raiz); if (!valores) { toast('No hay cambios.'); return false; }
+  btn.disabled = true;
+  try {
+    const r = await S.api('plan_guardar', { codigo: est, hoja: hoja, fila: fila || '', valores: valores });
+    if (!r.ok) throw r; toast('Guardado en la planilla del plan.'); return true;
+  } catch (e) { toast((e && (e.error || e.message)) || 'No se pudo guardar. Revisá la conexión.'); btn.disabled = false; return false; }
+}
+
+document.addEventListener('click', async ev => {
+  const t = ev.target.closest('[data-ir],[data-act],[data-filtro],tr.clic'); if (!t) return;
+  if (t.dataset.ir) return ir(t.dataset.ir);
+  if (t.dataset.filtro) { filtro = t.dataset.filtro; return vistaLista(); }
+  if (t.matches('tr.clic')) return abrirDato(Number(t.dataset.fila));
+  const a = t.dataset.act, clave = ruta()[1];
+  if (a === 'cerrar') return cerrarDlg();
+  if (a === 'nuevoDato') return abrirDato(null, t.dataset.plan);
+  if (a === 'guardarFicha') { if (await guardar('PLANES DE CONTINGENCIA', t.dataset.fila, app, t)) await cargar(false); return; }
+  if (a === 'guardarDato') { if (await guardar('DATOS POR PLAN', t.dataset.fila, $('#dlg'), t)) { cerrarDlg(); hojaDatos = null; await cargar(false); } return; }
+});
+document.addEventListener('change', ev => {
+  if (ev.target.id === 'selEst') { est = ev.target.value; cargar(false); }
+  if (ev.target.id === 'selOrd') { orden = ev.target.value; S.store.set('pc.orden', orden); vistaLista(); }
+});
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarDlg(); });
+window.addEventListener('hashchange', render);
+$('#btnAct').classList.remove('oculto');
+$('#btnAct').addEventListener('click', () => { coe = null; cat = null; cargar(true); });
+$('#btnAyuda').addEventListener('click', () => ir('#/ayuda'));
+
+function vistaAyuda() {
+  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Volver</button>${REGLA}<div class="tarjeta ayuda"><h2>Ayuda · Planes de contingencia</h2>
+    <h3>Para usar la pestaña</h3>
+    <ol><li>Cada tarjeta es un documento: el plan general (base común) y los 10 planes de contingencia. Muestra código, estado, responsable, fecha, orden de redacción, cuántas personas del COE participan, cuántos datos tiene cargados y cuántos bloques de texto.</li>
+      <li>Tocá una tarjeta para abrir el plan. En «Ficha del plan» cambiás estado, responsable, fecha y observaciones y tocás «Guardar ficha».</li>
+      <li>«Quiénes participan» sale de COE › «Por proyecto». Para sumar o sacar personas, hacelo en el COE: acá solo se ve.</li>
+      <li>«Datos del plan» son los datos propios de ese plan (por ejemplo, la autonomía del grupo electrógeno). Tocá una fila para cargarla o «Agregar dato». Si falta, «s/d (revisar)».</li>
+      <li>Incendio (PC-HMH-01) y Evacuación (PC-HMH-03) se trabajan dentro del Plan de Evacuación y Autoprotección.</li></ol>
+    <h3>Para la administradora</h3>
+    <ul><li>Todo vive en la planilla «PLAN · HMH»: hoja PLANES DE CONTINGENCIA (una fila por plan; la columna «Proyecto COE» tiene que coincidir con el nombre del proyecto en COE LISTAS) y hoja DATOS POR PLAN. Si falta la app, se carga ahí mismo.</li>
+      <li>Los textos se escriben en TEXTOS de «PLAN · Texto común», con la columna «Plan» (BASE, PC-01, PC-02…). El borrador del Plan de Evacuación toma solo BASE, PC-01 y PC-03. La hoja DOCUMENTOS de «PLAN · Texto común» dice qué bloques arman cada documento.</li>
+      <li>El botón «Generar borrador» de cada plan se habilita cuando ese plan tenga bloques propios. No se escribe ningún texto hasta tu aprobación.</li>
+      <li>HZT, HSST y los CAPS se suman en 2027 con la misma estructura (una fila en PLANES y las mismas hojas en su planilla PLAN).</li></ul>
+    <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79; OPS (2023) y OMS (2011) como MEJORA / buena práctica. La app es una base orientadora, no un registro en tiempo real. Todo queda en versión 0 hasta el alta.</p></div>`;
+}
+
+if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (!S.sesion.token()) location.replace('index.html'); else cargar(false);
+})();
+</script>
+</body>
+</html>

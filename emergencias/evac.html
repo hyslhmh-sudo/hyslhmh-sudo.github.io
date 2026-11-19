@@ -332,7 +332,7 @@ function redesTabs(r) { return cat.redes.length > 1 ? `<div class="redes">${cat.
 function esAdmin() { return !!(cat && cat.usuario && cat.usuario.rol === 'Administración'); }
 const SOLO_RED = ['inst', 'alb', 'crit', 'modelos'];
 function secTabs(act) {
-  return `<div class="secciones-tabs">${[['fichas', '#/', 'domain', 'Fichas de evacuación'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['plan', 'plan.html', 'assignment', 'Plan de Evacuación y Autoprotección'], ['deriv', 'derivaciones.html', 'night_shelter', 'Derivaciones y albergues · COEsp']].filter(t => esAdmin() || SOLO_RED.indexOf(t[0]) >= 0)
+  return `<div class="secciones-tabs">${[['fichas', '#/', 'domain', 'Fichas de evacuación'], ['modelos', '#/modelos', 'description', 'Planillas modelo'], ['plan', 'plan.html', 'assignment', 'Plan de Evacuación y Autoprotección'], ['pc', 'contingencias.html', 'emergency', 'Planes de contingencia'], ['deriv', 'derivaciones.html', 'night_shelter', 'Derivaciones y albergues · COEsp']].filter(t => esAdmin() || SOLO_RED.indexOf(t[0]) >= 0)
     .map(t => t[1].endsWith('.html') ? `<a class="stab" href="${t[1]}" style="text-decoration:none"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</a>` : `<button class="stab" data-ir="${t[1]}" aria-pressed="${act === t[0]}"><span class="ms" style="font-size:18px">${t[2]}</span>${t[3]}</button>`).join('')}</div>`;
 }
 function redVista() { if (!red(redActual)) redActual = cat.redes[0].nombre; S.store.set('evac.red', redActual); return red(redActual); }
