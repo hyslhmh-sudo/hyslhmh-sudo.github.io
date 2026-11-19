@@ -87,8 +87,8 @@ footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;min-widt
 </head>
 <body>
 <header class="barra">
-  <a class="icono" href="evac.html" aria-label="Volver a Gestión de contingencias"><span class="ms">arrow_back</span></a>
-  <h1 id="titulo">Plan de Evacuación y Autoprotección<small>Carga de datos por establecimiento · versión 0</small></h1>
+  <a class="icono" href="contingencias.html#/" aria-label="Volver a los planes"><span class="ms">arrow_back</span></a>
+  <h1 id="titulo">Gestión de contingencias<small>Plan de Evacuación y Autoprotección · versión 0</small></h1>
   <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
   <button class="icono" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
   <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
@@ -98,11 +98,12 @@ footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;min-widt
 <div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
+<script src="gc-nav.js"></script>
 <script>
 (function () {
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
-const REGLA = '<div class="regla"><b>REGLA DE EDICIÓN (v1):</b> todo se corrige acá, en la app, o en la planilla del plan; nunca en el Doc, porque si el borrador se vuelve a generar lo corregido a mano se pierde. Lo propio de este establecimiento va en sus datos (Ficha) o en Textos propios. El texto común lo corrige solo la administradora, en «PLAN · Texto común». El Doc se toca a mano solo en la revisión final, antes del PDF.</div>';
+const REGLA = GC.REGLA;
 let cat = S.store.get('plan.cat', null), hojaCache = {}, editando = null;
 
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 3200); }
@@ -139,6 +140,8 @@ function render() {
 }
 
 function vistaLista() {
+  // 19/11/2026 · Gestión de contingencias: el hospital se elige una vez (gc-nav.js); se abre directo su plan.
+  if (cat.planes.some(p => p.codigo === GC.hosp())) return ir('#/p/' + encodeURIComponent(GC.hosp()));
   if (!cat.planes.length) { app.innerHTML = REGLA + '<div class="tarjeta vacio">No tenés planes asignados. Consultá con Higiene y Seguridad Laboral.</div>'; return; }
   app.innerHTML = REGLA + '<h2>Establecimientos</h2><div class="lista">' + cat.planes.map(p =>
     `<button class="tarjeta est" data-ir="#/p/${encodeURIComponent(p.codigo)}"><b>${E(p.nombre)}</b>
@@ -147,11 +150,12 @@ function vistaLista() {
 
 async function vistaEstado(codigo) {
   const p = cat.planes.find(x => x.codigo === codigo); if (!p) return ir('#/');
-  app.innerHTML = `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Establecimientos</button>${REGLA}
-    <div class="tarjeta cab"><h2>${E(p.nombre)}</h2><div class="acc"><a class="btn sec mini" href="${E(p.planilla)}" target="_blank" rel="noopener"><span class="ms">table</span>Abrir la planilla del plan</a>${p.carpeta ? `<a class="btn sec mini" href="${E(p.carpeta)}" target="_blank" rel="noopener"><span class="ms">folder</span>Carpeta del plan</a>` : ''}</div></div>
+  app.innerHTML = GC.barra('planes') + `<a class="volver" href="contingencias.html#/" style="text-decoration:none"><span class="ms">arrow_back</span>Todos los planes de ${E(p.codigo)}</a>${REGLA}
+    <div class="tarjeta cab"><h2>Plan de Evacuación y Autoprotección · ${E(p.nombre)}</h2><div class="acc"><a class="btn sec mini" href="${E(p.planilla)}" target="_blank" rel="noopener"><span class="ms">table</span>Abrir la planilla del plan</a>${p.carpeta ? `<a class="btn sec mini" href="${E(p.carpeta)}" target="_blank" rel="noopener"><span class="ms">folder</span>Carpeta del plan</a>` : ''}</div></div>
     ${cat.admin ? `<div class="tarjeta" id="borr"><b>Borrador en Google Docs</b><p class="sub">Leyendo el último borrador…</p></div>` : ''}
     <div id="est"><div class="vacio">Leyendo el estado del plan…</div></div>`;
   if (cat.admin) cargarBorrador(codigo);
+  GC.enlazar(c => { location.href = c === 'HMH' ? 'plan.html#/p/HMH' : 'contingencias.html#/'; });
   try {
     const r = await S.api('plan_estado', { codigo: codigo }); if (!r.ok) throw r;
     const filas = r.hojas.reduce((a, h) => a + h.filas, 0), sd = r.hojas.reduce((a, h) => a + h.sd, 0);
