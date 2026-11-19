@@ -102,7 +102,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 .mnota{font-size:11.5px;color:var(--suave);margin-top:14px;line-height:1.45}
 .mpanel.oculto{display:none}
 .mcruz{background:none;border:0}.mcruz svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
-.mlab{background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#1A237E;font:700 11px 'Plus Jakarta Sans',sans-serif;padding:1px 6px}.mlab:before{display:none}
+.mlab{background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#1A237E;font:700 11px 'Plus Jakarta Sans',sans-serif;padding:1px 6px}.mlab:before{display:none}.mlab.rnb{color:#BF360C;text-align:center;line-height:1.25}
 .leaflet-popup-content{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12.5px;margin:10px 12px}
 .leaflet-popup-content b.pt{display:block;font-size:13.5px;margin-bottom:4px;color:#172B4D}
 .leaflet-popup-content table{border-collapse:collapse}.leaflet-popup-content td{padding:1px 6px 1px 0;vertical-align:top}.leaflet-popup-content td:first-child{color:#6B7A90;white-space:nowrap}
@@ -385,7 +385,7 @@ const CAPAEST = {
 const CAPAEST_COD = {
   'CAPA-EPI-01': { g: 'Pac dependientes (base Epidemiología 19.11.2026)', c: '#1E5AA8', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' },
   // 19/11/2026 06:57 (Belén: «podés construir una capa con la info de RENABAP?»)
-  'CAPA-RNB-01': { g: 'Barrios populares', c: '#E65100', t: 'area', op: .35, on: 1, nota: 'Familias aproximadas por barrio', fte: 'RENABAP (dic. 2023)', grupo: 'Barrios populares' },
+  'CAPA-RNB-01': { g: 'Barrios populares', c: '#E65100', t: 'area', op: .4, w: 2.5, rotulo: 1, on: 1, nota: 'Familias aproximadas por barrio', fte: 'RENABAP (dic. 2023)', grupo: 'Barrios populares' },
   'CAPA-EPI-02': { g: 'Pac dependientes (base Epidemiología 19.11.2026)', c: '#D32F2F', t: 'punto', r: 7, on: 1, nota: 'Ubicación aproximada', fte: 'Epidemiología HMH' }};
 const CRUZ = '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="10.5" fill="#fff" stroke="#C62828" stroke-width="2"/><path d="M10 5.5h4v4.5h4.5v4H14v4.5h-4V14H5.5v-4H10z" fill="#C62828"/></svg>';
 const GRUPOS = ['Pac dependientes (base Epidemiología 19.11.2026)', 'Barrios populares', 'Agua y antecedentes', 'Salud y seguridad', 'Comunidad', 'Educación', 'Calles y caminos', 'Otras capas'];
@@ -433,7 +433,7 @@ async function prender(cod, si) {
     // áreas grandes (jurisdicciones policiales, límites de sistema pluvial) no se tocan: muestran su nombre como rótulo.
     const fs = gj.features, grande = f => /Polygon/.test(f.geometry.type) && /(03|05)$/.test(cod) && !/^CAPA-EPI/i.test(cod);
     const est = f => /Polygon/.test(f.geometry.type)
-        ? { color: st.c, weight: grande(f) ? 2 : 1, dashArray: grande(f) ? '6 5' : null, fillColor: st.c, fillOpacity: grande(f) ? 0 : (st.op || .3) }
+        ? { color: st.c, weight: grande(f) ? 2 : (st.w || 1), dashArray: grande(f) ? '6 5' : null, fillColor: st.c, fillOpacity: grande(f) ? 0 : (st.op || .3) }
         : estiloLinea(st, f.properties || {});
     const pop = (f, l) => l.bindPopup(() => popupDe(f.properties || {}, capa), { maxWidth: 300 });
     const fc = l => ({ type: 'FeatureCollection', features: l });
@@ -441,7 +441,8 @@ async function prender(cod, si) {
     const grandes = fs.filter(grande), vect = fs.filter(f => !/Point/.test(f.geometry.type) && !grande(f)), pts = fs.filter(f => /Point/.test(f.geometry.type));
     if (grandes.length) Lf.geoJSON(fc(grandes), { pane: 'lineas', renderer: REN.areas, interactive: false, style: est,
       onEachFeature: (f, l) => { const p = f.properties || {}, t = p.JURIDICCION || p.SISTEMA; if (t) l.bindTooltip(String(t) + (p.SISTEMA ? ' (sistema pluvial)' : ''), { permanent: true, direction: 'center', className: 'mlab' }); } }).addTo(g);
-    if (vect.length) Lf.geoJSON(fc(vect), { pane: 'lineas', renderer: REN.lineas, style: est, onEachFeature: pop }).addTo(g);
+    if (vect.length) Lf.geoJSON(fc(vect), { pane: 'lineas', renderer: REN.lineas, style: est, onEachFeature: (f, l) => { pop(f, l); const p = f.properties || {};
+      if (st.rotulo && p.NOMBRE) l.bindTooltip(E(p.NOMBRE) + (p['Familias aproximadas'] ? '<br>' + E(p['Familias aproximadas']) + ' familias' : ''), { permanent: true, direction: 'center', className: 'mlab rnb' }); } }).addTo(g);
     if (pts.length) Lf.geoJSON(fc(pts), { pointToLayer: (f, ll) => st.cruz ? Lf.marker(ll, { pane: 'puntos', icon: Lf.divIcon({ className: 'mcruz', html: CRUZ, iconSize: [24, 24], iconAnchor: [12, 12], popupAnchor: [0, -10] }) }) : Lf.circleMarker(ll, { pane: 'puntos', renderer: REN.puntos, radius: /03$/.test(cod) ? 2.5 : (st.r || 5), color: '#fff', weight: /03$/.test(cod) ? 0 : 1.5, fillColor: st.c, fillOpacity: .95 }), onEachFeature: pop }).addTo(g);
     o.capa = g;
     const el = document.querySelector(`input[data-capa="${cod}"]`);
