@@ -287,13 +287,18 @@ function vEsp() {
 // 16/11/2026 21:24 (Belén: «ok» a sumar instituciones, albergues y población a cargo del COE · Derivaciones y albergues; «en el buscador
 // de distancias debe estar ordenado por 1. localidad. 2. institucion de salud: publica/privada - 3. albergues 4. asilos 5. etc...»).
 // Los lugares del COE llegan en D.base.coe (ID CR-, CA-, CP-); si tienen id_base, ya están en la BASE y no se duplican.
-const GRUPOS_DIS = ['Localidades', 'Instituciones de salud públicas', 'Instituciones de salud privadas', 'Albergues', 'Geriátricos',
-  'Dispositivos intermedios de Salud Mental Comunitaria', 'Otra población a cargo', 'Recursos de apoyo'];
-let ordenDis = S.store.get('transp.ordenDis') || 'grupo';
+// 18/11/2026 21:40 (Belén: «no puedo poner hasta HMH - revisar y ordenar bien por tipo»): las instituciones públicas se separan por tipo
+// (hospitales primero, con HMH, HZT y HSST arriba; después CAPS y centros de salud, puestos sanitarios y otros servicios), accesos rápidos
+// «Hasta» al HMH y al HZT, y la tabla vuelve a ordenarse por tipo por defecto (clave nueva, para no arrastrar «del más cercano»).
+const GRUPOS_DIS = ['Localidades', 'Hospitales públicos', 'CAPS y centros de salud', 'Puestos sanitarios', 'Otros servicios de salud pública',
+  'Instituciones de salud privadas', 'Albergues', 'Geriátricos', 'Dispositivos intermedios de Salud Mental Comunitaria', 'Otra población a cargo', 'Recursos de apoyo'];
+const PRIMEROS = ['L-002', 'L-001', 'L-003'];
+const grupoPub = t => /hospital/i.test(t || '') ? 'Hospitales públicos' : /\bcaps\b|centro de salud|centro integral|prosate|salud integral/i.test(t || '') ? 'CAPS y centros de salud' : /puesto/i.test(t || '') ? 'Puestos sanitarios' : 'Otros servicios de salud pública';
+let ordenDis = S.store.get('transp.ordenDis2') || 'grupo';
 function lugaresDis() {
   const o = [], pubRx = /cl[ií]nica privada|sanatorio privado|privad/i;
   (D.base.localidades || []).forEach(r => o.push({ id: r.id, n: r.nombre, g: 'Localidades', t: 'Localidad (centro)', loc: r.departamento ? 'Depto. ' + r.departamento : '' }));
-  D.base.lugares.forEach(l => o.push({ id: l.id, n: l.nombre, g: 'Instituciones de salud públicas', t: l.tipo, loc: l.localidad }));
+  D.base.lugares.forEach(l => o.push({ id: l.id, n: l.nombre, g: grupoPub(l.tipo), t: l.tipo, loc: l.localidad }));
   // 15/11/2026 06:05 y 06:13: la columna «albergue» de RECURSOS DE APOYO tiene el ID A- del COE; «recurso» = Sí → aparece en los dos grupos.
   D.base.recursos.forEach(r => {
     if (pubRx.test(r.tipo || '')) { o.push({ id: r.id, n: r.nombre, g: 'Instituciones de salud privadas', t: r.tipo, loc: r.localidad }); return; }
@@ -304,14 +309,15 @@ function lugaresDis() {
   });
   (D.base.coe || []).forEach(c => {
     let g;
-    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : 'Instituciones de salud públicas'; }
+    if (c.hoja === 'RECEPTORAS') { if (c.id_base) return; g = /privad/i.test(c.tipo) ? 'Instituciones de salud privadas' : grupoPub(c.tipo || 'Hospital'); }
     else if (c.hoja === 'ALBERGUES') { if (c.id_base) return; g = 'Albergues'; }
     else g = /geri[aá]tric/i.test(c.tipo) ? 'Geriátricos' : /salud mental/i.test(c.tipo) ? 'Dispositivos intermedios de Salud Mental Comunitaria' : 'Otra población a cargo';
     // Población a cargo que ya está en la BASE (p. ej. las comisarías): mismo ID de la BASE, aparece también en su grupo.
     o.push({ id: c.id_base || c.id, n: c.nombre, g: g, t: c.tipo + (c.hoja === 'POBLACION A CARGO' ? ' · población a cargo' : ''), loc: c.localidad, sinCoord: !c.id_base && !c.lat });
   });
   const cmp = (a, b) => String(a).localeCompare(String(b), 'es', { sensitivity: 'base' });
-  return o.sort((a, b) => GRUPOS_DIS.indexOf(a.g) - GRUPOS_DIS.indexOf(b.g) || cmp(a.loc, b.loc) || cmp(a.n, b.n));
+  const pr = x => { const i = PRIMEROS.indexOf(x.id); return i < 0 ? 99 : i; };
+  return o.sort((a, b) => GRUPOS_DIS.indexOf(a.g) - GRUPOS_DIS.indexOf(b.g) || pr(a) - pr(b) || (a.g === 'Localidades' ? 0 : cmp(a.loc, b.loc)) || cmp(a.t, b.t) || cmp(a.n, b.n));
 }
 function vDis() {
   const idx = {}; D.base.distancias.forEach(d => { idx[d[0] + '|' + d[1]] = d; });
@@ -335,12 +341,13 @@ function vDis() {
   return `<div class="filtros"><label>Desde <select id="fOrig">${grupos(orig, '')}</select></label>
     <button class="btn" type="button" id="fInv" style="margin-top:0"${dest ? '' : ' disabled title="Elegí un destino para invertir"'} aria-label="Invertir origen y destino"><span class="ms">swap_horiz</span>Invertir</button>
     <label>Hasta <select id="fDest"><option value="">Todos (${total - 1})</option>${grupos(dest, orig)}</select></label>
-    ${dest ? '' : `<label>Ordenar <select id="fOrden"><option value="grupo"${ordenDis === 'grupo' ? ' selected' : ''}>Por grupo</option><option value="cerca"${ordenDis === 'cerca' ? ' selected' : ''}>Del más cercano al más lejano</option></select></label>
+    <span style="display:inline-flex;gap:6px;align-items:center">${[['L-002', 'Al HMH'], ['L-001', 'Al HZT']].filter(x => x[0] !== orig && lugares.some(l => l.id === x[0])).map(x => `<button class="btn" type="button" data-hasta="${x[0]}" style="margin-top:0"${dest === x[0] ? ' aria-pressed="true"' : ''}><span class="ms">local_hospital</span>${x[1]}</button>`).join('')}</span>
+    ${dest ? '' : `<label>Ordenar <select id="fOrden"><option value="grupo"${ordenDis === 'grupo' ? ' selected' : ''}>Por tipo de lugar</option><option value="cerca"${ordenDis === 'cerca' ? ' selected' : ''}>Del más cercano al más lejano</option></select></label>
     <input type="search" id="fBus" placeholder="Buscar destino, tipo, grupo o localidad" value="${E(filtro)}">`}</div>
   <div class="tabw"><table><thead><tr><th>Hasta</th><th>Tipo</th><th>Localidad</th><th class="n">km</th><th class="n">min</th><th>Fuente</th></tr></thead><tbody>
   ${filas.map(fila).join('')}
   </tbody></table></div>
-  <p class="pie">Distancia y tiempo en auto. Grupos en este orden: localidades, instituciones de salud públicas y privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo y recursos de apoyo; dentro de cada grupo, del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15 y 16/11/2026, sin tránsito. Las localidades se miden desde su punto central (OpenStreetMap). Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud (hoja DISTANCIAS) y COE · Derivaciones y albergues (receptoras, albergues y población a cargo).</p>`;
+  <p class="pie">Distancia y tiempo en auto. Grupos en este orden: localidades, hospitales públicos (HMH, HZT y HSST primero), CAPS y centros de salud, puestos sanitarios, otros servicios de salud pública, instituciones de salud privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo y recursos de apoyo; dentro de cada grupo, del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15 y 16/11/2026, sin tránsito. Las localidades se miden desde su punto central (OpenStreetMap). Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud (hoja DISTANCIAS) y COE · Derivaciones y albergues (receptoras, albergues y población a cargo).</p>`;
 }
 
 function pintar() {
@@ -359,6 +366,7 @@ function pintar() {
 app.addEventListener('click', ev => {
   const t = ev.target.closest('[data-tab]'); if (t) { tab = t.dataset.tab; filtro = ''; S.store.set('transp.tab', tab); pintar(); return; }
   const e = ev.target.closest('[data-esc]'); if (e) { esc = esc === e.dataset.esc ? '' : e.dataset.esc; pintar(); return; }
+  const bh = ev.target.closest('[data-hasta]'); if (bh) { dest = bh.dataset.hasta; S.store.set('transp.dest', dest); pintar(); return; }
   if (ev.target.closest('#fInv') && dest) { const t = orig; orig = dest; dest = t; S.store.set('transp.orig', orig); S.store.set('transp.dest', dest); pintar(); return; }
   const ea = ev.target.closest('[data-amb]'); if (ea) { const h = D.hospitales.find(x => x.est === ea.dataset.amb); if (!('movs' in h)) { faltaPub = true; pintar(); return; } edAmb = { est: h.est, L: JSON.parse(JSON.stringify(h.ambs || [])), M: JSON.parse(JSON.stringify(h.movs || [])), msg: '' }; if (!edAmb.L.length) edAmb.L.push({}); pintar(); return; }
   const ms = ev.target.closest('[data-mas]'); if (edAmb && ms) { leerAmb(); edAmb[ms.dataset.mas].push({}); pintar(); return; }
@@ -373,7 +381,7 @@ app.addEventListener('change', ev => {
   if (ev.target.id === 'fTipo') { filtro = ev.target.value; pintar(); }
   if (ev.target.id === 'fOrig') { orig = ev.target.value; S.store.set('transp.orig', orig); pintar(); }
   if (ev.target.id === 'fDest') { dest = ev.target.value; S.store.set('transp.dest', dest); pintar(); }
-  if (ev.target.id === 'fOrden') { ordenDis = ev.target.value; S.store.set('transp.ordenDis', ordenDis); pintar(); }
+  if (ev.target.id === 'fOrden') { ordenDis = ev.target.value; S.store.set('transp.ordenDis2', ordenDis); pintar(); }
 });
 app.addEventListener('input', ev => {
   if (ev.target.id === 'fBus') { filtro = ev.target.value; const p = ev.target.selectionStart; pintar(); const b = document.getElementById('fBus'); if (b) { b.focus(); b.setSelectionRange(p, p); } }
