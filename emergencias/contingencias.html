@@ -103,7 +103,7 @@ footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;min-widt
 .pc .nom{font-size:16.5px;font-weight:800;color:var(--texto);line-height:1.25}
 .pc .nota{font-size:12.5px;color:var(--suave)}
 .pc .meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;border-top:1px solid #F3DADA;padding-top:8px;font-size:12.5px}
-.pc .meta span{display:block;color:var(--tenue);font-weight:600}.pc .meta b{font-weight:700}
+.pc .meta>span{display:block;color:var(--tenue);font-weight:600}.pc .meta b{display:block;font-weight:700;color:var(--texto);margin-top:1px}
 .pc .fondo{position:absolute;right:-10px;bottom:-18px;font-size:96px;opacity:.06;color:#8E1B1B;pointer-events:none}
 .est-chip{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap}
 .e0{background:#EEF2F7;color:#4B5B73}.e1{background:#FFE6CC;color:#7A3300}.e2{background:#DCEBFA;color:#0F3D6E}.e3{background:#C8E6C9;color:#1B5E20}
@@ -153,7 +153,7 @@ const claseEst = e => 'e' + Math.max(0, ESTADOS.indexOf(e));
 const nOrden = p => { const n = parseInt(p['Orden de redacción'], 10); return p.Clave === 'PGC' ? 0 : isNaN(n) ? (EN_PE.indexOf(p.Clave) >= 0 ? 200 : 100) : n; };
 
 async function cargar(avisar) {
-  app.innerHTML = '<div class="vacio">Cargando…</div>';
+  app.innerHTML = '<div class="vacio">Cargando… (lee la planilla del plan y el COE: puede tardar unos segundos)</div>';
   try {
     if (!cat) { const c = await S.api('plan_catalogo'); if (!c.ok) throw c; cat = c; }
     if (!cat.planes.length) { app.innerHTML = REGLA + '<div class="tarjeta vacio">No hay establecimientos con plan (hoja PLANES).</div>'; return; }
