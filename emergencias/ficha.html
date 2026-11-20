@@ -86,7 +86,7 @@ body.blanco textarea{min-height:70px;border:1px solid #777}body.blanco select{-w
 (function () {
 'use strict';
 const S = window.STARH, E = S.esc, app = document.getElementById('app');
-const ESTAB = ['Hospital Rural Gaiman', 'Hospital Rural Dolavon', 'Hospital Rural Las Plumas', 'Hospital Rural Paso de Indios', 'Hospital Rural Camarones', 'Puesto Sanitario 28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino'];
+const ESTAB = ['Hospital Rural Gaiman', 'Hospital Rural Dolavon', 'Hospital Rural Las Plumas', 'Hospital Rural Paso de Indios', 'Hospital Rural Camarones', 'Puesto Sanitario 28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino', 'Puesto Sanitario Cerro Cóndor', 'Puesto Sanitario Los Altares', 'Puesto Sanitario El Mirasol', 'Puesto Sanitario Garayalde'];
 const SN = ['Sí', 'No', 'No sabe'];
 // Tipos de internación: los mismos de la hoja CAMAS (columna «Categoría») para que la tabla sea homogénea en todos los establecimientos
 const TIPOS_INT = ['Int. general / adultos', 'Terapia intensiva adultos', 'Pediatría', 'Terapia intensiva pediátrica', 'Neonatología', 'Maternidad / obstetricia', 'Salud mental', 'Urgencias / emergencia con internación', 'Otra'];
@@ -233,7 +233,12 @@ const PRE = {
   'Hospital Rural Paso de Indios': Object.assign(base('Hospital Rural Paso de Indios', 'Paso de Indios', '10260702129030', 'Hospital rural'), { camas: camasPre(11) }, censo(1367, 605, 'PasoIndios'), pobAt(1367, REF_LOC_RURAL)),
   'Hospital Rural Camarones': Object.assign(base('Hospital Rural Camarones', 'Camarones', '10260282129013', 'Hospital rural'), { camas: camasPre(6), ref_tit: 'Florencia Mery Ann Müller' }, censo(1638, 739, 'FAmeghino'), pobAt(1638, REF_LOC_RURAL)),
   'Puesto Sanitario 28 de Julio': Object.assign(base('Puesto Sanitario 28 de Julio', '28 de Julio', '50260422129194', 'Puesto sanitario'), censo(609, 258, 'Gaiman'), pobAt(609, REF_LOC_RURAL)),
-  'Puesto Sanitario Dique Florentino Ameghino': Object.assign(base('Puesto Sanitario Dique Florentino Ameghino', 'Dique Ameghino', '51260422129332', 'Puesto sanitario'), censo(183, 109, 'Gaiman'), pobAt(183, REF_LOC_RURAL))
+  'Puesto Sanitario Dique Florentino Ameghino': Object.assign(base('Puesto Sanitario Dique Florentino Ameghino', 'Dique Ameghino', '51260422129332', 'Puesto sanitario'), censo(183, 109, 'Gaiman'), pobAt(183, REF_LOC_RURAL)),
+  // 20/11/2026 · Belén: crear la ficha de los puestos sanitarios que faltaban. Precarga: nombre, SISA y tipo (BASE / REFES). Población: s/d (revisar).
+  'Puesto Sanitario Cerro Cóndor': base('Puesto Sanitario Cerro Cóndor', 'Cerro Cóndor', '50260702129205', 'Puesto sanitario'),
+  'Puesto Sanitario Los Altares': base('Puesto Sanitario Los Altares', 'Los Altares', '50260702129232', 'Puesto sanitario'),
+  'Puesto Sanitario El Mirasol': base('Puesto Sanitario El Mirasol', 'El Mirasol', '50260702129215', 'Puesto sanitario'),
+  'Puesto Sanitario Garayalde': base('Puesto Sanitario Garayalde', 'Garayalde', '50260282129221', 'Puesto sanitario')
 };
 const FUENTE_PRE = { camas: 'hoja CAMAS de la app (rurales: informe APTW ene–oct 2026; HZT y HMH: Epidemiología HMH 05/11/2026; HSST: dato de Belén 12/11/2026)', camas_obs: 'hoja CAMAS de la app', ref_tit: 'referente designado (COEsp · Participantes)' };
 ['pob_ciu', 'viv'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadro 1.5 por gobierno local');
@@ -272,7 +277,7 @@ const req = s => s.c.filter(c => !c.opt); // los opcionales no cuentan para «Co
 const secOk = s => req(s).every(lleno);
 // 14/11/2026 19:35 (Belén: «Personas que requieren asistencia en una emergencia: ya está cargada la planilla de Trelew, revisar»).
 // Solo cantidades del libro de pacientes de la ciudad del establecimiento (acción red_pacientes con «ciudad»; lista cerrada).
-const CIUDAD = { 'Hospital Zonal Trelew': 'Trelew', 'Hospital María Humphreys': 'Trelew', 'Hospital Subzonal Santa Teresita': 'Rawson', 'Hospital Rural Gaiman': 'Gaiman', 'Hospital Rural Dolavon': 'Dolavon', 'Hospital Rural Las Plumas': 'Las Plumas', 'Hospital Rural Paso de Indios': 'Paso de Indios', 'Hospital Rural Camarones': 'Camarones', 'Puesto Sanitario 28 de Julio': '28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino': 'Dique Florentino Ameghino' };
+const CIUDAD = { 'Hospital Zonal Trelew': 'Trelew', 'Hospital María Humphreys': 'Trelew', 'Hospital Subzonal Santa Teresita': 'Rawson', 'Hospital Rural Gaiman': 'Gaiman', 'Hospital Rural Dolavon': 'Dolavon', 'Hospital Rural Las Plumas': 'Las Plumas', 'Hospital Rural Paso de Indios': 'Paso de Indios', 'Hospital Rural Camarones': 'Camarones', 'Puesto Sanitario 28 de Julio': '28 de Julio', 'Puesto Sanitario Dique Florentino Ameghino': 'Dique Florentino Ameghino', 'Puesto Sanitario Cerro Cóndor': 'Cerro Cóndor', 'Puesto Sanitario Los Altares': 'Los Altares', 'Puesto Sanitario El Mirasol': 'El Mirasol', 'Puesto Sanitario Garayalde': 'Garayalde' };
 const GRUPOS_CACHE = {};
 async function cargarGrupos() {
   const el = document.getElementById('gruposAuto'); if (!el) return;
