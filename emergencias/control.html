@@ -247,7 +247,7 @@ function armar() {
     const segC = inc == null ? aguaC : peor([pctCol(inc), aguaC]);
     return { key: k, nombre: nom, sub: sub, ests: u.ests, deps: deps,
       med: sumN(u.ests.map(e => e.med)), medOp: sumN(u.ests.map(e => e.medOp)), enf: sumN(u.ests.map(e => e.enf)), amb: sumN(u.ests.map(e => e.amb)), veh: sumN(u.ests.map(e => e.veh)), camas: sumN(u.ests.map(e => e.camas)),
-      ficha: ficha, fichaC: pctCol(ficha), inc: inc, incC: pctCol(inc), aguaC: aguaC, segC: segC, segTxt: inc == null ? (aguaC === 'n' ? SD : 'agua') : inc + ' %', planC: planC, planTxt: planTxt,
+      ficha: ficha, fichaC: pctCol(ficha), inc: inc, incC: pctCol(inc), aguaC: aguaC, segC: segC, segTxt: inc == null ? (aguaC === 'n' ? SD : aguaC === 'r' ? 'agua con problemas' : aguaC === 'a' ? 'agua: revisar' : 'agua apta') : inc + ' %', planC: planC, planTxt: planTxt,
       locs: [...new Set(u.ests.map(e => norm(e.loc)))] };
   });
   // Población a cargo, receptoras y albergues por localidad de la unidad.
