@@ -53,6 +53,7 @@ main{max-width:1240px;margin:0 auto;padding:18px 16px 40px}
 .c-v{background:#E7F3E3;color:#24561B}.c-a{background:#FBF0D4;color:#6B4A00}.c-r{background:#FBE3E3;color:#8E1F1F}.c-n{background:#EEEEEE;color:#4A4A4A}
 .lnk{background:none;border:0;padding:6px 0 0;font-size:12.5px;font-weight:700;color:var(--azul);cursor:pointer;text-align:left;min-height:32px;align-self:flex-start;margin-top:auto}
 .caja{font-size:12.5px;line-height:1.5;color:#3D434E;background:var(--fondo);border-radius:10px;padding:10px 12px}
+.caja > .lnk:last-child{display:block;margin:8px 0 0 auto;text-align:right}
 .pill{font-size:13px;font-weight:700;border-radius:999px;padding:8px 14px;border:1px solid #D3D7DF;background:#fff;cursor:pointer;min-height:38px;text-decoration:none;color:var(--texto);display:inline-flex;align-items:center;gap:6px}
 .pill[aria-pressed="true"]{background:var(--azul);color:#fff;border-color:var(--azul)}
 .pill.osc{background:#1D2129;color:#fff;border-color:#1D2129}
@@ -292,7 +293,7 @@ function resumenTareas(L) {
 /* ---------- pantallas ---------- */
 const unidadSel = () => M.unidades.find(u => u.key === ST.unidad) || M.unidades[0];
 const estabSel = () => { const u = unidadSel(); return u.ests.find(e => e.id === ST.estab) || null; };
-const crit = (k, ref, txt) => `<button class="lnk" type="button" data-crit="${k}" aria-expanded="${abiertos.has(k)}">Criterio${ref ? ' · ' + ref : ''}</button>${abiertos.has(k) ? `<div class="caja">${txt}</div>` : ''}`;
+const crit = (k, ref, txt) => `<button class="lnk" type="button" data-crit="${k}" aria-expanded="${abiertos.has(k)}">Criterio${ref ? ' · ' + ref : ''}</button>${abiertos.has(k) ? `<div class="caja">${txt}<button class="lnk" type="button" data-crit="${k}">Ocultar ▴</button></div>` : ''}`;
 const sec = (t, c, extra) => `<div class="sec"><span class="bar" style="background:${c}"></span><h2>${t}</h2>${extra ? `<span class="muted">${extra}</span>` : ''}</div>`;
 const tarjeta = (ico, color, titulo, cuerpo, c) => `<div class="card"><span class="ms bgi" style="color:${color}" aria-hidden="true">${ico}</span><div class="ct"><h3>${titulo}</h3>${c ? chip(c) : ''}</div>${cuerpo}</div>`;
 const fila = (l, v, c) => `<div class="row"><span>${l}</span><span>${c ? dot(c) : ''}${v}</span></div>`;
@@ -363,19 +364,19 @@ function nivel(u, e) {
   const resumenPl = z => { const c = {}; z.planes.forEach(p => { c[p.estado] = (c[p.estado] || 0) + 1; }); return Object.keys(c).map(k => `${c[k]} ${k.toLowerCase()}`).join(' · '); };
   const planesHtml = conPlan.length ? conPlan.map(z => fila(`<b>${E(z.corto)}</b>`, E(z.planTxt === '2027' ? '2027 · no corresponde aún' : z.planTxt), z.planC) + `<div class="muted">${E(resumenPl(z))}</div>`).join('')
     + `<button class="lnk" type="button" data-crit="planes" style="margin-top:0">${abiertos.has('planes') ? 'Ocultar los planes' : 'Ver plan por plan'}</button>`
-    + (abiertos.has('planes') ? `<div class="caja">${conPlan.map(z => `<b>${E(z.corto)}</b><br>` + z.planes.map(p => `${E(p.plan)}: ${E(p.estado)}`).join('<br>')).join('<br><br>')}</div>` : '') : fila('Planes de contingencia', SD, 'n');
+    + (abiertos.has('planes') ? `<div class="caja">${conPlan.map(z => `<b>${E(z.corto)}</b><br>` + z.planes.map(p => `${E(p.plan)}: ${E(p.estado)}`).join('<br>')).join('<br><br>')}<button class="lnk" type="button" data-crit="planes">Ocultar ▴</button></div>` : '') : fila('Planes de contingencia', SD, 'n');
   const planC = e ? e.planC : u.planC;
   // Seguridad básica
   const inc = e ? e.inc.pct : u.inc, incC = e ? e.inc.c : u.incC, ag = e ? e.agua : null, aguaC = e ? e.agua.c : u.aguaC;
   const aguaTxt = e ? e.agua.apta : (aguaC === 'n' ? SD : aguaC === 'r' ? 'con problemas' : 'ver detalle');
-  const aguaDet = abiertos.has('agua') ? `<div class="caja">${(e ? [e] : ests.filter(z => z.agua.c !== 'n')).map(z => `${e ? '' : `<b>${E(z.corto)}</b> · apta: ${E(z.agua.apta)}<br>`}${fila('Último bacteriológico', E(z.agua.bac.fecha), z.agua.bac.c)}<span class="muted">${E(z.agua.bac.res)} · vence el ${E(z.agua.bac.vence)} · cada 6 meses</span>${fila('Último físico-químico', E(z.agua.fq.fecha), z.agua.fq.c)}<span class="muted">${E(z.agua.fq.res)} · vence el ${E(z.agua.fq.vence)} · cada 12 meses</span>`).join('<hr style="border:0;border-top:1px solid #E1E4EA">') || 'Sin análisis cargados.'}</div>` : '';
+  const aguaDet = abiertos.has('agua') ? `<div class="caja">${(e ? [e] : ests.filter(z => z.agua.c !== 'n')).map(z => `${e ? '' : `<b>${E(z.corto)}</b> · apta: ${E(z.agua.apta)}<br>`}${fila('Último bacteriológico', E(z.agua.bac.fecha), z.agua.bac.c)}<span class="muted">${E(z.agua.bac.res)} · vence el ${E(z.agua.bac.vence)} · cada 6 meses</span>${fila('Último físico-químico', E(z.agua.fq.fecha), z.agua.fq.c)}<span class="muted">${E(z.agua.fq.res)} · vence el ${E(z.agua.fq.vence)} · cada 12 meses</span>`).join('<hr style="border:0;border-top:1px solid #E1E4EA">') || 'Sin análisis cargados.'}<button class="lnk" type="button" data-crit="agua">Ocultar ▴</button></div>` : '';
   const incDet = e && e.inc.partes ? `<span class="muted">Extintores ${e.inc.partes.ext} · plan ${e.inc.partes.plan} · simulacro ${e.inc.partes.sim} · capacitación ${e.inc.partes.cap}</span>` : '';
   const segC = peor([incC, aguaC].filter(c => c !== 'n').concat(['n']));
   // Relevamientos
   const relev = ests.filter(z => /^hospital/i.test(z.tipo || '') || z.starh !== SD || z.phr !== SD);
   const cuentaRel = k => { const c = {}; ests.forEach(z => { const v = z[k] === SD ? 'Sin relevar en la app' : z[k]; c[v] = (c[v] || 0) + 1; }); return Object.keys(c).map(x => `${c[x]} ${x.toLowerCase()}`).join(' · '); };
   const relHtml = (ests.length > 1 ? fila('Establecimientos', ests.length) : '') + fila('STAR-H', E(ests.length > 1 ? cuentaRel('starh') : ests[0].starh), 'n') + fila('PHR', E(ests.length > 1 ? cuentaRel('phr') : ests[0].phr), 'n')
-    + (ests.length > 1 ? `<button class="lnk" type="button" data-crit="rel" style="margin-top:0">${abiertos.has('rel') ? 'Ocultar el detalle' : 'Ver por establecimiento'}</button>` + (abiertos.has('rel') ? `<div class="caja">${ests.map(z => `<b>${E(z.corto)}</b>: STAR-H ${E(z.starh)} · PHR ${E(z.phr)}`).join('<br>')}</div>` : '') : '');
+    + (ests.length > 1 ? `<button class="lnk" type="button" data-crit="rel" style="margin-top:0">${abiertos.has('rel') ? 'Ocultar el detalle' : 'Ver por establecimiento'}</button>` + (abiertos.has('rel') ? `<div class="caja">${ests.map(z => `<b>${E(z.corto)}</b>: STAR-H ${E(z.starh)} · PHR ${E(z.phr)}`).join('<br>')}<button class="lnk" type="button" data-crit="rel">Ocultar ▴</button></div>` : '') : '');
   // Capacidad y población (a nivel de unidad; en el establecimiento, lo propio)
   const capA = ST.cap !== 'B';
   const roles = {}; ests.filter(z => z.emergRol).forEach(z => { roles[z.emergRol] = (roles[z.emergRol] || 0) + 1; });
@@ -386,7 +387,7 @@ function nivel(u, e) {
   const tipos = {}; u.pob.forEach(p => { tipos[p.tipo || 'Otro'] = (tipos[p.tipo || 'Otro'] || 0) + 1; });
   const pobHtml = Object.keys(tipos).length ? Object.keys(tipos).sort().map(k => fila(E(k), tipos[k])).join('') + (abiertos.has('pob') ? `<div class="caja">${u.pob.map(p => `<b>${E(p.nombre)}</b> · ${E(sd(p.tipo))}<br><span class="muted">plazas ${E(sd(p.poblacion))} · dependientes ${E(sd(p.dependientes))}</span>`).join('<br>')}</div>` : '') + `<button class="lnk" type="button" data-crit="pob">${abiertos.has('pob') ? 'Ocultar lista' : 'Ver nombre, plazas y dependientes'}</button>` : fila('Instituciones cargadas', SD, 'n');
   const pat = Object.keys(u.pat || {});
-  const pacHtml = `<div class="big">${u.pac == null ? SD : u.pac}</div><button class="lnk" type="button" data-crit="pac" style="margin-top:0">De qué dependen ${abiertos.has('pac') ? '▴' : '▾'}</button>${abiertos.has('pac') ? `<div class="caja">${pat.length ? pat.map(k => `${E(k)}: ${u.pat[k]}`).join('<br>') : SD}</div>` : ''}`;
+  const pacHtml = `<div class="big">${u.pac == null ? SD : u.pac}</div><button class="lnk" type="button" data-crit="pac" style="margin-top:0">De qué dependen ${abiertos.has('pac') ? '▴' : '▾'}</button>${abiertos.has('pac') ? `<div class="caja">${pat.length ? pat.map(k => `${E(k)}: ${u.pat[k]}`).join('<br>') : SD}<button class="lnk" type="button" data-crit="pac">Ocultar ▴</button></div>` : ''}`;
   const tar = u.tareas;
   const fichaPct = e ? e.fichaPct : u.ficha;
   return nav + fichaBtn + lista + recursos
