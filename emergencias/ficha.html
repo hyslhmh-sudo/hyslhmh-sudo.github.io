@@ -137,6 +137,8 @@ const SEC_HOSP = [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
     { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'litros', l: 'Capacidad (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' },
     { k: 'limpieza', l: '¿Se limpian una vez al año?', t: 'sn' }, { k: 'limpieza_f', l: 'Fecha de la última limpieza', t: 'f' }, { k: 'agua_alt', l: 'Fuente alternativa de agua', t: 't' },
+    // 20/11/2026 · Belén: «necesito que se vea en la ficha de la app». Solo lectura: BASE › ESTABLECIMIENTOS X:AH (acción transportes_leer).
+    { k: 'agua_lab', l: 'Calidad del agua: último análisis de laboratorio', t: 'auto', x: 'Se completa solo con la BASE · Establecimientos de salud (columnas de agua). No se carga acá: se corrige en la BASE o por el chat con Claude.' },
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Central', 'Tubos', 'Concentradores', 'No tiene'] },
     { k: 'calef', l: 'Calefacción y gas: ¿con qué cuenta?', t: 'm', o: ['Gas de red', 'Garrafas o tubos', 'Eléctrica', 'Leña', 'Otro'] },
     { k: 'comun', l: 'Comunicaciones: ¿con qué cuenta?', t: 'm', o: ['Teléfono fijo', 'Celular', 'Internet', 'Radio', 'Otro'] } ] },
@@ -171,7 +173,7 @@ const SEC_CAPS = [
     { k: 'pob_at', l: 'Población que atiende (estimada)', t: 'n' },
     { k: 'barrios', l: 'Barrios o zona que cubre', t: 'a' } ] },
   { id: 'c4', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
-    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'),
+    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'), campoH('agua_lab'),
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Tubos', 'Concentradores', 'No tiene'] },
     campoH('calef'), campoH('comun') ] },
   { id: 'c5', t: 'Personal', d: 'Quiénes trabajan y quién es el responsable', min: true, c: [
@@ -278,10 +280,37 @@ async function cargarGrupos() {
     el.innerHTML = /lista cerrada|Sin acceso/i.test(String(x && (x.error || x.message) || x)) ? 'Las cantidades las ve solo la lista cerrada de pacientes con necesidades especiales.' : 'No se pudieron leer las cantidades: s/d (revisar).';
   }
 }
+// 20/11/2026 · Calidad del agua (solo lectura): último bacteriológico y fisicoquímico de la BASE (planilla «Info para el COE» y siguientes).
+let AGUA_CACHE = null;
+async function cargarAgua() {
+  const el = document.getElementById('aguaAuto'); if (!el) return;
+  const sd = v => { v = String(v == null ? '' : v).trim(); return v || 's/d (revisar)'; };
+  const malo = v => /no\s*(apta|cumple)|arriba|limpieza|observ|sin conclusi/i.test(String(v || ''));
+  try {
+    const r = AGUA_CACHE || (AGUA_CACHE = await S.api('transportes_leer', {})); if (!r || !r.ok) { AGUA_CACHE = null; throw r; }
+    const L = (r.base && r.base.lugares) || [];
+    const l = L.find(x => normN(x.nombre) === normN(estab)) || L.find(x => esDeEste(x.nombre));
+    if (!l) { el.innerHTML = 's/d (revisar): este establecimiento no figura en la BASE.'; return; }
+    const a = l.agua;
+    if (!a) { el.innerHTML = 'Falta publicar la versión nueva del servidor para ver estos datos (s/d por ahora).'; return; }
+    const vacio = Object.keys(a).filter(k => k !== 'agua_fuente').every(k => /^(s\/d|—|-)?/i.test(a[k]) && !String(a[k]).replace(/s\/d \(revisar\)|—/g, '').trim());
+    if (vacio) { el.innerHTML = 's/d (revisar): todavía no hay análisis cargados en la BASE para este establecimiento.'; return; }
+    const lin = (t, f, res, p, nc) => {
+      const ojo = malo(res) || (nc && nc !== '—' && !/^s\/d/i.test(nc));
+      return `<div style="margin:4px 0"><b>${t}:</b> ${E(sd(f))}${String(f).trim() === 'Sin registro' ? '' : ` · <span style="${ojo ? 'color:#B35500;font-weight:600' : ''}">${E(sd(res))}</span> · punto de muestreo: ${E(sd(p))}${nc && nc !== '—' ? ` · no cumple: <span style="color:#B35500">${E(nc)}</span>` : ''}`}</div>`;
+    };
+    el.innerHTML = lin('Bacteriológico', a.agua_bact_fecha, a.agua_bact_resultado, a.agua_bact_punto, a.agua_bact_no_cumple)
+      + lin('Fisicoquímico', a.agua_fq_fecha, a.agua_fq_resultado, a.agua_fq_punto, a.agua_fq_no_cumple)
+      + `<div style="margin:4px 0"><b>Laboratorio:</b> ${E(sd(a.agua_laboratorio))}</div>`
+      + (a.agua_obs && a.agua_obs !== '—' ? `<div style="margin:4px 0"><b>Observaciones:</b> ${E(a.agua_obs)}</div>` : '')
+      + `<small>Fuente: ${E(sd(a.agua_fuente))}. Aptitud según el Código Alimentario Argentino (Ley 18.284), art. 982. En naranja, lo que no cumple o tiene observaciones.</small>`;
+  } catch (x) { el.innerHTML = 'No se pudo leer el último análisis: s/d (revisar).'; }
+}
 function campo(c) {
   const v = datos[c.k], id = 'f_' + c.k;
   const lab = `<span>${c.l}${esPre(c.k) ? ` <span class="pre" title="Dato que ya teníamos${FUENTE_PRE[c.k] ? ': ' + E(FUENTE_PRE[c.k]) : ' (libro de la app, hoja LUGARES)'}. Revisalo y cambialo si no es correcto.">Precargado</span>` : ''}</span>`;
   if (c.t === 'auto' && c.k === 'grupos' && !window.__blanco) { setTimeout(cargarGrupos, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="gruposAuto">Buscando las cantidades…</div></div>`; }
+  if (c.t === 'auto' && c.k === 'agua_lab' && !window.__blanco) { setTimeout(cargarAgua, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="aguaAuto">Buscando el último análisis…</div></div>`; }
   if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
   if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
   if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
