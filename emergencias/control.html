@@ -333,9 +333,9 @@ function general() {
   const ir2 = z => `data-ver="${E(z.uk)}|${E(z.id)}"`;
   const aguaNo = ESTS.filter(z => z.agua.c === 'r').map(z => {
     const p = [['bacteriológico', z.agua.bac], ['fisicoquímico', z.agua.fq]].filter(x => x[1].c === 'r').map(x => x[0] + ' ' + (x[1].cl === 'no' ? 'no apto (' + x[1].fecha + ')' : x[1].fecha === SD ? 'sin análisis' : 'vencido el ' + x[1].vence));
-    return [z, p.join(' · ') || 'no apta'];
-  });
-  const aguaPv = ESTS.filter(z => z.agua.c === 'a').map(z => [z, [['bacteriológico', z.agua.bac], ['fisicoquímico', z.agua.fq]].filter(x => x[1].c === 'a').map(x => x[0] + (x[1].cl === 'obs' ? ' con observaciones' : ' vence el ' + x[1].vence)).join(' · ') || 'revisar']);
+    return [z, p.join(' · ') || 'no apta', /no apto/.test(p.join()) ? 0 : 1];
+  }).sort((x, y) => x[2] - y[2]);
+  const aguaPv = ESTS.filter(z => z.agua.c === 'a').map(z => [z, [['bacteriológico', z.agua.bac], ['fisicoquímico', z.agua.fq]].filter(x => x[1].c === 'a' || x[1].c === 'n').map(x => x[0] + (x[1].c === 'n' ? ' sin análisis cargado (s/d)' : x[1].cl === 'obs' ? ' con observaciones' : ' vence el ' + x[1].vence)).join(' · ') || 's/d (revisar)']);
   const incR = ESTS.filter(z => z.inc.pct != null && z.inc.c === 'r').map(z => [z, 'índice contra incendios ' + z.inc.pct + ' %']);
   const tarR = M.unidades.filter(u => u.tarC === 'r');
   const fichaB = ESTS.filter(z => z.fichaPct == null || z.fichaPct < 50).sort((x, y) => (/^hospital/i.test(y.tipo || '') - /^hospital/i.test(x.tipo || '')) || ((x.fichaPct || 0) - (y.fichaPct || 0)));
