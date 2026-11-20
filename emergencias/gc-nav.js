@@ -45,5 +45,5 @@
     s.addEventListener('change', () => { guardar(s.value); if (alCambiar) alCambiar(s.value); });
   }
   global.GC = { HOSP: HOSP, hosp: leer, setHosp: guardar, info: c => HOSP.find(h => h.c === (c || leer())), barra: barra, enlazar: enlazar,
-    REGLA: '<div class="regla"><b>REGLA DE EDICIÓN:</b> los datos y los textos se cargan y se corrigen en la app o por el chat con Claude, nunca en el Doc generado; lo que se corrige en el Doc no vuelve a la app. El texto común va en TEXTOS de «PLAN · Texto común» y vale para todos; lo propio de un hospital va en sus datos o en Textos propios. El Doc se toca a mano solo en la revisión final.</div>' };
+    REGLA: '<div class="regla"><b>REGLA DE EDICIÓN:</b> los datos y los textos se cargan y se corrigen en la app, nunca en el Doc generado; lo que se corrige en el Doc no vuelve a la app. El texto común va en TEXTOS de «PLAN · Texto común» y vale para todos; lo propio de un hospital va en sus datos o en Textos propios. El Doc se toca a mano solo en la revisión final.</div>' };
 })(window);

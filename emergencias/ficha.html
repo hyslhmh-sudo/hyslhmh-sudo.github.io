@@ -16,7 +16,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 /* 14/11/2026 · VISTA DE PRUEBA (v0) de la ficha del establecimiento para los referentes de los hospitales rurales.
-   No guarda en el libro: lo cargado queda solo en este equipo. Diseño pedido por Belén; ver claude/cambios-app-emergencias-9.md. */
+   No guarda en el libro: lo cargado queda solo en este equipo. Diseño pedido por Belén. */
 :root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A}
 *{box-sizing:border-box}
 .deps{margin-top:14px;padding:12px 14px;border:1px solid var(--borde);border-radius:12px;background:#fff}.deps h4{margin:0 0 4px;color:var(--fuerte)}.deps .nota{margin:4px 0;color:var(--suave);font-size:13px}.tabla-dep{overflow-x:auto}.tabla-dep table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}.tabla-dep th,.tabla-dep td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--borde);vertical-align:middle}.tabla-dep th{color:var(--suave);font-weight:600}.tabla-dep .btn{padding:4px 10px;font-size:13px}
@@ -137,8 +137,20 @@ const SEC_HOSP = [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
     { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'litros', l: 'Capacidad (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' },
     { k: 'limpieza', l: '¿Se limpian una vez al año?', t: 'sn' }, { k: 'limpieza_f', l: 'Fecha de la última limpieza', t: 'f' }, { k: 'agua_alt', l: 'Fuente alternativa de agua', t: 't' },
-    // 20/11/2026 · Belén: «necesito que se vea en la ficha de la app». Solo lectura: BASE › ESTABLECIMIENTOS X:AH (acción transportes_leer).
-    { k: 'agua_lab', l: 'Calidad del agua: último análisis de laboratorio', t: 'auto', x: 'Se completa solo con la BASE · Establecimientos de salud (columnas de agua). No se carga acá: se corrige en la BASE o por el chat con Claude.' },
+    // 20/11/2026 · Belén: calidad del agua «debe permitir cargar datos manualmente y adjuntar PDF o fotos de los resultados».
+    // Se guarda en FICHA ESTAB (claves agua_*) y el servidor lo pasa a la BASE · Establecimientos. Lo que ya está en la BASE viene «Precargado».
+    { k: 'agua_tit', t: 'h', opt: true, l: '<span class="tag ley">LEY</span>Calidad del agua · último análisis de laboratorio', x: 'Agua para uso y consumo humano: Dto. 351/79, cap. 6, arts. 57 y 58. Aptitud según el Código Alimentario Argentino (Ley 18.284), art. 982. Cargá el último análisis bacteriológico y el último fisicoquímico y adjuntá el informe. Si no hay análisis, escribí «Sin registro» en el resultado.' },
+    { k: 'agua_bact_fecha', l: 'Bacteriológico: fecha de toma de la muestra', t: 'f', opt: true },
+    { k: 'agua_bact_resultado', l: 'Bacteriológico: resultado (apta, no apta, apta con observaciones o sin registro)', t: 't', opt: true },
+    { k: 'agua_bact_punto', l: 'Bacteriológico: punto de muestreo (red, tanque, cisterna, canilla…)', t: 't', opt: true },
+    { k: 'agua_bact_no_cumple', l: 'Bacteriológico: parámetros que no cumplieron', t: 't', opt: true },
+    { k: 'agua_fq_fecha', l: 'Fisicoquímico: fecha de toma de la muestra', t: 'f', opt: true },
+    { k: 'agua_fq_resultado', l: 'Fisicoquímico: resultado (apta, no apta, apta con observaciones o sin registro)', t: 't', opt: true },
+    { k: 'agua_fq_punto', l: 'Fisicoquímico: punto de muestreo (red, tanque, cisterna, canilla…)', t: 't', opt: true },
+    { k: 'agua_fq_no_cumple', l: 'Fisicoquímico: parámetros que no cumplieron', t: 't', opt: true },
+    { k: 'agua_laboratorio', l: 'Laboratorio que realizó los análisis', t: 't', opt: true },
+    { k: 'agua_obs', l: 'Observaciones sobre el agua', t: 'a', opt: true },
+    { k: 'agua_adj', l: 'Informes del laboratorio: PDF o fotos (hasta 5 archivos)', t: 'adj', opt: true },
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Central', 'Tubos', 'Concentradores', 'No tiene'] },
     { k: 'calef', l: 'Calefacción y gas: ¿con qué cuenta?', t: 'm', o: ['Gas de red', 'Garrafas o tubos', 'Eléctrica', 'Leña', 'Otro'] },
     { k: 'comun', l: 'Comunicaciones: ¿con qué cuenta?', t: 'm', o: ['Teléfono fijo', 'Celular', 'Internet', 'Radio', 'Otro'] } ] },
@@ -173,7 +185,7 @@ const SEC_CAPS = [
     { k: 'pob_at', l: 'Población que atiende (estimada)', t: 'n' },
     { k: 'barrios', l: 'Barrios o zona que cubre', t: 'a' } ] },
   { id: 'c4', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
-    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'), campoH('agua_lab'),
+    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'), campoH('agua_tit'), campoH('agua_bact_fecha'), campoH('agua_bact_resultado'), campoH('agua_bact_punto'), campoH('agua_bact_no_cumple'), campoH('agua_fq_fecha'), campoH('agua_fq_resultado'), campoH('agua_fq_punto'), campoH('agua_fq_no_cumple'), campoH('agua_laboratorio'), campoH('agua_obs'), campoH('agua_adj'),
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Tubos', 'Concentradores', 'No tiene'] },
     campoH('calef'), campoH('comun') ] },
   { id: 'c5', t: 'Personal', d: 'Quiénes trabajan y quién es el responsable', min: true, c: [
@@ -250,12 +262,12 @@ async function cargar(est) {
   try { const r = await S.api('ficha_leer', { est: est || '' }); if (!r.ok) throw r;
     srv = r; estab = r.est; SEC = (r.caps || []).indexOf(estab) >= 0 ? SEC_CAPS : SEC_HOSP; pend = S.store.get(COLA(), {}) || {};
     if (Object.keys(pend).length && srv.puede) { Object.assign(srv.datos, pend); setTimeout(enviar, 400); }
-    S.store.set('ficha.estab', estab); pintar(); if (deps) pintarDeps(); else cargarDeps(); }
+    S.store.set('ficha.estab', estab); pintar(); if (deps) pintarDeps(); else cargarDeps(); precargaAgua(); }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudo abrir la ficha.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`; }
 }
 window.confirmarPre = () => { const p = PRE[estab] || {}; let n = 0; Object.keys(p).forEach(k => { if (esPre(k)) { marcar(k); n++; } }); estado(n ? 'Guardando ' + n + ' datos precargados…' : 'No hay datos precargados para confirmar.'); };
 const fechaAct = () => srv.actualizado ? 'última carga ' + srv.actualizado : 'todavía no se cargó nada';
-const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
+const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto' || c.t === 'h') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
 const req = s => s.c.filter(c => !c.opt); // los opcionales no cuentan para «Completa»
 const secOk = s => req(s).every(lleno);
 // 14/11/2026 19:35 (Belén: «Personas que requieren asistencia en una emergencia: ya está cargada la planilla de Trelew, revisar»).
@@ -280,37 +292,80 @@ async function cargarGrupos() {
     el.innerHTML = /lista cerrada|Sin acceso/i.test(String(x && (x.error || x.message) || x)) ? 'Las cantidades las ve solo la lista cerrada de pacientes con necesidades especiales.' : 'No se pudieron leer las cantidades: s/d (revisar).';
   }
 }
-// 20/11/2026 · Calidad del agua (solo lectura): último bacteriológico y fisicoquímico de la BASE (planilla «Info para el COE» y siguientes).
-let AGUA_CACHE = null;
-async function cargarAgua() {
-  const el = document.getElementById('aguaAuto'); if (!el) return;
-  const sd = v => { v = String(v == null ? '' : v).trim(); return v || 's/d (revisar)'; };
-  const malo = v => /no\s*(apta|cumple)|arriba|limpieza|observ|sin conclusi/i.test(String(v || ''));
+// 20/11/2026 · Calidad del agua: lo que ya está en la BASE (acción transportes_leer) se precarga; los informes se adjuntan (ficha_adjunto)
+// y se abren desde la app (ficha_archivo), sin compartir el Drive.
+const AGUA_K = ['agua_bact_fecha', 'agua_bact_resultado', 'agua_bact_punto', 'agua_bact_no_cumple', 'agua_fq_fecha', 'agua_fq_resultado', 'agua_fq_punto', 'agua_fq_no_cumple', 'agua_laboratorio', 'agua_obs'];
+let AGUA_BASE = null;
+async function precargaAgua() {
   try {
-    const r = AGUA_CACHE || (AGUA_CACHE = await S.api('transportes_leer', {})); if (!r || !r.ok) { AGUA_CACHE = null; throw r; }
-    const L = (r.base && r.base.lugares) || [];
-    const l = L.find(x => normN(x.nombre) === normN(estab)) || L.find(x => esDeEste(x.nombre));
-    if (!l) { el.innerHTML = 's/d (revisar): este establecimiento no figura en la BASE.'; return; }
-    const a = l.agua;
-    if (!a) { el.innerHTML = 'Falta publicar la versión nueva del servidor para ver estos datos (s/d por ahora).'; return; }
-    const vacio = Object.keys(a).filter(k => k !== 'agua_fuente').every(k => /^(s\/d|—|-)?/i.test(a[k]) && !String(a[k]).replace(/s\/d \(revisar\)|—/g, '').trim());
-    if (vacio) { el.innerHTML = 's/d (revisar): todavía no hay análisis cargados en la BASE para este establecimiento.'; return; }
-    const lin = (t, f, res, p, nc) => {
-      const ojo = malo(res) || (nc && nc !== '—' && !/^s\/d/i.test(nc));
-      return `<div style="margin:4px 0"><b>${t}:</b> ${E(sd(f))}${String(f).trim() === 'Sin registro' ? '' : ` · <span style="${ojo ? 'color:#B35500;font-weight:600' : ''}">${E(sd(res))}</span> · punto de muestreo: ${E(sd(p))}${nc && nc !== '—' ? ` · no cumple: <span style="color:#B35500">${E(nc)}</span>` : ''}`}</div>`;
-    };
-    el.innerHTML = lin('Bacteriológico', a.agua_bact_fecha, a.agua_bact_resultado, a.agua_bact_punto, a.agua_bact_no_cumple)
-      + lin('Fisicoquímico', a.agua_fq_fecha, a.agua_fq_resultado, a.agua_fq_punto, a.agua_fq_no_cumple)
-      + `<div style="margin:4px 0"><b>Laboratorio:</b> ${E(sd(a.agua_laboratorio))}</div>`
-      + (a.agua_obs && a.agua_obs !== '—' ? `<div style="margin:4px 0"><b>Observaciones:</b> ${E(a.agua_obs)}</div>` : '')
-      + `<small>Fuente: ${E(sd(a.agua_fuente))}. Aptitud según el Código Alimentario Argentino (Ley 18.284), art. 982. En naranja, lo que no cumple o tiene observaciones.</small>`;
-  } catch (x) { el.innerHTML = 'No se pudo leer el último análisis: s/d (revisar).'; }
+    const r = AGUA_BASE || (AGUA_BASE = await S.api('transportes_leer', {})); if (!r || !r.ok) { AGUA_BASE = null; return; }
+    const L = (r.base && r.base.lugares) || [], l = L.find(x => normN(x.nombre) === normN(estab)) || L.find(x => esDeEste(x.nombre));
+    const a = l && l.agua; if (!a) return;
+    const util = v => { v = String(v == null ? '' : v).trim(); return v && v !== '—' && !/^s\/d/i.test(v) ? v : ''; };
+    const p = PRE[estab] = PRE[estab] || {}; let hay = false;
+    ['bact', 'fq'].forEach(g => {
+      const f = util(a['agua_' + g + '_fecha']), m = f.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (m) { p['agua_' + g + '_fecha'] = m[3] + '-' + m[2] + '-' + m[1]; hay = true; }
+      if (/sin registro/i.test(f)) { p['agua_' + g + '_resultado'] = 'Sin registro'; hay = true; }
+      ['resultado', 'punto', 'no_cumple'].forEach(c => { const v = util(a['agua_' + g + '_' + c]); if (v) { p['agua_' + g + '_' + c] = v; hay = true; } });
+    });
+    ['agua_laboratorio', 'agua_obs'].forEach(k => { const v = util(a[k]); if (v) { p[k] = v; hay = true; } });
+    AGUA_K.forEach(k => FUENTE_PRE[k] = 'BASE · Establecimientos de salud' + (util(a.agua_fuente) ? ' (' + a.agua_fuente + ')' : ''));
+    if (hay && !window.__blanco) { const abiertas = [...document.querySelectorAll('details.sec[open]')].map(d => d.id); pintar(); abiertas.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; }); }
+  } catch (e) { /* sin precarga: se carga a mano */ }
+}
+const b64aBytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+const aBase64 = blob => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(blob); });
+// Las fotos se achican (lado mayor 2000 px) para que suban rápido con poca señal.
+async function achicar(f) {
+  if (!/^image\//.test(f.type) || f.size < 1200000) return { blob: f, tipo: f.type, nombre: f.name };
+  try {
+    const img = await createImageBitmap(f), k = Math.min(1, 2000 / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.85));
+    return { blob, tipo: 'image/jpeg', nombre: f.name.replace(/\.[^.]+$/, '') + '.jpg' };
+  } catch (e) { return { blob: f, tipo: f.type, nombre: f.name }; }
+}
+async function subirAdj(k, files) {
+  const est = estab, el = document.getElementById('adjEstado_' + k), L = Array.isArray(datos[k]) ? datos[k] : [];
+  const libres = 5 - L.length; if (libres <= 0) { alert('Ya hay 5 archivos. Quitá alguno para agregar otro.'); return; }
+  const F = [...files].slice(0, libres); if (files.length > libres) alert('Solo se suben ' + libres + ': el máximo es 5 archivos.');
+  for (let i = 0; i < F.length; i++) {
+    const f = F[i];
+    if (f.type !== 'application/pdf' && !/^image\//.test(f.type)) { alert('«' + f.name + '» no es PDF ni foto.'); continue; }
+    if (el) el.textContent = 'Subiendo ' + (i + 1) + ' de ' + F.length + '…';
+    try {
+      const a = await achicar(f);
+      const r = await S.api('ficha_adjunto', { est, archivo: { nombre: a.nombre, tipo: a.tipo, datos: await aBase64(a.blob) } }, 180000);
+      if (!r || !r.ok) throw r;
+      if (est !== estab) return;
+      datos[k] = (Array.isArray(datos[k]) ? datos[k] : []).concat([{ id: r.id, nombre: r.nombre, tipo: r.tipo, fecha: r.fecha, por: r.por }]);
+      srv.datos[k] = datos[k]; marcar(k);
+    } catch (e) { alert('No se pudo subir «' + f.name + '»: ' + ((e && (e.error || e.message)) || 'sin conexión') + '.'); }
+  }
+  const sec = document.querySelector(`[data-adjcampo="${k}"]`), id = sec && sec.closest('details') && sec.closest('details').id;
+  pintar(); const d = id && document.getElementById(id); if (d) d.open = true;
+}
+async function verAdj(id, nombre) {
+  const w = window.open('', '_blank'); if (w) w.document.write('<p style="font-family:sans-serif">Abriendo ' + E(nombre || 'el archivo') + '…</p>');
+  try {
+    const r = await S.api('ficha_archivo', { est: estab, id }, 120000); if (!r || !r.ok) throw r;
+    const url = URL.createObjectURL(new Blob([b64aBytes(r.datos)], { type: r.tipo }));
+    if (w) w.location.href = url; else location.href = url;
+  } catch (e) { if (w) w.close(); alert('No se pudo abrir el archivo: ' + ((e && (e.error || e.message)) || 'sin conexión') + '.'); }
 }
 function campo(c) {
   const v = datos[c.k], id = 'f_' + c.k;
   const lab = `<span>${c.l}${esPre(c.k) ? ` <span class="pre" title="Dato que ya teníamos${FUENTE_PRE[c.k] ? ': ' + E(FUENTE_PRE[c.k]) : ' (libro de la app, hoja LUGARES)'}. Revisalo y cambialo si no es correcto.">Precargado</span>` : ''}</span>`;
   if (c.t === 'auto' && c.k === 'grupos' && !window.__blanco) { setTimeout(cargarGrupos, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="gruposAuto">Buscando las cantidades…</div></div>`; }
-  if (c.t === 'auto' && c.k === 'agua_lab' && !window.__blanco) { setTimeout(cargarAgua, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="aguaAuto">Buscando el último análisis…</div></div>`; }
+  if (c.t === 'h') return `<div class="campo"><h4 style="margin:14px 0 2px">${c.l}</h4><small class="ayuda">${E(c.x || '')}</small></div>`;
+  if (c.t === 'adj') {
+    const L = Array.isArray(v) ? v.filter(f => f && f.id) : [];
+    if (window.__blanco) return `<div class="campo">${lab}<div class="auto">Adjuntar copia de los informes del laboratorio.</div></div>`;
+    return `<div class="campo" data-adjcampo="${c.k}">${lab}${L.length ? `<ul style="margin:6px 0;padding-left:18px">${L.map((f, i) => `<li style="margin:4px 0"><span class="ms" style="font-size:16px;vertical-align:-3px">${/pdf/.test(f.tipo) ? 'picture_as_pdf' : 'image'}</span> <a href="#" data-verarch="${E(f.id)}" data-nom="${E(f.nombre || '')}">${E(f.nombre || 'archivo')}</a> <small>· ${E(f.fecha || '')}${f.por ? ' · ' + E(f.por) : ''}</small> <button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar ${E(f.nombre || '')}"><span class="ms" style="font-size:18px">close</span></button></li>`).join('')}</ul>` : '<div class="auto">Todavía no hay informes adjuntos.</div>'}
+      <div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><label class="btn"><span class="ms">photo_camera</span>Sacar foto<input type="file" accept="image/*" capture="environment" data-adj="${c.k}" hidden></label><label class="btn"><span class="ms">upload_file</span>Subir PDF o fotos<input type="file" accept="application/pdf,image/*" multiple data-adj="${c.k}" hidden></label></div>
+      <small class="ayuda" id="adjEstado_${c.k}">Hasta 5 archivos (PDF o fotos, de hasta 15 MB). Las fotos se achican solas para subir más rápido.</small></div>`;
+  }
   if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
   if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
   if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
@@ -385,6 +440,7 @@ function progreso() {
 }
 app.addEventListener('change', ev => {
   const t = ev.target;
+  if (t.dataset.adj) { if (t.files && t.files.length) subirAdj(t.dataset.adj, t.files); t.value = ''; return; }
   if (t.id === 'selEst') { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } cargar(t.value); return; }
   if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); return marcar(t.dataset.r); }
   if (t.dataset.m) { const k = t.dataset.k; datos[k] = [...app.querySelectorAll(`input[data-m][data-k="${k}"]:checked`)].map(x => x.value); return marcar(k); }
@@ -393,6 +449,7 @@ app.addEventListener('change', ev => {
 app.addEventListener('input', ev => { const t = ev.target; if (t.dataset.k && !t.dataset.m && t.type !== 'radio') { datos[t.dataset.k] = t.value; marcar(t.dataset.k); } else if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); marcar(t.dataset.r); } });
 app.addEventListener('click', ev => {
   const a = ev.target.closest('[data-agregar]'), q = ev.target.closest('[data-quitar]'), g = ev.target.closest('[data-gps]');
+  const va = ev.target.closest('[data-verarch]'); if (va) { ev.preventDefault(); verAdj(va.dataset.verarch, va.dataset.nom); return; }
   const vf = ev.target.closest('[data-verficha]'); if (vf) { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } cargar(vf.dataset.verficha); window.scrollTo(0, 0); return; }
   const reabrir = id => { pintar(); const d = document.getElementById(id); if (d) d.open = true; };
   if (a) { const k = a.dataset.agregar; (datos[k] = datos[k] || []).push({}); marcar(k); srv.datos[k] = datos[k]; reabrir(a.closest('details').id); }
