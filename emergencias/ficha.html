@@ -142,7 +142,7 @@ const SEC_HOSP = [
     { k: 'chofer', l: '¿Hay chofer las 24 horas?', t: 'sn' } ] },
   { id: 's5', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
-    { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'litros', l: 'Capacidad (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' },
+    { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'cant', l: 'Cantidad', t: 'n' }, { k: 'litros', l: 'Capacidad de cada uno (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' }, // 20/11/2026 · Belén: puede haber más de 1 tanque y más de 1 cisterna; Cantidad vacía = 1
     { k: 'limpieza', l: '¿Se limpian una vez al año?', t: 'sn' }, { k: 'limpieza_f', l: 'Fecha de la última limpieza', t: 'f' }, { k: 'agua_alt', l: 'Fuente alternativa de agua', t: 't' },
     // 20/11/2026 · Belén: historial de análisis de agua «de todos los establecimientos». Se lee y se carga en la planilla del Portal
     // «Agua · Tablero de análisis de laboratorio (v0)» (acciones agua_hist y agua_guardar); una fila por muestra, con su informe.
