@@ -677,7 +677,7 @@ const BO_CARPETA_EMB = 'https://drive.google.com/drive/folders/18ruSXKQYmEAvXkKh
 let BO_TK = '';
 // 13/11/2026 · Tablero de control EN REVISIÓN (Belén: «desactivarlo en vista para poder arreglarlo este finde»): solo lo ve Administración.
 // Para volver a mostrarlo a los usuarios habilitados, poner false (acá y en control.html).
-const CONTROL_EN_REVISION = true;
+const CONTROL_EN_REVISION = false; // 20/11/2026 · Belén: «hacer tablero visible».
 function boFecha(s) { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : 0; }
 function boletinesHtml(docs) {
   const Z = (docs || []).filter(d => /^Z/.test(d['Sección'] || '') && d.Enlace).sort((a, b) => boFecha(b.Fecha) - boFecha(a.Fecha));
