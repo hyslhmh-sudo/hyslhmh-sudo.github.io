@@ -328,13 +328,35 @@ function pintar() {
     <div class="leyenda">${['v', 'a', 'r'].map(c => `<span>${dot(c)}${c === 'v' ? 'Normal' : c === 'a' ? 'Alerta' : 'Vencido o crítico'}</span>`).join('')}<span>${dot('n')}s/d o no corresponde aún</span></div>`;
 }
 function general() {
-  const urg = [];
-  M.unidades.forEach(u => {
-    if (u.tarC === 'r') urg.push([u.key, 'r', `${u.nombre} · ${u.tarTxt}`]);
-    if (u.aguaC === 'r') urg.push([u.key, 'r', `${u.nombre} · agua: no apta o análisis vencido`]);
-    if (u.incC === 'r' && u.inc != null) urg.push([u.key, 'r', `${u.nombre} · seguridad contra incendios ${u.inc} %`]);
-    if (u.ficha != null && u.ficha < 50) urg.push([u.key, 'a', `${u.nombre} · ficha completa al ${u.ficha} %`]);
+  // 20/11/2026 · Belén: «lo más urgente» se arma por establecimiento y albergue de toda la red (no por unidad), sin tope de 5.
+  const ESTS = M.unidades.reduce((L, u) => L.concat(u.ests.map(e => Object.assign({ uk: u.key, un: u.nombre }, e))), []);
+  const ir2 = z => `data-ver="${E(z.uk)}|${E(z.id)}"`;
+  const aguaNo = ESTS.filter(z => z.agua.c === 'r').map(z => {
+    const p = [['bacteriológico', z.agua.bac], ['fisicoquímico', z.agua.fq]].filter(x => x[1].c === 'r').map(x => x[0] + ' ' + (x[1].cl === 'no' ? 'no apto (' + x[1].fecha + ')' : x[1].fecha === SD ? 'sin análisis' : 'vencido el ' + x[1].vence));
+    return [z, p.join(' · ') || 'no apta'];
   });
+  const aguaPv = ESTS.filter(z => z.agua.c === 'a').map(z => [z, [['bacteriológico', z.agua.bac], ['fisicoquímico', z.agua.fq]].filter(x => x[1].c === 'a').map(x => x[0] + (x[1].cl === 'obs' ? ' con observaciones' : ' vence el ' + x[1].vence)).join(' · ') || 'revisar']);
+  const incR = ESTS.filter(z => z.inc.pct != null && z.inc.c === 'r').map(z => [z, 'índice contra incendios ' + z.inc.pct + ' %']);
+  const tarR = M.unidades.filter(u => u.tarC === 'r');
+  const fichaB = ESTS.filter(z => z.fichaPct == null || z.fichaPct < 50).sort((x, y) => (/^hospital/i.test(y.tipo || '') - /^hospital/i.test(x.tipo || '')) || ((x.fichaPct || 0) - (y.fichaPct || 0)));
+  const ALB = (D.deriv && D.deriv.albergues) || [];
+  const ALB_K = [['capacidad', 'capacidad'], ['agua', 'agua'], ['energia', 'energía'], ['inodoros', 'inodoros'], ['duchas', 'duchas'], ['accesible', 'accesibilidad'], ['cocina', 'cocina'], ['calefaccion', 'calefacción']];
+  const vacio = v => !String(v == null ? '' : v).trim() || /^s\/d/i.test(String(v));
+  const albRiesgo = ALB.filter(a => /^s[ií]/i.test(a.zona_riesgo || ''));
+  const albFalta = ALB.map(a => [a, ALB_K.filter(k => vacio(a[k[0]])).map(k => k[1])]).filter(x => x[1].length);
+  const grupo = (k, c, ico, tit, n, items, nota) => !n ? '' : `<div class="card" style="min-height:0"><span class="ms bgi" style="color:${COL[c]}" aria-hidden="true">${ico}</span>
+      <div class="ct"><h3>${dot(c)}${tit}</h3><span class="big" style="font-size:22px">${n}</span></div>
+      ${items.slice(0, abiertos.has(k) ? 999 : 4).join('')}
+      ${items.length > 4 ? `<button class="lnk" type="button" data-crit="${k}">${abiertos.has(k) ? 'Ocultar ▴' : 'Ver los ' + items.length + ' ▾'}</button>` : ''}${nota ? `<p class="muted" style="margin:6px 0 0">${nota}</p>` : ''}</div>`;
+  const itE = (z, txt) => `<button class="urg" type="button" ${ir2(z)} style="margin-top:6px;padding:8px 12px"><span><b>${E(z.corto)}</b> <span class="muted">· ${E(z.un)}</span><br>${E(txt)}</span><span class="ms">chevron_right</span></button>`;
+  const itA = (a, txt) => `<a class="urg" href="derivaciones.html#/albergues" style="margin-top:6px;padding:8px 12px;text-decoration:none;color:inherit"><span><b>${E(a.nombre || a.id)}</b> <span class="muted">· ${E(a.localidad || SD)}</span><br>${E(txt)}</span><span class="ms">chevron_right</span></a>`;
+  const urgHtml = grupo('u-agua', 'r', 'water_drop', 'Agua no apta o análisis vencido', aguaNo.length, aguaNo.map(x => itE(x[0], x[1])), 'Dto. 351/79, arts. 57 y 58; CAA art. 982. Se carga en la ficha › Calidad del agua.')
+    + grupo('u-inc', 'r', 'local_fire_department', 'Seguridad contra incendios crítica', incR.length, incR.map(x => itE(x[0], x[1])))
+    + grupo('u-tar', 'r', 'event_busy', 'Tareas del COEsp vencidas', tarR.length, tarR.map(u => `<button class="urg" type="button" data-unidad="${E(u.key)}" style="margin-top:6px;padding:8px 12px"><span><b>${E(u.nombre)}</b><br>${E(u.tarTxt)}</span><span class="ms">chevron_right</span></button>`))
+    + grupo('u-albr', 'r', 'flood', 'Albergues en zona de riesgo', albRiesgo.length, albRiesgo.map(a => itA(a, 'Declarado en zona de riesgo: revisar si se mantiene como albergue')))
+    + grupo('u-aguap', 'a', 'water_drop', 'Agua: por vencer o con observaciones', aguaPv.length, aguaPv.map(x => itE(x[0], x[1])))
+    + grupo('u-ficha', 'a', 'badge', 'Fichas por debajo del 50 %', fichaB.length + ' de ' + ESTS.length, fichaB.map(z => itE(z, 'ficha completa al ' + (z.fichaPct == null ? 0 : z.fichaPct) + ' %')), 'Primero los hospitales, después de menor a mayor.')
+    + grupo('u-alb', 'a', 'night_shelter', 'Albergues con datos faltantes', albFalta.length + ' de ' + ALB.length, albFalta.map(x => itA(x[0], 'Falta: ' + x[1].join(', '))), 'Se completan en COE · Derivaciones y albergues › Albergues.');
   const refs = [['1', 'Total · operativos (los que pueden convocarse ante una emergencia). Solo la institución de salud.'], ['2', 'Total de enfermeros de la institución de salud.'],
     ['3', 'Solo en estado Muy bueno, Bueno o «Funciona». Las del HMH se cargan en la ficha del HZT (servicio compartido).'], ['4', 'Vehículos de apoyo de la institución, mismo criterio de estado.'],
     ['5', 'Instituciones con población dependiente (cárceles, comisarías, geriátricos, hogares), por localidad.'], ['6', 'Planes de contingencia aprobados sobre el total. Gris: s/d o no corresponde aún (2027).'],
@@ -346,7 +368,7 @@ function general() {
     ${esAdmin() ? `<td>${dot(u.planC)}${E(u.planTxt.replace(SD, 's/d'))}</td>` : ''}<td>${dot(u.segC)}${E(u.segTxt.replace(SD, 's/d'))}</td><td>${dot(u.tarC)}${E(u.tarTxt.replace(SD, 's/d'))}</td><td>${dot(u.fichaC)}${u.ficha == null ? 's/d' : u.ficha + ' %'}</td></tr>`).join('');
   const movil = M.unidades.map(u => `<button class="urg" type="button" data-unidad="${E(u.key)}"><span style="display:flex;flex-direction:column;gap:6px"><b>${E(u.nombre)}</b><span class="semaf" style="justify-content:flex-start">${(esAdmin() ? [['P', u.planC]] : []).concat([['S', u.segC], ['T', u.tarC], ['F', u.fichaC]]).map(x => `<span class="sem" style="background:${COL[x[1]]}" title="${x[0]}">${x[0]}</span>`).join('')}</span></span><span class="ms">chevron_right</span></button>`).join('');
   const r = M.reu;
-  return sec('Lo más urgente', 'var(--rojoS)') + (urg.length ? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">${urg.slice(0, 5).map(x => `<button class="urg" type="button" data-unidad="${E(x[0])}"><span>${dot(x[1])}${E(x[2])}</span><span class="ms">chevron_right</span></button>`).join('')}</div>` : `<p class="muted">Sin avisos en rojo o amarillo con los datos cargados.</p>`)
+  return sec('Lo más urgente', 'var(--rojoS)', 'toda la red: establecimientos y albergues') + (urgHtml ? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-items:start">${urgHtml}</div>` : `<p class="muted">Sin avisos en rojo o amarillo.</p>`)
     + sec('Comparación por unidad', 'var(--azul)', 'tocá el nombre para abrir su tablero')
     + `<div class="tw esc"><table class="cmp"><thead><tr><th>Unidad</th><th>Médicos<sup>1</sup></th><th>Enfermeros<sup>2</sup></th><th>Ambulancias<sup>3</sup></th><th>Vehículos<sup>4</sup></th><th>Población a cargo<sup>5</sup></th>${esAdmin() ? '<th>Planes<sup>6</sup></th>' : ''}<th>Seguridad básica<sup>7</sup></th><th>Tareas<sup>8</sup></th><th>Ficha<sup>9</sup></th></tr></thead><tbody>${fil}</tbody></table></div>
     <div class="solo-movil"><p class="muted">${esAdmin() ? 'P planes · ' : ''}S seguridad básica · T tareas · F ficha. Tocá una unidad para ver los números.</p><div style="display:flex;flex-direction:column;gap:8px">${movil}</div></div>
@@ -463,13 +485,14 @@ app.addEventListener('click', ev => {
   if (t.dataset.ir === 'general') { ST.vista = 'general'; ST.estab = ''; }
   else if (t.dataset.unidad) { ST.vista = 'unidad'; ST.unidad = t.dataset.unidad; ST.estab = ''; abiertos.clear(); }
   else if (t.dataset.estab) { ST.vista = 'estab'; ST.estab = t.dataset.estab; abiertos.clear(); }
+  else if (t.dataset.ver) { const p = t.dataset.ver.split('|'); ST.vista = 'estab'; ST.unidad = p[0]; ST.estab = p[1]; abiertos.clear(); }
   else if (t.dataset.emerg) ST.emerg = t.dataset.emerg;
   else if (t.dataset.cap) ST.cap = t.dataset.cap;
   else if (t.dataset.crit) { const k = t.dataset.crit; abiertos.has(k) ? abiertos.delete(k) : abiertos.add(k); }
   else if (t.dataset.ficha) { S.store.set('ficha.estab', t.dataset.ficha); location.href = 'ficha.html'; return; }
   else return;
   guardarVista(); pintar();
-  if (t.dataset.unidad || t.dataset.estab || t.dataset.ir) window.scrollTo({ top: 0 });
+  if (t.dataset.unidad || t.dataset.estab || t.dataset.ver || t.dataset.ir) window.scrollTo({ top: 0 });
 });
 $('#bAct').addEventListener('click', () => cargar(true));
 $('#bWord').addEventListener('click', word);
