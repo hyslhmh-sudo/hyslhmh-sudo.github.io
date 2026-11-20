@@ -155,7 +155,7 @@ const SEC_HOSP = [
     { k: 'calef', l: 'Calefacción y gas: ¿con qué cuenta?', t: 'm', o: ['Gas de red', 'Garrafas o tubos', 'Eléctrica', 'Leña', 'Otro'] },
     { k: 'comun', l: 'Comunicaciones: ¿con qué cuenta?', t: 'm', o: ['Teléfono fijo', 'Celular', 'Internet', 'Radio', 'Otro'] } ] },
   { id: 's7', t: 'Personal', d: 'Quiénes responden', min: true, c: [
-    { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
+    { k: 'trab_total', l: 'Total de trabajadores del establecimiento', t: 'n' }, { k: 'med_total', l: 'Total de médicos', t: 'n' }, { k: 'med_oper', l: 'Médicos operativos: los que pueden convocarse ante una emergencia', t: 'n' }, { k: 'enf_total', l: 'Total de enfermeros', t: 'n' },
     { k: 'ref_tit', l: 'Referente titular', t: 't' }, { k: 'ref_alt', l: 'Referente alterno', t: 't' },
     { k: 'cadena', l: 'Cadena de llamadas (orden de aviso) · opcional', t: 'a', opt: true } ] },
   { id: 's8', t: 'Contactos de emergencia', d: 'Visibles solo para Administración, el referente y la parte interna del COEsp', min: true, c: [
@@ -163,7 +163,14 @@ const SEC_HOSP = [
   { id: 's9', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: [
     { k: 'plan', l: '<span class="tag ley">LEY</span>¿Tiene plan de evacuación? <em>(Dto. 351/79, Anexo VII, cap. 18)</em>', t: 'sn' },
     { k: 'extintores', l: '<span class="tag ley">LEY</span>¿Tiene extintores? <em>(Dto. 351/79, Anexo VII, cap. 18)</em>', t: 'sn' },
+    // 20/11/2026 · Belén: cantidad y estado de los extintores, fecha del último simulacro y capacitación en uso de extintores (índice del tablero de control).
+    { k: 'ext_cant', l: 'Extintores: cantidad', t: 'n' },
+    { k: 'ext_estado', l: 'Extintores: estado', t: 'o', o: ['Todos al día', 'Algunos vencidos', 'Ninguno al día', 'No sabe'] },
+    { k: 'ext_venc', l: 'Extintores: cantidad vencidos (si hay algunos vencidos)', t: 'n', opt: true },
     { k: 'simulacro', l: '<span class="tag mej">MEJORA</span>¿Se hizo algún simulacro? <em>(buena práctica, ISH de la OPS)</em>', t: 'sn' },
+    { k: 'sim_fecha', l: 'Fecha del último simulacro', t: 'f' },
+    { k: 'cap_ext', l: '¿Se hizo alguna capacitación en uso de extintores?', t: 'sn' },
+    { k: 'cap_fecha', l: 'Fecha de la última capacitación en uso de extintores', t: 'f' },
     { k: 'seg_obs', l: 'Observaciones', t: 't' } ] },
   { id: 's10', t: 'Antecedentes', d: 'Lo que ya pasó', c: [
     { k: 'antec', l: 'Eventos anteriores (inundaciones, nevadas, cortes largos de luz o agua): qué pasó y cómo se resolvió', t: 'a' } ] }
@@ -189,7 +196,7 @@ const SEC_CAPS = [
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Tubos', 'Concentradores', 'No tiene'] },
     campoH('calef'), campoH('comun') ] },
   { id: 'c5', t: 'Personal', d: 'Quiénes trabajan y quién es el responsable', min: true, c: [
-    { k: 'trab_total', l: 'Total de trabajadores del CAPS', t: 'n' }, campoH('med_total'), campoH('enf_total'),
+    { k: 'trab_total', l: 'Total de trabajadores del CAPS', t: 'n' }, campoH('med_total'), campoH('med_oper'), campoH('enf_total'),
     { k: 'ref_tit', l: 'Responsable del CAPS (coordinador o jefe)', t: 't' }, { k: 'ref_alt', l: 'Reemplazo del responsable', t: 't' } ] },
   { id: 'c6', t: 'Contactos de emergencia', d: 'Visibles solo para Administración y el referente', min: true, c: [
     { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Responsable del CAPS', 'Hospital del que depende', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
@@ -372,6 +379,7 @@ function campo(c) {
       <small class="ayuda" id="adjEstado_${c.k}">Hasta 5 archivos (PDF o fotos, de hasta 15 MB). Las fotos se achican solas para subir más rápido.</small></div>`;
   }
   if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
+  if (c.t === 'o') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${E(o)}"${v === o ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
   if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
   if (c.t === 'm') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="checkbox" data-k="${c.k}" data-m="1" value="${E(o)}"${Array.isArray(v) && v.includes(o) ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
   if (c.t === 'a') return `<label class="campo">${lab}<textarea data-k="${c.k}" placeholder="${window.__blanco ? '' : 's/d (revisar)'}">${E(v || '')}</textarea></label>`;

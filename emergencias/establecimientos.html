@@ -83,19 +83,19 @@ const SECC = [['Identificación', ['nombre', 'corto', 'sisa', 'complejidad', 'de
   ['Población', ['pob_at', 'pob_ciu', 'viv', 'depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob']],
   ['Capacidad asistencial', ['servicios', 'camas', 'camas_obs', 'cam_guardia', 'arm', 'ambs', 'movs', 'chofer']],
   ['Servicios críticos', ['grupo', 'grupo_areas', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
-  ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']],
-  ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['Antecedentes', ['antec']]];
+  ['Personal', ['trab_total', 'med_total', 'med_oper', 'enf_total', 'ref_tit', 'ref_alt']],
+  ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'ext_cant', 'ext_estado', 'simulacro', 'sim_fecha', 'cap_ext', 'cap_fecha', 'seg_obs']], ['Antecedentes', ['antec']]];
 // 15/11/2026 · Ficha corta del CAPS (8 secciones; mismas claves que ficha.html › SEC_CAPS). El servidor marca ficha.caps.
 const SECC_CAPS = [['Identificación', ['nombre', 'corto', 'sisa', 'depende', 'horario', 'ref']], ['Ubicación y acceso', ['dir', 'coord', 'accesos', 'cortes', 'inundable', 'agua_cerca']],
   ['Atención y población', ['servicios', 'camillas', 'pob_at', 'barrios']], ['Servicios críticos', ['grupo', 'grupo_h', 'tanques', 'limpieza', 'limpieza_f', 'agua_alt', 'oxigeno', 'calef', 'comun']],
-  ['Personal', ['trab_total', 'med_total', 'enf_total', 'ref_tit', 'ref_alt']], ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'simulacro', 'seg_obs']], ['En una emergencia', ['emerg_rol', 'antec']]];
+  ['Personal', ['trab_total', 'med_total', 'med_oper', 'enf_total', 'ref_tit', 'ref_alt']], ['Contactos de emergencia', ['contactos']], ['Seguridad del edificio', ['plan', 'extintores', 'ext_cant', 'ext_estado', 'simulacro', 'sim_fecha', 'cap_ext', 'cap_fecha', 'seg_obs']], ['En una emergencia', ['emerg_rol', 'antec']]];
 const seccDe = f => (f && f.caps) ? SECC_CAPS : SECC;
 const ETQ = { horario: 'Horario de atención', barrios: 'Barrios o zona que cubre', camillas: 'Camillas', emerg_rol: 'En una emergencia, el CAPS…', complejidad: 'Nivel de complejidad', h24: 'Atiende las 24 horas', guardia: 'Tiene guardia', ref: 'Hospital de referencia',
   dir: 'Dirección', coord: 'Coordenadas', accesos: 'Accesos', cortes: 'Se cortan con lluvia o crecida', inundable: 'Zona inundable', agua_cerca: 'Cerca de río, canal o cañadón',
   pob_at: 'Población atendida (estimada)', pob_ciu: 'Población de la localidad (Censo 2022)', viv: 'Viviendas (Censo 2022)', depto: 'Departamento',
   servicios: 'Servicios', camas_obs: 'Aclaraciones sobre camas', cam_guardia: 'Camas o camillas de guardia', chofer: 'Chofer las 24 horas',
   grupo: 'Grupo electrógeno', grupo_areas: 'Áreas que cubre', grupo_h: 'Autonomía (horas)', limpieza: 'Tanques: limpieza anual', limpieza_f: 'Última limpieza de tanques', agua_alt: 'Fuente alternativa de agua',
-  oxigeno: 'Oxígeno', calef: 'Calefacción y gas', comun: 'Comunicaciones', trab_total: 'Trabajadores', med_total: 'Médicos', enf_total: 'Enfermeros',
+  oxigeno: 'Oxígeno', calef: 'Calefacción y gas', comun: 'Comunicaciones', trab_total: 'Trabajadores', med_total: 'Médicos', med_oper: 'Médicos operativos (convocables ante una emergencia)', enf_total: 'Enfermeros', ext_cant: 'Extintores: cantidad', ext_estado: 'Extintores: estado', ext_venc: 'Extintores vencidos', sim_fecha: 'Último simulacro', cap_ext: 'Capacitación en uso de extintores', cap_fecha: 'Última capacitación en uso de extintores',
   plan: 'Plan de evacuación (LEY · Dto. 351/79, Anexo VII, cap. 18)', extintores: 'Extintores (LEY · Dto. 351/79, Anexo VII, cap. 18)', simulacro: 'Simulacro (MEJORA · ISH OPS)', seg_obs: 'Observaciones de seguridad', antec: 'Eventos anteriores' };
 const num = v => { const t = String(v == null ? '' : v).trim(); if (!t) return null; const n = Number(t.replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : null; };
 const fmt = n => n == null ? '' : n.toLocaleString('es-AR');

@@ -5,8 +5,8 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tablero de control · Emergencias y desastres</title>
-<meta name="description" content="Tablero de control por proyecto, solo lectura: tareas, reuniones y acuerdos, integrantes y funciones.">
-<meta name="theme-color" content="#172B4D">
+<meta name="description" content="Tablero de control general, por unidad y por establecimiento. Solo lectura.">
+<meta name="theme-color" content="#8A4A00">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,285 +14,404 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
-/* Tablero de control por proyecto · versión 0 (04/11/2026) · solo lectura */
-:root{--fuerte:#172B4D;--medio:#2F5BEA;--claro:#E4EAFB;--borde:#C5D1F2;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--linea:#E4EAFB;--fondo:#F5F7FB;--papel:#fff;--radio:12px;--sombra:0 1px 2px rgba(27,42,65,.06),0 4px 14px rgba(27,42,65,.06);
-  --rojo:#C62828;--amar:#F57C00;--verde:#1E7B4B}
+/* Tablero de control · general, por unidad y por establecimiento · versión 0 (20/11/2026) · solo lectura.
+ * Diseño aprobado por Belén el 20/11/2026 (canvas «Tablero de control · App COESP · Pantallas (v0)»).
+ * No se carga nada acá: lee lo que ya está en la app y en las planillas. */
+:root{--texto:#1D2129;--suave:#5B6270;--linea:#E1E4EA;--fondo:#F4F5F8;--papel:#fff;--rojo:#D32F2F;--amar:#E0A100;--verde:#3B8B2E;--gris:#9E9E9E;
+  --azul:#1F5FA8;--turq:#0E8C8C;--viol:#6A3FA0;--rojoS:#C62828;--naranja:#F57C00}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:14.5px;line-height:1.45}
 button,input,select{font:inherit;color:inherit}
 .ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
 .oculto{display:none!important}
-.barra{position:sticky;top:0;z-index:20;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:6px;border-bottom:3px solid var(--medio)}
+.barra{position:sticky;top:0;z-index:20;background:linear-gradient(120deg,#8A4A00 0%,#F57C00 100%);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:6px}
 .barra h1{font-size:16px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.9}
 .icono{background:transparent;border:0;color:inherit;height:40px;padding:0 10px;border-radius:10px;display:inline-flex;gap:6px;align-items:center;cursor:pointer;font-weight:600;font-size:13px;text-decoration:none}
-.icono:hover{background:rgba(255,255,255,.14)}
-.icono .t{display:inline}
-main{max-width:1180px;margin:0 auto;padding:16px 16px 40px}
-.tarjeta{background:var(--papel);border:1px solid var(--linea);border-radius:var(--radio);box-shadow:var(--sombra)}
-.panel{padding:16px;margin-bottom:14px}
-.panel h2{font-size:15.5px;margin:0 0 4px;color:var(--fuerte);display:flex;align-items:center;gap:8px}
-.panel .nota{font-size:12.5px;color:var(--suave);margin:0 0 12px}
-.proys{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
-.tab{border:1px solid var(--borde);background:#fff;border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap;min-height:40px}
-.tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
-.cab{display:flex;gap:16px;align-items:center;padding:16px 18px;margin-bottom:14px;border-left:8px solid var(--c)}
-.cab .luz{width:46px;height:46px;border-radius:50%;background:var(--c);flex:none;box-shadow:0 0 0 6px color-mix(in srgb,var(--c) 18%,transparent)}
-.cab b{font-size:18px;display:block}
-.cab span{font-size:13px;color:var(--suave)}
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
-.kpi{padding:12px 14px}
-.kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.1}
-.kpi span{font-size:12.5px;color:var(--suave)}
-.kpi.alerta b{color:var(--rojo)}.kpi.aviso b{color:var(--amar)}
-.dos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.fila-b{display:grid;grid-template-columns:minmax(110px,230px) 1fr 70px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
-.fila-b .nom{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.barra-p{height:14px;background:#F5F7FB;border-radius:4px;overflow:hidden;display:flex;gap:2px}
-.barra-p i{display:block;height:100%}
-.fila-b .n{color:var(--suave);text-align:right;font-variant-numeric:tabular-nums}
-.leyenda{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--suave);margin:0 0 8px}
-.leyenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.lista{list-style:none;margin:0;padding:0}
-.lista li{border-top:1px solid var(--linea)}
-.lista button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;padding:9px 4px;cursor:pointer;font-size:13px}
-.lista button:hover{background:#F5F7FB}.lista button:focus-visible{outline:2px solid var(--medio)}
-.lista .id{font-size:11.5px;font-weight:800;color:var(--tenue)}
-.lista .f{font-size:12px;font-weight:700;white-space:nowrap}
-.chip{display:inline-flex;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--claro);color:var(--fuerte);white-space:nowrap}
-.sub{font-size:12.5px;color:var(--suave)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
-th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--suave);font-weight:700;background:#F5F7FB}
+.icono:hover{background:rgba(255,255,255,.16)}
+main{max-width:1240px;margin:0 auto;padding:18px 16px 40px}
+.kick{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--rojoS)}
+.tit{font-size:24px;font-weight:800;margin:2px 0}
+.sub{font-size:13px;color:var(--suave)}
+.cabeza{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:flex-end}
+.sello{font-size:12px;color:var(--suave)}
+.aviso{margin-top:12px;background:#FFF6E0;border:1px solid #F0D58C;color:#6B4A00;border-radius:10px;padding:8px 12px;font-size:12.5px}
+.sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;flex-wrap:wrap}
+.sec h2{margin:0;font-size:17px;font-weight:800}
+.sec .bar{width:28px;height:4px;border-radius:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{position:relative;overflow:hidden;background:var(--papel);border:1px solid var(--linea);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;min-height:140px}
+.bgi{position:absolute;right:-6px;bottom:-14px;font-size:112px!important;opacity:.08;pointer-events:none}
+.ct{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ct h3{margin:0;font-size:15px;font-weight:700}
+.row{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:2px 0}
+.row>span:last-child{font-weight:600;text-align:right}
+.big{font-size:30px;font-weight:800;line-height:1.1}
+.muted{font-size:12px;color:var(--suave)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;flex:none}
+.chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.c-v{background:#E7F3E3;color:#24561B}.c-a{background:#FBF0D4;color:#6B4A00}.c-r{background:#FBE3E3;color:#8E1F1F}.c-n{background:#EEEEEE;color:#4A4A4A}
+.lnk{background:none;border:0;padding:6px 0 0;font-size:12.5px;font-weight:700;color:var(--azul);cursor:pointer;text-align:left;min-height:32px;align-self:flex-start;margin-top:auto}
+.caja{font-size:12.5px;line-height:1.5;color:#3D434E;background:var(--fondo);border-radius:10px;padding:10px 12px}
+.pill{font-size:13px;font-weight:700;border-radius:999px;padding:8px 14px;border:1px solid #D3D7DF;background:#fff;cursor:pointer;min-height:38px;text-decoration:none;color:var(--texto);display:inline-flex;align-items:center;gap:6px}
+.pill[aria-pressed="true"]{background:var(--azul);color:#fff;border-color:var(--azul)}
+.pill.osc{background:#1D2129;color:#fff;border-color:#1D2129}
+.pill.roja{background:var(--rojoS);color:#fff;border-color:var(--rojoS)}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.urg{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--linea);border-radius:12px;padding:12px 14px;font-size:14px;cursor:pointer;text-align:left;min-height:48px;width:100%}
+.urg:hover{border-color:#B9C0CC}
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--linea);border-radius:14px}
+table.cmp{width:100%;border-collapse:collapse;min-width:980px;font-size:13.5px}
+table.cmp th,table.cmp td{padding:10px 8px;border-bottom:1px solid #E7E9EE;text-align:center;vertical-align:middle}
+table.cmp th{font-size:12px;font-weight:700;color:var(--suave);background:#F8F9FB}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left}
+sup{font-size:10px;color:var(--azul);margin-left:2px}
+.ub{background:none;border:0;padding:0;font-size:14px;font-weight:800;color:var(--azul);cursor:pointer;text-align:left;min-height:32px}
+.refs{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:6px 24px;font-size:12.5px;color:#3D434E}
+.refs b{color:var(--azul)}
+.leyenda{display:flex;flex-wrap:wrap;gap:14px;margin-top:22px;font-size:12.5px;color:#3D434E}
 .vacio{padding:28px;text-align:center;color:var(--suave)}
-.aviso-of{background:#fff;border:1.5px solid var(--amar);box-shadow:inset 5px 0 0 var(--amar);border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:12px}
-.ingreso{max-width:420px;margin:7vh auto 0;padding:26px 22px}
+.ingreso{max-width:420px;margin:7vh auto 0;padding:26px 22px;background:#fff;border:1px solid var(--linea);border-radius:14px}
 .campo{display:block;margin:14px 0}.campo span{display:block;font-size:12.5px;font-weight:600;color:var(--suave);margin-bottom:5px}
 .campo input{width:100%;border:1px solid #C5D1F2;border-radius:10px;padding:11px 12px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--medio);color:#fff;min-height:44px;text-decoration:none}
-.btn.sec{background:#fff;color:var(--fuerte);border:1.5px solid var(--medio)}
-.msg{font-size:13px;padding:8px 10px;border-radius:8px;background:#fff;border:1.5px solid var(--amar);box-shadow:inset 5px 0 0 var(--amar)}
-dialog{border:0;border-radius:16px;padding:0;max-width:560px;width:calc(100% - 24px);box-shadow:0 20px 60px rgba(23,43,77,.3)}
-dialog::backdrop{background:rgba(23,43,77,.45)}
-.dlg-cab{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--linea)}.dlg-cab b{flex:1}
-.dlg-cuerpo{padding:12px 16px 18px}
-.dlg-cuerpo dl{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;margin:0;font-size:13.5px}
-.dlg-cuerpo dt{color:var(--suave);font-weight:600}.dlg-cuerpo dd{margin:0}
-footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
-.solo-imp{display:none}
-@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.dos{grid-template-columns:1fr}}
-@media (max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.icono .t{display:none}.fila-b{grid-template-columns:100px 1fr 56px}.dlg-cuerpo dl{grid-template-columns:1fr}}
-@media print{
-  @page{size:A4;margin:12mm 12mm 22mm}
-  .barra,.proys,footer,dialog,.aviso-of{display:none!important}
-  body{background:#fff;font-size:10.5pt}main{padding:0;max-width:none}
-  .tarjeta{box-shadow:none;break-inside:avoid}
-  .solo-imp{display:block}
-  .pie-imp{position:fixed;bottom:0;left:0;right:0;text-align:center}
-  .pie-imp img{width:66.67%;max-height:12mm;object-fit:contain}
-  .lista button{padding:4px}
-}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:var(--azul);color:#fff;min-height:44px}
+.msg{font-size:13px;padding:8px 10px;border-radius:8px;background:#fff;border:1.5px solid var(--naranja)}
+.semaf{display:flex;gap:6px;justify-content:center}
+.sem{width:28px;height:28px;border-radius:50%;border:0;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.solo-movil{display:none}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}footer p{font-size:11.5px;color:var(--suave);margin:6px 0 0}
+@media (max-width:640px){.tw.esc{display:none}.solo-movil{display:block}.refs{grid-template-columns:1fr}.icono .t{display:none}}
+@media print{.barra,.no-imp,footer{display:none!important}body{background:#fff}.card{break-inside:avoid}}
 </style>
 </head>
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Volver al inicio"><span class="ms">arrow_back</span></a>
-  <h1>Tablero de control<small id="subt">Seguimiento por proyecto · solo lectura · versión 0</small></h1>
+  <h1>Tablero de control<small id="subt">General, por unidad y por establecimiento · solo lectura · versión 0</small></h1>
   <button class="icono oculto" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span><span class="t">Actualizar</span></button>
-  <button class="icono oculto" id="bImp" aria-label="Imprimir"><span class="ms">print</span><span class="t">Imprimir</span></button>
-  <button class="icono oculto" id="bWord" aria-label="Descargar en Word"><span class="ms">download</span><span class="t">Word</span></button>
+  <button class="icono oculto" id="bWord" aria-label="Descargar en Word"><span class="ms">description</span><span class="t">Word</span></button>
+  <button class="icono oculto" id="bCsv" aria-label="Descargar planilla"><span class="ms">table_view</span><span class="t">Planilla</span></button>
 </header>
 <main id="app"><div class="vacio">Cargando…</div></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Tablero de control</p></footer>
-<dialog id="dlg"></dialog>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Tablero de control · versión 0</p></footer>
 <script src="config.js"></script>
 <script src="starh.js"></script>
 <script>
 (function () {
 'use strict';
 const S = window.STARH, $ = s => document.querySelector(s), E = S.esc, app = $('#app');
-const COL = { 'Completada': '#1E7B4B', 'En curso': '#2F5BEA', 'Pendiente': '#F57C00', 'Reprogramada': '#6B7A90' };
 const SD = 's/d (revisar)';
-const sd = v => String(v == null ? '' : v).trim() || SD;
-let datos = null, proyecto = S.store.get('control.proyecto', ''), offline = false;
+const COL = { v: '#3B8B2E', a: '#E0A100', r: '#D32F2F', n: '#9E9E9E' };
+const LBL = { v: 'Normal', a: 'Alerta', r: 'Crítico', n: 's/d' };
+const AREA = 'Área Programática Trelew';
+// Puestos sanitarios que van como fila propia, con su nombre, hasta que se confirme de qué hospital dependen (Belén, 20/11/2026).
+const SIN_DEP = ['L-009', 'L-010', 'L-080', 'L-081'];
+const TRELEW = ['L-001', 'L-002'];
+const EMERG = ['Inundación', 'Corte de energía', 'Falta de agua', 'Clima', 'Pandemia', 'Materiales peligrosos'];
+const ESTADO_OK = /^(muy bueno|bueno|funciona)/i;
+let D = null, M = null, offline = false, cargando = false;
+const ST = Object.assign({ vista: 'general', unidad: '', estab: '', emerg: 'Inundación', cap: 'A' }, S.store.get('control2.vista', {}));
+const abiertos = new Set();
+const guardarVista = () => S.store.set('control2.vista', { vista: ST.vista, unidad: ST.unidad, estab: ST.estab, emerg: ST.emerg, cap: ST.cap });
 
-/* ---------- fechas (dd/mm/aaaa) ---------- */
-const fecha = t => { const m = String(t || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
-const hoy0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
-const dias = d => Math.round((d - hoy0()) / 864e5);
-const hoyTxt = () => new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-/* ---------- cálculo del tablero ---------- */
-function calcular(r) {
-  const T = r.tareas || [];
-  const abierta = t => t.estado !== 'Completada';
-  const venc = T.filter(t => abierta(t) && fecha(t.fecha) && dias(fecha(t.fecha)) < 0).sort((a, b) => fecha(a.fecha) - fecha(b.fecha));
-  const prox = T.filter(t => abierta(t) && fecha(t.fecha) && dias(fecha(t.fecha)) >= 0 && dias(fecha(t.fecha)) <= 15).sort((a, b) => fecha(a.fecha) - fecha(b.fecha));
-  const sinFecha = T.filter(t => abierta(t) && !fecha(t.fecha));
-  const sinResp = T.filter(t => abierta(t) && !String(t.respDesig || '').trim());
-  const en7 = prox.filter(t => dias(fecha(t.fecha)) <= 7);
-  const n = e => T.filter(t => t.estado === e).length;
-  const comp = n('Completada');
-  const ejes = {}; T.forEach(t => { const k = String(t.eje || '').trim() || SD; (ejes[k] = ejes[k] || []).push(t); });
-  let luz = 'verde';
-  if (!T.length) luz = 'gris'; else if (venc.length) luz = 'rojo'; else if (sinResp.length || en7.length) luz = 'amarillo';
-  const motivo = luz === 'rojo' ? `${venc.length} tarea${venc.length > 1 ? 's' : ''} vencida${venc.length > 1 ? 's' : ''}`
-    : luz === 'amarillo' ? [sinResp.length ? `${sinResp.length} sin responsable designado` : '', en7.length ? `${en7.length} vence${en7.length > 1 ? 'n' : ''} en 7 días o menos` : ''].filter(Boolean).join(' · ')
-    : T.length ? 'Sin tareas vencidas, todas con responsable y sin vencimientos en los próximos 7 días' : 'Todavía no hay tareas cargadas para este proyecto';
-  return { T, venc, prox, sinFecha, sinResp, comp, enCurso: n('En curso'), pend: n('Pendiente'), reprog: n('Reprogramada'), ejes, luz, motivo,
-    pct: T.length ? Math.round(comp * 100 / T.length) : 0 };
-}
-const LUZ = { rojo: ['#C62828', 'Requiere atención'], amarillo: ['#F57C00', 'Con alertas'], verde: ['#1E7B4B', 'En marcha'], gris: ['#6B7A90', 'Sin tareas cargadas'] };
-
-/* ---------- vistas ---------- */
-const CONTROL_EN_REVISION = true; // poner false para volver a mostrarlo a los usuarios habilitados (también en index.html)
-function render() {
-  if (!S.sesion.token()) return vistaIngreso();
-  // 13/11/2026 · Tablero EN REVISIÓN (Belén): mientras CONTROL_EN_REVISION sea true, solo lo ve Administración.
-  const yo = S.sesion.usuario() || {};
-  if (CONTROL_EN_REVISION && yo.rol !== 'Administración') {
-    ['#bAct', '#bImp', '#bWord'].forEach(s => { const b = $(s); if (b) b.classList.add('oculto'); });
-    app.innerHTML = `<div class="tarjeta vacio"><span class="ms" style="font-size:40px;color:var(--tenue)">construction</span><p><b>El tablero de control está en revisión.</b></p><p class="sub">Vuelve a estar disponible en unos días.</p><a class="btn sec" href="index.html">Volver al inicio</a></div>`;
-    return;
-  }
-  if (!datos) return;
-  const vis = datos.proyectos || [];
-  $('#bAct').classList.remove('oculto');
-  if (!vis.length) {
-    ['#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
-    app.innerHTML = `<div class="tarjeta vacio"><span class="ms" style="font-size:40px;color:var(--tenue)">dashboard</span><p><b>Tu usuario todavía no tiene proyectos habilitados en el tablero de control.</b></p><p class="sub">Consultá con Higiene y Seguridad Laboral.</p><a class="btn sec" href="index.html">Volver al inicio</a></div>`;
-    return;
-  }
-  const sel = `<div class="proys" role="group" aria-label="Proyecto">${vis.map(p => `<button class="tab" data-proy="${E(p)}" aria-pressed="${p === proyecto}">${E(p)}</button>`).join('')}</div>`;
-  const av = offline ? `<div class="aviso-of">Sin conexión: se muestra la última copia guardada en este dispositivo (${E(datos.cache || 's/d')}).</div>` : '';
-  if (!datos.proyecto) { app.innerHTML = av + sel + '<div class="tarjeta vacio">Cargando el proyecto…</div>'; return; }
-  // 13/11/2026 · Proyecto con contenido reservado (COEsp LISTAS, columna E): solo el nombre, sin contenido.
-  if (datos.reservado) { ['#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
-    app.innerHTML = av + sel + `<div class="tarjeta vacio"><span class="ms" style="font-size:36px;color:var(--tenue)">lock</span><p><b>${E(datos.proyecto)}</b></p><p>${/hospital/i.test(datos.reservado) ? 'El contenido de este proyecto se ve en su módulo: cada hospital ve el suyo.' : 'El contenido de este proyecto lo ve solo Higiene y Seguridad Laboral.'}</p></div>`; return; }
-  ['#bImp', '#bWord'].forEach(s => $(s).classList.remove('oculto'));
-  app.innerHTML = av + sel + cuerpo(false);
-}
-
-function cuerpo(word) {
-  const r = datos, c = calcular(r), L = LUZ[c.luz];
-  const fila = (t, tipo) => {
-    const d = fecha(t.fecha), n = d ? dias(d) : null;
-    const f = tipo === 'venc' ? `<span class="f" style="color:var(--rojo)">${E(t.fecha)} · hace ${-n} día${-n === 1 ? '' : 's'}</span>` : `<span class="f" style="color:${n <= 7 ? 'var(--amar)' : 'var(--suave)'}">${E(t.fecha)} · ${n === 0 ? 'hoy' : 'en ' + n + ' día' + (n === 1 ? '' : 's')}</span>`;
-    return `<li><button data-tarea="${E(t.id)}"><span class="id">${E(t.num || t.id)}</span><span>${E(t.tarea || SD)}<br><span class="sub">${E(t.respDesig ? 'Responsable: ' + t.respDesig : 'Sin responsable designado')}</span></span>${f}</button></li>`;
-  };
-  const kpi = (v, t, cls) => `<div class="tarjeta kpi ${cls || ''}"><b>${v}</b><span>${t}</span></div>`;
-  const leyenda = `<div class="leyenda">${Object.keys(COL).map(k => `<span><i style="background:${COL[k]}"></i>${k}</span>`).join('')}</div>`;
-  const ejes = Object.keys(c.ejes).map(k => {
-    const l = c.ejes[k], tot = l.length, comp = l.filter(t => t.estado === 'Completada').length;
-    const seg = Object.keys(COL).map(e => { const n = l.filter(t => t.estado === e).length; return n ? `<i style="width:${n * 100 / tot}%;background:${COL[e]}" title="${e}: ${n}"></i>` : ''; }).join('');
-    return `<div class="fila-b"><span class="nom" title="${E(k)}">${E(k)}</span><span class="barra-p">${seg}</span><span class="n">${comp}/${tot}</span></div>`;
-  }).join('');
-
-  // Reuniones
-  const R = r.reuniones || [], ult = R[0];
-  const proxReu = R.map(x => x.proxima).find(x => String(x || '').trim());
-  const tareasActa = R.flatMap(x => (x.tareas || []).filter(y => !/complet|cumplid|hech/i.test(y.e || '')).map(y => Object.assign({ acta: x.num || x.id, fechaActa: x.fecha }, y)));
-  const reu = !R.length ? '<p class="sub">Todavía no hay actas guardadas para este proyecto.</p>' : `
-    <dl style="display:grid;grid-template-columns:140px 1fr;gap:4px 12px;margin:0 0 10px;font-size:13.5px">
-      <dt class="sub">Última reunión</dt><dd style="margin:0"><b>${E(sd(ult.fecha))}</b> · ${E(sd(ult.comite))}${ult.tipo ? ' · ' + E(ult.tipo) : ''}</dd>
-      <dt class="sub">Asistentes</dt><dd style="margin:0">${ult.asistentes || SD}</dd>
-      <dt class="sub">Próxima reunión</dt><dd style="margin:0">${E(sd(proxReu))}</dd>
-      <dt class="sub">Reuniones registradas</dt><dd style="margin:0">${R.length}</dd></dl>
-    <b style="font-size:13px">Decisiones y acuerdos de la última reunión</b>
-    ${(ult.decisiones || []).length ? `<ul style="margin:4px 0 10px;padding-left:20px;font-size:13px">${ult.decisiones.map(d => `<li>${E(d)}</li>`).join('')}</ul>` : '<p class="sub">Sin decisiones registradas.</p>'}
-    <b style="font-size:13px">Compromisos de las actas sin cumplir (${tareasActa.length})</b>
-    ${tareasActa.length ? `<table style="margin-top:4px"><thead><tr><th>Compromiso</th><th>Responsable</th><th>Plazo</th><th>Acta</th></tr></thead><tbody>${tareasActa.slice(0, word ? 999 : 12).map(y => `<tr><td>${E(y.t)}</td><td>${E(sd(y.r))}</td><td>${E(sd(y.p))}</td><td>${E(y.acta)}</td></tr>`).join('')}</tbody></table>${!word && tareasActa.length > 12 ? `<p class="sub">Y ${tareasActa.length - 12} más (salen todos en el informe).</p>` : ''}` : '<p class="sub">No hay compromisos pendientes en las actas.</p>'}`;
-
-  // Integrantes
-  const I = r.integrantes || [];
-  const porInst = {}; I.forEach(x => { const k = String(x.institucion || '').trim() || SD; porInst[k] = (porInst[k] || 0) + 1; });
-  const nInt = I.filter(x => /intern/i.test(x.tipo)).length, nExt = I.filter(x => /extern/i.test(x.tipo)).length;
-  const integ = !I.length ? '<p class="sub">Todavía no hay integrantes asignados a este proyecto.</p>' : `
-    <p class="sub" style="margin:0 0 8px">${I.length} integrante${I.length > 1 ? 's' : ''} · ${nInt} interno${nInt === 1 ? '' : 's'} · ${nExt} externo${nExt === 1 ? '' : 's'}${I.length - nInt - nExt ? ' · ' + (I.length - nInt - nExt) + ' sin tipo' : ''}</p>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${Object.keys(porInst).sort((a, b) => porInst[b] - porInst[a]).map(k => `<span class="chip">${E(k)} · ${porInst[k]}</span>`).join('')}</div>
-    <table><thead><tr><th>Función en el proyecto</th><th>Integrante</th><th>Institución</th></tr></thead><tbody>${I.slice().sort((a, b) => String(a.funcion).localeCompare(String(b.funcion), 'es')).map(x => `<tr><td>${E(sd(x.funcion))}</td><td>${E(sd(x.nombre))}</td><td>${E(sd(x.institucion))}</td></tr>`).join('')}</tbody></table>`;
-
-  // Solicitudes (solo Administración)
-  const so = r.solicitudes;
-  const sol = !so ? '' : `<section class="tarjeta panel"><h2><span class="ms">outgoing_mail</span>Solicitudes a organismos <span class="chip">Solo Administración</span></h2>
-    <p class="sub" style="margin:0 0 6px">Total ${so.total} · Borrador ${so['Borrador'] || 0} · Enviadas ${so['Enviada'] || 0} · Respondidas ${so['Respondida'] || 0} · Sin respuesta ${so['Sin respuesta'] || 0}${so.vencidas ? ` · <b style="color:var(--rojo)">${so.vencidas} con plazo vencido</b>` : ''}</p>
-    ${word ? '' : '<a class="btn sec" href="coe.html" data-ir-sol style="min-height:36px;padding:6px 12px"><span class="ms" style="font-size:18px">open_in_new</span>Ver en COEsp › Solicitudes</a>'}</section>`;
-
-  const cabImp = `<div class="solo-imp" ${word ? 'style="display:block"' : ''}><p style="font-size:9pt;color:#4B5B73;margin:0">Preparación y Respuesta a Emergencias y desastres · Higiene y Seguridad Laboral</p>
-    <h1 style="font-size:15pt;margin:4px 0 2px">Informe de avance · ${E(r.proyecto)}</h1><p style="font-size:9.5pt;margin:0 0 10px">Fecha de corte: ${hoyTxt()} · Versión 0 · Base orientadora: los datos surgen de la matriz, las actas y la nómina del COEsp cargadas a esa fecha.</p></div>`;
-  const pieImp = word ? '' : '<div class="solo-imp pie-imp"><img src="logo-hysl.png" alt="HySL"></div>';
-
-  return `${cabImp}
-  <section class="tarjeta cab" style="--c:${L[0]}"><span class="luz" aria-hidden="true"></span><div><b>${E(r.proyecto)} · ${L[1]}</b><span>${E(c.motivo)}</span></div></section>
-  <div class="kpis">${kpi(c.T.length, 'Tareas')}${kpi(c.pct + '%', 'Completadas (' + c.comp + ')')}${kpi(c.enCurso, 'En curso')}${kpi(c.pend + c.reprog, 'Pendientes' + (c.reprog ? ' (' + c.reprog + ' reprog.)' : ''))}${kpi(c.venc.length, 'Vencidas', c.venc.length ? 'alerta' : '')}${kpi(c.sinResp.length, 'Sin responsable', c.sinResp.length ? 'aviso' : '')}</div>
-  <section class="tarjeta panel"><h2><span class="ms">stacked_bar_chart</span>Avance por eje</h2><p class="nota">Tareas completadas sobre el total de cada eje de la matriz operativa.</p>${leyenda}${ejes || '<p class="sub">Sin tareas.</p>'}</section>
-  <div class="dos">
-    <section class="tarjeta panel"><h2><span class="ms" style="color:var(--rojo)">event_busy</span>Vencidas (${c.venc.length})</h2><p class="nota">Fecha comprometida ya pasada y la tarea no está completada.</p>${c.venc.length ? `<ul class="lista">${c.venc.map(t => fila(t, 'venc')).join('')}</ul>` : '<p class="sub">No hay tareas vencidas.</p>'}</section>
-    <section class="tarjeta panel"><h2><span class="ms" style="color:var(--amar)">event_upcoming</span>Vencen en 15 días (${c.prox.length})</h2><p class="nota">${c.sinFecha.length} tarea${c.sinFecha.length === 1 ? '' : 's'} abierta${c.sinFecha.length === 1 ? '' : 's'} sin fecha comprometida (no se cuentan acá).</p>${c.prox.length ? `<ul class="lista">${c.prox.map(t => fila(t, 'prox')).join('')}</ul>` : '<p class="sub">No hay vencimientos en los próximos 15 días.</p>'}</section>
-  </div>
-  <div class="dos">
-    <section class="tarjeta panel"><h2><span class="ms">groups</span>Reuniones y acuerdos</h2>${reu}</section>
-    <section class="tarjeta panel"><h2><span class="ms">badge</span>Integrantes y funciones</h2><p class="nota">Sin teléfonos ni correos: los contactos están en el módulo COEsp.</p>${integ}</section>
-  </div>
-  ${sol}
-  <p class="sub" style="margin:4px 2px 0">Tablero de solo lectura y base orientadora, no es un registro en tiempo real. Datos al ${E(new Date(r.generado || Date.now()).toLocaleString('es-AR'))}. Las correcciones se hacen en el módulo COEsp (Administración).</p>
-  ${pieImp}`;
-}
-
-function ficha(id) {
-  const t = (datos.tareas || []).find(x => x.id === id); if (!t) return;
-  const d = $('#dlg');
-  const row = (k, v) => `<dt>${k}</dt><dd>${E(sd(v))}</dd>`;
-  d.innerHTML = `<div class="dlg-cab"><b>${E(t.num || t.id)} · Tarea de la matriz</b><button class="icono" style="color:var(--fuerte)" data-cerrar aria-label="Cerrar"><span class="ms">close</span></button></div>
-    <div class="dlg-cuerpo"><p style="margin:0 0 12px;font-weight:700">${E(sd(t.tarea))}</p><dl>${row('Eje', t.eje)}${row('Estado', t.estado)}${row('Responsable designado', t.respDesig)}${row('Responsable propuesto', t.respProp)}${row('Fecha comprometida', t.fecha)}${row('Plazo sugerido', t.plazo)}${row('Producto', t.producto)}${row('Brecha', t.brecha)}</dl>
-    <p class="sub" style="margin:12px 0 0">Solo lectura. Las modificaciones las hace Administración en COEsp › Matriz operativa.</p></div>`;
-  d.showModal();
-}
-
-function word() {
-  const r = datos;
-  const css = `@page Section1{size:595.3pt 841.9pt;margin:34pt 32pt 60pt;mso-footer:f1;mso-footer-margin:18pt}div.Section1{page:Section1}
-    body{font-family:Arial,sans-serif;font-size:9.5pt;color:#172B4D}h2{font-size:11pt;border-bottom:1.5pt solid #2F5BEA;margin:10pt 0 4pt}
-    table{width:100%;border-collapse:collapse}td,th{border:1pt solid #C5D1F2;padding:3pt 5pt;font-size:8.5pt;vertical-align:top;text-align:left}th{background:#E4EAFB}
-    .kpis div{display:inline-block;margin-right:14pt}.sub{color:#4B5B73;font-size:8.5pt}.chip{background:#E4EAFB;padding:1pt 4pt}.ms,.luz,.barra-p,.leyenda,.btn{display:none}
-    .lista{margin:0;padding-left:14pt}.lista button{display:block}`;
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Informe de avance</title>
-    <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body><div class="Section1">${cuerpo(true)}</div>
-    <div style="mso-element:footer" id="f1"><p class="MsoFooter" align="center" style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p></div></body></html>`;
-  const blob = new Blob(['﻿', html], { type: 'application/msword' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = ('Informe de avance - ' + r.proyecto + ' - ' + hoyTxt().replace(/\//g, '-')).replace(/[\\/:*?"<>|]/g, '-') + '.doc';
-  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-}
+/* ---------- utilidades ---------- */
+const norm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[«»"()]/g, ' ').replace(/\s+/g, ' ').trim();
+const num = v => { const t = String(v == null ? '' : v).trim(); if (!t || /^s\/d/i.test(t)) return null; const n = Number(t.replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : null; };
+const fmt = n => n == null ? SD : n.toLocaleString('es-AR');
+const sd = v => { const t = String(v == null ? '' : v).trim(); return !t || /^s\/d/i.test(t) || t === '—' ? SD : t; };
+const fecha = t => { const s = String(t || '').trim(); let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return new Date(+m[3], +m[2] - 1, +m[1]); m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const ddmm = d => d ? String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear() : SD;
+const masMeses = (d, n) => { const x = new Date(d); x.setMonth(x.getMonth() + n); return x; };
+const hoy = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+const dias = d => Math.round((d - hoy()) / 864e5);
+const peor = cs => cs.indexOf('r') >= 0 ? 'r' : cs.indexOf('a') >= 0 ? 'a' : cs.indexOf('v') >= 0 ? 'v' : 'n';
+const pctCol = p => p == null ? 'n' : p >= 80 ? 'v' : p >= 50 ? 'a' : 'r';
+const dot = c => `<span class="dot" style="background:${COL[c] || COL.n}"></span>`;
+const chip = c => `<span class="chip c-${c}">${LBL[c]}</span>`;
+const sumN = L => { const v = L.filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) : null; };
+const cumplido = r => r && r.status === 'fulfilled' && r.value && r.value.ok ? r.value : null;
 
 /* ---------- datos (con copia en el dispositivo para usar sin conexión) ---------- */
-async function cargar() {
-  offline = false;
-  const cacheKey = 'control.cache.' + proyecto;
+async function cargar(forzar) {
+  if (cargando) return; cargando = true; offline = false;
+  const c = S.store.get('control2.cache', null);
+  if (c && !D) { D = c; armar(); pintar(); }
   try {
     if (!navigator.onLine) throw { offline: true };
-    let r = await S.api('tablero_proyecto', { proyecto: proyecto });
-    if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); return render(); } throw r; }
-    if (!proyecto || (r.proyectos || []).indexOf(proyecto) < 0) {
-      proyecto = (r.proyectos || [])[0] || '';
-      S.store.set('control.proyecto', proyecto);
-      if (proyecto) { datos = r; render(); r = await S.api('tablero_proyecto', { proyecto: proyecto }); if (!r.ok) throw r; }
-    }
-    datos = r; datos.cache = new Date().toLocaleString('es-AR');
-    if (proyecto) S.store.set('control.cache.' + proyecto, datos);
-    render();
+    const pedidos = [['estab', 'estab_consolidado'], ['trans', 'transportes_leer'], ['agenda', 'red_agenda'], ['deriv', 'deriv_catalogo'], ['planes', 'plan_catalogo'],
+      ['pac', 'red_pacientes'], ['matriz', 'coe_matriz'], ['sol', 'coe_solicitudes'], ['starh', 'tablero'], ['phr', 'phr_tablero'], ['vuln', 'vuln_barrios']];
+    const R = await Promise.allSettled(pedidos.map(p => S.api(p[1], forzar ? { actualizar: true } : {}, 120000)));
+    if (R[0].status === 'fulfilled' && R[0].value && R[0].value.sesion) { S.sesion.cerrar(); cargando = false; return vistaIngreso(); }
+    const N = {}; pedidos.forEach((p, i) => { N[p[0]] = cumplido(R[i]); });
+    if (!N.estab) throw (R[0].value || R[0].reason || { error: 'No se pudo leer el consolidado de establecimientos.' });
+    N.pc = {};
+    const cods = ((N.planes && N.planes.planes) || []).map(p => p.codigo);
+    const RP = await Promise.allSettled(cods.map(k => S.api('plan_pc', { codigo: k }, 90000)));
+    cods.forEach((k, i) => { const v = cumplido(RP[i]); if (v) N.pc[k] = v.planes || []; });
+    N.cuando = new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    D = N; S.store.set('control2.cache', D);
   } catch (e) {
-    const c = S.store.get(cacheKey, null);
-    if (c) { datos = c; offline = true; render(); return; }
-    if (e && /acci[oó]n desconocida/i.test(e.error || '')) { app.innerHTML = `<div class="tarjeta vacio"><span class="ms" style="font-size:40px;color:var(--amar)">cloud_off</span><p><b>El tablero todavía no está habilitado en el servidor.</b></p><p class="sub">Falta publicar la versión nueva del Apps Script de la app (Implementar › Administrar implementaciones › Editar › Nueva versión › Implementar). Después, tocá «Actualizar».</p></div>`; return; }
-    app.innerHTML = `<div class="tarjeta vacio">${E((e && (e.error || e.message)) || (e && e.offline ? 'Sin conexión y sin copia guardada en este dispositivo.' : 'No se pudo cargar el tablero.'))}</div>`;
+    if (!D) { cargando = false; app.innerHTML = `<div class="vacio">${E((e && (e.error || e.message)) || (e && e.offline ? 'Sin conexión y sin copia guardada en este dispositivo.' : 'No se pudo cargar el tablero.'))}</div>`; return; }
+    offline = true;
   }
+  cargando = false; armar(); pintar();
 }
 
+/* ---------- modelo ---------- */
+function estadoFicha(f) {
+  if (!f) return null;
+  const SECC = f.caps ? 8 : 10, c = f.claves || [];
+  // Mismas secciones que la página Establecimientos: alcanza con que una sección tenga un dato.
+  const SEC = f.caps ? [['nombre','corto','sisa','depende','horario','ref'],['dir','coord','accesos','cortes','inundable','agua_cerca'],['servicios','camillas','pob_at','barrios'],['grupo','grupo_h','tanques','limpieza','limpieza_f','agua_alt','oxigeno','calef','comun'],['trab_total','med_total','med_oper','enf_total','ref_tit','ref_alt'],['contactos'],['plan','extintores','ext_cant','ext_estado','simulacro','sim_fecha','cap_ext','cap_fecha','seg_obs'],['emerg_rol','antec']]
+    : [['nombre','corto','sisa','complejidad','depende','h24','guardia','ref'],['dir','coord','accesos','cortes','inundable','agua_cerca'],['pob_at','pob_ciu','viv','depto','pob_depto','dens','mayores','indices','sin_cob'],['servicios','camas','camas_obs','cam_guardia','arm','ambs','movs','chofer'],['grupo','grupo_areas','grupo_h','tanques','limpieza','limpieza_f','agua_alt','oxigeno','calef','comun'],['trab_total','med_total','med_oper','enf_total','ref_tit','ref_alt'],['contactos'],['plan','extintores','ext_cant','ext_estado','simulacro','sim_fecha','cap_ext','cap_fecha','seg_obs'],['antec']];
+  const n = SEC.filter(s => s.some(k => c.indexOf(k) >= 0)).length;
+  return Math.round(n / SEC.length * 100);
+}
+function aguaDe(d, base) {
+  const g = k => { const v = (d && d[k]) || (base && base[k]) || ''; return /^s\/d/i.test(v) || v === '—' ? '' : v; };
+  const clas = t => !t || /sin registro/i.test(t) ? null : /no apta|no cumple|arriba|supera|fuera de norma|no potable/i.test(t) ? 'no' : /^apta\b|^apta$|apta con/i.test(t.trim()) ? 'si' : 'obs';
+  const an = (fk, rk, nk, meses) => {
+    const f = fecha(g(fk)), r = g(rk), nc = g(nk), cl = clas(r) === 'si' && nc ? 'obs' : clas(r);
+    if (!f && !cl) return { fecha: SD, res: r || SD, vence: SD, c: 'n', cl: null };
+    const v = f ? masMeses(f, meses) : null, dd = v ? dias(v) : null;
+    const c = cl === 'no' || (dd != null && dd < 0) || !f ? 'r' : cl === 'obs' || (dd != null && dd <= 60) ? 'a' : 'v';
+    return { fecha: f ? ddmm(f) : SD, res: r || SD, vence: v ? ddmm(v) : SD, c: c, cl: cl };
+  };
+  const b = an('agua_bact_fecha', 'agua_bact_resultado', 'agua_bact_no_cumple', 6), q = an('agua_fq_fecha', 'agua_fq_resultado', 'agua_fq_no_cumple', 12);
+  const cls = [b.cl, q.cl];
+  const apta = cls.indexOf('no') >= 0 ? 'No' : cls.indexOf('si') >= 0 || cls.indexOf('obs') >= 0 ? 'Sí' : SD;
+  const c = apta === SD ? 'n' : apta === 'No' ? 'r' : peor([b.c === 'n' ? 'a' : b.c, q.c === 'n' ? 'a' : q.c]);
+  return { apta: apta, c: c, bac: b, fq: q };
+}
+function incendioDe(d) {
+  if (!d || !['plan', 'extintores', 'simulacro', 'ext_estado', 'sim_fecha', 'cap_ext', 'cap_fecha'].some(k => d[k])) return { pct: null, c: 'n', partes: null };
+  let ext = 0; const est = d.ext_estado || '', cant = num(d.ext_cant), venc = num(d.ext_venc);
+  if (S.esSi(d.extintores) || est) {
+    if (/todos al d/i.test(est)) ext = 25;
+    else if (/algunos/i.test(est)) ext = cant && venc != null && venc <= cant ? 25 * (cant - venc) / cant : 12.5;
+    else ext = 0;
+  }
+  const anual = (si, f) => { const x = fecha(f); if (x) return dias(masMeses(x, 12)) >= 0 ? 25 : 12.5; return S.esSi(si) ? 12.5 : 0; };
+  const plan = S.esSi(d.plan) ? 25 : 0, sim = anual(d.simulacro, d.sim_fecha), cap = anual(d.cap_ext, d.cap_fecha);
+  const pct = Math.round((ext + plan + sim + cap) * 10) / 10;
+  return { pct: pct, c: pctCol(pct), partes: { ext: ext, plan: plan, sim: sim, cap: cap } };
+}
+function armar() {
+  const est = (D.estab.establecimientos || []).filter(e => e.area === AREA && !/sede administrativa/i.test(e.tipo || ''));
+  const hosp = est.filter(e => /^hospital/i.test(e.tipo || ''));
+  const lug = {}; ((D.trans && D.trans.base && D.trans.base.lugares) || []).forEach(l => { lug[l.id] = l; });
+  const flota = {}; ((D.trans && D.trans.hospitales) || []).forEach(h => { flota[h.id] = h; });
+  const nombreSt = []; [D.starh, D.phr].forEach((t, i) => ((t && t.redes) || []).forEach(r => (r.establecimientos || []).forEach(x => nombreSt.push([i, norm(x.nombre), x.estado]))));
+  const relev = (e, i) => { const n = norm(e.corto || e.nombre), m = nombreSt.find(x => x[0] === i && (x[1].indexOf(n) >= 0 || x[1].indexOf(norm(e.nombre)) >= 0)); return m ? m[2] : SD; };
+  const codPlan = e => e.id === 'L-001' ? 'HZT' : e.id === 'L-002' ? 'HMH' : e.id === 'L-003' ? 'HSST' : '';
+  const unidadDe = e => {
+    if (TRELEW.indexOf(e.id) >= 0) return 'trelew';
+    if (/^hospital/i.test(e.tipo || '') || SIN_DEP.indexOf(e.id) >= 0) return e.id;
+    const dep = norm(e.depende);
+    if (/hospital zonal trelew/.test(dep)) return 'trelew';
+    const h = dep && hosp.find(x => norm(x.nombre).indexOf(dep) === 0);
+    return h ? h.id : e.id;
+  };
+  const E2 = est.map(e => {
+    const f = e.ficha, d = (f && f.datos) || {}, fl = flota[e.id] || {};
+    const cuentaOk = L => Array.isArray(L) && L.length ? L.filter(x => ESTADO_OK.test(x.estado || '')).length : null;
+    let amb = cuentaOk(fl.ambs); if (amb == null && d.ambs && typeof d.ambs === 'object' && !Array.isArray(d.ambs)) amb = Object.keys(d.ambs).filter(k => ESTADO_OK.test(k)).reduce((a, k) => a + d.ambs[k], 0) || null;
+    const inc = incendioDe(d), agua = aguaDe(d, (lug[e.id] || {}).agua), fp = estadoFicha(f), cp = codPlan(e);
+    const planes = cp && D.pc && D.pc[cp] ? D.pc[cp].map(p => ({ plan: p.Plan || p['Código'], cod: p['Código'] || '', estado: p.Estado || SD, tipo: p.Tipo || '' })) : null;
+    let planC = 'n', planTxt = SD;
+    if (planes && planes.length) {
+      const ap = planes.filter(p => /aprobado/i.test(p.estado)).length, enM = planes.filter(p => !/sin empezar|aprobado/i.test(p.estado)).length, pct = Math.round(ap / planes.length * 100);
+      if (cp !== 'HMH' && !ap && !enM) { planC = 'n'; planTxt = '2027'; } else { planC = pctCol(pct); planTxt = ap + ' de ' + planes.length + ' aprobados'; }
+    }
+    return { id: e.id, nombre: e.nombre, corto: e.corto || e.nombre, tipo: e.tipo, loc: /^s\/d/.test(e.loc || '') ? SD : e.loc, unidad: unidadDe(e), ficha: f, puede: !!(f && f.puede),
+      med: num(d.med_total), medOp: num(d.med_oper), enf: num(d.enf_total), amb: amb, veh: cuentaOk(fl.movs), camas: num(e.camasTotal),
+      fichaPct: fp, inc: inc, agua: agua, planes: planes, planC: planC, planTxt: planTxt,
+      starh: relev(e, 0), phr: relev(e, 1), emergRol: Array.isArray(d.emerg_rol) ? d.emerg_rol.join(', ') : (d.emerg_rol || '') };
+  });
+  // Unidades: Trelew (HMH + HZT + dependencias), cada hospital con sus dependencias y cada puesto sin dependencia con su nombre.
+  const U = {};
+  E2.forEach(e => { (U[e.unidad] = U[e.unidad] || { key: e.unidad, ests: [] }).ests.push(e); });
+  const orden = ['trelew'].concat(hosp.filter(h => TRELEW.indexOf(h.id) < 0).map(h => h.id), SIN_DEP);
+  const unidades = Object.keys(U).sort((a, b) => (orden.indexOf(a) < 0 ? 99 : orden.indexOf(a)) - (orden.indexOf(b) < 0 ? 99 : orden.indexOf(b))).map(k => {
+    const u = U[k], cab = u.ests.find(e => /^hospital/i.test(e.tipo || '')) || u.ests[0];
+    const nom = k === 'trelew' ? 'Trelew' : /^hospital/i.test(cab.tipo || '') ? (cab.loc === SD ? cab.corto : cab.loc) : cab.corto;
+    const deps = u.ests.length - (k === 'trelew' ? 2 : 1);
+    const sub = k === 'trelew' ? `HMH + HZT + ${deps} dependencias` : /^hospital/i.test(cab.tipo || '') ? (deps ? `${cab.corto} + ${deps} dependencia${deps > 1 ? 's' : ''}` : cab.corto) : `${cab.tipo} · dependencia s/d`;
+    const conFicha = u.ests.filter(e => e.fichaPct != null), incs = u.ests.filter(e => e.inc.pct != null), aguas = u.ests.filter(e => e.agua.c !== 'n');
+    const planesU = u.ests.filter(e => e.planes);
+    const ficha = conFicha.length ? Math.round(conFicha.reduce((a, e) => a + e.fichaPct, 0) / conFicha.length) : null;
+    const inc = incs.length ? Math.round(incs.reduce((a, e) => a + e.inc.pct, 0) / incs.length * 10) / 10 : null;
+    const aguaC = aguas.length ? peor(aguas.map(e => e.agua.c)) : 'n';
+    const planC = planesU.length ? peor(planesU.map(e => e.planC).filter(c => c !== 'n').concat(['n'])) : 'n';
+    const planTxt = planesU.length ? planesU.map(e => e.planTxt).join(' · ') : SD;
+    const segC = inc == null ? aguaC : peor([pctCol(inc), aguaC]);
+    return { key: k, nombre: nom, sub: sub, ests: u.ests, deps: deps,
+      med: sumN(u.ests.map(e => e.med)), medOp: sumN(u.ests.map(e => e.medOp)), enf: sumN(u.ests.map(e => e.enf)), amb: sumN(u.ests.map(e => e.amb)), veh: sumN(u.ests.map(e => e.veh)), camas: sumN(u.ests.map(e => e.camas)),
+      ficha: ficha, fichaC: pctCol(ficha), inc: inc, incC: pctCol(inc), aguaC: aguaC, segC: segC, segTxt: inc == null ? (aguaC === 'n' ? SD : 'agua') : inc + ' %', planC: planC, planTxt: planTxt,
+      locs: [...new Set(u.ests.map(e => norm(e.loc)))] };
+  });
+  // Población a cargo, receptoras y albergues por localidad de la unidad.
+  const deriv = D.deriv || {};
+  unidades.forEach(u => {
+    const enU = l => { const n = norm(l); return n && u.locs.some(x => x && (n.indexOf(x) >= 0 || x.indexOf(n) >= 0)); };
+    u.pob = (deriv.poblacion || []).filter(p => enU(p.localidad));
+    u.alb = (deriv.albergues || []).filter(a => enU(a.localidad));
+    u.rec = (deriv.receptoras || []).filter(r => enU(r.localidad) || enU(r.recibe_de));
+    const pac = ((D.pac && D.pac.establecimientos) || []).find(p => u.locs.indexOf(norm(p.corto)) >= 0 || (u.key === 'trelew' && norm(p.corto) === 'trelew'));
+    u.pac = pac ? pac.total : null;
+    const zon = ((D.pac && D.pac.zonas) || []).filter(z => norm(z.zona).indexOf(norm(u.nombre)) === 0);
+    const pat = {}; zon.forEach(z => Object.keys(z.patologia || {}).forEach(k => { pat[k] = (pat[k] || 0) + z.patologia[k]; })); u.pat = pat;
+    // Tareas del COEsp: por ahora se asignan por el nombre del proyecto (PE-HMH, PC-HMH…), hasta que la matriz tenga la columna «Hospital».
+    const tar = ((D.matriz && D.matriz.filas) || []).filter(t => u.key === 'trelew' && /\bHMH\b/.test(t.proyecto || ''));
+    u.tareas = resumenTareas(tar);
+  });
+  const todas = resumenTareas((D.matriz && D.matriz.filas) || []);
+  const sol = ((D.sol && D.sol.filas) || []).filter(s => /enviada/i.test(s.estado || '') && !/respondida/i.test(s.estado || '')).length;
+  const reu = ((D.agenda && D.agenda.reuniones) || []).map(r => Object.assign({}, r, { f: fecha(r.fecha) })).filter(r => r.f && r.f >= hoy()).sort((a, b) => a.f - b.f)[0] || null;
+  const prior = ((D.vuln && D.vuln.barrios) || []).filter(b => +b.prioridad === 1).length;
+  unidades.forEach(u => { u.tarC = u.tareas.c; u.tarTxt = u.tareas.txt; });
+  M = { unidades: unidades, todas: todas, sol: D.sol ? sol : null, reu: reu, prior: D.vuln ? prior : null,
+    camas: sumN(unidades.map(u => u.camas)), rec: (deriv.receptoras || []).length, alb: (deriv.albergues || []).length };
+}
+function resumenTareas(L) {
+  const abiertas = L.filter(t => !/completad/i.test(t.estado || ''));
+  const venc = abiertas.filter(t => { const f = fecha(t.fecha); return f && dias(f) < 0; }).length;
+  const prox = abiertas.filter(t => { const f = fecha(t.fecha); return f && dias(f) >= 0 && dias(f) <= 15; }).length;
+  const c = !L.length ? 'n' : venc ? 'r' : prox ? 'a' : 'v';
+  return { total: L.length, abiertas: abiertas.length, venc: venc, prox: prox, c: c, txt: !L.length ? SD : venc ? venc + ' vencida' + (venc > 1 ? 's' : '') : prox ? prox + ' por vencer' : 'al día' };
+}
+
+/* ---------- pantallas ---------- */
+const unidadSel = () => M.unidades.find(u => u.key === ST.unidad) || M.unidades[0];
+const estabSel = () => { const u = unidadSel(); return u.ests.find(e => e.id === ST.estab) || null; };
+const crit = (k, ref, txt) => `<button class="lnk" type="button" data-crit="${k}" aria-expanded="${abiertos.has(k)}">Criterio${ref ? ' · ' + ref : ''}</button>${abiertos.has(k) ? `<div class="caja">${txt}</div>` : ''}`;
+const sec = (t, c, extra) => `<div class="sec"><span class="bar" style="background:${c}"></span><h2>${t}</h2>${extra ? `<span class="muted">${extra}</span>` : ''}</div>`;
+const tarjeta = (ico, color, titulo, cuerpo, c) => `<div class="card"><span class="ms bgi" style="color:${color}" aria-hidden="true">${ico}</span><div class="ct"><h3>${titulo}</h3>${c ? chip(c) : ''}</div>${cuerpo}</div>`;
+const fila = (l, v, c) => `<div class="row"><span>${l}</span><span>${c ? dot(c) : ''}${v}</span></div>`;
+
+function pintar() {
+  if (!M) return;
+  ['#bAct', '#bWord', '#bCsv'].forEach(s => $(s).classList.remove('oculto'));
+  const vista = ST.vista === 'estab' && estabSel() ? 'estab' : ST.vista === 'unidad' ? 'unidad' : 'general';
+  const u = unidadSel(), e = vista === 'estab' ? estabSel() : null;
+  const titulo = vista === 'general' ? 'Tablero general' : 'Tablero · ' + (e ? e.corto : u.nombre);
+  const subt = vista === 'general' ? AREA + ' · todas las unidades' : e ? `${E(e.tipo)} · ${E(u.nombre)}` : E(u.sub);
+  app.innerHTML = `<div class="cabeza"><div><div class="kick">COESP · PREPARACIÓN Y RESPUESTA A EMERGENCIAS Y DESASTRES</div><div class="tit">${E(titulo)}</div><div class="sub">${subt}</div></div>
+    <div class="sello">Datos al ${E(D.cuando || SD)}${offline ? ' · <b style="color:#8E1F1F">Sin conexión: última copia del dispositivo</b>' : ''}</div></div>
+    <div class="aviso">Base orientadora, no es un registro en tiempo real: las capacidades son estimadas. Lo que falta cargar figura «${SD}».</div>
+    ${vista === 'general' ? general() : nivel(u, e)}
+    <div class="leyenda">${['v', 'a', 'r'].map(c => `<span>${dot(c)}${c === 'v' ? 'Normal' : c === 'a' ? 'Alerta' : 'Vencido o crítico'}</span>`).join('')}<span>${dot('n')}s/d o no corresponde aún</span></div>`;
+}
+function general() {
+  const urg = [];
+  M.unidades.forEach(u => {
+    if (u.tarC === 'r') urg.push([u.key, 'r', `${u.nombre} · ${u.tarTxt}`]);
+    if (u.aguaC === 'r') urg.push([u.key, 'r', `${u.nombre} · agua: no apta o análisis vencido`]);
+    if (u.incC === 'r' && u.inc != null) urg.push([u.key, 'r', `${u.nombre} · seguridad contra incendios ${u.inc} %`]);
+    if (u.ficha != null && u.ficha < 50) urg.push([u.key, 'a', `${u.nombre} · ficha completa al ${u.ficha} %`]);
+  });
+  const refs = [['1', 'Total · operativos (los que pueden convocarse ante una emergencia). Solo la institución de salud.'], ['2', 'Total de enfermeros de la institución de salud.'],
+    ['3', 'Solo en estado Muy bueno, Bueno o «Funciona». Las del HMH se cargan en la ficha del HZT (servicio compartido).'], ['4', 'Vehículos de apoyo de la institución, mismo criterio de estado.'],
+    ['5', 'Instituciones con población dependiente (cárceles, comisarías, geriátricos, hogares), por localidad.'], ['6', 'Planes de contingencia aprobados sobre el total. Gris: s/d o no corresponde aún (2027).'],
+    ['7', 'Índice de seguridad contra incendios y agua apta para consumo; toma el peor de los dos.'], ['8', 'Tareas del COEsp: rojo si hay alguna vencida, amarillo si alguna vence en 15 días o menos.'],
+    ['9', 'Porcentaje de secciones de la ficha con datos; «s/d» cuenta como faltante.']];
+  const fil = M.unidades.map(u => `<tr><td><button class="ub" type="button" data-unidad="${E(u.key)}">${E(u.nombre)}</button><div class="muted">${E(u.sub)}</div></td>
+    <td>${fmt(u.med)} · ${fmt(u.medOp)}</td><td>${fmt(u.enf)}</td><td>${fmt(u.amb)}</td><td>${fmt(u.veh)}</td><td>${u.pob.length || SD}</td>
+    <td>${dot(u.planC)}${E(u.planTxt)}</td><td>${dot(u.segC)}${E(u.segTxt)}</td><td>${dot(u.tarC)}${E(u.tarTxt)}</td><td>${dot(u.fichaC)}${u.ficha == null ? SD : u.ficha + ' %'}</td></tr>`).join('');
+  const movil = M.unidades.map(u => `<button class="urg" type="button" data-unidad="${E(u.key)}"><span style="display:flex;flex-direction:column;gap:6px"><b>${E(u.nombre)}</b><span class="semaf" style="justify-content:flex-start">${[['P', u.planC], ['S', u.segC], ['T', u.tarC], ['F', u.fichaC]].map(x => `<span class="sem" style="background:${COL[x[1]]}" title="${x[0]}">${x[0]}</span>`).join('')}</span></span><span class="ms">chevron_right</span></button>`).join('');
+  const r = M.reu;
+  return sec('Lo más urgente', 'var(--rojoS)') + (urg.length ? `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">${urg.slice(0, 5).map(x => `<button class="urg" type="button" data-unidad="${E(x[0])}"><span>${dot(x[1])}${E(x[2])}</span><span class="ms">chevron_right</span></button>`).join('')}</div>` : `<p class="muted">Sin avisos en rojo o amarillo con los datos cargados.</p>`)
+    + sec('Comparación por unidad', 'var(--azul)', 'tocá el nombre para abrir su tablero')
+    + `<div class="tw esc"><table class="cmp"><thead><tr><th>Unidad</th><th>Médicos<sup>1</sup></th><th>Enfermeros<sup>2</sup></th><th>Ambulancias<sup>3</sup></th><th>Vehículos<sup>4</sup></th><th>Población a cargo<sup>5</sup></th><th>Planes<sup>6</sup></th><th>Seguridad básica<sup>7</sup></th><th>Tareas<sup>8</sup></th><th>Ficha<sup>9</sup></th></tr></thead><tbody>${fil}</tbody></table></div>
+    <div class="solo-movil"><p class="muted">P planes · S seguridad básica · T tareas · F ficha. Tocá una unidad para ver los números.</p><div style="display:flex;flex-direction:column;gap:8px">${movil}</div></div>
+    <div class="refs">${refs.map(x => `<span><b>${x[0]}</b> ${E(x[1])}</span>`).join('')}</div>
+    <p class="muted" style="margin:8px 0 0">Fuente: fichas de los establecimientos, BASE · Establecimientos (LUGARES), COE · Derivaciones y albergues y libro de la app · datos al ${E(D.cuando || SD)}</p>`
+    + sec('Qué sigue funcionando', 'var(--turq)')
+    + `<div class="card" style="min-height:0"><div class="pills">${EMERG.map(x => `<button class="pill" type="button" data-emerg="${E(x)}" aria-pressed="${ST.emerg === x}">${E(x)}</button>`).join('')}</div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px;margin-top:8px">${M.unidades.map(u => fila(E(u.nombre), `${u.ests.length} sin decidir`, 'n')).join('')}</div>
+      <p class="muted" style="margin:4px 0 0">Ante «${E(ST.emerg)}» todavía no se cargó qué establecimientos continúan o cierran. Lo decide la Dirección o el Área Externa con el COE.</p></div>`
+    + sec('Datos de toda la red', 'var(--viol)')
+    + `<div class="grid">${tarjeta('event', '#6A3FA0', 'Próxima reunión' + (r ? ' · ' + E(r.parte || '') : ''), r ? `<div class="big" style="font-size:24px">${E(r.fecha)}</div>${fila('Hora', E(sd(r.horario)))}${fila('Lugar', E(sd(r.lugar)))}${r.enlace ? fila('Conexión', `<a href="${E(r.enlace)}" target="_blank" rel="noopener">Entrar a la reunión</a>`) : fila('Conexión', E(SD))}<span class="muted">${E(sd(r.organo))} · ${E(sd(r.tipo))}</span>` : `<div class="big">${SD}</div><span class="muted">No hay reuniones programadas en la agenda.</span>`)}
+      ${tarjeta('bed', '#0E8C8C', 'Camas estimadas', `<div class="big">${fmt(M.camas)}</div><span class="muted">fuente: LUGARES</span>`)}
+      ${tarjeta('night_shelter', '#0E8C8C', 'Receptoras · albergues', `<div class="big">${M.rec || SD} · ${M.alb || SD}</div><span class="muted">públicas y privadas, con capacidad</span>`)}
+      ${tarjeta('location_on', '#6A3FA0', 'Barrios a mirar primero', `<div class="big">${M.prior == null ? SD : M.prior}</div><span class="muted">vulnerabilidad social · Trelew</span>`)}
+      ${tarjeta('checklist', '#6A3FA0', 'Tareas y pedidos del COEsp', fila('Tareas abiertas', M.todas.abiertas) + fila('Vencidas', M.todas.venc, M.todas.venc ? 'r' : 'v') + fila('Vencen en 15 días', M.todas.prox, M.todas.prox ? 'a' : 'v') + (M.sol == null ? '' : fila('Solicitudes sin respuesta', M.sol)), M.todas.c)}</div>`;
+}
+function nivel(u, e) {
+  const x = e || u, ests = e ? [e] : u.ests;
+  const nav = `<div class="pills no-imp" style="margin-top:18px"><button class="pill osc" type="button" data-ir="general"><span class="ms" style="font-size:17px">arrow_back</span>Tablero general</button>${M.unidades.map(v => `<button class="pill" type="button" data-unidad="${E(v.key)}" aria-pressed="${v.key === u.key}">${E(v.nombre)}</button>`).join('')}</div>`;
+  const fichaBtn = e ? (e.ficha ? `<div class="pills no-imp" style="margin-top:14px"><button class="pill" type="button" data-unidad="${E(u.key)}"><span class="ms" style="font-size:17px">arrow_back</span>Volver a ${E(u.nombre)}</button><button class="pill ${e.puede ? 'roja' : ''}" type="button" data-ficha="${E(e.ficha.est)}"><span class="ms" style="font-size:17px">${e.puede ? 'edit' : 'visibility'}</span>${e.puede ? 'Completar la ficha del establecimiento' : 'Ver la ficha del establecimiento'}</button></div>`
+    : `<div class="pills no-imp" style="margin-top:14px"><button class="pill" type="button" data-unidad="${E(u.key)}"><span class="ms" style="font-size:17px">arrow_back</span>Volver a ${E(u.nombre)}</button></div><p class="muted">Este establecimiento todavía no tiene ficha en la app.</p>`) : '';
+  const lista = !e ? sec('Establecimientos de la unidad', '#1D2129', 'tocá uno para ver su tablero') + `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">${u.ests.map(z => `<button class="urg" type="button" data-estab="${E(z.id)}"><span style="display:flex;flex-direction:column;gap:2px"><b>${E(z.corto)}</b><span class="muted">${E(z.tipo)}${z.fichaPct == null ? ' · sin ficha' : ' · ficha ' + z.fichaPct + ' %'}</span></span><span class="ms">chevron_right</span></button>`).join('')}</div>` : '';
+  const med = e ? e.med : u.med, medOp = e ? e.medOp : u.medOp, enf = e ? e.enf : u.enf, amb = e ? e.amb : u.amb, veh = e ? e.veh : u.veh;
+  const recursos = sec('Recursos operativos', 'var(--azul)', 'de la institución de salud') + `<div class="grid">
+    ${tarjeta('stethoscope', '#1F5FA8', 'Médicos', `<div class="big">${fmt(med)}</div><span class="muted">${fmt(medOp)} operativos</span>${crit('c1', '1', 'Total y operativos: los que pueden convocarse ante una emergencia. Se cargan en la ficha, sección Personal.')}`)}
+    ${tarjeta('medical_services', '#1F5FA8', 'Enfermeros', `<div class="big">${fmt(enf)}</div><span class="muted">total</span>${crit('c2', '2', 'Total de enfermeros de la institución de salud.')}`)}
+    ${tarjeta('ambulance', '#1F5FA8', 'Ambulancias', `<div class="big">${fmt(amb)}</div><span class="muted">en condiciones</span>${crit('c3', '3', 'Solo en estado Muy bueno, Bueno o «Funciona». Las del HMH se cargan en la ficha del HZT (servicio compartido).')}`)}
+    ${tarjeta('local_shipping', '#1F5FA8', 'Vehículos de apoyo', `<div class="big">${fmt(veh)}</div><span class="muted">en condiciones</span>${crit('c4', '4', 'Vehículos de apoyo de la institución, solo en estado Muy bueno, Bueno o «Funciona».')}`)}</div>`;
+  // Planes
+  const conPlan = ests.filter(z => z.planes);
+  const planesHtml = conPlan.length ? conPlan.map(z => `<div class="muted" style="margin-top:4px"><b>${E(z.corto)}</b> · ${E(z.planTxt)}</div>` + z.planes.map(p => fila(E(p.plan), E(p.estado), /aprobado/i.test(p.estado) ? 'v' : /sin empezar/i.test(p.estado) ? (z.planTxt === '2027' ? 'n' : 'r') : 'a')).join('')).join('') : fila('Planes de contingencia', SD, 'n');
+  const planC = e ? e.planC : u.planC;
+  // Seguridad básica
+  const inc = e ? e.inc.pct : u.inc, incC = e ? e.inc.c : u.incC, ag = e ? e.agua : null, aguaC = e ? e.agua.c : u.aguaC;
+  const aguaTxt = e ? e.agua.apta : (aguaC === 'n' ? SD : aguaC === 'r' ? 'con problemas' : 'ver detalle');
+  const aguaDet = abiertos.has('agua') ? `<div class="caja">${(e ? [e] : ests.filter(z => z.agua.c !== 'n')).map(z => `${e ? '' : `<b>${E(z.corto)}</b> · apta: ${E(z.agua.apta)}<br>`}${fila('Último bacteriológico', E(z.agua.bac.fecha), z.agua.bac.c)}<span class="muted">${E(z.agua.bac.res)} · vence el ${E(z.agua.bac.vence)} · cada 6 meses</span>${fila('Último físico-químico', E(z.agua.fq.fecha), z.agua.fq.c)}<span class="muted">${E(z.agua.fq.res)} · vence el ${E(z.agua.fq.vence)} · cada 12 meses</span>`).join('<hr style="border:0;border-top:1px solid #E1E4EA">') || 'Sin análisis cargados.'}</div>` : '';
+  const incDet = e && e.inc.partes ? `<span class="muted">Extintores ${e.inc.partes.ext} · plan ${e.inc.partes.plan} · simulacro ${e.inc.partes.sim} · capacitación ${e.inc.partes.cap}</span>` : '';
+  const segC = peor([incC, aguaC].filter(c => c !== 'n').concat(['n']));
+  // Relevamientos
+  const relev = ests.filter(z => /^hospital/i.test(z.tipo || '') || z.starh !== SD || z.phr !== SD);
+  const relHtml = (relev.length ? relev : ests.slice(0, 1)).map(z => `${ests.length > 1 ? `<div class="muted" style="margin-top:4px"><b>${E(z.corto)}</b></div>` : ''}${fila('STAR-H', E(z.starh), /pendiente/i.test(z.starh) || z.starh === SD ? 'n' : 'a')}${fila('PHR', E(z.phr), /pendiente/i.test(z.phr) || z.phr === SD ? 'n' : 'a')}`).join('');
+  // Capacidad y población (a nivel de unidad; en el establecimiento, lo propio)
+  const capA = ST.cap !== 'B';
+  const rolCaps = ests.filter(z => z.emergRol).map(z => fila(E(z.corto), E(z.emergRol))).join('');
+  const capHtml = fila('Camas propias', fmt(e ? e.camas : u.camas)) + `<div class="pills" style="margin:4px 0"><button class="pill" type="button" data-cap="A" aria-pressed="${capA}">Atención de la población</button><button class="pill" type="button" data-cap="B" aria-pressed="${!capA}">Evacuación o derivación</button></div>`
+    + (capA ? fila('Siguen funcionando (' + E(ST.emerg) + ')', `s/d de ${ests.length}`, 'n') + fila('Albergues', u.alb.length || SD) + (rolCaps ? `<div class="muted" style="margin-top:4px">Lo que declara cada CAPS en su ficha:</div>${rolCaps}` : '')
+      : fila('Receptoras públicas y privadas', u.rec.length || SD) + (abiertos.has('rec') ? `<div class="caja">${u.rec.map(r => `<b>${E(r.nombre)}</b> · ${E(sd(r.tipo))} · ${E(sd(r.localidad))}<br><span class="muted">${E(sd(r.distancia))} · ${E(sd(r.tiempo))} · internación ${E(sd(r.internacion_est))} · UTI adultos ${E(sd(r.uti_adultos_est))}</span>`).join('<br>') || SD}</div>` : '') + `<button class="lnk" type="button" data-crit="rec">${abiertos.has('rec') ? 'Ocultar lista' : 'Ver lista con nombre y capacidad'}</button>`);
+  const tipos = {}; u.pob.forEach(p => { tipos[p.tipo || 'Otro'] = (tipos[p.tipo || 'Otro'] || 0) + 1; });
+  const pobHtml = Object.keys(tipos).length ? Object.keys(tipos).sort().map(k => fila(E(k), tipos[k])).join('') + (abiertos.has('pob') ? `<div class="caja">${u.pob.map(p => `<b>${E(p.nombre)}</b> · ${E(sd(p.tipo))}<br><span class="muted">plazas ${E(sd(p.poblacion))} · dependientes ${E(sd(p.dependientes))}</span>`).join('<br>')}</div>` : '') + `<button class="lnk" type="button" data-crit="pob">${abiertos.has('pob') ? 'Ocultar lista' : 'Ver nombre, plazas y dependientes'}</button>` : fila('Instituciones cargadas', SD, 'n');
+  const pat = Object.keys(u.pat || {});
+  const pacHtml = `<div class="big">${u.pac == null ? SD : u.pac}</div><button class="lnk" type="button" data-crit="pac" style="margin-top:0">De qué dependen ${abiertos.has('pac') ? '▴' : '▾'}</button>${abiertos.has('pac') ? `<div class="caja">${pat.length ? pat.map(k => `${E(k)}: ${u.pat[k]}`).join('<br>') : SD}</div>` : ''}`;
+  const tar = u.tareas;
+  const fichaPct = e ? e.fichaPct : u.ficha;
+  return nav + fichaBtn + lista + recursos
+    + sec('Preparación', 'var(--rojoS)') + `<div class="grid">
+      ${tarjeta('description', '#C62828', 'Planes', planesHtml + crit('c6', '6', 'Estados: sin empezar, compilando información, en redacción, en revisión, presentado a la Dirección, aprobado. Avance = planes aprobados sobre el total. Gris: no corresponde aún (HZT y HSST, 2027).'), planC)}
+      ${tarjeta('local_fire_department', '#C62828', 'Seguridad básica', fila('Índice contra incendios', inc == null ? SD : inc + ' %', incC) + incDet + `<button class="lnk" type="button" data-crit="agua" style="margin-top:0;display:flex;justify-content:space-between;width:100%;color:inherit;font-weight:400;font-size:14px"><span>Agua apta para consumo ${abiertos.has('agua') ? '▴' : '▾'}</span><span style="font-weight:600">${dot(aguaC)}${E(aguaTxt)}</span></button>` + aguaDet + crit('c7', '7', 'Índice: extintores, plan de evacuación, simulacro y capacitación en uso de extintores, 25 % cada uno. Extintores bajan en proporción a los vencidos. Simulacro y capacitación: anual; con más de 12 meses valen la mitad. LEY · Dto. 351/79, Anexo VII, cap. 18. Agua: el color toma el peor de los dos análisis; bacteriológico cada 6 meses y físico-químico cada 12 (LEY · Dto. 351/79, Anexo I, cap. 6, arts. 57 y 58).'), segC)}
+      ${tarjeta('fact_check', '#6A3FA0', 'Relevamientos', relHtml + crit('c5', '', 'Cada línea por separado y por establecimiento: STAR-H, PHR e ISH no se mezclan. Hoy se muestra el estado del relevamiento.'), null)}</div>`
+    + sec('Capacidad y población', 'var(--turq)') + `<div class="grid">
+      ${tarjeta('bed', '#0E8C8C', 'Capacidad estimada', capHtml + crit('c8', '', 'Camas: única fuente LUGARES. Qué sigue funcionando se carga por establecimiento y tipo de emergencia; lo decide la Dirección o el Área Externa con el COE. Receptoras y albergues: con nombre y capacidad, sin contactos.'))}
+      ${tarjeta('groups', '#0E8C8C', 'Población a cargo', pobHtml + crit('c9', '5', 'Instituciones con población dependiente (cárceles, comisarías, geriátricos, hogares), por localidad. Sin contactos.'))}
+      ${tarjeta('monitor_heart', '#0E8C8C', 'Pacientes con necesidades especiales', pacHtml + crit('c10', '', 'Total y de qué dependen. El mapa con un punto por paciente lo ve solo la lista cerrada con acceso a esos datos.'))}</div>`
+    + sec('Seguimiento', 'var(--viol)') + `<div class="grid">
+      ${tarjeta('checklist', '#6A3FA0', 'Tareas y pedidos', fila('Tareas abiertas', tar.abiertas) + fila('Vencidas', tar.venc) + fila('Vencen en 15 días', tar.prox) + crit('c11', '8', 'Tareas del COEsp del hospital. Hasta que la matriz tenga la columna «Hospital», se asignan por el nombre del proyecto (PE-HMH, PC-HMH…).'), tar.c)}
+      ${tarjeta('badge', '#6A3FA0', 'Ficha del establecimiento', `<div style="height:10px;background:#EEF0F3;border-radius:5px;margin:8px 0"><div style="height:10px;border-radius:5px;width:${fichaPct || 0}%;background:${COL[pctCol(fichaPct)]}"></div></div>${fila('Completa', fichaPct == null ? SD : fichaPct + ' %')}${e && e.ficha ? `<button class="lnk" type="button" data-ficha="${E(e.ficha.est)}" style="margin-top:0">${e.puede ? 'Completar la ficha ›' : 'Ver la ficha ›'}</button>` : !e ? '<span class="muted">la ficha se completa en cada establecimiento</span>' : ''}` + crit('c12', '9', 'Porcentaje de secciones con datos; «s/d» cuenta como faltante. Verde 80 % o más, amarillo 50 a 79 %, rojo menos de 50 %.'), pctCol(fichaPct))}</div>`;
+}
+
+/* ---------- descargas ---------- */
+function bajar(nombre, tipo, contenido) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿', contenido], { type: tipo }));
+  a.download = nombre.replace(/[\\/:*?"<>|]/g, '-'); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+const fechaArch = () => new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+function csv() {
+  const q = v => '"' + String(v == null ? SD : v).replace(/"/g, '""') + '"';
+  const L = [['Unidad', 'Qué suma', 'Médicos', 'Médicos operativos', 'Enfermeros', 'Ambulancias', 'Vehículos de apoyo', 'Población a cargo', 'Planes', 'Seguridad básica', 'Tareas', 'Ficha (%)', 'Camas']]
+    .concat(M.unidades.map(u => [u.nombre, u.sub, u.med, u.medOp, u.enf, u.amb, u.veh, u.pob.length, u.planTxt, u.segTxt, u.tarTxt, u.ficha, u.camas]));
+  bajar('Tablero de control - ' + fechaArch() + '.csv', 'text/csv', L.map(r => r.map(q).join(';')).join('\r\n'));
+}
+function word() {
+  const cuerpo = app.cloneNode(true); cuerpo.querySelectorAll('.no-imp,button.lnk,.solo-movil').forEach(n => n.remove()); cuerpo.querySelectorAll('.ms').forEach(n => n.remove());
+  const css = 'body{font-family:Arial,sans-serif;font-size:9.5pt;color:#1D2129}table{border-collapse:collapse;width:100%}td,th{border:1pt solid #D3D7DF;padding:3pt 5pt;font-size:8.5pt}.card{border:1pt solid #D3D7DF;padding:6pt;margin:4pt 0}.dot{display:none}.big{font-size:14pt;font-weight:bold}h2{font-size:11pt;border-bottom:1.5pt solid #F57C00}';
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Tablero de control</title><style>${css}</style></head><body>${cuerpo.innerHTML}<p style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p><p style="text-align:center;font-size:8pt">Versión 0 · fecha de corte ${E(D.cuando || '')}</p></body></html>`;
+  bajar('Tablero de control - ' + fechaArch() + '.doc', 'application/msword', html);
+}
+
+/* ---------- ingreso ---------- */
 function vistaIngreso() {
-  ['#bAct', '#bImp', '#bWord'].forEach(s => $(s).classList.add('oculto'));
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2 style="color:var(--fuerte);margin:0 0 4px">Tablero de control</h2><p style="color:var(--suave);font-size:13px">Ingresá con el mismo usuario y clave de las apps.</p>
-    <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
+  ['#bAct', '#bWord', '#bCsv'].forEach(s => $(s).classList.add('oculto'));
+  app.innerHTML = `<form class="ingreso" id="fIng"><h2 style="margin:0 0 4px">Tablero de control</h2><p class="sub">Ingresá con el mismo usuario y clave de las apps.</p>
+    <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" type="submit" style="width:100%"><span class="ms">login</span>Ingresar</button><div class="msg oculto" id="msg" style="margin-top:10px"></div></form>`;
   $('#fIng').addEventListener('submit', async ev => {
@@ -303,16 +422,23 @@ function vistaIngreso() {
   });
 }
 
+/* ---------- eventos ---------- */
 app.addEventListener('click', ev => {
-  const p = ev.target.closest('[data-proy]');
-  if (p) { proyecto = p.dataset.proy; S.store.set('control.proyecto', proyecto); datos = Object.assign({}, datos, { proyecto: '' }); render(); cargar(); return; }
-  if (ev.target.closest('[data-ir-sol]')) S.store.set('coe.vista', 'solicitudes');
-  const t = ev.target.closest('[data-tarea]'); if (t) ficha(t.dataset.tarea);
+  const t = ev.target.closest('button'); if (!t) return;
+  if (t.dataset.ir === 'general') { ST.vista = 'general'; ST.estab = ''; }
+  else if (t.dataset.unidad) { ST.vista = 'unidad'; ST.unidad = t.dataset.unidad; ST.estab = ''; abiertos.clear(); }
+  else if (t.dataset.estab) { ST.vista = 'estab'; ST.estab = t.dataset.estab; abiertos.clear(); }
+  else if (t.dataset.emerg) ST.emerg = t.dataset.emerg;
+  else if (t.dataset.cap) ST.cap = t.dataset.cap;
+  else if (t.dataset.crit) { const k = t.dataset.crit; abiertos.has(k) ? abiertos.delete(k) : abiertos.add(k); }
+  else if (t.dataset.ficha) { S.store.set('ficha.estab', t.dataset.ficha); location.href = 'ficha.html'; return; }
+  else return;
+  guardarVista(); pintar();
+  if (t.dataset.unidad || t.dataset.estab || t.dataset.ir) window.scrollTo({ top: 0 });
 });
-$('#dlg').addEventListener('click', ev => { if (ev.target.closest('[data-cerrar]') || ev.target === $('#dlg')) $('#dlg').close(); });
-$('#bAct').addEventListener('click', () => cargar());
-$('#bImp').addEventListener('click', () => window.print());
+$('#bAct').addEventListener('click', () => { app.insertAdjacentHTML('afterbegin', '<div class="aviso">Actualizando…</div>'); cargar(true); });
 $('#bWord').addEventListener('click', word);
+$('#bCsv').addEventListener('click', csv);
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 if (S.sesion.token()) cargar(); else vistaIngreso();
 })();
