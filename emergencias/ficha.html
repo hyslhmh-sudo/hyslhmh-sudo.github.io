@@ -137,20 +137,10 @@ const SEC_HOSP = [
     { k: 'grupo', l: '¿Tiene grupo electrógeno?', t: 'sn' }, { k: 'grupo_areas', l: 'Áreas que cubre el grupo electrógeno', t: 't' }, { k: 'grupo_h', l: 'Horas de autonomía con el combustible disponible', t: 'n' },
     { k: 'tanques', l: 'Tanques y cisternas de agua', t: 'rep', cols: [{ k: 'tipo', l: 'Tipo', o: ['Tanque', 'Cisterna'] }, { k: 'litros', l: 'Capacidad (litros)', t: 'n' }], add: 'Agregar tanque o cisterna' },
     { k: 'limpieza', l: '¿Se limpian una vez al año?', t: 'sn' }, { k: 'limpieza_f', l: 'Fecha de la última limpieza', t: 'f' }, { k: 'agua_alt', l: 'Fuente alternativa de agua', t: 't' },
-    // 20/11/2026 · Belén: calidad del agua «debe permitir cargar datos manualmente y adjuntar PDF o fotos de los resultados».
-    // Se guarda en FICHA ESTAB (claves agua_*) y el servidor lo pasa a la BASE · Establecimientos. Lo que ya está en la BASE viene «Precargado».
-    { k: 'agua_tit', t: 'h', opt: true, l: '<span class="tag ley">LEY</span>Calidad del agua · último análisis de laboratorio', x: 'Agua para uso y consumo humano: Dto. 351/79, cap. 6, arts. 57 y 58. Aptitud según el Código Alimentario Argentino (Ley 18.284), art. 982. Cargá el último análisis bacteriológico y el último fisicoquímico y adjuntá el informe. Si no hay análisis, escribí «Sin registro» en el resultado.' },
-    { k: 'agua_bact_fecha', l: 'Bacteriológico: fecha de toma de la muestra', t: 'f', opt: true },
-    { k: 'agua_bact_resultado', l: 'Bacteriológico: resultado (apta, no apta, apta con observaciones o sin registro)', t: 't', opt: true },
-    { k: 'agua_bact_punto', l: 'Bacteriológico: punto de muestreo (red, tanque, cisterna, canilla…)', t: 't', opt: true },
-    { k: 'agua_bact_no_cumple', l: 'Bacteriológico: parámetros que no cumplieron', t: 't', opt: true },
-    { k: 'agua_fq_fecha', l: 'Fisicoquímico: fecha de toma de la muestra', t: 'f', opt: true },
-    { k: 'agua_fq_resultado', l: 'Fisicoquímico: resultado (apta, no apta, apta con observaciones o sin registro)', t: 't', opt: true },
-    { k: 'agua_fq_punto', l: 'Fisicoquímico: punto de muestreo (red, tanque, cisterna, canilla…)', t: 't', opt: true },
-    { k: 'agua_fq_no_cumple', l: 'Fisicoquímico: parámetros que no cumplieron', t: 't', opt: true },
-    { k: 'agua_laboratorio', l: 'Laboratorio que realizó los análisis', t: 't', opt: true },
-    { k: 'agua_obs', l: 'Observaciones sobre el agua', t: 'a', opt: true },
-    { k: 'agua_adj', l: 'Informes del laboratorio: PDF o fotos (hasta 5 archivos)', t: 'adj', opt: true },
+    // 20/11/2026 · Belén: historial de análisis de agua «de todos los establecimientos». Se lee y se carga en la planilla del Portal
+    // «Agua · Tablero de análisis de laboratorio (v0)» (acciones agua_hist y agua_guardar); una fila por muestra, con su informe.
+    { k: 'agua_tit', t: 'h', opt: true, l: '<span class="tag ley">LEY</span>Calidad del agua · análisis de laboratorio', x: 'Agua para uso y consumo humano: Dto. 351/79, cap. 6, arts. 57 y 58. Aptitud según el Código Alimentario Argentino (Ley 18.284), art. 982. Cada análisis se agrega como una fila nueva: los anteriores quedan en el historial.' },
+    { k: 'agua_hist', l: 'Historial de análisis de agua', t: 'aguah', opt: true },
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Central', 'Tubos', 'Concentradores', 'No tiene'] },
     { k: 'calef', l: 'Calefacción y gas: ¿con qué cuenta?', t: 'm', o: ['Gas de red', 'Garrafas o tubos', 'Eléctrica', 'Leña', 'Otro'] },
     { k: 'comun', l: 'Comunicaciones: ¿con qué cuenta?', t: 'm', o: ['Teléfono fijo', 'Celular', 'Internet', 'Radio', 'Otro'] } ] },
@@ -192,7 +182,7 @@ const SEC_CAPS = [
     { k: 'pob_at', l: 'Población que atiende (estimada)', t: 'n' },
     { k: 'barrios', l: 'Barrios o zona que cubre', t: 'a' } ] },
   { id: 'c4', t: 'Servicios críticos', d: 'Cuánto aguantan sin apoyo', c: [
-    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'), campoH('agua_tit'), campoH('agua_bact_fecha'), campoH('agua_bact_resultado'), campoH('agua_bact_punto'), campoH('agua_bact_no_cumple'), campoH('agua_fq_fecha'), campoH('agua_fq_resultado'), campoH('agua_fq_punto'), campoH('agua_fq_no_cumple'), campoH('agua_laboratorio'), campoH('agua_obs'), campoH('agua_adj'),
+    campoH('grupo'), campoH('grupo_h'), campoH('tanques'), campoH('limpieza'), campoH('limpieza_f'), campoH('agua_alt'), campoH('agua_tit'), campoH('agua_hist'),
     { k: 'oxigeno', l: 'Oxígeno: ¿con qué cuenta?', t: 'm', o: ['Tubos', 'Concentradores', 'No tiene'] },
     campoH('calef'), campoH('comun') ] },
   { id: 'c5', t: 'Personal', d: 'Quiénes trabajan y quién es el responsable', min: true, c: [
@@ -274,12 +264,12 @@ async function cargar(est) {
   try { const r = await S.api('ficha_leer', { est: est || '' }); if (!r.ok) throw r;
     srv = r; estab = r.est; SEC = (r.caps || []).indexOf(estab) >= 0 ? SEC_CAPS : SEC_HOSP; pend = S.store.get(COLA(), {}) || {};
     if (Object.keys(pend).length && srv.puede) { Object.assign(srv.datos, pend); setTimeout(enviar, 400); }
-    S.store.set('ficha.estab', estab); pintar(); if (deps) pintarDeps(); else cargarDeps(); precargaAgua(); }
+    S.store.set('ficha.estab', estab); pintar(); if (deps) pintarDeps(); else cargarDeps(); }
   catch (e) { if (e && e.sesion) { location.replace('index.html'); return; } app.innerHTML = `<div class="aviso"><b>No se pudo abrir la ficha.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`; }
 }
 window.confirmarPre = () => { const p = PRE[estab] || {}; let n = 0; Object.keys(p).forEach(k => { if (esPre(k)) { marcar(k); n++; } }); estado(n ? 'Guardando ' + n + ' datos precargados…' : 'No hay datos precargados para confirmar.'); };
 const fechaAct = () => srv.actualizado ? 'última carga ' + srv.actualizado : 'todavía no se cargó nada';
-const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto' || c.t === 'h') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
+const lleno = (c) => { const v = datos[c.k]; if (c.t === 'auto' || c.t === 'h' || c.t === 'aguah') return true; if (c.t === 'rep') return Array.isArray(v) && v.some(f => Object.entries(f || {}).some(([k2, x]) => k2 !== 'quien' && String(x || '').trim())); if (Array.isArray(v)) return v.length > 0; return String(v == null ? '' : v).trim() !== ''; };
 const req = s => s.c.filter(c => !c.opt); // los opcionales no cuentan para «Completa»
 const secOk = s => req(s).every(lleno);
 // 14/11/2026 19:35 (Belén: «Personas que requieren asistencia en una emergencia: ya está cargada la planilla de Trelew, revisar»).
@@ -304,28 +294,6 @@ async function cargarGrupos() {
     el.innerHTML = /lista cerrada|Sin acceso/i.test(String(x && (x.error || x.message) || x)) ? 'Las cantidades las ve solo la lista cerrada de pacientes con necesidades especiales.' : 'No se pudieron leer las cantidades: s/d (revisar).';
   }
 }
-// 20/11/2026 · Calidad del agua: lo que ya está en la BASE (acción transportes_leer) se precarga; los informes se adjuntan (ficha_adjunto)
-// y se abren desde la app (ficha_archivo), sin compartir el Drive.
-const AGUA_K = ['agua_bact_fecha', 'agua_bact_resultado', 'agua_bact_punto', 'agua_bact_no_cumple', 'agua_fq_fecha', 'agua_fq_resultado', 'agua_fq_punto', 'agua_fq_no_cumple', 'agua_laboratorio', 'agua_obs'];
-let AGUA_BASE = null;
-async function precargaAgua() {
-  try {
-    const r = AGUA_BASE || (AGUA_BASE = await S.api('transportes_leer', {})); if (!r || !r.ok) { AGUA_BASE = null; return; }
-    const L = (r.base && r.base.lugares) || [], l = L.find(x => normN(x.nombre) === normN(estab)) || L.find(x => esDeEste(x.nombre));
-    const a = l && l.agua; if (!a) return;
-    const util = v => { v = String(v == null ? '' : v).trim(); return v && v !== '—' && !/^s\/d/i.test(v) ? v : ''; };
-    const p = PRE[estab] = PRE[estab] || {}; let hay = false;
-    ['bact', 'fq'].forEach(g => {
-      const f = util(a['agua_' + g + '_fecha']), m = f.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-      if (m) { p['agua_' + g + '_fecha'] = m[3] + '-' + m[2] + '-' + m[1]; hay = true; }
-      if (/sin registro/i.test(f)) { p['agua_' + g + '_resultado'] = 'Sin registro'; hay = true; }
-      ['resultado', 'punto', 'no_cumple'].forEach(c => { const v = util(a['agua_' + g + '_' + c]); if (v) { p['agua_' + g + '_' + c] = v; hay = true; } });
-    });
-    ['agua_laboratorio', 'agua_obs'].forEach(k => { const v = util(a[k]); if (v) { p[k] = v; hay = true; } });
-    AGUA_K.forEach(k => FUENTE_PRE[k] = 'BASE · Establecimientos de salud' + (util(a.agua_fuente) ? ' (' + a.agua_fuente + ')' : ''));
-    if (hay && !window.__blanco) { const abiertas = [...document.querySelectorAll('details.sec[open]')].map(d => d.id); pintar(); abiertas.forEach(id => { const d = document.getElementById(id); if (d) d.open = true; }); }
-  } catch (e) { /* sin precarga: se carga a mano */ }
-}
 const b64aBytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
 const aBase64 = blob => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(blob); });
 // Las fotos se achican (lado mayor 2000 px) para que suban rápido con poca señal.
@@ -338,25 +306,80 @@ async function achicar(f) {
     return { blob, tipo: 'image/jpeg', nombre: f.name.replace(/\.[^.]+$/, '') + '.jpg' };
   } catch (e) { return { blob: f, tipo: f.type, nombre: f.name }; }
 }
-async function subirAdj(k, files) {
-  const est = estab, el = document.getElementById('adjEstado_' + k), L = Array.isArray(datos[k]) ? datos[k] : [];
-  const libres = 5 - L.length; if (libres <= 0) { alert('Ya hay 5 archivos. Quitá alguno para agregar otro.'); return; }
-  const F = [...files].slice(0, libres); if (files.length > libres) alert('Solo se suben ' + libres + ': el máximo es 5 archivos.');
-  for (let i = 0; i < F.length; i++) {
-    const f = F[i];
-    if (f.type !== 'application/pdf' && !/^image\//.test(f.type)) { alert('«' + f.name + '» no es PDF ni foto.'); continue; }
-    if (el) el.textContent = 'Subiendo ' + (i + 1) + ' de ' + F.length + '…';
-    try {
-      const a = await achicar(f);
-      const r = await S.api('ficha_adjunto', { est, archivo: { nombre: a.nombre, tipo: a.tipo, datos: await aBase64(a.blob) } }, 180000);
-      if (!r || !r.ok) throw r;
-      if (est !== estab) return;
-      datos[k] = (Array.isArray(datos[k]) ? datos[k] : []).concat([{ id: r.id, nombre: r.nombre, tipo: r.tipo, fecha: r.fecha, por: r.por }]);
-      srv.datos[k] = datos[k]; marcar(k);
-    } catch (e) { alert('No se pudo subir «' + f.name + '»: ' + ((e && (e.error || e.message)) || 'sin conexión') + '.'); }
+// 20/11/2026 · Historial de análisis de agua (planilla del Portal «Agua · Tablero de análisis de laboratorio»).
+let AH = null, AH_FORM = null; // AH: respuesta de agua_hist; AH_FORM: análisis que se está cargando o corrigiendo
+const AH_RES = ['Apta', 'No apta', 'Sin conclusión', 'Pendiente'], AH_TIPOS = ['Bacteriológico', 'Fisicoquímico'];
+const ahColor = r => /no apta/i.test(r) ? '#B3261E' : /sin conclusi|pendiente/i.test(r) ? '#B35500' : /apta/i.test(r) ? '#1E7B34' : 'inherit';
+async function cargarAguaHist(forzar) {
+  const el = document.getElementById('aguaBox'); if (!el) return;
+  if (!AH || AH.est !== estab || forzar) {
+    el.innerHTML = '<div class="auto">Buscando los análisis…</div>';
+    try { const r = await S.api('agua_hist', { est: estab }, 120000); if (!r || !r.ok) throw r; AH = r; }
+    catch (e) { el.innerHTML = '<div class="auto">No se pudo leer el historial de análisis: ' + E((e && (e.error || e.message)) || 'sin conexión') + '. s/d (revisar).</div>'; return; }
   }
-  const sec = document.querySelector(`[data-adjcampo="${k}"]`), id = sec && sec.closest('details') && sec.closest('details').id;
-  pintar(); const d = id && document.getElementById(id); if (d) d.open = true;
+  pintarAgua();
+}
+function ahFecha(f) { const m = String(f || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? m[3] + '-' + m[2] + '-' + m[1] : ''; }
+function pintarAgua() {
+  const el = document.getElementById('aguaBox'); if (!el || !AH) return;
+  if (AH.sinRegistro) { el.innerHTML = '<div class="auto">Este establecimiento todavía no tiene un registro de análisis de agua asignado: s/d (revisar).</div>'; return; }
+  const T = AH.tablero, F = AH.filas || [], adm = ((S.sesion.usuario() || {}).rol === 'Administración');
+  const est = T ? `<div class="auto" style="border-left:4px solid ${T.estado === 'Vigente' ? '#1E7B34' : T.estado === 'No apta' ? '#B3261E' : '#B35500'}">
+      <b>Estado: ${E(T.estado || 's/d')}</b> · último muestreo ${E(T.ultimo || 's/d')} · último bacteriológico ${E(T.ultBact || 's/d')} · último fisicoquímico ${E(T.ultFq || 's/d')}<br>
+      Próximo muestreo: ${E(T.proximo || 's/d')} · próximo completo (bacteriológico + fisicoquímico): ${E(T.proxCompleto || 's/d')}<br>
+      <b>Qué solicitar:</b> ${E(T.solicitar || 's/d')}${T.aviso ? ' · <b>' + E(T.aviso) + '</b>' : ''}</div>` : '';
+  const archivos = f => [f.informe ? `<a href="#" data-verarch="${E(f.informe)}" data-nom="Informe">Informe</a>` : '', f.remitoPdf ? `<a href="#" data-verarch="${E(f.remitoPdf)}" data-nom="Remito">Remito</a>` : '']
+    .concat((f.adj || []).slice(f.informe && f.adj && f.adj[0] && f.adj[0].id === f.informe ? 1 : 0).map(a => `<a href="#" data-verarch="${E(a.id)}" data-nom="${E(a.nombre || '')}">${/pdf/.test(a.tipo) ? 'PDF' : 'Foto'}</a>`)).filter(Boolean).join(' · ') || 's/d';
+  const filas = F.map(f => `<tr><td>${E(f.fecha || 's/d')}</td><td>${E(f.analisis || 's/d')}</td><td>${E(f.lugar || 's/d')}</td><td style="color:${ahColor(f.resultado)};font-weight:600">${E(f.resultado || 's/d')}</td><td>${E(f.detalle || '')}</td><td>${E(f.lab || '')}</td><td>${archivos(f)}</td>
+      <td class="no-imp">${AH.puede && (f.app || adm) ? `<button class="btn" type="button" data-ahedit="${f.fila}">Corregir</button> <button class="quitar" type="button" data-ahquitar="${f.fila}" aria-label="Quitar"><span class="ms" style="font-size:18px">close</span></button>` : ''}</td></tr>`).join('');
+  el.innerHTML = est + (AH.puede ? `<div class="no-imp" style="margin:8px 0">${AH_FORM ? '' : '<button class="btn" type="button" data-ahnuevo="1"><span class="ms">add</span>Agregar análisis</button>'}</div>` : '')
+    + (AH_FORM ? formAgua() : '')
+    + (F.length ? `<div class="tabw"><table class="tab"><thead><tr><th>Fecha de toma</th><th>Análisis</th><th>Punto de muestreo</th><th>Resultado</th><th>Detalle o parámetros que no cumplieron</th><th>Laboratorio</th><th>Informe</th><th class="no-imp"></th></tr></thead><tbody>${filas}</tbody></table></div>`
+      : '<div class="auto">Todavía no hay análisis cargados: s/d (revisar).</div>')
+    + `<small class="ayuda">${F.length} ${F.length === 1 ? 'análisis' : 'análisis'} · registro «${E(AH.registro || '')}» de la planilla «Agua · Tablero de análisis de laboratorio». Lo cargado en el Portal HyS se corrige ahí; lo cargado desde la app se corrige acá.</small>`;
+}
+function formAgua() {
+  const d = AH_FORM, sel = (k, o) => `<select data-af="${k}"><option value="">Elegí…</option>${o.map(x => `<option${d[k] === x ? ' selected' : ''}>${E(x)}</option>`).join('')}</select>`;
+  const inp = (k, ph, t) => `<input data-af="${k}" ${t ? 'type="' + t + '"' : ''} value="${E(d[k] || '')}" placeholder="${E(ph || '')}">`;
+  return `<div class="auto" style="background:var(--claro)"><b>${d.fila ? 'Corregir análisis' : 'Nuevo análisis'}</b>
+    <div class="rep"><div class="fila">
+      <label class="rc"><small>Análisis</small>${sel('analisis', AH_TIPOS)}</label>
+      <label class="rc"><small>Fecha de toma de la muestra</small>${inp('fecha', '', 'date')}</label>
+      <label class="rc"><small>Punto de muestreo (canilla, tanque, cisterna…)</small>${inp('lugar', 's/d (revisar)')}</label>
+      <label class="rc"><small>Resultado</small>${sel('resultado', AH_RES)}</label>
+      <label class="rc"><small>Detalle o parámetros que no cumplieron</small>${inp('detalle', '')}</label>
+      <label class="rc"><small>N.º de muestra</small>${inp('muestra', 's/d (revisar)')}</label>
+      <label class="rc"><small>Laboratorio</small>${inp('lab', 's/d (revisar)')}</label>
+      <label class="rc"><small>Observaciones</small>${inp('obs', '')}</label>
+    </div></div>
+    <div><small>Informe del laboratorio: PDF o fotos, hasta 5 archivos</small>${(d.adj || []).length ? `<ul style="margin:4px 0;padding-left:18px">${d.adj.map((a, i) => `<li>${E(a.nombre || 'archivo')} <button class="quitar" type="button" data-ahadjq="${i}" aria-label="Quitar"><span class="ms" style="font-size:16px">close</span></button></li>`).join('')}</ul>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0"><label class="btn"><span class="ms">photo_camera</span>Sacar foto<input type="file" accept="image/*" capture="environment" data-ahadj="1" hidden></label><label class="btn"><span class="ms">upload_file</span>Subir PDF o fotos<input type="file" accept="application/pdf,image/*" multiple data-ahadj="1" hidden></label></div>
+      <small class="ayuda" id="ahEstado">Las fotos se achican solas para subir más rápido.</small></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" type="button" data-ahguardar="1"><span class="ms">save</span>Guardar análisis</button><button class="btn" type="button" data-ahcancelar="1">Cancelar</button></div></div>`;
+}
+async function subirAguaAdj(files) {
+  const d = AH_FORM, el = document.getElementById('ahEstado'); d.adj = d.adj || [];
+  const libres = 5 - d.adj.length; if (libres <= 0) { alert('Ya hay 5 archivos. Quitá alguno para agregar otro.'); return; }
+  const L = [...files].slice(0, libres); if (files.length > libres) alert('Solo se suben ' + libres + ': el máximo es 5 archivos.');
+  for (let i = 0; i < L.length; i++) {
+    const f = L[i];
+    if (f.type !== 'application/pdf' && !/^image\//.test(f.type)) { alert('«' + f.name + '» no es PDF ni foto.'); continue; }
+    if (el) el.textContent = 'Subiendo ' + (i + 1) + ' de ' + L.length + '…';
+    try { const a = await achicar(f); const r = await S.api('ficha_adjunto', { est: estab, archivo: { nombre: a.nombre, tipo: a.tipo, datos: await aBase64(a.blob) } }, 180000);
+      if (!r || !r.ok) throw r; d.adj.push({ id: r.id, nombre: r.nombre, tipo: r.tipo }); }
+    catch (e) { alert('No se pudo subir «' + f.name + '»: ' + ((e && (e.error || e.message)) || 'sin conexión') + '.'); }
+  }
+  pintarAgua();
+}
+async function guardarAgua(quitar) {
+  const el = document.getElementById('ahEstado');
+  try {
+    const req = { est: estab };
+    if (quitar) req.quitar = quitar; else { const d = AH_FORM; if (!d.analisis || !d.fecha || !d.resultado) { alert('Completá análisis, fecha y resultado.'); return; } req.d = d; if (d.fila) req.fila = d.fila; }
+    if (el) el.textContent = 'Guardando…';
+    const r = await S.api('agua_guardar', req, 120000); if (!r || !r.ok) throw r;
+    AH = r; AH_FORM = null; pintarAgua();
+  } catch (e) { alert('No se pudo guardar: ' + ((e && (e.error || e.message)) || 'sin conexión') + '.'); if (el) el.textContent = ''; }
 }
 async function verAdj(id, nombre) {
   const w = window.open('', '_blank'); if (w) w.document.write('<p style="font-family:sans-serif">Abriendo ' + E(nombre || 'el archivo') + '…</p>');
@@ -371,13 +394,8 @@ function campo(c) {
   const lab = `<span>${c.l}${esPre(c.k) ? ` <span class="pre" title="Dato que ya teníamos${FUENTE_PRE[c.k] ? ': ' + E(FUENTE_PRE[c.k]) : ' (libro de la app, hoja LUGARES)'}. Revisalo y cambialo si no es correcto.">Precargado</span>` : ''}</span>`;
   if (c.t === 'auto' && c.k === 'grupos' && !window.__blanco) { setTimeout(cargarGrupos, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="gruposAuto">Buscando las cantidades…</div></div>`; }
   if (c.t === 'h') return `<div class="campo"><h4 style="margin:14px 0 2px">${c.l}</h4><small class="ayuda">${E(c.x || '')}</small></div>`;
-  if (c.t === 'adj') {
-    const L = Array.isArray(v) ? v.filter(f => f && f.id) : [];
-    if (window.__blanco) return `<div class="campo">${lab}<div class="auto">Adjuntar copia de los informes del laboratorio.</div></div>`;
-    return `<div class="campo" data-adjcampo="${c.k}">${lab}${L.length ? `<ul style="margin:6px 0;padding-left:18px">${L.map((f, i) => `<li style="margin:4px 0"><span class="ms" style="font-size:16px;vertical-align:-3px">${/pdf/.test(f.tipo) ? 'picture_as_pdf' : 'image'}</span> <a href="#" data-verarch="${E(f.id)}" data-nom="${E(f.nombre || '')}">${E(f.nombre || 'archivo')}</a> <small>· ${E(f.fecha || '')}${f.por ? ' · ' + E(f.por) : ''}</small> <button class="quitar no-imp" type="button" data-quitar="${c.k}" data-i="${i}" aria-label="Quitar ${E(f.nombre || '')}"><span class="ms" style="font-size:18px">close</span></button></li>`).join('')}</ul>` : '<div class="auto">Todavía no hay informes adjuntos.</div>'}
-      <div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><label class="btn"><span class="ms">photo_camera</span>Sacar foto<input type="file" accept="image/*" capture="environment" data-adj="${c.k}" hidden></label><label class="btn"><span class="ms">upload_file</span>Subir PDF o fotos<input type="file" accept="application/pdf,image/*" multiple data-adj="${c.k}" hidden></label></div>
-      <small class="ayuda" id="adjEstado_${c.k}">Hasta 5 archivos (PDF o fotos, de hasta 15 MB). Las fotos se achican solas para subir más rápido.</small></div>`;
-  }
+  if (c.t === 'aguah') { if (window.__blanco) return `<div class="campo">${lab}<div class="auto">Fecha · análisis (bacteriológico o fisicoquímico) · punto de muestreo · resultado · laboratorio. Adjuntar copia del informe.</div></div>`;
+    setTimeout(() => cargarAguaHist(false), 0); return `<div class="campo">${lab}<div id="aguaBox"><div class="auto">Buscando los análisis…</div></div></div>`; }
   if (c.t === 'auto') return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div></div>`;
   if (c.t === 'o') return `<div class="campo">${lab}<div class="sn">${c.o.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${E(o)}"${v === o ? ' checked' : ''}>${E(o)}</label>`).join('')}</div></div>`;
   if (c.t === 'sn') return `<div class="campo">${lab}<div class="sn">${SN.map(o => `<label><input type="radio" name="${id}" data-k="${c.k}" value="${o}"${v === o ? ' checked' : ''}>${o}</label>`).join('')}</div></div>`;
@@ -453,15 +471,25 @@ function progreso() {
 }
 app.addEventListener('change', ev => {
   const t = ev.target;
-  if (t.dataset.adj) { if (t.files && t.files.length) subirAdj(t.dataset.adj, t.files); t.value = ''; return; }
+  if (t.dataset.ahadj) { if (t.files && t.files.length) subirAguaAdj(t.files); t.value = ''; return; }
+  if (t.dataset.af) { AH_FORM[t.dataset.af] = t.value; return; }
   if (t.id === 'selEst') { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } cargar(t.value); return; }
   if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); return marcar(t.dataset.r); }
   if (t.dataset.m) { const k = t.dataset.k; datos[k] = [...app.querySelectorAll(`input[data-m][data-k="${k}"]:checked`)].map(x => x.value); return marcar(k); }
   if (t.dataset.k) { datos[t.dataset.k] = t.value; marcar(t.dataset.k); }
 });
-app.addEventListener('input', ev => { const t = ev.target; if (t.dataset.k && !t.dataset.m && t.type !== 'radio') { datos[t.dataset.k] = t.value; marcar(t.dataset.k); } else if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); marcar(t.dataset.r); } });
+app.addEventListener('input', ev => { const t = ev.target; if (t.dataset.af) { AH_FORM[t.dataset.af] = t.value; return; } if (t.dataset.k && !t.dataset.m && t.type !== 'radio') { datos[t.dataset.k] = t.value; marcar(t.dataset.k); } else if (t.dataset.r) { const L = datos[t.dataset.r]; L[+t.dataset.i] = Object.assign({}, L[+t.dataset.i], { [t.dataset.c]: t.value }); marcar(t.dataset.r); } });
 app.addEventListener('click', ev => {
   const a = ev.target.closest('[data-agregar]'), q = ev.target.closest('[data-quitar]'), g = ev.target.closest('[data-gps]');
+  const ah = ev.target.closest('[data-ahnuevo],[data-ahedit],[data-ahquitar],[data-ahguardar],[data-ahcancelar],[data-ahadjq]');
+  if (ah) { ev.preventDefault(); const D = ah.dataset;
+    if (D.ahnuevo) { AH_FORM = { analisis: '', fecha: '', resultado: '', adj: [] }; pintarAgua(); }
+    else if (D.ahedit) { const f = (AH.filas || []).find(x => String(x.fila) === D.ahedit); if (f) { AH_FORM = { fila: f.fila, analisis: f.analisis, fecha: ahFecha(f.fecha), lugar: f.lugar === 's/d' ? '' : f.lugar, resultado: f.resultado, detalle: f.detalle === 's/d' ? '' : f.detalle, muestra: f.muestra === 's/d' ? '' : f.muestra, lab: f.lab === 's/d' ? '' : f.lab, obs: f.obs, adj: (f.adj || []).slice() }; pintarAgua(); } }
+    else if (D.ahquitar) { if (confirm('¿Quitar este análisis del historial?')) guardarAgua(D.ahquitar); }
+    else if (D.ahguardar) guardarAgua();
+    else if (D.ahcancelar) { AH_FORM = null; pintarAgua(); }
+    else if (D.ahadjq != null) { AH_FORM.adj.splice(+D.ahadjq, 1); pintarAgua(); }
+    return; }
   const va = ev.target.closest('[data-verarch]'); if (va) { ev.preventDefault(); verAdj(va.dataset.verarch, va.dataset.nom); return; }
   const vf = ev.target.closest('[data-verficha]'); if (vf) { if (Object.keys(pend).length) { clearTimeout(tGuardar); enviar(); } cargar(vf.dataset.verficha); window.scrollTo(0, 0); return; }
   const reabrir = id => { pintar(); const d = document.getElementById(id); if (d) d.open = true; };
