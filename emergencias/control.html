@@ -109,6 +109,7 @@ const AREA = 'Área Programática Trelew';
 const SIN_DEP = ['L-009', 'L-010', 'L-080', 'L-081'];
 const TRELEW = ['L-001', 'L-002'];
 const EMERG = ['Inundación', 'Corte de energía', 'Falta de agua', 'Clima', 'Pandemia', 'Materiales peligrosos'];
+const CONT_K = { 'Inundación': 'cont_inund', 'Corte de energía': 'cont_energia', 'Falta de agua': 'cont_agua', 'Clima': 'cont_clima', 'Pandemia': 'cont_pandemia', 'Materiales peligrosos': 'cont_matpel' }; // ficha › Antecedentes y continuidad
 const ESTADO_OK = /^(muy bueno|bueno|funciona)/i;
 let D = null, M = null, offline = false, cargando = false;
 // 20/11/2026 · Belén: el detalle de los planes de contingencia es solo para ella (Administración).
@@ -171,8 +172,8 @@ function estadoFicha(f) {
   if (!f) return null;
   const SECC = f.caps ? 8 : 10, c = f.claves || [];
   // Mismas secciones que la página Establecimientos: alcanza con que una sección tenga un dato.
-  const SEC = f.caps ? [['nombre','corto','sisa','depende','horario','ref'],['dir','coord','accesos','cortes','inundable','agua_cerca'],['servicios','camillas','pob_at','barrios'],['grupo','grupo_h','tanques','limpieza','limpieza_f','agua_alt','oxigeno','calef','comun'],['trab_total','med_total','med_oper','enf_total','ref_tit','ref_alt'],['contactos'],['plan','extintores','ext_cant','ext_estado','simulacro','sim_fecha','cap_ext','cap_fecha','seg_obs'],['emerg_rol','antec']]
-    : [['nombre','corto','sisa','complejidad','depende','h24','guardia','ref'],['dir','coord','accesos','cortes','inundable','agua_cerca'],['pob_at','pob_ciu','viv','depto','pob_depto','dens','mayores','indices','sin_cob'],['servicios','camas','camas_obs','cam_guardia','arm','ambs','movs','chofer'],['grupo','grupo_areas','grupo_h','tanques','limpieza','limpieza_f','agua_alt','oxigeno','calef','comun'],['trab_total','med_total','med_oper','enf_total','ref_tit','ref_alt'],['contactos'],['plan','extintores','ext_cant','ext_estado','simulacro','sim_fecha','cap_ext','cap_fecha','seg_obs'],['antec']];
+  const SEC = f.caps ? [['nombre','corto','sisa','depende','horario','ref'],['dir','coord','accesos','cortes','inundable','agua_cerca'],['servicios','camillas','pob_at','barrios'],['grupo','grupo_h','tanques','limpieza','limpieza_f','agua_alt','oxigeno','calef','comun'],['trab_total','med_total','med_oper','enf_total','ref_tit','ref_alt'],['contactos'],['plan','extintores','ext_cant','ext_estado','simulacro','sim_fecha','cap_ext','cap_fecha','seg_obs'],['emerg_rol','antec','cont_inund','cont_energia','cont_agua','cont_clima','cont_pandemia','cont_matpel','cont_deriva']]
+    : [['nombre','corto','sisa','complejidad','depende','h24','guardia','ref'],['dir','coord','accesos','cortes','inundable','agua_cerca'],['pob_at','pob_ciu','viv','depto','pob_depto','dens','mayores','indices','sin_cob'],['servicios','camas','camas_obs','cam_guardia','arm','ambs','movs','chofer'],['grupo','grupo_areas','grupo_h','tanques','limpieza','limpieza_f','agua_alt','oxigeno','calef','comun'],['trab_total','med_total','med_oper','enf_total','ref_tit','ref_alt'],['contactos'],['plan','extintores','ext_cant','ext_estado','simulacro','sim_fecha','cap_ext','cap_fecha','seg_obs'],['antec','cont_inund','cont_energia','cont_agua','cont_clima','cont_pandemia','cont_matpel','cont_deriva']];
   const n = SEC.filter(s => s.some(k => c.indexOf(k) >= 0)).length;
   return Math.round(n / SEC.length * 100);
 }
@@ -210,8 +211,17 @@ function armar() {
   const hosp = est.filter(e => /^hospital/i.test(e.tipo || ''));
   const lug = {}; ((D.trans && D.trans.base && D.trans.base.lugares) || []).forEach(l => { lug[l.id] = l; });
   const flota = {}; ((D.trans && D.trans.hospitales) || []).forEach(h => { flota[h.id] = h; });
-  const nombreSt = []; [D.starh, D.phr].forEach((t, i) => ((t && t.redes) || []).forEach(r => (r.establecimientos || []).forEach(x => nombreSt.push([i, norm(x.nombre), x.estado]))));
-  const relev = (e, i) => { const n = norm(e.corto || e.nombre), m = nombreSt.find(x => x[0] === i && (x[1].indexOf(n) >= 0 || x[1].indexOf(norm(e.nombre)) >= 0)); return m ? m[2] : SD; };
+  // 20/11/2026 · STAR-H: amenazas con riesgo ≥ 17 (fila[9] = riesgo). PHR: % de ítems que aplican y cumplen (fila[4] aplica, fila[5] estado).
+  const detSt = (i, r, cod) => {
+    const F = (r.filas || []).filter(x => x[0] === cod);
+    if (i === 0) { const ev = F.filter(x => x[5] !== 'No aplica' && x[9] !== ''); return ev.length ? { alto: ev.filter(x => +x[9] >= 17).length, ev: ev.length } : null; }
+    const ap = F.filter(x => !/^no/i.test(x[4] || '')), ev = ap.filter(x => x[5]);
+    return ev.length ? { pct: Math.round(ap.filter(x => /^cumple$/i.test(x[5])).length / ap.length * 100), ev: ev.length, tot: ap.length } : null;
+  };
+  const nombreSt = []; [D.starh, D.phr].forEach((t, i) => ((t && t.redes) || []).forEach(r => (r.establecimientos || []).forEach(x => nombreSt.push([i, norm(x.nombre), x.estado, detSt(i, r, x.codigo)]))));
+  const buscaSt = (e, i) => { const n = norm(e.corto || e.nombre); return nombreSt.find(x => x[0] === i && (x[1].indexOf(n) >= 0 || x[1].indexOf(norm(e.nombre)) >= 0)); };
+  const relev = (e, i) => { const m = buscaSt(e, i); return m ? m[2] : SD; };
+  const relDet = (e, i) => { const m = buscaSt(e, i); return m && m[3] ? (i === 0 ? m[3].alto + ' amenaza' + (m[3].alto === 1 ? '' : 's') + ' con riesgo ≥ 17' : m[3].pct + ' % cumple') : ''; };
   const codPlan = e => e.id === 'L-001' ? 'HZT' : e.id === 'L-002' ? 'HMH' : e.id === 'L-003' ? 'HSST' : '';
   const unidadDe = e => {
     if (TRELEW.indexOf(e.id) >= 0) return 'trelew';
@@ -235,7 +245,9 @@ function armar() {
     return { id: e.id, nombre: e.nombre, corto: e.corto || e.nombre, tipo: e.tipo, loc: /^s\/d/.test(e.loc || '') ? SD : e.loc, unidad: unidadDe(e), ficha: f, puede: !!(f && f.puede),
       med: num(d.med_total), medOp: num(d.med_oper), enf: num(d.enf_total), amb: amb, veh: cuentaOk(fl.movs), camas: num(e.camasTotal),
       fichaPct: fp, inc: inc, agua: agua, planes: planes, planC: planC, planTxt: planTxt,
-      starh: relev(e, 0), phr: relev(e, 1), emergRol: Array.isArray(d.emerg_rol) ? d.emerg_rol.join(', ') : (d.emerg_rol || '') };
+      starh: relev(e, 0), phr: relev(e, 1), starhDet: relDet(e, 0), phrDet: relDet(e, 1),
+      cont: Object.keys(CONT_K).reduce((o, k) => { const v = String(d[CONT_K[k]] || ''); o[k] = /^contin/i.test(v) ? 'Continúa' : /^cierra/i.test(v) ? 'Cierra' : 'Sin decidir'; return o; }, {}), contDeriva: d.cont_deriva || '',
+      emergRol: Array.isArray(d.emerg_rol) ? d.emerg_rol.join(', ') : (d.emerg_rol || '') };
   });
   // Unidades: Trelew (HMH + HZT + dependencias), cada hospital con sus dependencias y cada puesto sin dependencia con su nombre.
   const U = {};
@@ -270,8 +282,9 @@ function armar() {
     u.pac = pac ? pac.total : null;
     const zon = ((D.pac && D.pac.zonas) || []).filter(z => norm(z.zona).indexOf(norm(u.nombre)) === 0);
     const pat = {}; zon.forEach(z => Object.keys(z.patologia || {}).forEach(k => { pat[k] = (pat[k] || 0) + z.patologia[k]; })); u.pat = pat;
-    // Tareas del COEsp: por ahora se asignan por el nombre del proyecto (PE-HMH, PC-HMH…), hasta que la matriz tenga la columna «Hospital».
-    const tar = ((D.matriz && D.matriz.filas) || []).filter(t => u.key === 'trelew' && /\bHMH\b/.test(t.proyecto || ''));
+    // Tareas del COEsp por la columna «Hospital» de la matriz (20/11/2026): Trelew = HMH + HZT; HSST = L-003; «Toda el Área» va a las dos.
+    const hDe = { trelew: ['HMH', 'HZT'], 'L-003': ['HSST'] }[u.key] || [];
+    const tar = ((D.matriz && D.matriz.filas) || []).filter(t => hDe.length && (hDe.indexOf(t.hospital) >= 0 || t.hospital === 'Toda el Área'));
     u.tareas = resumenTareas(tar);
   });
   const todas = resumenTareas((D.matriz && D.matriz.filas) || []);
@@ -282,6 +295,9 @@ function armar() {
   M = { unidades: unidades, todas: todas, sol: D.sol ? sol : null, reu: reu, prior: D.vuln ? prior : null,
     camas: sumN(unidades.map(u => u.camas)), rec: (deriv.receptoras || []).length, alb: (deriv.albergues || []).length };
 }
+const contCuenta = L => L.reduce((c, z) => { c[z.cont[ST.emerg]]++; return c; }, { 'Continúa': 0, 'Cierra': 0, 'Sin decidir': 0 });
+const contTxt = L => { const c = contCuenta(L); return [c['Continúa'] && c['Continúa'] + ' continúa' + (c['Continúa'] > 1 ? 'n' : ''), c['Cierra'] && c['Cierra'] + ' cierra' + (c['Cierra'] > 1 ? 'n' : ''), c['Sin decidir'] && c['Sin decidir'] + ' sin decidir'].filter(Boolean).join(' · '); };
+const contC = L => { const c = contCuenta(L); return c['Sin decidir'] === L.length ? 'n' : c['Sin decidir'] ? 'a' : 'v'; };
 function resumenTareas(L) {
   const abiertas = L.filter(t => !/completad/i.test(t.estado || ''));
   const venc = abiertas.filter(t => { const f = fecha(t.fecha); return f && dias(f) < 0; }).length;
@@ -338,8 +354,8 @@ function general() {
     <p class="muted" style="margin:8px 0 0">s/d = sin dato, revisar. Fuente: fichas de los establecimientos, BASE · Establecimientos (LUGARES), COE · Derivaciones y albergues y libro de la app · datos al ${E(D.cuando || SD)}</p>`
     + sec('Qué sigue funcionando', 'var(--turq)')
     + `<div class="card" style="min-height:0"><div class="pills">${EMERG.map(x => `<button class="pill" type="button" data-emerg="${E(x)}" aria-pressed="${ST.emerg === x}">${E(x)}</button>`).join('')}</div>
-      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px;margin-top:8px">${M.unidades.map(u => fila(E(u.nombre), `${u.ests.length} sin decidir`, 'n')).join('')}</div>
-      <p class="muted" style="margin:4px 0 0">Ante «${E(ST.emerg)}» todavía no se cargó qué establecimientos continúan o cierran. Lo decide la Dirección o el Área Externa con el COE.</p></div>`
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px;margin-top:8px">${M.unidades.map(u => fila(E(u.nombre), contTxt(u.ests), contC(u.ests))).join('')}</div>
+      <p class="muted" style="margin:4px 0 0">Ante «${E(ST.emerg)}», según la ficha de cada establecimiento (Antecedentes y continuidad). Lo decide la Dirección o el Área Externa con el COE.</p></div>`
     + sec('Datos de toda la red', 'var(--viol)')
     + `<div class="grid">${tarjeta('event', '#6A3FA0', 'Próxima reunión' + (r ? ' · ' + E(r.parte || '') : ''), r ? `<div class="big" style="font-size:24px">${E(r.fecha)}</div>${fila('Hora', E(sd(r.horario)))}${fila('Lugar', E(sd(r.lugar)))}${r.enlace ? fila('Conexión', `<a href="${E(r.enlace)}" target="_blank" rel="noopener">Entrar a la reunión</a>`) : fila('Conexión', E(SD))}<span class="muted">${E(sd(r.organo))} · ${E(sd(r.tipo))}</span>` : `<div class="big">${SD}</div><span class="muted">No hay reuniones programadas en la agenda.</span>`)}
       ${tarjeta('bed', '#0E8C8C', 'Camas estimadas', `<div class="big">${fmt(M.camas)}</div><span class="muted">fuente: LUGARES</span>`)}
@@ -375,14 +391,17 @@ function nivel(u, e) {
   // Relevamientos
   const relev = ests.filter(z => /^hospital/i.test(z.tipo || '') || z.starh !== SD || z.phr !== SD);
   const cuentaRel = k => { const c = {}; ests.forEach(z => { const v = z[k] === SD ? 'Sin relevar en la app' : z[k]; c[v] = (c[v] || 0) + 1; }); return Object.keys(c).map(x => `${c[x]} ${x.toLowerCase()}`).join(' · '); };
-  const relHtml = (ests.length > 1 ? fila('Establecimientos', ests.length) : '') + fila('STAR-H', E(ests.length > 1 ? cuentaRel('starh') : ests[0].starh), 'n') + fila('PHR', E(ests.length > 1 ? cuentaRel('phr') : ests[0].phr), 'n')
-    + (ests.length > 1 ? `<button class="lnk" type="button" data-crit="rel" style="margin-top:0">${abiertos.has('rel') ? 'Ocultar el detalle' : 'Ver por establecimiento'}</button>` + (abiertos.has('rel') ? `<div class="caja">${ests.map(z => `<b>${E(z.corto)}</b>: STAR-H ${E(z.starh)} · PHR ${E(z.phr)}`).join('<br>')}<button class="lnk" type="button" data-crit="rel">Ocultar ▴</button></div>` : '') : '');
+  const relHtml = (ests.length > 1 ? fila('Establecimientos', ests.length) : '') + fila('STAR-H', E(ests.length > 1 ? cuentaRel('starh') : ests[0].starh), 'n') + (ests.length === 1 && ests[0].starhDet ? `<div class="muted" style="text-align:right">${E(ests[0].starhDet)}</div>` : '')
+    + fila('PHR', E(ests.length > 1 ? cuentaRel('phr') : ests[0].phr), 'n') + (ests.length === 1 && ests[0].phrDet ? `<div class="muted" style="text-align:right">${E(ests[0].phrDet)}</div>` : '')
+    + (ests.length > 1 ? `<button class="lnk" type="button" data-crit="rel" style="margin-top:0">${abiertos.has('rel') ? 'Ocultar el detalle' : 'Ver por establecimiento'}</button>` + (abiertos.has('rel') ? `<div class="caja">${ests.map(z => `<b>${E(z.corto)}</b>: STAR-H ${E(z.starh)}${z.starhDet ? ' (' + E(z.starhDet) + ')' : ''} · PHR ${E(z.phr)}${z.phrDet ? ' (' + E(z.phrDet) + ')' : ''}`).join('<br>')}<button class="lnk" type="button" data-crit="rel">Ocultar ▴</button></div>` : '') : '');
   // Capacidad y población (a nivel de unidad; en el establecimiento, lo propio)
   const capA = ST.cap !== 'B';
   const roles = {}; ests.filter(z => z.emergRol).forEach(z => { roles[z.emergRol] = (roles[z.emergRol] || 0) + 1; });
   const rolCaps = Object.keys(roles).map(k => fila(E(k), roles[k])).join('');
   const capHtml = fila('Camas propias', fmt(e ? e.camas : u.camas)) + `<div class="pills" style="margin:4px 0"><button class="pill" type="button" data-cap="A" aria-pressed="${capA}">Atención de la población</button><button class="pill" type="button" data-cap="B" aria-pressed="${!capA}">Evacuación o derivación</button></div>`
-    + (capA ? fila('Siguen funcionando (' + E(ST.emerg) + ')', `s/d de ${ests.length}`, 'n') + fila('Albergues', u.alb.length || SD) + (rolCaps ? `<div class="muted" style="margin-top:4px">En una emergencia, según la ficha de cada CAPS:</div>${rolCaps}` : '')
+    + (capA ? `<div class="pills" style="margin:4px 0">${EMERG.map(x => `<button class="pill" type="button" data-emerg="${E(x)}" aria-pressed="${ST.emerg === x}">${E(x)}</button>`).join('')}</div>` + fila('Ante ' + E(ST.emerg.toLowerCase()), E(e ? e.cont[ST.emerg] : contTxt(ests)), contC(ests))
+      + (e && e.cont[ST.emerg] === 'Cierra' ? fila('Deriva a', E(sd(e.contDeriva))) : '')
+      + (!e && ests.length > 1 && ests.some(z => z.cont[ST.emerg] === 'Cierra') ? `<div class="muted">Cierran: ${ests.filter(z => z.cont[ST.emerg] === 'Cierra').map(z => E(z.corto) + (z.contDeriva ? ' → ' + E(z.contDeriva) : '')).join(' · ')}</div>` : '') + fila('Albergues', u.alb.length || SD) + (rolCaps ? `<div class="muted" style="margin-top:4px">En una emergencia, según la ficha de cada CAPS:</div>${rolCaps}` : '')
       : fila('Receptoras públicas y privadas', u.rec.length || SD) + (abiertos.has('rec') ? `<div class="caja">${u.rec.map(r => `<b>${E(r.nombre)}</b> · ${E(sd(r.tipo))} · ${E(sd(r.localidad))}<br><span class="muted">${E(sd(r.distancia))} · ${E(sd(r.tiempo))} · internación ${E(sd(r.internacion_est))} · UTI adultos ${E(sd(r.uti_adultos_est))}</span>`).join('<br>') || SD}</div>` : '') + `<button class="lnk" type="button" data-crit="rec">${abiertos.has('rec') ? 'Ocultar lista' : 'Ver lista con nombre y capacidad'}</button>`);
   const tipos = {}; u.pob.forEach(p => { tipos[p.tipo || 'Otro'] = (tipos[p.tipo || 'Otro'] || 0) + 1; });
   const pobHtml = Object.keys(tipos).length ? Object.keys(tipos).sort().map(k => fila(E(k), tipos[k])).join('') + (abiertos.has('pob') ? `<div class="caja">${u.pob.map(p => `<b>${E(p.nombre)}</b> · ${E(sd(p.tipo))}<br><span class="muted">plazas ${E(sd(p.poblacion))} · dependientes ${E(sd(p.dependientes))}</span>`).join('<br>')}</div>` : '') + `<button class="lnk" type="button" data-crit="pob">${abiertos.has('pob') ? 'Ocultar lista' : 'Ver nombre, plazas y dependientes'}</button>` : fila('Instituciones cargadas', SD, 'n');
@@ -400,7 +419,7 @@ function nivel(u, e) {
       ${tarjeta('groups', '#0E8C8C', 'Población a cargo', pobHtml + crit('c9', '5', 'Instituciones con población dependiente (cárceles, comisarías, geriátricos, hogares), por localidad. Sin contactos.'))}
       ${tarjeta('monitor_heart', '#0E8C8C', 'Pacientes con necesidades especiales', pacHtml + crit('c10', '', 'Total y de qué dependen. El mapa con un punto por paciente lo ve solo la lista cerrada con acceso a esos datos.'))}</div>`
     + sec('Seguimiento', 'var(--viol)') + `<div class="grid">
-      ${tarjeta('checklist', '#6A3FA0', 'Tareas y pedidos', fila('Tareas abiertas', tar.abiertas) + fila('Vencidas', tar.venc) + fila('Vencen en 15 días', tar.prox) + crit('c11', '8', 'Tareas del COEsp del hospital. Hasta que la matriz tenga la columna «Hospital», se asignan por el nombre del proyecto (PE-HMH, PC-HMH…).'), tar.c)}
+      ${tarjeta('checklist', '#6A3FA0', 'Tareas y pedidos', fila('Tareas abiertas', tar.abiertas) + fila('Vencidas', tar.venc) + fila('Vencen en 15 días', tar.prox) + crit('c11', '8', 'Tareas del COEsp según la columna «Hospital» de la matriz: Trelew suma HMH y HZT; «Toda el Área» aparece en Trelew y en HSST. Las tareas sin hospital asignado (s/d) cuentan solo en el total general.'), tar.c)}
       ${tarjeta('badge', '#6A3FA0', 'Ficha del establecimiento', `<div style="height:10px;background:#EEF0F3;border-radius:5px;margin:8px 0"><div style="height:10px;border-radius:5px;width:${fichaPct || 0}%;background:${COL[pctCol(fichaPct)]}"></div></div>${fila('Completa', fichaPct == null ? SD : fichaPct + ' %')}${e && e.ficha ? `<button class="lnk" type="button" data-ficha="${E(e.ficha.est)}" style="margin-top:0">${e.puede ? 'Completar la ficha ›' : 'Ver la ficha ›'}</button>` : !e ? '<span class="muted">la ficha se completa en cada establecimiento</span>' : ''}` + crit('c12', '9', 'Porcentaje de secciones con datos; «s/d» cuenta como faltante. Verde 80 % o más, amarillo 50 a 79 %, rojo menos de 50 %.'), pctCol(fichaPct))}</div>`;
 }
 

@@ -101,6 +101,13 @@ const COLS_AMB = [{ k: 'id', l: 'Patente' }, { k: 'marca', l: 'Marca y modelo' }
 const COLS_MOV = [{ k: 'id', l: 'Patente' }, { k: 'marca', l: 'Marca y modelo' }, { k: 'anio', l: 'Año', t: 'n' }, { k: 'funcion', l: 'Función', o: ['Apoyo', 'Mantenimiento', 'Servicio o programa específico', 'Otro'] },
   { k: 'estado', l: 'Estado', o: EST_VEH }, { k: 'uso', l: '¿En uso?', o: SNN }, { k: 'emerg', l: '¿Se puede usar en una emergencia?', o: SNN }, { k: 'h24', l: '¿Disponible las 24 h?', o: SNN },
   { k: 'sentados', l: 'Personas sentadas', t: 'n' }, { k: 'camilla', l: '¿Puede llevar camilla?', o: SNN }, { k: 'obs', l: 'Observaciones' }];
+// 20/11/2026 · Belén: qué sigue funcionando según el tipo de emergencia (lo decide la Dirección o el Área Externa con el COE).
+// Mismas claves en hospital (s10) y CAPS (c8). El tablero de control las lee en «Qué sigue funcionando».
+const CONT_OP = ['Continúa', 'Cierra', 'Sin decidir'];
+const CONT_CAMPOS = [['cont_inund', 'Inundación'], ['cont_energia', 'Corte de energía'], ['cont_agua', 'Falta de agua'], ['cont_clima', 'Clima (viento, nieve, temperaturas extremas)'], ['cont_pandemia', 'Pandemia o epidemia'], ['cont_matpel', 'Materiales peligrosos']]
+  .map(([k, l]) => ({ k: k, l: 'Ante ' + l.charAt(0).toLowerCase() + l.slice(1) + ', el establecimiento…', t: 'o', o: CONT_OP }))
+  .concat([{ k: 'cont_deriva', l: 'Si cierra: establecimiento al que deriva (si cambia según la emergencia, aclararlo)', t: 't' },
+    { k: 'cont_obs', l: 'Quién lo decidió y cuándo · opcional', t: 't', opt: true }]);
 const SEC_HOSP = [
   { id: 's1', t: 'Identificación', d: 'Quiénes son y de quién dependen', min: true, c: [
     { k: 'nombre', l: 'Nombre oficial', t: 't' }, { k: 'corto', l: 'Nombre corto', t: 't' },
@@ -162,7 +169,8 @@ const SEC_HOSP = [
     { k: 'cap_ext', l: '¿Se hizo alguna capacitación en uso de extintores?', t: 'sn' },
     { k: 'cap_fecha', l: 'Fecha de la última capacitación en uso de extintores', t: 'f' },
     { k: 'seg_obs', l: 'Observaciones', t: 't' } ] },
-  { id: 's10', t: 'Antecedentes', d: 'Lo que ya pasó', c: [
+  { id: 's10', t: 'Antecedentes y continuidad', d: 'Lo que ya pasó y qué sigue funcionando según la emergencia', c: [
+    ...CONT_CAMPOS,
     { k: 'antec', l: 'Eventos anteriores (inundaciones, nevadas, cortes largos de luz o agua): qué pasó y cómo se resolvió', t: 'a' } ] }
 ];
 // 15/11/2026 · Ficha corta del CAPS (Belén: «ficha para CAPS sabiendo que no tienen ARM, internación, quirófano y UMU»).
@@ -191,9 +199,9 @@ const SEC_CAPS = [
   { id: 'c6', t: 'Contactos de emergencia', d: 'Visibles solo para Administración y el referente', min: true, c: [
     { k: 'contactos', l: 'Contactos', t: 'rep', fijo: ['Responsable del CAPS', 'Hospital del que depende', 'Comisaría', 'Bomberos', 'Protección Civil municipal', 'Energía (cooperativa o empresa)', 'Agua', 'Gas', 'Posible albergue (escuela o gimnasio)'], cols: [{ k: 'quien', l: 'Contacto' }, { k: 'nombre', l: 'Nombre' }, { k: 'tel', l: 'Teléfono' }], add: 'Agregar otro contacto' } ] },
   { id: 'c7', t: 'Seguridad del edificio', d: 'Pocas preguntas; vale «No sabe»', c: SEC_HOSP.find(s => s.id === 's9').c },
-  { id: 'c8', t: 'En una emergencia', d: 'Qué hace el CAPS y qué pasó antes', c: [
+  { id: 'c8', t: 'En una emergencia', d: 'Qué hace el CAPS, si sigue funcionando y qué pasó antes', c: [
     { k: 'emerg_rol', l: 'Si hay una emergencia en la zona, el CAPS…', t: 'm', o: ['Sigue atendiendo', 'Cierra y deriva al hospital', 'Puede funcionar como punto de vacunación o de atención', 'Puede funcionar como lugar de reunión o albergue', 'No está definido'] },
-    campoH('antec') ] }
+    ...CONT_CAMPOS, campoH('antec') ] }
 ];
 let SEC = SEC_HOSP;
 // Datos que ya tenemos (libro de la app: LUGARES, CAMAS y COE PARTICIPANTES). El referente los revisa y los puede cambiar.
