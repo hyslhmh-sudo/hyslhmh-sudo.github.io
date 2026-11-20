@@ -288,6 +288,7 @@ function dlgReunion(id, programar) {
      <div class="dos">${campo('num', 'N.º de reunión o acta (se propone el siguiente; corregible)', r ? r['N.º'] : numSig(org))}${selC('tipo', 'Tipo', r ? r.Tipo : 'Ordinaria', ['Ordinaria', 'Extraordinaria', 'De trabajo'])}</div>
      <div class="dos">${campo('lugar', 'Lugar o modalidad', r && r['Lugar o modalidad'])}${campo('coordino', 'Convocó · coordinó', r && r['Convocó · coordinó'])}</div>
      <div class="dos">${campo('redacto', 'Redactó', r ? r['Redactó'] : (S.sesion.usuario() || {}).nombre)}${selC('estado', 'Estado', estado0, [['Convocada', 'Programada (convocada)'], ['Realizada', 'Realizada'], ['Suspendida', 'Suspendida']])}</div>
+     ${campo('enlace', 'Enlace de conexión (Zoom, Meet…) · lo ven solo quienes ven la reunión', r && r['Enlace de conexión'])}
      ${campo('orden', 'Orden del día · temas a tratar', r && r['Orden del día'], 'area')}
      <label class="campo" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" name="avisar" style="width:auto;margin-top:3px" ${r && /^no$/i.test(r['Avisar por mail'] || '') ? '' : 'checked'}><span style="font-weight:500">Avisar por mail si está programada: convocatoria al guardar y recordatorio 24 h antes. COEsp interno: integrantes internos · COEsp externo: todos los integrantes · Otra reunión: los convocados tildados. Sale desde belenpellegrini.hys@gmail.com, en copia oculta.</span></label>
      <div class="post-reu">${campo('temas', 'Temas tratados (después de la reunión; separá los párrafos con una línea en blanco)', r && r['Temas tratados'], 'area')}
@@ -332,7 +333,7 @@ function leerReunion(f) {
   const asistencia = [...f.querySelectorAll('input[name=as]:checked')].map(c => ({ persona: c.value, nombre: c.dataset.n, funcion: c.dataset.f, presente: conv ? 'convocado' : true }))
     .concat(f.extras.value.split('\n').map(x => x.trim()).filter(Boolean).map(x => { const p = x.split(/\s+·\s+|\s+-\s+/); return { persona: '', nombre: p[0], funcion: p.slice(1).join(' · '), presente: conv ? 'convocado' : true }; }));
   const acuerdos = [...document.querySelectorAll('.acu-fila')].map(d => ({ id: d.dataset.id, tipo: d.querySelector('[name=aTipo]').value, texto: d.querySelector('[name=aTexto]').value.trim(), resp: d.querySelector('[name=aResp]').value, plazo: d.querySelector('[name=aPlazo]').value, estado: d.querySelector('[name=aEst]').value })).filter(a => a.texto);
-  return { organo: f.organo.value, parte: f.parte.value, fecha: f.fecha.value.trim(), horario: f.horario.value, num: f.num.value, tipo: f.tipo.value, lugar: f.lugar.value, coordino: f.coordino.value,
+  return { organo: f.organo.value, parte: f.parte.value, fecha: f.fecha.value.trim(), horario: f.horario.value, num: f.num.value, tipo: f.tipo.value, lugar: f.lugar.value, coordino: f.coordino.value, enlace: f.enlace ? f.enlace.value.trim() : undefined,
     redacto: f.redacto.value, estado: f.estado.value, orden: f.orden.value, temas: f.temas.value, proxima: f.proxima.value, acta: f.acta.value, escaneo: f.escaneo.value, obs: f.obs.value, avisar: f.avisar.checked, asistencia: asistencia, acuerdos: acuerdos };
 }
 
