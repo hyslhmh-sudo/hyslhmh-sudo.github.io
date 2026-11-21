@@ -81,7 +81,7 @@ const esComun = f => /^todas$/i.test(f.loc || 'Todas');
 // 21/11/2026 08:55 (Belén: «en Trelew aclarar que es HMH»): nombre completo del establecimiento en cada contacto y en los subtítulos.
 const EST_NOMBRE = { 'HMH': 'Hospital María Humphreys (HMH)', 'HZT': 'Hospital Zonal Trelew (HZT)', 'HZT y HMH': 'HZT y HMH · servicios compartidos', 'HSST': 'Hospital Subzonal Santa Teresita (HSST)' };
 const estNombre = e => EST_NOMBRE[String(e || '').trim()] || String(e || '').trim();
-const POR_EST = ['Interno', 'Guía de internos', 'Empresas contratistas', 'Proveedores'];
+const POR_EST = ['Interno', 'Empresas contratistas', 'Proveedores'];
 function telHtml(t) {
   if (vacio(t)) return `<span class="sd">${E(String(t || '').trim() || SD)}</span>`;
   // El número se marca solo con la parte que es número: «0280 401-1979», «Interno 1000» o «911 (a confirmar)».
@@ -94,6 +94,10 @@ async function cargar() {
   if (D) { pintar(); const n = document.createElement('div'); n.className = 'aviso no-imp'; n.id = 'actualizando'; n.innerHTML = '<b>Actualizando la agenda…</b> Se muestra la última copia guardada en este dispositivo.'; app.prepend(n); }
   try {
     const r = await S.api('agenda_leer'); if (!r || !r.ok) throw r;
+    // 21/11/2026 09:18 (Belén: «se repite interno y guía interno, unificar»): una sola sección «Interno»; si un interno de la guía
+    // ya está en la agenda (como número o como alterno), no se repite.
+    const ya = {}; r.filas.filter(f => !f.guia && /HMH/.test(f.est || '')).forEach(f => [f.tel, f.alterno].forEach(t => (String(t || '').match(/\b1\d{3}\b/g) || []).forEach(n => ya[n] = 1)));
+    r.filas = r.filas.filter(f => !f.guia || !ya[(String(f.tel).match(/\b1\d{3}\b/) || [''])[0]]);
     D = r; S.store.set('agenda.datos', r); delCache = false; pintar();
   } catch (e) {
     if (e && e.sesion) { location.replace('index.html'); return; }
@@ -126,7 +130,7 @@ function bloque(nombreLoc, filas) {
     const fs = filas.filter(f => f.cat === c);
     if (POR_EST.indexOf(c) < 0) return `<h3 class="cat">${E(c)}</h3><div class="grid">${fs.map(item).join('')}</div>`;
     const ests = []; fs.forEach(f => { if (ests.indexOf(f.est) < 0) ests.push(f.est); });
-    return ests.map(e => `<h3 class="cat">${E(c)} · ${E(estNombre(e) || 'Todos')}</h3>${c === 'Guía de internos' ? '<p class="mini" style="margin-top:-4px">Solo servicio e interno, tomados de la guía telefónica del HMH, que se actualiza en el hospital. Desde afuera: línea general y pedir el interno.</p>' : ''}<div class="grid">${fs.filter(f => f.est === e).map(item).join('')}</div>`).join('');
+    return ests.map(e => `<h3 class="cat">${E(c)} · ${E(estNombre(e) || 'Todos')}</h3>${c === 'Interno' && e === 'HMH' && fs.some(f => f.guia) ? '<p class="mini" style="margin-top:-4px">Incluye la guía telefónica del HMH (servicio e interno), que se actualiza en el hospital. Desde afuera: línea general y pedir el interno.</p>' : ''}<div class="grid">${fs.filter(f => f.est === e).map(item).join('')}</div>`).join('');
   };
   return `<h2 class="loc"><span class="ms">location_city</span>${E(nombreLoc)}</h2>` + cats.map(grupo).join('')
     + (sinCat.length ? `<h3 class="cat">Otros</h3><div class="grid">${sinCat.map(item).join('')}</div>` : '');
@@ -151,7 +155,7 @@ function pintar() {
   <details class="ayuda no-imp"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Los teléfonos y correos <b>institucionales</b> de los establecimientos, los servicios de emergencia, los organismos, las empresas contratistas, los proveedores y la red de derivación. No se publican teléfonos ni correos personales. En «COEsp · integrantes» se ve el apellido y nombre de cada integrante, con su función y sus datos institucionales.</p>
     <p><b>Cómo se usa.</b> Elegí la localidad: se ven sus números y, además, los <b>comunes</b> (los que valen para todas, como 100, 101 o 103). Podés filtrar por tipo o buscar por nombre, servicio o número. En el teléfono, tocá el número para llamar o el correo para escribir. «Si no atiende» es el número alternativo.</p>
-    <p><b>Internos del HMH.</b> La «Guía de internos» se lee de la guía telefónica del HMH, que se actualiza en el hospital: siempre se ve la última versión (se renueva cada media hora). Solo se muestran el servicio y el interno, sin nombres de personas. La guía del HZT todavía falta.</p>
+    <p><b>Internos del HMH.</b> En «Interno · Hospital María Humphreys» están los internos cargados en la agenda y los de la guía telefónica del HMH, sin repetir. La guía se lee de la guía telefónica del HMH, que se actualiza en el hospital: siempre se ve la última versión (se renueva cada media hora). Solo se muestran el servicio y el interno, sin nombres de personas. La guía del HZT todavía falta.</p>
     <p><b>Datos que faltan.</b> Lo que todavía no se tiene se ve en naranja como «s/d (revisar)»; «a confirmar» indica un número que falta verificar. Base orientadora: antes de usarla en un cartel, confirmá los números.</p>
     <p><b>Imprimir.</b> El botón de la impresora arma una hoja con la localidad elegida.</p>
     <p><b>Sin conexión.</b> La última agenda que abriste queda guardada en este dispositivo.</p>
