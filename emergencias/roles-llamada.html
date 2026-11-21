@@ -16,7 +16,7 @@ if(!ok){document.documentElement.style.display='none';location.replace('index.ht
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
 <style>
 /* 21/11/2026 · Roles de llamada (v0). Belén: «2 · Gestión de la emergencia: nueva tarjeta ROLES DE LLAMADA… por establecimiento y por contingencia».
-   Decisiones: cadena de llamadas + qué decir; 10 planes + amenaza de bomba; dos turnos; EN DISEÑO: lo ven solo dos usuarios y carga uno
+   Decisiones: cadena de llamadas + qué decir; 10 planes + amenaza de bomba; dos turnos; EN DISEÑO: lo ve y carga solo HySL (21/11/2026 09:30: sin Bustos hasta nuevo aviso)
    (lo decide el servidor, acciones roles_*). Modelo común por tipo de establecimiento + lo propio de cada uno. Ningún dato va en el código público. */
 :root{--fuerte:#7A1F3D;--medio:#C2185B;--claro:#FBE7EF;--borde:#EBC3D3;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A;--rojo:#C62828;--ambar:#B26A00}
 *{box-sizing:border-box}
@@ -49,6 +49,8 @@ select,input,textarea{font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.5px 
 .tel{font-weight:800;font-size:15px;color:var(--texto);text-decoration:none;border-bottom:2px solid var(--borde)}
 .decir{background:var(--fondo);border-left:4px solid var(--medio);border-radius:0 10px 10px 0;padding:6px 10px;margin-top:6px;font-size:13.5px}
 .mini{font-size:12px;color:var(--tenue);margin-top:4px}
+.prot{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.prot .ms{font-size:16px;color:var(--medio)}.prot a{color:var(--fuerte);font-weight:700}
+.protf{border:1px solid var(--borde);border-radius:12px;padding:8px 12px;margin:8px 0}.protf legend{font-weight:700;font-size:13px;color:var(--fuerte)}.protf .btn{padding:4px 8px}
 .sd{color:var(--coral);font-style:italic}
 .btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:10px;padding:6px 10px;font:600 12.5px 'Plus Jakarta Sans',sans-serif;cursor:pointer}
 .btn:hover{background:var(--claro)}.btn.pri{background:var(--fuerte);border-color:var(--fuerte);color:#fff}.btn.pri:hover{background:var(--medio)}
@@ -124,7 +126,7 @@ function pintar() {
   const origen = R.origen === 'propio' ? '<span class="chip c-prop">Propio del establecimiento</span>' : R.origen === 'modelo' ? `<span class="chip c-mod">${esModelo(est) ? 'Modelo común' : 'Del modelo común: ' + E(tipoDe(est).replace('MODELO · ', ''))}</span>` : '<span class="chip c-sin">Sin cargar</span>';
   const sdN = R.pasos.reduce((n, p) => n + ['llama', 'aquien', 'numero', 'alterno', 'decir'].filter(k => vacio(p[k])).length, 0);
   app.innerHTML = `
-  <div class="aviso no-imp"><b>En diseño · versión 0.</b> Esta tarjeta la ven solo dos usuarios mientras se diseña. Base orientadora: los números se confirman antes de imprimir el cartel.</div>
+  <div class="aviso no-imp"><b>En diseño · versión 0.</b> Esta tarjeta la ve solo Higiene y Seguridad Laboral mientras se diseña. Base orientadora: los números se confirman antes de imprimir el cartel.</div>
   <details class="ayuda no-imp"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> El rol de llamada dice, para cada establecimiento y cada contingencia, <b>quién llama a quién, en qué orden, a qué número, qué hacer si no atiende y qué decir</b>. Lo que hace cada rol después de la llamada está en las tarjetas y en los planes de contingencia (no se repite acá).</p>
     <p><b>Cómo se usa.</b> Elegí el establecimiento, la contingencia y el turno. El paso 0 (naranja) es el primer aviso. Los datos que faltan se ven en naranja como «s/d (revisar)». El punto de cada contingencia es verde si está completa en los dos turnos, naranja si tiene datos que faltan y gris si no está cargada.</p>
@@ -132,6 +134,7 @@ function pintar() {
     <p><b>Turnos.</b> Días hábiles de 7 a 19 h, y noche, fines de semana y feriados. Un paso marcado «Los dos turnos» vale para ambos.</p>
     <p><b>Cartel.</b> El botón de imprimir arma el cartel para pegar junto al teléfono: sin botones, sin etiquetas ni citas. La planilla (CSV) se abre en Google Sheets o Excel.</p>
     ${D.puede ? `<p><b>Administración (carga).</b> «Agregar paso», el lápiz para corregir y el tacho para quitar. «Copiar el modelo» crea los pasos propios del establecimiento a partir del modelo de su tipo, para completarlos. En la carga podés elegir un contacto de la ficha del establecimiento para no escribir el número dos veces. Todo cambio queda en el REGISTRO de la app. Los datos se guardan en la hoja ROLES DE LLAMADA del libro de la app.</p>` : '<p>Con tu usuario podés ver e imprimir; la carga la hace Higiene y Seguridad Laboral.</p>'}
+    <p><b>Protocolos preexistentes.</b> Si ya hay un protocolo escrito para un paso (por ejemplo, el rol de llamada ante principio de incendio del HMH), aparece debajo de «Qué decir» y se abre en Drive. Al corregir un paso se puede subir un PDF o un Word, pegar el enlace de un Doc o PDF que ya está en Drive o elegir uno ya cargado en otro paso (hasta 5 por paso). No salen en el cartel.</p>
     <p><b>Fundamento.</b> LEY: Dto. 351/79, cap. 18 (protección contra incendios; artículo exacto s/d, revisar). MEJORA / buena práctica: OPS 2023, plan hospitalario de respuesta (activación y comunicación); Vítolo 2026.</p>
   </details>
   <div class="filtros no-imp">
@@ -146,6 +149,7 @@ function pintar() {
       <div class="linea"><b>${val(p.llama)}</b> llama a <b>${val(p.aquien)}</b> · ${telHtml(p.numero)}${p.agendaNombre ? ` <span class="chip c-mod no-imp" title="${E(p.agendaNombre)}">de la agenda</span>` : ''}</div>
       <div class="mini">Si no atiende: ${val(p.alterno)}${p.turno === D.ambos ? '' : ` · <span class="no-imp">solo ${E(p.turno)}</span>`}</div>
       <div class="decir">Qué decir: ${val(p.decir)}</div>
+      ${(p.prot || []).length ? `<div class="mini prot no-imp"><span class="ms">description</span>Protocolo: ${p.prot.map(x => `<a href="${E(x.url)}" target="_blank" rel="noopener">${E(x.nombre)}</a>`).join(' · ')}</div>` : ''}
       ${p.obs ? `<div class="mini">${E(p.obs)}</div>` : ''}
       <div class="mini no-imp"><span class="chip ${/LEY/.test(p.etiqueta) ? 'c-ley' : 'c-mej'}">${E(p.etiqueta || SD)}</span> <span class="cita">${E(p.cita || '')}</span></div>
       ${D.puede && R.origen !== 'modelo' || (D.puede && esModelo(est)) ? `<div class="ed"><button class="btn" type="button" data-ed="${E(p.id)}"><span class="ms">edit</span>Corregir</button><button class="btn" type="button" data-del="${E(p.id)}"><span class="ms">delete</span>Quitar</button></div>` : ''}
@@ -168,6 +172,8 @@ function pintar() {
   const bc = document.getElementById('bCopiar'); if (bc) bc.onclick = () => copiarModelo(R.pasos);
   const bv = document.getElementById('bCsv'); if (bv) bv.onclick = () => csv(R.pasos);
 }
+// Protocolos ya cargados en cualquier paso (para reutilizarlos sin subirlos de nuevo).
+const protTodos = () => { const vis = {}; (D.filas || []).forEach(f => (f.prot || []).forEach(x => { if (x && x.url && !vis[x.url]) vis[x.url] = { nombre: x.nombre, url: x.url }; })); return Object.values(vis).sort((a, b) => a.nombre.localeCompare(b.nombre)); };
 const msg = (t, mal) => { const m = document.getElementById('msg'); if (m) { m.textContent = t; m.className = 'msg' + (mal ? ' mal' : ''); } };
 async function guardar(fila) { const r = await S.api('roles_guardar', { fila: fila }); if (!r || !r.ok) throw r; return r; }
 function editar(p) {
@@ -189,6 +195,13 @@ function editar(p) {
     <div class="dos"><label>Etiqueta<select name="etiqueta">${['LEY', 'LEY + MEJORA', 'MEJORA'].map(t => `<option ${t === c.etiqueta ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
     <label>Estado<select name="estado">${['Propuesto', 'Aprobado'].map(t => `<option ${t === c.estado ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
     <label>Cita (norma o referencia)<input name="cita" value="${v('cita')}"></label>
+    <fieldset class="protf"><legend>Protocolo preexistente (si lo hay)</legend><div id="protL"></div>
+      <label>Subir PDF o Word<input type="file" id="protF" accept="application/pdf,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
+      <div class="dos"><label>O pegar el enlace de Drive (Doc o PDF)<input id="protU" placeholder="https://docs.google.com/… o https://drive.google.com/…"></label>
+      <label>Nombre del protocolo<input id="protN" placeholder="Rol de llamada ante principio de incendio"></label></div>
+      <button class="btn" type="button" id="protA"><span class="ms">link</span>Agregar enlace</button>
+      ${protTodos().length ? `<label>O elegir uno ya cargado<select id="protS"><option value="">—</option>${protTodos().map((x, i) => `<option value="${i}">${E(x.nombre)}</option>`).join('')}</select></label>` : ''}
+      <div class="msg" id="protM"></div></fieldset>
     <p class="sub">Lo que quede vacío se guarda como «s/d (revisar)».</p><div class="msg" id="fMsg"></div>
     <div class="pie-f"><button class="btn" type="button" id="fCan">Cancelar</button><button class="btn pri" type="submit">Guardar</button></div>`;
   // 21/11/2026 · Roles vinculados a la agenda: el número sale de la hoja AGENDA; el alterno también, salvo que el paso tenga uno propio.
@@ -196,12 +209,31 @@ function editar(p) {
   const agPintar = () => { if (!ag) return; const a = agDe(ag.value); f.elements.numero.readOnly = !!a; if (a) { f.elements.numero.value = a.tel || ''; if (!f.elements.alterno.value || (p && p.alternoDeAgenda)) f.elements.alterno.placeholder = a.alterno ? 'De la agenda: ' + a.alterno : ''; } else f.elements.alterno.placeholder = ''; };
   if (ag) { ag.onchange = () => { if (p && p.alternoDeAgenda) f.elements.alterno.value = ''; agPintar(); }; if (p && p.alternoDeAgenda) f.elements.alterno.value = ''; agPintar(); }
   const ct = f.elements.ct; if (ct) ct.onchange = () => { const x = contactos[+ct.value]; if (!x) return; f.elements.aquien.value = [x.quien, x.nombre].filter(Boolean).join(' · '); f.elements.numero.value = x.tel || ''; };
+  // 21/11/2026 · Protocolos preexistentes del paso (hasta 5): subir PDF/Word a Drive, pegar enlace o elegir uno ya cargado.
+  let prot = ((p && p.prot) || []).map(x => ({ nombre: x.nombre, url: x.url }));
+  const pm = t => { document.getElementById('protM').textContent = t || ''; };
+  const pPintar = () => { document.getElementById('protL').innerHTML = prot.length ? prot.map((x, i) => `<div class="mini"><a href="${E(x.url)}" target="_blank" rel="noopener">${E(x.nombre)}</a> <button class="btn" type="button" data-pq="${i}" title="Quitar del paso"><span class="ms">close</span></button></div>`).join('') : '<div class="mini">Sin protocolo cargado.</div>';
+    f.querySelectorAll('[data-pq]').forEach(b => b.onclick = () => { prot.splice(+b.dataset.pq, 1); pPintar(); }); };
+  const pAgregar = x => { if (prot.length >= 5) { pm('Máximo 5 protocolos por paso.'); return; } if (prot.some(y => y.url === x.url)) { pm('Ya está en este paso.'); return; } prot.push(x); pPintar(); pm(''); };
+  pPintar();
+  document.getElementById('protA').onclick = () => { const u = document.getElementById('protU').value.trim(), n = document.getElementById('protN').value.trim();
+    if (!/^https:\/\/(docs|drive)\.google\.com\//i.test(u)) { pm('Pegá un enlace de Google Drive o Docs (empieza con https://docs.google.com o https://drive.google.com).'); return; }
+    pAgregar({ nombre: n || 'Protocolo', url: u }); document.getElementById('protU').value = ''; document.getElementById('protN').value = ''; };
+  const ps = document.getElementById('protS'); if (ps) ps.onchange = () => { const x = protTodos()[+ps.value]; if (x) pAgregar({ nombre: x.nombre, url: x.url }); ps.value = ''; };
+  document.getElementById('protF').onchange = async ev => { const fi = ev.target.files[0]; ev.target.value = ''; if (!fi) return;
+    if (fi.size > 20 * 1048576) { pm('El archivo supera 20 MB.'); return; }
+    pm('Subiendo «' + fi.name + '»…');
+    try { const datos = await new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = mal; r.readAsDataURL(fi); });
+      const r = await S.api('roles_protocolo_subir', { archivo: { nombre: fi.name, tipo: fi.type || (/\.docx$/i.test(fi.name) ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : /\.doc$/i.test(fi.name) ? 'application/msword' : 'application/pdf'), datos: datos } }, 180000);
+      if (!r || !r.ok) throw r; pAgregar({ nombre: r.nombre, url: r.url }); pm('Subido ✓. Tocá «Guardar» para dejarlo en el paso.'); }
+    catch (e) { pm('No se pudo subir: ' + ((e && (e.error || e.message)) || 'sin conexión')); } };
   document.getElementById('fCan').onclick = () => dlg.close();
   f.onsubmit = async ev => {
     ev.preventDefault(); const b = f.querySelector('[type=submit]'); b.disabled = true; const fm = document.getElementById('fMsg'); fm.textContent = 'Guardando…'; fm.className = 'msg';
     const d = { id: p ? p.id : '', ambito: est, cont: cont };
     ['paso', 'turno', 'llama', 'aquien', 'numero', 'alterno', 'decir', 'obs', 'etiqueta', 'estado', 'cita'].forEach(k => d[k] = f.elements[k].value);
     d.agenda = ag ? ag.value : (p ? p.agenda || '' : '');
+    d.prot = prot;
     try { await guardar(d); dlg.close(); await cargar(); msg('Guardado ✓'); }
     catch (e) { fm.textContent = 'No se pudo guardar: ' + ((e && (e.error || e.message)) || 'sin conexión'); fm.className = 'msg mal'; b.disabled = false; }
   };
