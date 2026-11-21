@@ -78,6 +78,10 @@ let D = S.store.get('agenda.datos', null), loc = S.store.get('agenda.loc', ''), 
 const vacio = v => !String(v == null ? '' : v).trim() || /s\/d/i.test(String(v));
 const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const esComun = f => /^todas$/i.test(f.loc || 'Todas');
+// 21/11/2026 08:55 (Belén: «en Trelew aclarar que es HMH»): nombre completo del establecimiento en cada contacto y en los subtítulos.
+const EST_NOMBRE = { 'HMH': 'Hospital María Humphreys (HMH)', 'HZT': 'Hospital Zonal Trelew (HZT)', 'HZT y HMH': 'HZT y HMH · servicios compartidos', 'HSST': 'Hospital Subzonal Santa Teresita (HSST)' };
+const estNombre = e => EST_NOMBRE[String(e || '').trim()] || String(e || '').trim();
+const POR_EST = ['Interno', 'Guía de internos', 'Empresas contratistas', 'Proveedores'];
 function telHtml(t) {
   if (vacio(t)) return `<span class="sd">${E(String(t || '').trim() || SD)}</span>`;
   // El número se marca solo con la parte que es número: «0280 401-1979», «Interno 1000» o «911 (a confirmar)».
@@ -100,10 +104,10 @@ async function cargar() {
 function coincide(f) {
   if (cat && f.cat !== cat) return false;
   if (!q) return true;
-  return sinTilde([f.nombre, f.est, f.tel, f.alterno, f.correo, f.dir, f.loc, f.cat, f.obs].join(' ')).indexOf(sinTilde(q)) >= 0;
+  return sinTilde([f.nombre, f.est, estNombre(f.est), f.sector, f.tel, f.alterno, f.correo, f.dir, f.loc, f.cat, f.obs].join(' ')).indexOf(sinTilde(q)) >= 0;
 }
 function item(f) {
-  const est = f.est && !/^todos$/i.test(f.est) ? E(f.est) : '';
+  const est = f.sector ? E(f.sector) : (f.est && !/^todos$/i.test(f.est) ? E(estNombre(f.est)) : '');
   const chips = (/^s[ií]$/i.test(f.h24) ? '<span class="chip c-24">24 h</span>' : '') + (/confirmar/i.test(f.estado) ? '<span class="chip c-ac">a confirmar</span>' : '') + (esComun(f) ? '<span class="chip c-com">común</span>' : '');
   const dir = [f.dir, esComun(f) ? '' : f.loc].filter(x => String(x || '').trim()).join(', ');
   return `<div class="item"><div class="n">${E(f.nombre)}${chips}</div>${est ? `<div class="e">${est}</div>` : ''}
@@ -116,7 +120,13 @@ function item(f) {
 function bloque(nombreLoc, filas) {
   const cats = D.categorias.filter(c => filas.some(f => f.cat === c));
   const sinCat = filas.filter(f => !f.cat);
-  return `<h2 class="loc"><span class="ms">location_city</span>${E(nombreLoc)}</h2>` + cats.map(c => `<h3 class="cat">${E(c)}</h3><div class="grid">${filas.filter(f => f.cat === c).map(item).join('')}</div>`).join('')
+  const grupo = c => {
+    const fs = filas.filter(f => f.cat === c);
+    if (POR_EST.indexOf(c) < 0) return `<h3 class="cat">${E(c)}</h3><div class="grid">${fs.map(item).join('')}</div>`;
+    const ests = []; fs.forEach(f => { if (ests.indexOf(f.est) < 0) ests.push(f.est); });
+    return ests.map(e => `<h3 class="cat">${E(c)} · ${E(estNombre(e) || 'Todos')}</h3>${c === 'Guía de internos' ? '<p class="mini" style="margin-top:-4px">Solo servicio e interno, tomados de la guía telefónica del HMH, que se actualiza en el hospital. Desde afuera: línea general y pedir el interno.</p>' : ''}<div class="grid">${fs.filter(f => f.est === e).map(item).join('')}</div>`).join('');
+  };
+  return `<h2 class="loc"><span class="ms">location_city</span>${E(nombreLoc)}</h2>` + cats.map(grupo).join('')
     + (sinCat.length ? `<h3 class="cat">Otros</h3><div class="grid">${sinCat.map(item).join('')}</div>` : '');
 }
 function pintar() {
@@ -134,10 +144,12 @@ function pintar() {
     const f = de(loc); cuerpo = f.length ? bloque(loc, f) : '';
   }
   app.innerHTML = `
+  ${D.guiaHmh && !D.guiaHmh.ok ? `<div class="aviso no-imp"><b>Guía de internos del HMH:</b> ${E(D.guiaHmh.error || 'no disponible ahora')}. Se ven los internos cargados en la agenda.</div>` : ''}
   ${delCache ? '<div class="aviso"><b>Sin conexión.</b> Se muestra la última agenda guardada en este dispositivo.</div>' : ''}
   <details class="ayuda no-imp"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> Los teléfonos y correos <b>institucionales</b> de los establecimientos, los servicios de emergencia, los organismos, las empresas contratistas, los proveedores y la red de derivación. No se publican datos ni contactos personales.</p>
     <p><b>Cómo se usa.</b> Elegí la localidad: se ven sus números y, además, los <b>comunes</b> (los que valen para todas, como 100, 101 o 103). Podés filtrar por tipo o buscar por nombre, servicio o número. En el teléfono, tocá el número para llamar o el correo para escribir. «Si no atiende» es el número alternativo.</p>
+    <p><b>Internos del HMH.</b> La «Guía de internos» se lee de la guía telefónica del HMH, que se actualiza en el hospital: siempre se ve la última versión (se renueva cada media hora). Solo se muestran el servicio y el interno, sin nombres de personas. La guía del HZT todavía falta.</p>
     <p><b>Datos que faltan.</b> Lo que todavía no se tiene se ve en naranja como «s/d (revisar)»; «a confirmar» indica un número que falta verificar. Base orientadora: antes de usarla en un cartel, confirmá los números.</p>
     <p><b>Imprimir.</b> El botón de la impresora arma una hoja con la localidad elegida.</p>
     <p><b>Sin conexión.</b> La última agenda que abriste queda guardada en este dispositivo.</p>
