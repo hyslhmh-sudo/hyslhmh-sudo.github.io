@@ -501,11 +501,13 @@ function faltaBox() {
   if (window.__blanco || !srv.puede) { box.hidden = true; return; }
   const filas = [], pres = [];
   SEC.forEach((s, i) => {
-    const f = req(s).filter(c => !lleno(c) && c.t !== 'h').map(etq);
+    const R = req(s).filter(c => !['h', 'auto', 'aguah'].includes(c.t)), f = R.filter(c => !lleno(c)).map(etq);
     const pr = s.c.filter(c => esPre(c.k)).map(etq);
     const a = `<a data-irsec="${s.id}">${i + 1} · ${E(s.t)}</a>`;
-    if (f.length) filas.push(`<li>${a}: ${f.map(E).join(', ')}</li>`);
-    if (pr.length) pres.push(`<li>${a}: ${pr.map(E).join(', ')}</li>`);
+    // Corto para el celular: sección entera, hasta 4 datos por nombre, o los 3 primeros y «y N más».
+    const lista = (L, todo) => todo ? '<b>toda la sección</b>' : L.length <= 4 ? L.map(E).join(', ') : L.slice(0, 3).map(E).join(', ') + ` y ${L.length - 3} más`;
+    if (f.length) filas.push(`<li>${a}: ${lista(f, f.length === R.length && R.length > 2)}</li>`);
+    if (pr.length) pres.push(`<li>${a}: ${lista(pr, false)}</li>`);
   });
   box.hidden = false; box.className = 'no-imp' + (filas.length || pres.length ? '' : ' ok');
   box.innerHTML = `<div class="fc"><span class="ms" style="font-size:20px">checklist</span>${filas.length || pres.length ? 'Lo que falta en esta ficha' : 'Ficha completa'}</div><div class="fb">`
