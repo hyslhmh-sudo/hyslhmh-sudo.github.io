@@ -91,7 +91,7 @@ function telHtml(t) {
 }
 const mailHtml = c => String(c || '').split(/[\s,;]+/).filter(x => /@/.test(x)).map(x => `<a class="mail" href="mailto:${E(x)}">${E(x)}</a>`).join(' · ');
 async function cargar() {
-  if (D) pintar();
+  if (D) { pintar(); const n = document.createElement('div'); n.className = 'aviso no-imp'; n.id = 'actualizando'; n.innerHTML = '<b>Actualizando la agenda…</b> Se muestra la última copia guardada en este dispositivo.'; app.prepend(n); }
   try {
     const r = await S.api('agenda_leer'); if (!r || !r.ok) throw r;
     D = r; S.store.set('agenda.datos', r); delCache = false; pintar();
@@ -106,6 +106,8 @@ function coincide(f) {
   if (!q) return true;
   return sinTilde([f.nombre, f.est, estNombre(f.est), f.sector, f.tel, f.alterno, f.correo, f.dir, f.loc, f.cat, f.obs].join(' ')).indexOf(sinTilde(q)) >= 0;
 }
+// 21/11/2026 09:17 (Belén: «están los números, revisar»): en la tarjeta no se muestran horario ni dirección cuando no hay dato
+// (siguen como «s/d (revisar)» en la hoja); el teléfono sin dato sí se muestra.
 function item(f) {
   const est = f.sector ? E(f.sector) : (f.est && !/^todos$/i.test(f.est) ? E(estNombre(f.est)) : '');
   const chips = (/^s[ií]$/i.test(f.h24) ? '<span class="chip c-24">24 h</span>' : '') + (/confirmar/i.test(f.estado) ? '<span class="chip c-ac">a confirmar</span>' : '') + (esComun(f) ? '<span class="chip c-com">común</span>' : '');
@@ -113,8 +115,8 @@ function item(f) {
   return `<div class="item"><div class="n">${E(f.nombre)}${chips}</div>${est ? `<div class="e">${est}</div>` : ''}
     <div class="fila"><span class="ms">call</span><span>${telHtml(f.tel)}${!vacio(f.alterno) ? ` <span class="mini">· si no atiende: ${telHtml(f.alterno)}</span>` : ''}</span></div>
     ${mailHtml(f.correo) ? `<div class="fila"><span class="ms">mail</span><span>${mailHtml(f.correo)}</span></div>` : ''}
-    ${String(f.horario || '').trim() && !/^las 24 h$/i.test(f.horario) ? `<div class="fila"><span class="ms">schedule</span><span>${vacio(f.horario) ? `<span class="sd">${E(f.horario)}</span>` : E(f.horario)}</span></div>` : ''}
-    ${dir ? `<div class="fila"><span class="ms">location_on</span><span>${vacio(dir) ? `<span class="sd">${E(dir)}</span>` : E(dir)}</span></div>` : ''}
+    ${!vacio(f.horario) && !/^las 24 h$/i.test(f.horario) ? `<div class="fila"><span class="ms">schedule</span><span>${E(f.horario)}</span></div>` : ''}
+    ${!vacio(f.dir) ? `<div class="fila"><span class="ms">location_on</span><span>${E(dir)}</span></div>` : ''}
     ${String(f.obs || '').trim() ? `<div class="mini obs">${E(f.obs)}</div>` : ''}</div>`;
 }
 function bloque(nombreLoc, filas) {
