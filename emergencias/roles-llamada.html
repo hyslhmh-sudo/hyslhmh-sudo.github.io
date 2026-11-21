@@ -143,7 +143,7 @@ function pintar() {
     <div class="solo-imp"><b style="font-size:18pt">ROL DE LLAMADA · ${E(cont.toUpperCase())}</b><br>${E(est)} · ${E(D.turnos[turno])}</div>
     <div class="no-imp"><h2>${E(cont)}</h2><div class="sub">${E(est)} · ${E(D.turnos[turno])} · ${origen}${R.pasos.length ? ` · ${R.pasos.length} pasos · ${sdN ? `<span class="sd">${sdN} datos en s/d</span>` : 'sin datos pendientes'}` : ''}${res && !esModelo(est) ? ` · ${res.completas} de ${res.total} contingencias completas` : ''}</div></div>
     ${R.pasos.length ? R.pasos.map(p => `<div class="paso"><div class="num ${+p.paso === 0 ? 'cero' : ''}">${E(p.paso)}</div><div>
-      <div class="linea"><b>${val(p.llama)}</b> llama a <b>${val(p.aquien)}</b> · ${telHtml(p.numero)}</div>
+      <div class="linea"><b>${val(p.llama)}</b> llama a <b>${val(p.aquien)}</b> · ${telHtml(p.numero)}${p.agendaNombre ? ` <span class="chip c-mod no-imp" title="${E(p.agendaNombre)}">de la agenda</span>` : ''}</div>
       <div class="mini">Si no atiende: ${val(p.alterno)}${p.turno === D.ambos ? '' : ` · <span class="no-imp">solo ${E(p.turno)}</span>`}</div>
       <div class="decir">Qué decir: ${val(p.decir)}</div>
       ${p.obs ? `<div class="mini">${E(p.obs)}</div>` : ''}
@@ -179,6 +179,7 @@ function editar(p) {
     <div class="dos"><label>Paso N.º (0 = primer aviso)<input name="paso" type="number" min="0" max="50" value="${v('paso')}"></label>
     <label>Turno<select name="turno">${D.turnos.concat([D.ambos]).map(t => `<option ${t === c.turno ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></label></div>
     <label>Quién llama<input name="llama" value="${v('llama')}" placeholder="Conmutador"></label>
+    ${(D.agenda || []).length ? `<label>Número de la agenda (recomendado: así se corrige en un solo lugar)<select name="agenda"><option value="">— sin vincular (número propio del paso)</option>${D.agenda.map(a => `<option value="${E(a.id)}" ${a.id === c.agenda ? 'selected' : ''}>${E([a.nombre, a.tel, a.loc && !/^todas$/i.test(a.loc) ? a.loc : ''].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>` : ''}
     ${contactos.length ? `<label>Elegir un contacto de la ficha (opcional)<select name="ct"><option value="">—</option>${contactos.map((x, i) => `<option value="${i}">${E([x.quien, x.nombre, x.tel].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>` : ''}
     <div class="dos"><label>A quién llama<input name="aquien" value="${v('aquien')}" placeholder="Bomberos"></label>
     <label>Número o interno<input name="numero" value="${v('numero')}" placeholder="100"></label></div>
@@ -190,12 +191,17 @@ function editar(p) {
     <label>Cita (norma o referencia)<input name="cita" value="${v('cita')}"></label>
     <p class="sub">Lo que quede vacío se guarda como «s/d (revisar)».</p><div class="msg" id="fMsg"></div>
     <div class="pie-f"><button class="btn" type="button" id="fCan">Cancelar</button><button class="btn pri" type="submit">Guardar</button></div>`;
+  // 21/11/2026 · Roles vinculados a la agenda: el número sale de la hoja AGENDA; el alterno también, salvo que el paso tenga uno propio.
+  const ag = f.elements.agenda, agDe = id => (D.agenda || []).find(a => a.id === id);
+  const agPintar = () => { if (!ag) return; const a = agDe(ag.value); f.elements.numero.readOnly = !!a; if (a) { f.elements.numero.value = a.tel || ''; if (!f.elements.alterno.value || (p && p.alternoDeAgenda)) f.elements.alterno.placeholder = a.alterno ? 'De la agenda: ' + a.alterno : ''; } else f.elements.alterno.placeholder = ''; };
+  if (ag) { ag.onchange = () => { if (p && p.alternoDeAgenda) f.elements.alterno.value = ''; agPintar(); }; if (p && p.alternoDeAgenda) f.elements.alterno.value = ''; agPintar(); }
   const ct = f.elements.ct; if (ct) ct.onchange = () => { const x = contactos[+ct.value]; if (!x) return; f.elements.aquien.value = [x.quien, x.nombre].filter(Boolean).join(' · '); f.elements.numero.value = x.tel || ''; };
   document.getElementById('fCan').onclick = () => dlg.close();
   f.onsubmit = async ev => {
     ev.preventDefault(); const b = f.querySelector('[type=submit]'); b.disabled = true; const fm = document.getElementById('fMsg'); fm.textContent = 'Guardando…'; fm.className = 'msg';
     const d = { id: p ? p.id : '', ambito: est, cont: cont };
     ['paso', 'turno', 'llama', 'aquien', 'numero', 'alterno', 'decir', 'obs', 'etiqueta', 'estado', 'cita'].forEach(k => d[k] = f.elements[k].value);
+    d.agenda = ag ? ag.value : (p ? p.agenda || '' : '');
     try { await guardar(d); dlg.close(); await cargar(); msg('Guardado ✓'); }
     catch (e) { fm.textContent = 'No se pudo guardar: ' + ((e && (e.error || e.message)) || 'sin conexión'); fm.className = 'msg mal'; b.disabled = false; }
   };
@@ -211,7 +217,7 @@ async function quitar(id) {
 async function copiarModelo(pasos) {
   if (!confirm('Se copian ' + pasos.length + ' pasos del modelo como pasos propios de ' + est + ', para completarlos. ¿Seguir?')) return;
   msg('Copiando…');
-  try { for (const p of pasos) await guardar(Object.assign({}, p, { id: '', ambito: est, obs: (p.obs ? p.obs + ' · ' : '') + 'Copiado del modelo' })); await cargar(); msg('Modelo copiado ✓. Completá los datos propios.'); }
+  try { for (const p of pasos) await guardar(Object.assign({}, p, p.alternoDeAgenda ? { alterno: '' } : {}, { id: '', ambito: est, obs: (p.obs ? p.obs + ' · ' : '') + 'Copiado del modelo' })); await cargar(); msg('Modelo copiado ✓. Completá los datos propios.'); }
   catch (e) { msg('No se pudo copiar: ' + ((e && (e.error || e.message)) || 'sin conexión'), true); await cargar(); }
 }
 function csv(pasos) {
