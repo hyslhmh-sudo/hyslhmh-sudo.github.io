@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda telefónica · Emergencias</title>
+<meta name="theme-color" content="#0D3B66">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<style>
+/* 21/11/2026 · Agenda telefónica (v0). Belén: «al final de la app, agregar agenda telefónica de externos, internos, empresas, proveedores, etc.»,
+   «que la agenda sean los datos de un sheet» y «ver números de teléfono y mails institucionales de todos; no ver datos y contactos personales;
+   agregar dirección y localidad; separar por localidad y copiar los comunes». La ven todos los usuarios; solo lectura.
+   Los datos vienen del servidor (acción agenda_leer, hoja AGENDA). Las filas con Localidad «Todas» se copian en cada localidad. */
+:root{--fuerte:#0D3B66;--medio:#1C6FB8;--claro:#E6F0FA;--borde:#C9DCEF;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A;--rojo:#C62828}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid var(--coral);border-left:6px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda summary{cursor:pointer;font-weight:700}.ayuda p{margin:.5em 0}
+.buscar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.buscar input{flex:1;font:500 15px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:12px;padding:10px 12px;background:#fff;color:var(--texto);min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{border:1.5px solid var(--borde);background:#fff;border-radius:999px;padding:6px 12px;font:600 13px 'Plus Jakarta Sans',sans-serif;color:var(--fuerte);cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--fuerte);border-color:var(--fuerte);color:#fff}
+.chips.cat button{font-size:12px;padding:4px 10px}
+h2.loc{font-size:18px;color:var(--fuerte);margin:18px 0 6px;display:flex;align-items:center;gap:6px}
+h3.cat{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--suave);margin:14px 0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.item{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 12px;break-inside:avoid}
+.item .n{font-weight:800;font-size:14.5px;color:var(--fuerte)}
+.item .e{font-size:12px;color:var(--tenue)}
+.fila{display:flex;gap:6px;align-items:flex-start;font-size:13.5px;margin-top:4px}.fila .ms{font-size:17px;color:var(--medio);margin-top:1px}
+.tel{font-weight:800;font-size:15px;color:var(--texto);text-decoration:none;border-bottom:2px solid var(--borde)}
+a.mail{color:var(--medio);word-break:break-all}
+.sd{color:var(--coral);font-style:italic}
+.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700;white-space:nowrap;margin-left:4px;vertical-align:middle}
+.c-24{background:#E3F4EC;color:var(--ok)}.c-ac{background:#FFF1DB;color:#B26A00}.c-com{background:var(--claro);color:var(--medio)}
+.mini{font-size:12px;color:var(--tenue);margin-top:4px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:10px;padding:6px 10px;font:600 12.5px 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.btn:hover{background:var(--claro)}
+.acc{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+.vacio{color:var(--tenue);font-size:13.5px;padding:12px 0}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
+@media print{.barra,.ayuda,.buscar,.chips,.acc,.no-imp,.aviso{display:none!important}body{background:#fff;font-size:11pt}main{padding:0}.grid{grid-template-columns:1fr 1fr;gap:6px}.item{border:1px solid #ccc;padding:6px 8px}.mini.obs{display:none}footer img{width:66.67%;max-height:22mm}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Agenda telefónica<small>Internos, emergencias, organismos, empresas y proveedores · versión 0</small></h1>
+  <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
+</header>
+<main id="app"><p class="mini">Cargando…</p></main>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const SD = 's/d (revisar)';
+const TODAS = 'Todas las localidades';
+let D = S.store.get('agenda.datos', null), loc = S.store.get('agenda.loc', ''), cat = '', q = '', delCache = false;
+const vacio = v => !String(v == null ? '' : v).trim() || /s\/d/i.test(String(v));
+const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const esComun = f => /^todas$/i.test(f.loc || 'Todas');
+function telHtml(t) {
+  if (vacio(t)) return `<span class="sd">${E(String(t || '').trim() || SD)}</span>`;
+  // El número se marca solo con la parte que es número: «0280 401-1979», «Interno 1000» o «911 (a confirmar)».
+  const m = String(t).match(/^(\(?\+?[\d][\d\s\-()]{1,}[\d])(.*)$/);
+  if (m && m[1].replace(/\D/g, '').length >= 3) return `<a class="tel" href="tel:${E(m[1].replace(/[^\d+]/g, ''))}">${E(m[1])}</a>${E(m[2])}`;
+  return `<b>${E(t)}</b>`;
+}
+const mailHtml = c => String(c || '').split(/[\s,;]+/).filter(x => /@/.test(x)).map(x => `<a class="mail" href="mailto:${E(x)}">${E(x)}</a>`).join(' · ');
+async function cargar() {
+  if (D) pintar();
+  try {
+    const r = await S.api('agenda_leer'); if (!r || !r.ok) throw r;
+    D = r; S.store.set('agenda.datos', r); delCache = false; pintar();
+  } catch (e) {
+    if (e && e.sesion) { location.replace('index.html'); return; }
+    if (D) { delCache = true; pintar(); return; }
+    app.innerHTML = `<div class="aviso"><b>No se pudo traer la agenda.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`;
+  }
+}
+function coincide(f) {
+  if (cat && f.cat !== cat) return false;
+  if (!q) return true;
+  return sinTilde([f.nombre, f.est, f.tel, f.alterno, f.correo, f.dir, f.loc, f.cat, f.obs].join(' ')).indexOf(sinTilde(q)) >= 0;
+}
+function item(f) {
+  const est = f.est && !/^todos$/i.test(f.est) ? E(f.est) : '';
+  const chips = (/^s[ií]$/i.test(f.h24) ? '<span class="chip c-24">24 h</span>' : '') + (/confirmar/i.test(f.estado) ? '<span class="chip c-ac">a confirmar</span>' : '') + (esComun(f) ? '<span class="chip c-com">común</span>' : '');
+  const dir = [f.dir, esComun(f) ? '' : f.loc].filter(x => String(x || '').trim()).join(', ');
+  return `<div class="item"><div class="n">${E(f.nombre)}${chips}</div>${est ? `<div class="e">${est}</div>` : ''}
+    <div class="fila"><span class="ms">call</span><span>${telHtml(f.tel)}${!vacio(f.alterno) ? ` <span class="mini">· si no atiende: ${telHtml(f.alterno)}</span>` : ''}</span></div>
+    ${mailHtml(f.correo) ? `<div class="fila"><span class="ms">mail</span><span>${mailHtml(f.correo)}</span></div>` : ''}
+    ${String(f.horario || '').trim() && !/^las 24 h$/i.test(f.horario) ? `<div class="fila"><span class="ms">schedule</span><span>${vacio(f.horario) ? `<span class="sd">${E(f.horario)}</span>` : E(f.horario)}</span></div>` : ''}
+    ${dir ? `<div class="fila"><span class="ms">location_on</span><span>${vacio(dir) ? `<span class="sd">${E(dir)}</span>` : E(dir)}</span></div>` : ''}
+    ${String(f.obs || '').trim() ? `<div class="mini obs">${E(f.obs)}</div>` : ''}</div>`;
+}
+function bloque(nombreLoc, filas) {
+  const cats = D.categorias.filter(c => filas.some(f => f.cat === c));
+  const sinCat = filas.filter(f => !f.cat);
+  return `<h2 class="loc"><span class="ms">location_city</span>${E(nombreLoc)}</h2>` + cats.map(c => `<h3 class="cat">${E(c)}</h3><div class="grid">${filas.filter(f => f.cat === c).map(item).join('')}</div>`).join('')
+    + (sinCat.length ? `<h3 class="cat">Otros</h3><div class="grid">${sinCat.map(item).join('')}</div>` : '');
+}
+function pintar() {
+  const locs = (D.localidades || []).slice();
+  if (loc !== TODAS && locs.indexOf(loc) < 0) loc = locs[0] || TODAS;
+  S.store.set('agenda.loc', loc);
+  const comunes = D.filas.filter(esComun);
+  const de = l => D.filas.filter(f => f.loc === l).concat(comunes).filter(coincide);
+  let cuerpo;
+  if (loc === TODAS) {
+    const propios = locs.map(l => ({ l, f: D.filas.filter(x => x.loc === l).filter(coincide) })).filter(x => x.f.length);
+    const c = comunes.filter(coincide);
+    cuerpo = (c.length ? bloque('Comunes a todas las localidades', c) : '') + propios.map(x => bloque(x.l, x.f)).join('');
+  } else {
+    const f = de(loc); cuerpo = f.length ? bloque(loc, f) : '';
+  }
+  app.innerHTML = `
+  ${delCache ? '<div class="aviso"><b>Sin conexión.</b> Se muestra la última agenda guardada en este dispositivo.</div>' : ''}
+  <details class="ayuda no-imp"><summary><span class="ms">help</span> Ayuda</summary>
+    <p><b>Qué es.</b> Los teléfonos y correos <b>institucionales</b> de los establecimientos, los servicios de emergencia, los organismos, las empresas contratistas, los proveedores y la red de derivación. No se publican datos ni contactos personales.</p>
+    <p><b>Cómo se usa.</b> Elegí la localidad: se ven sus números y, además, los <b>comunes</b> (los que valen para todas, como 100, 101 o 103). Podés filtrar por tipo o buscar por nombre, servicio o número. En el teléfono, tocá el número para llamar o el correo para escribir. «Si no atiende» es el número alternativo.</p>
+    <p><b>Datos que faltan.</b> Lo que todavía no se tiene se ve en naranja como «s/d (revisar)»; «a confirmar» indica un número que falta verificar. Base orientadora: antes de usarla en un cartel, confirmá los números.</p>
+    <p><b>Imprimir.</b> El botón de la impresora arma una hoja con la localidad elegida.</p>
+    <p><b>Sin conexión.</b> La última agenda que abriste queda guardada en este dispositivo.</p>
+    <p><b>Correcciones.</b> Si un número está mal o falta uno, avisá a Higiene y Seguridad Laboral. La agenda se actualiza desde una planilla única: los cambios se ven en todos los dispositivos.</p>
+  </details>
+  <div class="buscar no-imp"><span class="ms">search</span><input id="q" type="search" placeholder="Buscar: nombre, servicio, número…" value="${E(q)}" aria-label="Buscar"></div>
+  <div class="chips" role="group" aria-label="Localidad">${locs.concat([TODAS]).map(l => `<button type="button" data-loc="${E(l)}" aria-pressed="${l === loc}">${E(l)}</button>`).join('')}</div>
+  <div class="chips cat" role="group" aria-label="Tipo"><button type="button" data-cat="" aria-pressed="${!cat}">Todos los tipos</button>${D.categorias.filter(c => D.filas.some(f => f.cat === c)).map(c => `<button type="button" data-cat="${E(c)}" aria-pressed="${c === cat}">${E(c)}</button>`).join('')}</div>
+  <div class="acc no-imp"><button class="btn" type="button" id="csv"><span class="ms">download</span> Descargar CSV</button></div>
+  ${cuerpo || '<p class="vacio">No hay contactos que coincidan con la búsqueda.</p>'}
+  <p class="mini">Versión 0. Fuente de cada dato en la planilla de la agenda. Actualizado según la última carga.</p>`;
+  const inp = document.getElementById('q');
+  inp.addEventListener('input', () => { q = inp.value; const p = inp.selectionStart; pintar(); const n = document.getElementById('q'); n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} });
+  app.querySelectorAll('[data-loc]').forEach(b => b.onclick = () => { loc = b.dataset.loc; pintar(); });
+  app.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => { cat = b.dataset.cat; pintar(); });
+  document.getElementById('csv').onclick = csv;
+}
+function csv() {
+  const K = ['loc', 'cat', 'est', 'nombre', 'tel', 'alterno', 'correo', 'horario', 'h24', 'dir', 'estado'];
+  const T = ['Localidad', 'Categoría', 'Establecimiento', 'Nombre o servicio', 'Teléfono o interno', 'Alterno', 'Correo institucional', 'Horario', '24 h', 'Dirección', 'Estado'];
+  const filas = loc === TODAS ? D.filas : D.filas.filter(f => f.loc === loc || esComun(f));
+  const c = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const txt = '﻿' + [T.map(c).join(';')].concat(filas.filter(coincide).map(f => K.map(k => c(k === 'loc' && esComun(f) ? 'Todas' : f[k])).join(';'))).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'agenda-telefonica-' + sinTilde(loc).replace(/[^a-z0-9]+/g, '-') + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+cargar();
+})();
+</script>
+</body>
+</html>
