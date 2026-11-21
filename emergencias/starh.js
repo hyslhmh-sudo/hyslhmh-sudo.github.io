@@ -552,7 +552,7 @@
 })();
 
 /* 21/11/2026 · Aviso emergente de una sola vez (Belén: «un mensaje en la app, corto, conciso, amable, que lo lean 1 vez y desaparezca»).
-   Se arma desde Notas: tipo «Para leer» y, en «Establecimiento o red», escribir «Aviso emergente»; con destinatarios. Al entrar, quien la tiene sin leer la ve en una
+   Se arma desde Notas: tipo «Para leer» y, en «Establecimiento o red», escribir «Aviso emergente» (o «Aviso emergente → ficha.html» para abrir esa pantalla después de «Entendido»); con destinatarios. Al entrar, quien la tiene sin leer la ve en una
    ventana con «Entendido»; al tocarlo queda marcada como leída y no vuelve a aparecer. No manda mails ni avisos externos. No se imprime. */
 (function () {
   if (typeof document === 'undefined' || !window.STARH || STARH.DEMO) return;
@@ -582,6 +582,8 @@
       S.api('notas_marcar', { id: n.id, que: 'leido', texto: '' }).catch(function () {}).then(function () {
         d.remove(); st.remove(); S.store.set('notas.franja', null);
         try { window.dispatchEvent(new Event('notas:cambio')); } catch (e) {}
+        var ir = (String(n.lugar || '').match(/→\s*([\w-]+\.html)/) || [])[1]; // «Aviso emergente → ficha.html»: después de «Entendido» abre esa pantalla
+        if (ir && location.pathname.slice(-ir.length) !== ir) { location.href = ir; return; }
         if (sigue) sigue();
       });
     });
@@ -596,7 +598,7 @@
       if (!r || !r.ok) return;
       var yo = r.yo, P = (r.notas || []).filter(function (n) {
         var dest = n.para === 'todos' || (n.para || []).indexOf(yo) >= 0;
-        return n.estado === 'Abierta' && dest && n.tipo === 'Para leer' && (n.lugar === 'Aviso emergente' || n.accion === 'Aviso emergente') && !(n.lect || {})[yo];
+        return n.estado === 'Abierta' && dest && n.tipo === 'Para leer' && /^Aviso emergente/.test(n.lugar || '') && !(n.lect || {})[yo];
       });
       (function uno(i) { if (i < P.length) mostrar(P[i], function () { uno(i + 1); }); })(0);
     }).catch(function () {});

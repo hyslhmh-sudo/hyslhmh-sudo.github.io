@@ -33,6 +33,13 @@ main{max-width:860px;margin:0 auto;padding:16px 16px 40px}
 select,input,textarea{width:100%;border:1px solid var(--borde);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:#fff;color:var(--texto)}
 textarea{min-height:64px;resize:vertical}
 .prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+/* 21/11/2026 · Lo que falta cargar (se actualiza con cada dato) */
+#falta{margin-top:10px;border-radius:14px;overflow:hidden;border:1px solid #EBC3D3;background:#fff}
+#falta .fc{display:flex;align-items:center;gap:8px;padding:10px 14px;background:linear-gradient(135deg,#2F5BEA 0%,#00897B 100%);color:#fff;font-weight:800;font-size:14px}
+#falta .fb{padding:10px 14px 8px;border-left:5px solid #C2185B;font-size:13.5px;line-height:1.5}
+#falta .fb p{margin:0 0 6px}#falta ul{margin:0 0 8px;padding-left:18px}#falta li{margin:2px 0}
+#falta a{color:#2F5BEA;font-weight:800;text-decoration:none;cursor:pointer}#falta a:hover{text-decoration:underline}
+#falta .pre{color:#C2185B;font-weight:800}#falta.ok .fb{border-left-color:#1E8E5A}
 .barrita{flex:1;min-width:160px;height:10px;background:var(--claro);border-radius:999px;overflow:hidden}.barrita i{display:block;height:100%;background:var(--medio)}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--claro);color:var(--fuerte)}
 .chip.ok{background:#E3F4EC;color:var(--ok)}.chip.falta{background:#FFF0E0;color:#B35500}
@@ -245,7 +252,10 @@ const PRE = {
   'Puesto Sanitario El Mirasol': base('Puesto Sanitario El Mirasol', 'El Mirasol', '50260702129215', 'Puesto sanitario'),
   'Puesto Sanitario Garayalde': base('Puesto Sanitario Garayalde', 'Garayalde', '50260282129221', 'Puesto sanitario')
 };
-const FUENTE_PRE = { camas: 'hoja CAMAS de la app (rurales: informe APTW ene–oct 2026; HZT y HMH: Epidemiología HMH 05/11/2026; HSST: dato de Belén 12/11/2026)', camas_obs: 'hoja CAMAS de la app', ref_tit: 'referente designado (COEsp · Participantes)' };
+// 21/11/2026 · Belén: precargar dirección y coordenadas de Dolavon, Las Plumas y Camarones (base de establecimientos) para que las confirmen.
+[['Hospital Rural Dolavon', 'Raúl B. Díaz 275', '-43.3109144, -65.7048220'], ['Hospital Rural Las Plumas', 'Belgrano 215', '-43.7209525, -67.2841843'], ['Hospital Rural Camarones', '25 de Mayo 321', '-44.7962030, -65.7131953']]
+  .forEach(([e, dir, coord]) => Object.assign(PRE[e], { dir, coord }));
+const FUENTE_PRE = { dir: 'base de establecimientos del Área Programática', coord: 'base de establecimientos del Área Programática', camas: 'hoja CAMAS de la app (rurales: informe APTW ene–oct 2026; HZT y HMH: Epidemiología HMH 05/11/2026; HSST: dato de Belén 12/11/2026)', camas_obs: 'hoja CAMAS de la app', ref_tit: 'referente designado (COEsp · Participantes)' };
 ['pob_ciu', 'viv'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadro 1.5 por gobierno local');
 ['depto', 'pob_depto', 'dens', 'mayores', 'indices', 'sin_cob'].forEach(k => FUENTE_PRE[k] = 'INDEC, Censo 2022, Chubut, cuadros por departamento (la densidad solo se publica por departamento)');
 FUENTE_PRE.pob_at = 'ver «Referencias utilizadas en esta sección»'; FUENTE_PRE.pob_fuente = 'referencias de los datos precargados de esta sección (14/11/2026)';
@@ -463,7 +473,7 @@ function pintar() {
   <div class="cab"><label for="selEst">Establecimiento</label><select id="selEst">${(srv.establecimientos || ESTAB).map(e => `<option value="${E(e)}"${e === estab ? ' selected' : ''}>${E(e)}${(srv.mios || []).indexOf(e) < 0 ? ' (solo lectura)' : ''}</option>`).join('')}</select>
   <div id="estadoG" class="estadoG" aria-live="polite"></div>
   <div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" type="button" onclick="imprimir(true)"><span class="ms">print</span>Imprimir planilla en blanco</button><button class="btn" type="button" onclick="imprimir(false)"><span class="ms">print</span>Imprimir lo cargado</button></div>
-  <div id="prog"></div></div>
+  <div id="prog"></div><div id="falta" class="no-imp" hidden></div></div>
   <h2 class="paso">Paso 1 · Mis datos <small>(se completan al ingresar; para revisarlos, en el inicio tocá tu nombre)</small></h2>
   <h2 class="paso">Paso 2 · Datos del establecimiento <small>(se puede completar por partes)</small></h2>
   <fieldset ${srv.puede ? '' : 'disabled'} style="border:0;padding:0;margin:0;min-width:0">${SEC.map((s, i) => secHtml(s, i + 1)).join('')}</fieldset>
@@ -483,7 +493,30 @@ async function rolesEnFicha() {
     : '<b>Roles de llamada</b> (en diseño): por ahora son para el HMH, el HZT, el HSST y sus CAPS.';
   lab.insertAdjacentElement('afterend', d);
 }
+// 21/11/2026 · Belén: «que les aparezca en pantalla lo que les falta cargar y, si corresponde, revisar y confirmar los precargados;
+// que este cartel se actualice conforme avance la carga». Se recalcula con cada dato (lo llama progreso()).
+const etq = c => String(c.l || '').replace(/<[^>]+>/g, '').replace(/^(LEY|MEJORA)/, '').split(' (')[0].split(': uno por fila')[0].replace(/ · opcional$/, '').replace(/, el establecimiento…$/, '').replace(/: los que .*$/, '').replace(/\.$/, '').trim();
+function faltaBox() {
+  const box = document.getElementById('falta'); if (!box) return;
+  if (window.__blanco || !srv.puede) { box.hidden = true; return; }
+  const filas = [], pres = [];
+  SEC.forEach((s, i) => {
+    const f = req(s).filter(c => !lleno(c) && c.t !== 'h').map(etq);
+    const pr = s.c.filter(c => esPre(c.k)).map(etq);
+    const a = `<a data-irsec="${s.id}">${i + 1} · ${E(s.t)}</a>`;
+    if (f.length) filas.push(`<li>${a}: ${f.map(E).join(', ')}</li>`);
+    if (pr.length) pres.push(`<li>${a}: ${pr.map(E).join(', ')}</li>`);
+  });
+  box.hidden = false; box.className = 'no-imp' + (filas.length || pres.length ? '' : ' ok');
+  box.innerHTML = `<div class="fc"><span class="ms" style="font-size:20px">checklist</span>${filas.length || pres.length ? 'Lo que falta en esta ficha' : 'Ficha completa'}</div><div class="fb">`
+    + (pres.length ? `<p><span class="pre">Revisá y confirmá</span> los datos precargados (si están bien, tocá «Confirmar los precargados»):</p><ul>${pres.join('')}</ul>` : '')
+    + (filas.length ? `<p><b>Te falta cargar:</b></p><ul>${filas.join('')}</ul>` : '')
+    + (filas.length || pres.length ? '<p style="color:var(--suave);font-size:12.5px">Se actualiza solo a medida que cargás. Tocá una sección para ir directo.</p>' : '<p>No falta nada obligatorio. Gracias.</p>')
+    + '</div>';
+}
+app.addEventListener('click', ev => { const a = ev.target.closest && ev.target.closest('[data-irsec]'); if (!a) return; const d = document.getElementById(a.dataset.irsec); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
 function progreso() {
+  faltaBox();
   const ok = SEC.filter(secOk).length, min = SEC.filter(s => s.min), minOk = min.every(secOk);
   const p = document.getElementById('prog'); if (!p) return;
   p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b><small>· ${fechaAct()}</small>
