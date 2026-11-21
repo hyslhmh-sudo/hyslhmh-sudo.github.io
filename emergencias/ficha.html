@@ -39,7 +39,9 @@ textarea{min-height:64px;resize:vertical}
 #falta .fb{padding:10px 14px 8px;border-left:5px solid #C2185B;font-size:13.5px;line-height:1.5}
 #falta .fb p{margin:0 0 6px}#falta ul{margin:0 0 8px;padding-left:18px}#falta li{margin:2px 0}
 #falta a{color:#2F5BEA;font-weight:800;text-decoration:none;cursor:pointer}#falta a:hover{text-decoration:underline}
-#falta .pre{color:#C2185B;font-weight:800}#falta.ok .fb{border-left-color:#1E8E5A}
+#falta .pre{color:#C2185B;font-weight:800}#falta li.rojo,#falta li.rojo a{color:#C62828;font-weight:800}
+.dirChk{border:2px solid #C62828;background:#FDECEA;border-radius:12px;padding:8px 12px;margin:-4px 0 12px;font-size:13.5px;color:#7F1D1D}
+.dirChk b{color:#C62828}.dirChk .btn{margin-top:6px;border-color:#C62828;color:#C62828}.campo.dirMal input{border:2px solid #C62828!important;background:#FFF5F5}#falta.ok .fb{border-left-color:#1E8E5A}
 .barrita{flex:1;min-width:160px;height:10px;background:var(--claro);border-radius:999px;overflow:hidden}.barrita i{display:block;height:100%;background:var(--medio)}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--claro);color:var(--fuerte)}
 .chip.ok{background:#E3F4EC;color:var(--ok)}.chip.falta{background:#FFF0E0;color:#B35500}
@@ -407,7 +409,18 @@ async function verAdj(id, nombre) {
     if (w) w.location.href = url; else location.href = url;
   } catch (e) { if (w) w.close(); alert('No se pudo abrir el archivo: ' + ((e && (e.error || e.message)) || 'sin conexión') + '.'); }
 }
+// 21/11/2026 · Belén: «marcar en rojo en la ficha y pedir confirmar dirección» donde la dirección cargada no coincide con la de la base.
+const DIR_BASE = { 'Hospital Rural Dolavon': 'Raúl B. Díaz 275', 'Hospital Rural Gaiman': 'Eugenio Tello 1202' };
+const normDir = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+const dirRevisar = () => !window.__blanco && !!DIR_BASE[estab] && String(datos.dir || '').trim() !== '' && datos.dir_conf !== datos.dir && normDir(datos.dir) !== normDir(DIR_BASE[estab]);
+function actualizarDir() {
+  const box = document.getElementById('dirChk'), inp = app.querySelector('input[data-k="dir"]'); if (!box || !inp) return;
+  const mal = dirRevisar(); box.hidden = !mal; const lab = inp.closest('.campo'); if (lab) lab.classList.toggle('dirMal', mal);
+}
+window.confirmarDir = () => { datos.dir_conf = datos.dir; marcar('dir_conf'); actualizarDir(); };
 function campo(c) {
+  if (c.k === 'dir' && !c._x && DIR_BASE[estab] && !window.__blanco) return campo(Object.assign({}, c, { _x: 1 }))
+    + `<div id="dirChk" class="dirChk no-imp"${dirRevisar() ? '' : ' hidden'}><b>Confirmá la dirección.</b> En la base de establecimientos figura «${E(DIR_BASE[estab])}». Si la cargada es la correcta, tocá «Confirmar esta dirección»; si no, corregila.<br><button class="btn" type="button" onclick="confirmarDir()"><span class="ms">check</span>Confirmar esta dirección</button></div>`;
   const v = datos[c.k], id = 'f_' + c.k;
   const lab = `<span>${c.l}${esPre(c.k) ? ` <span class="pre" title="Dato que ya teníamos${FUENTE_PRE[c.k] ? ': ' + E(FUENTE_PRE[c.k]) : ' (libro de la app, hoja LUGARES)'}. Revisalo y cambialo si no es correcto.">Precargado</span>` : ''}</span>`;
   if (c.t === 'auto' && c.k === 'grupos' && !window.__blanco) { setTimeout(cargarGrupos, 0); return `<div class="campo">${lab}<div class="auto"><span class="ms" style="font-size:16px">sync</span> ${E(c.x)}</div><div class="auto" id="gruposAuto">Buscando las cantidades…</div></div>`; }
@@ -509,6 +522,7 @@ function faltaBox() {
     if (f.length) filas.push(`<li>${a}: ${lista(f, f.length === R.length && R.length > 2)}</li>`);
     if (pr.length) pres.push(`<li>${a}: ${lista(pr, false)}</li>`);
   });
+  if (dirRevisar()) pres.unshift(`<li class="rojo"><a data-irsec="${(SEC.find(x => x.c.some(c => c.k === 'dir')) || {}).id}">Dirección</a>: confirmala (en la base figura «${E(DIR_BASE[estab])}»)</li>`);
   box.hidden = false; box.className = 'no-imp' + (filas.length || pres.length ? '' : ' ok');
   box.innerHTML = `<div class="fc"><span class="ms" style="font-size:20px">checklist</span>${filas.length || pres.length ? 'Lo que falta en esta ficha' : 'Ficha completa'}</div><div class="fb">`
     + (pres.length ? `<p><span class="pre">Revisá y confirmá</span> los datos precargados (si están bien, tocá «Confirmar los precargados»):</p><ul>${pres.join('')}</ul>` : '')
@@ -518,7 +532,7 @@ function faltaBox() {
 }
 app.addEventListener('click', ev => { const a = ev.target.closest && ev.target.closest('[data-irsec]'); if (!a) return; const d = document.getElementById(a.dataset.irsec); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
 function progreso() {
-  faltaBox();
+  faltaBox(); actualizarDir();
   const ok = SEC.filter(secOk).length, min = SEC.filter(s => s.min), minOk = min.every(secOk);
   const p = document.getElementById('prog'); if (!p) return;
   p.innerHTML = `<div class="prog"><div class="barrita"><i style="width:${Math.round(ok / SEC.length * 100)}%"></i></div><b>${ok} de ${SEC.length} secciones completas</b><small>· ${fechaAct()}</small>
