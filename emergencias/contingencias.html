@@ -220,7 +220,7 @@ function tarjetaPlan(p) {
         ${p.Observaciones ? `<span class="nota">${E(p.Observaciones.replace(/\s*Incluye sus dependencias \(hoja DEPENDENCIAS\)\./, ''))}</span>` : ''}
         <span class="meta"><span>Responsable<b>${celda(p.Responsable)}</b></span><span>Fecha<b>${celda(p.Fecha)}</b></span>
           <span>Orden de redacción<b>${celda(p['Orden de redacción'])}</b></span><span>Participantes (COE)<b>${pa == null ? '<span class="sdv">s/d</span>' : pa.length ? pa.length : '<span class="sdv">ninguno todavía</span>'}</b></span>
-          <span>Datos del plan<b>${d.filas} ${d.sd ? `<span class="sdv">${d.sd} s/d</span>` : ''}</b></span><span>Bloques de texto<b>${p.Clave === 'PGC' ? (datos.bloques.BASE || 0) + ' BASE' : (datos.bloques[p.Clave] || 0)}</b></span></span>
+          <span>Datos del plan<b>${d.filas} ${d.sd ? `<span class="sdv">${d.sd} s/d</span>` : ''}</b></span><span>Bloques de texto<b>${datos.bloques[p.Clave] || 0}</b></span></span>
       </button>`; }
 function vistaLista() {
   const planes = datos.planes.filter(p => EN_PE_PLAN.indexOf(p.Clave) < 0);
@@ -271,7 +271,7 @@ function seccionDependencias() {
 
 async function vistaPlan(clave) {
   const p = datos.planes.find(x => x.Clave === clave); if (!p) return ir('#/');
-  const enPE = EN_PE.indexOf(clave) >= 0, pa = participantes(p), bl = clave === 'PGC' ? (datos.bloques.BASE || 0) : (datos.bloques[clave] || 0), pr = datos.propios[clave] || 0;
+  const enPE = EN_PE.indexOf(clave) >= 0, pa = participantes(p), bl = datos.bloques[clave] || 0, pr = datos.propios[clave] || 0;
   const fechaISO = (() => { const m = String(p.Fecha || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; })();
   app.innerHTML = GC.barra('planes') + `<button class="volver" data-ir="#/"><span class="ms">arrow_back</span>Todos los planes de ${E(est)}</button>${REGLA}
     <div class="tarjeta cab"><div class="cab-pc"><span class="cod" style="font-weight:800;color:#8E1B1B">${celda(p['Código'])}</span><span class="est-chip ${claseEst(p.Estado)}">${E(p.Estado || 's/d')}</span></div><h2>${E(p.Plan)}</h2>
@@ -296,7 +296,7 @@ async function vistaPlan(clave) {
       <div id="tdatos"><div class="vacio">Leyendo…</div></div>
     </section>
     <section class="tarjeta secc" aria-labelledby="h4"><h3 id="h4">4 · Textos del plan</h3>
-      <div class="kpis" style="margin-bottom:6px"><div class="tarjeta kpi"><b>${bl}</b><span>${clave === 'PGC' ? 'bloques BASE en TEXTOS' : 'bloques en TEXTOS con «Plan» = ' + E(clave)}</span></div><div class="tarjeta kpi"><b>${pr}</b><span>textos propios del establecimiento</span></div><div class="tarjeta kpi"><b>${datos.bloques.BASE || 0}</b><span>bloques BASE que puede reutilizar</span></div></div>
+      <div class="kpis" style="margin-bottom:6px"><div class="tarjeta kpi"><b>${bl}</b><span>bloques en TEXTOS con «Plan» = ${E(clave)}</span></div><div class="tarjeta kpi"><b>${pr}</b><span>textos propios del establecimiento</span></div></div>
       <p class="sub">Cada bloque lleva su etiqueta LEY o MEJORA y su cita. ${bl || enPE ? '' : 'Todavía no se escribió ningún texto de este plan.'} El texto se corrige en la planilla o por el chat, nunca en el Doc. Las {variables} toman el valor de «3 · Datos del plan» y de los datos generales del hospital.</p>
       <div id="ttextos">${bl ? '<div class="vacio">Leyendo el texto…</div>' : ''}</div>
     </section>
@@ -477,7 +477,7 @@ function vistaAyuda() {
       <li>«Planes de referencia» (arriba de la lista de planes) abre la carpeta de Drive donde se guardan planes de otros hospitales y organismos que sirven de consulta. Son material de consulta: no forman parte de los planes del hospital.</li></ul>
     <h3>Para la administradora</h3>
     <ul><li>Cada hospital tiene su planilla «PLAN · …» registrada en la hoja PLANES del libro de la app: PLANES DE CONTINGENCIA, DATOS POR PLAN (Plan = PGC para los datos generales), DEPENDENCIAS y TEXTOS PROPIOS. Todo se puede cargar también ahí.</li>
-      <li>Los textos se escriben en TEXTOS de «PLAN · Texto común» con la columna «Plan» (BASE, PC-01, PC-02…). El borrador del Plan de Evacuación toma BASE, PC-01 y PC-03.</li>
+      <li>Los textos se escriben en TEXTOS de «PLAN · Texto común» con la columna «Plan» (PGC, PC-02, PC-04…). El plan general toma los bloques PGC; el borrador del Plan de Evacuación toma BASE, PC-01 y PC-03.</li>
       <li>Los proyectos del COE existen para los planes del HMH; en HZT y HSST «Proyecto COE» queda en s/d hasta crearlos en COE LISTAS.</li></ul>
     <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79; OPS (2023) y OMS (2011) como MEJORA / buena práctica. La app es una base orientadora, no un registro en tiempo real. Todo queda en versión 0 hasta el alta.</p></div>`;
   GC.enlazar(c => { est = c; cargar(false); });
