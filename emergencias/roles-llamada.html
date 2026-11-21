@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roles de llamada · Gestión de la emergencia</title>
+<meta name="theme-color" content="#7A1F3D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<style>
+/* 21/11/2026 · Roles de llamada (v0). Belén: «2 · Gestión de la emergencia: nueva tarjeta ROLES DE LLAMADA… por establecimiento y por contingencia».
+   Decisiones: cadena de llamadas + qué decir; 10 planes + amenaza de bomba; dos turnos; EN DISEÑO: lo ven solo dos usuarios y carga uno
+   (lo decide el servidor, acciones roles_*). Modelo común por tipo de establecimiento + lo propio de cada uno. Ningún dato va en el código público. */
+:root{--fuerte:#7A1F3D;--medio:#C2185B;--claro:#FBE7EF;--borde:#EBC3D3;--texto:#172B4D;--suave:#4B5B73;--tenue:#6B7A90;--fondo:#F5F7FB;--coral:#F57C00;--ok:#1E8E5A;--rojo:#C62828;--ambar:#B26A00}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:var(--fuerte);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--medio)}
+.barra h1{font-size:16px;margin:0;flex:1}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:10px;font-weight:600;font-size:13px;background:none;border:0;cursor:pointer;font-family:inherit}
+.icono:hover{background:rgba(255,255,255,.14)}
+main{max-width:1100px;margin:0 auto;padding:16px 16px 40px}
+.aviso{background:#FFF6EC;border:1.5px solid var(--coral);border-left:6px solid var(--coral);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda{background:#fff;border:1px solid var(--borde);border-radius:14px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.ayuda summary{cursor:pointer;font-weight:700}.ayuda p{margin:.5em 0}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.filtros label{display:flex;gap:6px;align-items:center;min-width:0;max-width:100%;flex:1 1 280px;font-size:12.5px;font-weight:700;color:var(--suave)}.filtros select{min-width:0;width:100%}
+select,input,textarea{font:500 14px 'Plus Jakarta Sans',sans-serif;border:1.5px solid var(--borde);border-radius:10px;padding:8px 10px;background:#fff;color:var(--texto);max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chips button{border:1.5px solid var(--borde);background:#fff;border-radius:999px;padding:6px 12px;font:600 13px 'Plus Jakarta Sans',sans-serif;color:var(--fuerte);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chips button[aria-pressed=true]{background:var(--fuerte);border-color:var(--fuerte);color:#fff}
+.chips .pt{width:8px;height:8px;border-radius:50%;background:#C9CED8;display:inline-block}.chips .pt.c{background:var(--ok)}.chips .pt.p{background:var(--coral)}
+.card{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.card h2{margin:0 0 2px;font-size:16px;color:var(--fuerte)}.sub{font-size:12.5px;color:var(--tenue)}
+.chip{display:inline-block;border-radius:999px;padding:1px 9px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.c-prop{background:#E3F4EC;color:var(--ok)}.c-mod{background:#E8EEFB;color:#2F5BEA}.c-sin{background:#EEF1F6;color:var(--suave)}.c-ley{background:#E8EEFB;color:#1B3FA0}.c-mej{background:#FFF1DB;color:var(--ambar)}
+.paso{display:grid;grid-template-columns:42px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--claro)}
+.paso:first-of-type{border-top:0}
+.num{width:34px;height:34px;border-radius:50%;background:var(--fuerte);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.num.cero{background:var(--coral)}
+.linea{font-size:14.5px}.linea b{color:var(--fuerte)}
+.tel{font-weight:800;font-size:15px;color:var(--texto);text-decoration:none;border-bottom:2px solid var(--borde)}
+.decir{background:var(--fondo);border-left:4px solid var(--medio);border-radius:0 10px 10px 0;padding:6px 10px;margin-top:6px;font-size:13.5px}
+.mini{font-size:12px;color:var(--tenue);margin-top:4px}
+.sd{color:var(--coral);font-style:italic}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--borde);background:#fff;color:var(--fuerte);border-radius:10px;padding:6px 10px;font:600 12.5px 'Plus Jakarta Sans',sans-serif;cursor:pointer}
+.btn:hover{background:var(--claro)}.btn.pri{background:var(--fuerte);border-color:var(--fuerte);color:#fff}.btn.pri:hover{background:var(--medio)}
+.acc{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ed{display:flex;gap:6px;margin-top:6px}
+.cadena{white-space:pre-wrap;font-size:13px;background:var(--fondo);border-radius:10px;padding:8px 10px}
+dialog{border:0;border-radius:18px;padding:0;width:min(680px,96vw);max-height:92vh;box-shadow:0 20px 50px rgba(23,43,77,.35)}
+dialog::backdrop{background:rgba(23,43,77,.45)}
+#fPaso{padding:16px 18px;overflow:auto;max-height:92vh}#fPaso h3{margin:0 0 4px;font-size:17px;color:var(--fuerte)}
+#fPaso label{display:block;font-size:12.5px;font-weight:700;color:var(--suave);margin-top:10px}
+#fPaso input,#fPaso select,#fPaso textarea{display:block;width:100%;margin-top:3px}
+#fPaso .dos{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}@media(max-width:520px){#fPaso .dos{grid-template-columns:1fr}}
+#fPaso .pie-f{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;position:sticky;bottom:-16px;background:#fff;padding:10px 0}
+.msg{margin-top:8px;font-size:13px}.msg.mal{color:var(--rojo)}
+.solo-imp{display:none}
+footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-width:min(300px,92%);max-width:900px;object-fit:contain;height:auto}
+/* Cartel para el teléfono: sin botones, sin ayuda y sin bibliografía (etiquetas y citas quedan en la pantalla y en la planilla). */
+@media print{.barra,.ayuda,.filtros,.chips,.acc,.ed,.no-imp,.aviso,.mini .cita,.chip.c-ley,.chip.c-mej{display:none!important}.solo-imp{display:block}body{background:#fff;font-size:13pt}main{padding:0}.card{border:0;padding:0}.paso{break-inside:avoid}.num{-webkit-print-color-adjust:exact;print-color-adjust:exact}footer img{width:66.67%;max-height:22mm}}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Roles de llamada<small>Gestión de la emergencia · versión 0 · en diseño</small></h1>
+  <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir el cartel"><span class="ms">print</span></button>
+</header>
+<main id="app"><p class="sub">Cargando…</p></main>
+<dialog id="dlg"><form id="fPaso" method="dialog"></form></dialog>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+(function () {
+'use strict';
+const S = window.STARH, E = S.esc, app = document.getElementById('app');
+const SD = 's/d (revisar)';
+const qs = new URLSearchParams(location.search);
+let D = null, est = qs.get('est') || S.store.get('roles.est', 'Hospital María Humphreys'), cont = qs.get('cont') || S.store.get('roles.cont', ''), turno = S.store.get('roles.turno', 0);
+const vacio = v => !String(v == null ? '' : v).trim() || /s\/d/i.test(String(v));
+const val = v => vacio(v) ? `<span class="sd">${E(String(v || '').trim() || SD)}</span>` : E(v);
+const telHtml = t => vacio(t) ? val(t) : (/^[\d\s\-+()]{3,}$/.test(String(t).trim()) ? `<a class="tel" href="tel:${E(String(t).replace(/[^\d+]/g, ''))}">${E(t)}</a>` : `<b>${E(t)}</b>`);
+const tipoDe = n => { const e = (D.establecimientos || []).find(x => x.nombre === n); return e ? e.tipo : (D.modelos.indexOf(n) >= 0 ? '' : ''); };
+const esModelo = n => (D.modelos || []).indexOf(n) >= 0;
+function resolver(n, c, t) {
+  const T = D.turnos[t], de = a => D.filas.filter(f => f.ambito === a && f.cont === c && (f.turno === T || f.turno === D.ambos)).sort((a, b) => (+a.paso || 0) - (+b.paso || 0));
+  const p = de(n); if (p.length || esModelo(n)) return { origen: esModelo(n) ? 'modelo' : 'propio', pasos: p };
+  const m = de(tipoDe(n)); return { origen: m.length ? 'modelo' : 'sin cargar', pasos: m };
+}
+function estadoCont(n, c) {
+  const R = D.turnos.map((_, i) => resolver(n, c, i));
+  if (!R.some(r => r.pasos.length)) return '';
+  return R.every(r => r.pasos.length && r.pasos.every(p => !vacio(p.llama) && !vacio(p.aquien) && !vacio(p.numero))) ? 'c' : 'p';
+}
+async function cargar() {
+  try {
+    const r = await S.api('roles_leer', { est: est }); if (!r || !r.ok) throw r;
+    D = r;
+    const todos = D.establecimientos.map(e => e.nombre).concat(D.puede ? D.modelos : []);
+    if (todos.indexOf(est) < 0) est = todos[0];
+    if (D.contingencias.indexOf(cont) < 0) cont = D.contingencias[0];
+    D.fichaDe = est;
+    pintar();
+  } catch (e) {
+    if (e && e.sesion) { location.replace('index.html'); return; }
+    app.innerHTML = `<div class="aviso"><b>No disponible.</b> ${E((e && (e.error || e.message)) || 'Revisá la conexión y volvé a entrar.')}</div>`;
+  }
+}
+function pintar() {
+  S.store.set('roles.est', est); S.store.set('roles.cont', cont); S.store.set('roles.turno', turno);
+  const R = resolver(est, cont, turno), res = (D.resumen || {})[est];
+  const opts = D.establecimientos.map(e => `<option ${e.nombre === est ? 'selected' : ''}>${E(e.nombre)}</option>`).join('')
+    + (D.puede ? `<optgroup label="Modelos comunes (por tipo)">${D.modelos.map(m => `<option ${m === est ? 'selected' : ''}>${E(m)}</option>`).join('')}</optgroup>` : '');
+  const origen = R.origen === 'propio' ? '<span class="chip c-prop">Propio del establecimiento</span>' : R.origen === 'modelo' ? `<span class="chip c-mod">${esModelo(est) ? 'Modelo común' : 'Del modelo común: ' + E(tipoDe(est).replace('MODELO · ', ''))}</span>` : '<span class="chip c-sin">Sin cargar</span>';
+  const sdN = R.pasos.reduce((n, p) => n + ['llama', 'aquien', 'numero', 'alterno', 'decir'].filter(k => vacio(p[k])).length, 0);
+  app.innerHTML = `
+  <div class="aviso no-imp"><b>En diseño · versión 0.</b> Esta tarjeta la ven solo dos usuarios mientras se diseña. Base orientadora: los números se confirman antes de imprimir el cartel.</div>
+  <details class="ayuda no-imp"><summary><span class="ms">help</span> Ayuda</summary>
+    <p><b>Qué es.</b> El rol de llamada dice, para cada establecimiento y cada contingencia, <b>quién llama a quién, en qué orden, a qué número, qué hacer si no atiende y qué decir</b>. Lo que hace cada rol después de la llamada está en las tarjetas y en los planes de contingencia (no se repite acá).</p>
+    <p><b>Cómo se usa.</b> Elegí el establecimiento, la contingencia y el turno. El paso 0 (naranja) es el primer aviso. Los datos que faltan se ven en naranja como «s/d (revisar)». El punto de cada contingencia es verde si está completa en los dos turnos, naranja si tiene datos que faltan y gris si no está cargada.</p>
+    <p><b>Modelo común y lo propio.</b> Hay un modelo por tipo de establecimiento (hospital con seguridad privada, hospital sin seguridad privada y CAPS). Si un establecimiento no tiene pasos propios para una contingencia, se muestra el modelo de su tipo. Cuando se cargan pasos propios, reemplazan al modelo solo para ese establecimiento, esa contingencia y ese turno.</p>
+    <p><b>Turnos.</b> Días hábiles de 7 a 19 h, y noche, fines de semana y feriados. Un paso marcado «Los dos turnos» vale para ambos.</p>
+    <p><b>Cartel.</b> El botón de imprimir arma el cartel para pegar junto al teléfono: sin botones, sin etiquetas ni citas. La planilla (CSV) se abre en Google Sheets o Excel.</p>
+    ${D.puede ? `<p><b>Administración (carga).</b> «Agregar paso», el lápiz para corregir y el tacho para quitar. «Copiar el modelo» crea los pasos propios del establecimiento a partir del modelo de su tipo, para completarlos. En la carga podés elegir un contacto de la ficha del establecimiento para no escribir el número dos veces. Todo cambio queda en el REGISTRO de la app. Los datos se guardan en la hoja ROLES DE LLAMADA del libro de la app.</p>` : '<p>Con tu usuario podés ver e imprimir; la carga la hace Higiene y Seguridad Laboral.</p>'}
+    <p><b>Fundamento.</b> LEY: Dto. 351/79, cap. 18 (protección contra incendios; artículo exacto s/d, revisar). MEJORA / buena práctica: OPS 2023, plan hospitalario de respuesta (activación y comunicación); Vítolo 2026.</p>
+  </details>
+  <div class="filtros no-imp">
+    <label>Establecimiento <select id="sEst">${opts}</select></label>
+    <label>Turno <select id="sTur">${D.turnos.map((t, i) => `<option value="${i}" ${i === turno ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></label>
+  </div>
+  <div class="chips no-imp" role="group" aria-label="Contingencia">${D.contingencias.map(c => { const s = estadoCont(est, c); return `<button type="button" data-c="${E(c)}" aria-pressed="${c === cont}"><span class="pt ${s}"></span>${E(c)}</button>`; }).join('')}</div>
+  <section class="card">
+    <div class="solo-imp"><b style="font-size:18pt">ROL DE LLAMADA · ${E(cont.toUpperCase())}</b><br>${E(est)} · ${E(D.turnos[turno])}</div>
+    <div class="no-imp"><h2>${E(cont)}</h2><div class="sub">${E(est)} · ${E(D.turnos[turno])} · ${origen}${R.pasos.length ? ` · ${R.pasos.length} pasos · ${sdN ? `<span class="sd">${sdN} datos en s/d</span>` : 'sin datos pendientes'}` : ''}${res && !esModelo(est) ? ` · ${res.completas} de ${res.total} contingencias completas` : ''}</div></div>
+    ${R.pasos.length ? R.pasos.map(p => `<div class="paso"><div class="num ${+p.paso === 0 ? 'cero' : ''}">${E(p.paso)}</div><div>
+      <div class="linea"><b>${val(p.llama)}</b> llama a <b>${val(p.aquien)}</b> · ${telHtml(p.numero)}</div>
+      <div class="mini">Si no atiende: ${val(p.alterno)}${p.turno === D.ambos ? '' : ` · <span class="no-imp">solo ${E(p.turno)}</span>`}</div>
+      <div class="decir">Qué decir: ${val(p.decir)}</div>
+      ${p.obs ? `<div class="mini">${E(p.obs)}</div>` : ''}
+      <div class="mini no-imp"><span class="chip ${/LEY/.test(p.etiqueta) ? 'c-ley' : 'c-mej'}">${E(p.etiqueta || SD)}</span> <span class="cita">${E(p.cita || '')}</span> · ${E(p.estado || 'Propuesto')}${p.act ? ' · ' + E(p.act) + (p.por ? ' · ' + E(p.por) : '') : ''}</div>
+      ${D.puede && R.origen !== 'modelo' || (D.puede && esModelo(est)) ? `<div class="ed"><button class="btn" type="button" data-ed="${E(p.id)}"><span class="ms">edit</span>Corregir</button><button class="btn" type="button" data-del="${E(p.id)}"><span class="ms">delete</span>Quitar</button></div>` : ''}
+    </div></div>`).join('') : `<p class="sub">Todavía no hay pasos cargados para esta contingencia${esModelo(est) ? ' en este modelo' : ' ni en el modelo de su tipo'}.</p>`}
+    <div class="acc">
+      ${D.puede && (R.origen !== 'modelo' || esModelo(est)) ? '<button class="btn pri" type="button" id="bNuevo"><span class="ms">add</span>Agregar paso</button>' : ''}
+      ${D.puede && R.origen === 'modelo' && !esModelo(est) ? '<button class="btn pri" type="button" id="bCopiar"><span class="ms">content_copy</span>Copiar el modelo a este establecimiento</button>' : ''}
+      ${R.pasos.length ? '<button class="btn" type="button" onclick="window.print()"><span class="ms">print</span>Cartel para el teléfono</button><button class="btn" type="button" id="bCsv"><span class="ms">table</span>Planilla (CSV)</button>' : ''}
+    </div>
+    <div class="msg" id="msg"></div>
+  </section>
+  ${D.ficha && D.ficha.cadena && !esModelo(est) ? `<section class="card no-imp"><h2>Cadena de llamadas escrita en la ficha</h2><div class="sub">Texto libre del campo «Cadena de llamadas» de la ficha del establecimiento. Sirve de antecedente para cargar los pasos acá.</div><div class="cadena">${E(D.ficha.cadena)}</div></section>` : ''}
+  <p class="sub solo-imp">Versión 0 · ${E(new Date().toLocaleDateString('es-AR'))} · Higiene y Seguridad Laboral</p>`;
+  document.getElementById('sEst').onchange = ev => { est = ev.target.value; app.querySelector('.card').style.opacity = .5; cargar(); };
+  document.getElementById('sTur').onchange = ev => { turno = +ev.target.value; pintar(); };
+  app.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cont = b.dataset.c; pintar(); });
+  app.querySelectorAll('[data-ed]').forEach(b => b.onclick = () => editar(D.filas.find(f => f.id === b.dataset.ed)));
+  app.querySelectorAll('[data-del]').forEach(b => b.onclick = () => quitar(b.dataset.del));
+  const bn = document.getElementById('bNuevo'); if (bn) bn.onclick = () => editar(null);
+  const bc = document.getElementById('bCopiar'); if (bc) bc.onclick = () => copiarModelo(R.pasos);
+  const bv = document.getElementById('bCsv'); if (bv) bv.onclick = () => csv(R.pasos);
+}
+const msg = (t, mal) => { const m = document.getElementById('msg'); if (m) { m.textContent = t; m.className = 'msg' + (mal ? ' mal' : ''); } };
+async function guardar(fila) { const r = await S.api('roles_guardar', { fila: fila }); if (!r || !r.ok) throw r; return r; }
+function editar(p) {
+  const f = document.getElementById('fPaso'), dlg = document.getElementById('dlg');
+  const c = p || { ambito: est, cont: cont, turno: D.ambos, paso: String(resolver(est, cont, turno).pasos.reduce((m, x) => Math.max(m, +x.paso || 0), -1) + 1), etiqueta: 'MEJORA', estado: 'Propuesto' };
+  const contactos = (D.ficha && D.fichaDe === est && D.ficha.contactos) || [];
+  const v = k => E(c[k] && !/^s\/d \(revisar\)$/.test(c[k]) ? c[k] : '');
+  f.innerHTML = `<h3>${p ? 'Corregir paso ' + E(p.paso) : 'Agregar paso'}</h3><div class="sub">${E(est)} · ${E(cont)}</div>
+    <div class="dos"><label>Paso N.º (0 = primer aviso)<input name="paso" type="number" min="0" max="50" value="${v('paso')}"></label>
+    <label>Turno<select name="turno">${D.turnos.concat([D.ambos]).map(t => `<option ${t === c.turno ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></label></div>
+    <label>Quién llama<input name="llama" value="${v('llama')}" placeholder="Conmutador"></label>
+    ${contactos.length ? `<label>Elegir un contacto de la ficha (opcional)<select name="ct"><option value="">—</option>${contactos.map((x, i) => `<option value="${i}">${E([x.quien, x.nombre, x.tel].filter(Boolean).join(' · '))}</option>`).join('')}</select></label>` : ''}
+    <div class="dos"><label>A quién llama<input name="aquien" value="${v('aquien')}" placeholder="Bomberos"></label>
+    <label>Número o interno<input name="numero" value="${v('numero')}" placeholder="100"></label></div>
+    <label>Si no atiende<input name="alterno" value="${v('alterno')}"></label>
+    <label>Qué decir<textarea name="decir" rows="3">${v('decir')}</textarea></label>
+    <label>Observaciones<textarea name="obs" rows="2">${E(c.obs || '')}</textarea></label>
+    <div class="dos"><label>Etiqueta<select name="etiqueta">${['LEY', 'LEY + MEJORA', 'MEJORA'].map(t => `<option ${t === c.etiqueta ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label>Estado<select name="estado">${['Propuesto', 'Aprobado'].map(t => `<option ${t === c.estado ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
+    <label>Cita (norma o referencia)<input name="cita" value="${v('cita')}"></label>
+    <p class="sub">Lo que quede vacío se guarda como «s/d (revisar)».</p><div class="msg" id="fMsg"></div>
+    <div class="pie-f"><button class="btn" type="button" id="fCan">Cancelar</button><button class="btn pri" type="submit">Guardar</button></div>`;
+  const ct = f.elements.ct; if (ct) ct.onchange = () => { const x = contactos[+ct.value]; if (!x) return; f.elements.aquien.value = [x.quien, x.nombre].filter(Boolean).join(' · '); f.elements.numero.value = x.tel || ''; };
+  document.getElementById('fCan').onclick = () => dlg.close();
+  f.onsubmit = async ev => {
+    ev.preventDefault(); const b = f.querySelector('[type=submit]'); b.disabled = true; const fm = document.getElementById('fMsg'); fm.textContent = 'Guardando…'; fm.className = 'msg';
+    const d = { id: p ? p.id : '', ambito: est, cont: cont };
+    ['paso', 'turno', 'llama', 'aquien', 'numero', 'alterno', 'decir', 'obs', 'etiqueta', 'estado', 'cita'].forEach(k => d[k] = f.elements[k].value);
+    try { await guardar(d); dlg.close(); await cargar(); msg('Guardado ✓'); }
+    catch (e) { fm.textContent = 'No se pudo guardar: ' + ((e && (e.error || e.message)) || 'sin conexión'); fm.className = 'msg mal'; b.disabled = false; }
+  };
+  dlg.showModal();
+}
+async function quitar(id) {
+  const p = D.filas.find(f => f.id === id); if (!p) return;
+  if (!confirm('¿Quitar el paso ' + p.paso + ' (' + p.llama + ' → ' + p.aquien + ')?')) return;
+  msg('Quitando…');
+  try { const r = await S.api('roles_guardar', { op: 'borrar', id: id }); if (!r || !r.ok) throw r; await cargar(); msg('Paso quitado ✓'); }
+  catch (e) { msg('No se pudo quitar: ' + ((e && (e.error || e.message)) || 'sin conexión'), true); }
+}
+async function copiarModelo(pasos) {
+  if (!confirm('Se copian ' + pasos.length + ' pasos del modelo como pasos propios de ' + est + ', para completarlos. ¿Seguir?')) return;
+  msg('Copiando…');
+  try { for (const p of pasos) await guardar(Object.assign({}, p, { id: '', ambito: est, obs: (p.obs ? p.obs + ' · ' : '') + 'Copiado del modelo' })); await cargar(); msg('Modelo copiado ✓. Completá los datos propios.'); }
+  catch (e) { msg('No se pudo copiar: ' + ((e && (e.error || e.message)) || 'sin conexión'), true); await cargar(); }
+}
+function csv(pasos) {
+  const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
+  const cab = ['Establecimiento', 'Contingencia', 'Turno', 'Paso', 'Quién llama', 'A quién llama', 'Número o interno', 'Si no atiende', 'Qué decir', 'Etiqueta', 'Cita', 'Estado', 'Observaciones'];
+  const filas = pasos.map(p => [est, cont, p.turno, p.paso, p.llama, p.aquien, p.numero, p.alterno, p.decir, p.etiqueta, p.cita, p.estado, p.obs]);
+  const blob = new Blob(['﻿' + [cab].concat(filas).map(r => r.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = ('Rol de llamada · ' + est + ' · ' + cont + ' (v0).csv').replace(/[\\/:*?"<>|]/g, '-'); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+cargar();
+})();
+</script>
+</body>
+</html>

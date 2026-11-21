@@ -468,7 +468,20 @@ function pintar() {
   <h2 class="paso">Paso 2 · Datos del establecimiento <small>(se puede completar por partes)</small></h2>
   <fieldset ${srv.puede ? '' : 'disabled'} style="border:0;padding:0;margin:0;min-width:0">${SEC.map((s, i) => secHtml(s, i + 1)).join('')}</fieldset>
   <p class="pie">Versión 0. Lo que no se sabe queda como «s/d (revisar)». Base orientadora: no es un registro en tiempo real.</p>`;
-  progreso();
+  progreso();  if (!B) rolesEnFicha();
+}
+// 21/11/2026 · Roles de llamada (en diseño): debajo de «Cadena de llamadas», resumen y acceso a la tarjeta. Solo para quien el servidor habilita (roles_acceso).
+let ROLES_RES = null;
+async function rolesEnFicha() {
+  if (!S.store.get('roles.quien', '') || (S.sesion.enVista && S.sesion.enVista())) return;
+  const ta = app.querySelector('textarea[data-k="cadena"]'); if (!ta) return;
+  try { if (!ROLES_RES) { const r = await S.api('roles_leer', { solo: 'resumen' }); if (!r || !r.ok) return; ROLES_RES = r.resumen || {}; } } catch (e) { return; }
+  const x = ROLES_RES[estab], lab = ta.closest('.campo'); if (!lab || document.getElementById('rolesFicha')) return;
+  const d = document.createElement('div'); d.id = 'rolesFicha'; d.className = 'no-imp';
+  d.style.cssText = 'background:#FBE7EF;border:1px solid #EBC3D3;border-radius:12px;padding:8px 12px;margin:-4px 0 12px;font-size:13px';
+  d.innerHTML = x ? `<b>Roles de llamada</b> (en diseño): ${x.completas} de ${x.total} contingencias completas · ${x.cargadas} con pasos cargados (propios o del modelo). <a href="roles-llamada.html?est=${encodeURIComponent(estab)}">Ver los roles de llamada de este establecimiento</a>. Este campo de texto queda como antecedente.`
+    : '<b>Roles de llamada</b> (en diseño): por ahora son para el HMH, el HZT, el HSST y sus CAPS.';
+  lab.insertAdjacentElement('afterend', d);
 }
 function progreso() {
   const ok = SEC.filter(secOk).length, min = SEC.filter(s => s.min), minOk = min.every(secOk);

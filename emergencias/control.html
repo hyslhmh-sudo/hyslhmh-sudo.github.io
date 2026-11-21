@@ -325,7 +325,26 @@ function pintar() {
     <div class="sello">Datos al ${E(D.cuando || SD)}${offline ? ' · <b style="color:#8E1F1F">Sin conexión: última copia del dispositivo</b>' : ''}</div></div>
     <div class="aviso">Base orientadora, no es un registro en tiempo real: las capacidades son estimadas. Lo que falta cargar figura «${SD}».</div>
     ${vista === 'general' ? general() : nivel(u, e)}
-    <div class="leyenda">${['v', 'a', 'r'].map(c => `<span>${dot(c)}${c === 'v' ? 'Normal' : c === 'a' ? 'Alerta' : 'Vencido o crítico'}</span>`).join('')}<span>${dot('n')}s/d o no corresponde aún</span></div>`;
+    <div id="rolesTab"></div>
+    <div class="leyenda">${['v', 'a', 'r'].map(c => `<span>${dot(c)}${c === 'v' ? 'Normal' : c === 'a' ? 'Alerta' : 'Vencido o crítico'}</span>`).join('')}<span>${dot('n')}s/d o no corresponde aún</span></div>`;  rolesTablero(e);
+}
+// 21/11/2026 · Roles de llamada (en diseño): indicador «n de 11 contingencias completas» por establecimiento. Solo para quien el servidor
+// habilita (roles_acceso; hoy, dos usuarios). Se pide aparte y no se guarda en la copia del tablero.
+let RL = null;
+async function rolesTablero(e) {
+  if (!S.store.get('roles.quien', '') || (S.sesion.enVista && S.sesion.enVista())) return;
+  try { if (!RL) { const r = await S.api('roles_leer', { solo: 'resumen' }); if (!r || !r.ok) return; RL = r; } } catch (x) { return; }
+  const box = document.getElementById('rolesTab'); if (!box) return;
+  const N = (RL.establecimientos || []), R = RL.resumen || {}, c = x => x.completas === x.total ? 'v' : x.cargadas ? 'a' : 'n';
+  const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const sel = e ? N.filter(n => norm(n.nombre) === norm(e.nombre) || norm(n.nombre) === norm(e.corto)) : N;
+  if (e && !sel.length) return;
+  const hosp = sel.filter(n => !/CAPS/.test(n.tipo)), caps = sel.filter(n => /CAPS/.test(n.tipo));
+  const capsComp = caps.filter(n => R[n.nombre] && R[n.nombre].completas === R[n.nombre].total).length;
+  box.innerHTML = sec('Roles de llamada · en diseño', 'var(--viol)', 'lo ven solo dos usuarios') + `<div class="card" style="min-height:0">
+    ${hosp.map(n => { const x = R[n.nombre] || { completas: 0, cargadas: 0, total: 10 }; return `<div style="margin:4px 0">${dot(c(x))}<a href="roles-llamada.html?est=${encodeURIComponent(n.nombre)}">${E(n.nombre)}</a>: ${x.completas} de ${x.total} contingencias completas · ${x.cargadas} con pasos</div>`; }).join('')}
+    ${caps.length ? `<div style="margin:4px 0">${dot(capsComp === caps.length ? 'v' : 'n')}CAPS: ${capsComp} de ${caps.length} con los roles completos <span class="muted">(usan el modelo común de CAPS hasta tener los propios)</span></div>` : ''}
+    <p class="muted" style="margin:6px 0 0">Completa = los dos turnos con pasos y sin «s/d» en quién llama, a quién ni número. Se carga en Gestión de la emergencia › Roles de llamada.</p></div>`;
 }
 function general() {
   // 20/11/2026 · Belén: «lo más urgente» se arma por establecimiento y albergue de toda la red (no por unidad), sin tope de 5.
