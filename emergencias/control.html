@@ -342,7 +342,7 @@ async function rolesTablero(e) {
   const hosp = sel.filter(n => !/CAPS/.test(n.tipo)), caps = sel.filter(n => /CAPS/.test(n.tipo));
   const capsComp = caps.filter(n => R[n.nombre] && R[n.nombre].completas === R[n.nombre].total).length;
   box.innerHTML = sec('Roles de llamada · en diseño', 'var(--viol)', 'lo ven solo dos usuarios') + `<div class="card" style="min-height:0">
-    ${hosp.map(n => { const x = R[n.nombre] || { completas: 0, cargadas: 0, total: 10 }; return `<div style="margin:4px 0">${dot(c(x))}<a href="roles-llamada.html?est=${encodeURIComponent(n.nombre)}">${E(n.nombre)}</a>: ${x.completas} de ${x.total} contingencias completas · ${x.cargadas} con pasos</div>`; }).join('')}
+    ${hosp.map(n => { const x = R[n.nombre] || { completas: 0, cargadas: 0, total: (RL.contingencias || []).length || 11 }; return `<div style="margin:4px 0">${dot(c(x))}<a href="roles-llamada.html?est=${encodeURIComponent(n.nombre)}">${E(n.nombre)}</a>: ${x.completas} de ${x.total} contingencias completas · ${x.cargadas} con pasos</div>`; }).join('')}
     ${caps.length ? `<div style="margin:4px 0">${dot(capsComp === caps.length ? 'v' : 'n')}CAPS: ${capsComp} de ${caps.length} con los roles completos <span class="muted">(usan el modelo común de CAPS hasta tener los propios)</span></div>` : ''}
     <p class="muted" style="margin:6px 0 0">Completa = los dos turnos con pasos y sin «s/d» en quién llama, a quién ni número. Se carga en Gestión de la emergencia › Roles de llamada.</p></div>`;
 }
