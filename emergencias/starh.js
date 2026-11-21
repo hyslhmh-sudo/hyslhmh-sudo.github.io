@@ -550,3 +550,50 @@
   window.addEventListener('notas:cambio', function () { var b = document.getElementById('fabNotas'); var c = S.store.get('notas.franja', null); if (b && c) pintar(b, c); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', poner); else poner();
 })();
+
+/* 21/11/2026 · Aviso emergente de una sola vez (Belén: «un mensaje en la app, corto, conciso, amable, que lo lean 1 vez y desaparezca»).
+   Se arma desde Notas: tipo «Para leer», acción «Aviso emergente», con destinatarios. Al entrar, quien la tiene sin leer la ve en una
+   ventana con «Entendido»; al tocarlo queda marcada como leída y no vuelve a aparecer. No manda mails ni avisos externos. No se imprime. */
+(function () {
+  if (typeof document === 'undefined' || !window.STARH || STARH.DEMO) return;
+  var S = STARH;
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function mostrar(n, sigue) {
+    var st = document.createElement('style');
+    st.textContent = '#avisoUnaVez{position:fixed;inset:0;z-index:60;background:rgba(23,43,77,.45);display:flex;align-items:center;justify-content:center;padding:18px}'
+      + '#avisoUnaVez .c{background:#fff;max-width:440px;width:100%;border-radius:14px;padding:20px 20px 16px;box-shadow:0 12px 40px rgba(23,43,77,.35);font:15px/1.5 "Plus Jakarta Sans",system-ui,sans-serif;color:#172B4D}'
+      + '#avisoUnaVez h2{margin:0 0 8px;font-size:17px;color:#2F5BEA}#avisoUnaVez p{margin:0 0 8px;white-space:pre-line}'
+      + '#avisoUnaVez button{margin-top:8px;float:right;border:0;border-radius:999px;background:#172B4D;color:#fff;font:700 14px/1 "Plus Jakarta Sans",system-ui,sans-serif;padding:11px 20px;cursor:pointer}'
+      + '#avisoUnaVez button:hover{background:#2F5BEA}@media print{#avisoUnaVez{display:none!important}}';
+    document.head.appendChild(st);
+    var d = document.createElement('div');
+    d.id = 'avisoUnaVez'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+    d.innerHTML = '<div class="c"><h2>' + esc(n.tema) + '</h2><p>' + esc(n.texto) + '</p><button type="button">Entendido</button><div style="clear:both"></div></div>';
+    document.body.appendChild(d);
+    var b = d.querySelector('button'); b.focus();
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      S.api('notas_marcar', { id: n.id, que: 'leido', texto: '' }).catch(function () {}).then(function () {
+        d.remove(); st.remove(); S.store.set('notas.franja', null);
+        try { window.dispatchEvent(new Event('notas:cambio')); } catch (e) {}
+        if (sigue) sigue();
+      });
+    });
+  }
+  function revisar() {
+    if (!S.sesion.token() || !navigator.onLine || document.getElementById('avisoUnaVez')) return;
+    if (/notas\.html$/.test(location.pathname) || S.store.get('vista.token', '')) return; // en «Ver como» no se muestra, para no marcarla leída por otro
+    var k = 'avisos.revisado', c = S.store.get(k, null);
+    if (c && c.tk === S.sesion.token() && Date.now() - (c.t || 0) < 300000) return; // como mucho cada 5 minutos
+    S.store.set(k, { tk: S.sesion.token(), t: Date.now() });
+    S.api('notas_leer', {}).then(function (r) {
+      if (!r || !r.ok) return;
+      var yo = r.yo, P = (r.notas || []).filter(function (n) {
+        var dest = n.para === 'todos' || (n.para || []).indexOf(yo) >= 0;
+        return n.estado === 'Abierta' && dest && n.tipo === 'Para leer' && n.accion === 'Aviso emergente' && !(n.lect || {})[yo];
+      });
+      (function uno(i) { if (i < P.length) mostrar(P[i], function () { uno(i + 1); }); })(0);
+    }).catch(function () {});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', revisar); else revisar();
+})();
