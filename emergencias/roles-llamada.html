@@ -147,7 +147,7 @@ function pintar() {
       <div class="mini">Si no atiende: ${val(p.alterno)}${p.turno === D.ambos ? '' : ` · <span class="no-imp">solo ${E(p.turno)}</span>`}</div>
       <div class="decir">Qué decir: ${val(p.decir)}</div>
       ${p.obs ? `<div class="mini">${E(p.obs)}</div>` : ''}
-      <div class="mini no-imp"><span class="chip ${/LEY/.test(p.etiqueta) ? 'c-ley' : 'c-mej'}">${E(p.etiqueta || SD)}</span> <span class="cita">${E(p.cita || '')}</span> · ${E(p.estado || 'Propuesto')}${p.act ? ' · ' + E(p.act) + (p.por ? ' · ' + E(p.por) : '') : ''}</div>
+      <div class="mini no-imp"><span class="chip ${/LEY/.test(p.etiqueta) ? 'c-ley' : 'c-mej'}">${E(p.etiqueta || SD)}</span> <span class="cita">${E(p.cita || '')}</span></div>
       ${D.puede && R.origen !== 'modelo' || (D.puede && esModelo(est)) ? `<div class="ed"><button class="btn" type="button" data-ed="${E(p.id)}"><span class="ms">edit</span>Corregir</button><button class="btn" type="button" data-del="${E(p.id)}"><span class="ms">delete</span>Quitar</button></div>` : ''}
     </div></div>`).join('') : `<p class="sub">Todavía no hay pasos cargados para esta contingencia${esModelo(est) ? ' en este modelo' : ' ni en el modelo de su tipo'}.</p>`}
     <div class="acc">
