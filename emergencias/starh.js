@@ -552,7 +552,7 @@
 })();
 
 /* 21/11/2026 · Aviso emergente de una sola vez (Belén: «un mensaje en la app, corto, conciso, amable, que lo lean 1 vez y desaparezca»).
-   Se arma desde Notas: tipo «Para leer», acción «Aviso emergente», con destinatarios. Al entrar, quien la tiene sin leer la ve en una
+   Se arma desde Notas: tipo «Para leer» y, en «Establecimiento o red», escribir «Aviso emergente»; con destinatarios. Al entrar, quien la tiene sin leer la ve en una
    ventana con «Entendido»; al tocarlo queda marcada como leída y no vuelve a aparecer. No manda mails ni avisos externos. No se imprime. */
 (function () {
   if (typeof document === 'undefined' || !window.STARH || STARH.DEMO) return;
@@ -590,7 +590,7 @@
       if (!r || !r.ok) return;
       var yo = r.yo, P = (r.notas || []).filter(function (n) {
         var dest = n.para === 'todos' || (n.para || []).indexOf(yo) >= 0;
-        return n.estado === 'Abierta' && dest && n.tipo === 'Para leer' && n.accion === 'Aviso emergente' && !(n.lect || {})[yo];
+        return n.estado === 'Abierta' && dest && n.tipo === 'Para leer' && (n.lugar === 'Aviso emergente' || n.accion === 'Aviso emergente') && !(n.lect || {})[yo];
       });
       (function uno(i) { if (i < P.length) mostrar(P[i], function () { uno(i + 1); }); })(0);
     }).catch(function () {});
