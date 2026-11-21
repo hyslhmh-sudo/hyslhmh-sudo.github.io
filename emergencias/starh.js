@@ -558,17 +558,23 @@
   if (typeof document === 'undefined' || !window.STARH || STARH.DEMO) return;
   var S = STARH;
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  // **texto** se muestra en negrita y en color (palabras clave).
+  function marcar(t) { return esc(t).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); }
   function mostrar(n, sigue) {
     var st = document.createElement('style');
-    st.textContent = '#avisoUnaVez{position:fixed;inset:0;z-index:60;background:rgba(23,43,77,.45);display:flex;align-items:center;justify-content:center;padding:18px}'
-      + '#avisoUnaVez .c{background:#fff;max-width:440px;width:100%;border-radius:14px;padding:20px 20px 16px;box-shadow:0 12px 40px rgba(23,43,77,.35);font:15px/1.5 "Plus Jakarta Sans",system-ui,sans-serif;color:#172B4D}'
-      + '#avisoUnaVez h2{margin:0 0 8px;font-size:17px;color:#2F5BEA}#avisoUnaVez p{margin:0 0 8px;white-space:pre-line}'
-      + '#avisoUnaVez button{margin-top:8px;float:right;border:0;border-radius:999px;background:#172B4D;color:#fff;font:700 14px/1 "Plus Jakarta Sans",system-ui,sans-serif;padding:11px 20px;cursor:pointer}'
-      + '#avisoUnaVez button:hover{background:#2F5BEA}@media print{#avisoUnaVez{display:none!important}}';
+    st.textContent = '#avisoUnaVez{position:fixed;inset:0;z-index:60;background:rgba(23,43,77,.5);display:flex;align-items:center;justify-content:center;padding:18px}'
+      + '#avisoUnaVez .c{background:#fff;max-width:440px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(23,43,77,.4);font:15px/1.55 "Plus Jakarta Sans",system-ui,sans-serif;color:#172B4D}'
+      + '#avisoUnaVez .cab{display:flex;align-items:center;gap:12px;padding:16px 20px;background:linear-gradient(135deg,#2F5BEA 0%,#00897B 100%);color:#fff}'
+      + '#avisoUnaVez .cab svg{flex:none;width:30px;height:30px;fill:#fff;opacity:.95}#avisoUnaVez h2{margin:0;font-size:17px;line-height:1.3;color:#fff}'
+      + '#avisoUnaVez .cu{padding:16px 20px 16px;border-left:5px solid #F57C00}#avisoUnaVez p{margin:0 0 8px;white-space:pre-line}'
+      + '#avisoUnaVez strong{color:#2F5BEA;font-weight:800}'
+      + '#avisoUnaVez button{margin-top:8px;float:right;border:0;border-radius:999px;background:#F57C00;color:#fff;font:700 14px/1 "Plus Jakarta Sans",system-ui,sans-serif;padding:11px 22px;cursor:pointer;box-shadow:0 3px 10px rgba(245,124,0,.35)}'
+      + '#avisoUnaVez button:hover{background:#E65100}@media print{#avisoUnaVez{display:none!important}}';
     document.head.appendChild(st);
     var d = document.createElement('div');
     d.id = 'avisoUnaVez'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
-    d.innerHTML = '<div class="c"><h2>' + esc(n.tema) + '</h2><p>' + esc(n.texto) + '</p><button type="button">Entendido</button><div style="clear:both"></div></div>';
+    d.innerHTML = '<div class="c"><div class="cab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 12v2h8v-2H8Zm0 4v2h5v-2H8Z"/></svg><h2>' + esc(n.tema) + '</h2></div>'
+      + '<div class="cu"><p>' + marcar(n.texto) + '</p><button type="button">Entendido</button><div style="clear:both"></div></div></div>';
     document.body.appendChild(d);
     var b = d.querySelector('button'); b.focus();
     b.addEventListener('click', function () {
