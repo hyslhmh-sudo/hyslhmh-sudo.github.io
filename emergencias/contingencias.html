@@ -230,7 +230,7 @@ function vistaLista() {
   app.innerHTML = GC.barra('planes') + REGLA + `
     ${datos.avisoTextos ? `<div class="regla" style="background:#FFF;border-color:#F5C2BE">Textos: ${E(datos.avisoTextos)}</div>` : ''}
     <div class="grilla" style="margin-bottom:14px">${tarjetaPE()}</div>
-    <h2 style="margin:6px 0 8px">Plan general y planes de contingencia</h2>
+    <div class="acc" style="margin:6px 0 8px;align-items:center"><h2 style="margin:0;flex:1">Plan general y planes de contingencia</h2><a class="btn sec mini" href="https://drive.google.com/drive/folders/1OdKypVUwGMk6g45oEN0Dvf6kmakDIViy" target="_blank" rel="noopener"><span class="ms">folder_open</span>Planes de referencia</a></div>
     <div class="kpis"><div class="tarjeta kpi"><b>${planes.length}</b><span>documentos</span></div><div class="tarjeta kpi"><b>${cuenta('Sin empezar')}</b><span>sin empezar</span></div><div class="tarjeta kpi"><b>${cuenta('En redacción') + cuenta('Propuesto') + cuenta('Aprobado')}</b><span>en redacción, propuestos o aprobados</span></div></div>
     <div class="filtros"><span class="sub" style="font-weight:700">Ver:</span>${['Todos'].concat(ESTADOS).map(e => `<button class="fbtn" data-filtro="${E(e)}" aria-pressed="${filtro === e}">${E(e)}</button>`).join('')}
       <span style="flex:1"></span><label class="sub" for="selOrd" style="font-weight:700">Ordenar</label><select id="selOrd"><option value="redaccion" ${orden === 'redaccion' ? 'selected' : ''}>Por orden de redacción</option><option value="codigo" ${orden === 'codigo' ? 'selected' : ''}>Por código</option></select></div>
@@ -434,7 +434,8 @@ function vistaAyuda() {
     <h3>Cargar y descargar</h3>
     <ul><li>Lo que cargás acá queda en la planilla del hospital, y acá ves siempre lo último (tocá «Actualizar» si alguien la cambió mientras tenías la pantalla abierta).</li>
       <li>«Descargar» (en cada plan): Doc del plan (Google Docs o Word), planilla del hospital (Excel) o datos del plan (CSV). Nunca PDF.</li>
-      <li>Si un dato falta: «s/d (revisar)».</li></ul>
+      <li>Si un dato falta: «s/d (revisar)».</li>
+      <li>«Planes de referencia» (arriba de la lista de planes) abre la carpeta de Drive donde se guardan planes de otros hospitales y organismos que sirven de consulta. Son material de consulta: no forman parte de los planes del hospital.</li></ul>
     <h3>Para la administradora</h3>
     <ul><li>Cada hospital tiene su planilla «PLAN · …» registrada en la hoja PLANES del libro de la app: PLANES DE CONTINGENCIA, DATOS POR PLAN (Plan = PGC para los datos generales), DEPENDENCIAS y TEXTOS PROPIOS. Todo se puede cargar también ahí.</li>
       <li>Los textos se escriben en TEXTOS de «PLAN · Texto común» con la columna «Plan» (BASE, PC-01, PC-02…). El borrador del Plan de Evacuación toma BASE, PC-01 y PC-03.</li>
