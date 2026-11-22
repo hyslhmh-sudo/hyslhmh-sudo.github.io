@@ -105,7 +105,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 .mlab{background:rgba(255,255,255,.85);border:0;box-shadow:none;color:#1A237E;font:700 11px 'Plus Jakarta Sans',sans-serif;padding:1px 6px}.mlab:before{display:none}.mlab.rnb{color:#BF360C;text-align:center;line-height:1.25}
 .leaflet-popup-content{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12.5px;margin:10px 12px}
 .leaflet-popup-content b.pt{display:block;font-size:13.5px;margin-bottom:4px;color:#172B4D}
-.leaflet-popup-content table{border-collapse:collapse}.leaflet-popup-content td{padding:1px 6px 1px 0;vertical-align:top}.leaflet-popup-content td:first-child{color:#6B7A90;white-space:nowrap}
+.leaflet-popup-content .pcuerpo{max-height:300px;overflow:auto;margin-top:6px;padding-right:4px}.leaflet-popup-content .pf{padding:5px 0;border-top:1px solid #EEF1F6}.leaflet-popup-content .pf:first-child{border-top:0}.leaflet-popup-content .pl{display:block;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#6B7A90;margin-bottom:1px}.leaflet-popup-content .pv{display:block;color:#1F2A3C;line-height:1.35;overflow-wrap:anywhere}.leaflet-popup-content .pchips{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}.leaflet-popup-content .pchip{background:#EAF1FF;color:#2F5BEA;border-radius:10px;padding:1px 7px;font-size:11.5px}.leaflet-popup-content .pfte{color:#6B7A90;font-size:11px;margin-top:6px;padding-top:5px;border-top:1px solid #EEF1F6}
 @media (max-width:700px){.mpanel{position:absolute;right:0;top:0;bottom:0;z-index:1000;box-shadow:-6px 0 20px rgba(0,0,0,.2)}}
 @media (max-width:560px){.dos{grid-template-columns:1fr}}
 @media print{body.sin-imprimir main,body.sin-imprimir .visor{display:none!important}.barra .icono,.adm,.filtros,.ayuda,.acc{display:none}.barra{position:static}}
@@ -409,12 +409,24 @@ function mvis() {
   return v;
 }
 const OCULTOS = /^(CIRC|SECTOR|DIVISION|PARCELA|_nombre)$/i;
+// 22/11/2026 (Belén: las tarjetas del mapa se veían apretadas). Rótulo arriba y valor abajo, a todo el ancho;
+// las listas largas van en etiquetas; los nombres de campo se muestran con tildes.
+const TILDES = { direccion: 'Dirección', telefono: 'Teléfono', categoria: 'Categoría', jurisdiccion: 'Jurisdicción', descripcion: 'Descripción', poblacion: 'Población', informacion: 'Información', atencion: 'Atención', atenciones: 'Atenciones', numero: 'Número', area: 'Área', codigo: 'Código', ubicacion: 'Ubicación', dias: 'Días', medico: 'Médico', medicos: 'Médicos', odontologia: 'Odontología', psicologia: 'Psicología', nutricion: 'Nutrición', enfermeria: 'Enfermería', vacunacion: 'Vacunación', jardin: 'Jardín', via: 'Vía', energia: 'Energía', tension: 'Tensión', superficie: 'Superficie', nivel: 'Nivel' };
+function rotulo(k) {
+  const t = String(k).replace(/[_]+/g, ' ').trim().toLowerCase().split(/\s+/).map(w => TILDES[w] ? TILDES[w].toLowerCase() : w).join(' ');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+function valorDe(v) {
+  const t = String(v).trim(), partes = t.split(/\s*[;,\/]\s*|\s+-\s+/).filter(Boolean);
+  if (t.length > 45 && partes.length >= 3 && partes.every(x => x.length <= 40)) return `<span class="pchips">${partes.map(x => `<span class="pchip">${E(x)}</span>`).join('')}</span>`;
+  return `<span class="pv">${E(t)}</span>`;
+}
 function popupDe(p, capa) {
   const tk = ['Tipo', 'NOMBRE', 'nombre', 'JURIDICCION', 'SISTEMA', 'descripcion'].find(k => p[k]);
   const tit = tk ? p[tk] : (p._nombre || capa.titulo);
-  const filas = Object.keys(p).filter(k => !OCULTOS.test(k) && k !== tk && p[k] !== '').map(k => `<tr><td>${E(k.charAt(0) + k.slice(1).toLowerCase())}</td><td>${E(p[k])}</td></tr>`).join('');
-  const sub = p._nombre && p._nombre !== tit ? `<div style="color:#6B7A90;font-size:11.5px;margin-bottom:4px">${E(p._nombre)}</div>` : '';
-  return `<b class="pt">${E(tit)}</b>${sub}${filas ? '<table>' + filas + '</table>' : ''}<div style="color:#6B7A90;font-size:11px;margin-top:6px">${E(capa.titulo)} · ${E(estDe(capa).fte || 'Municipalidad de Trelew')}</div>`;
+  const filas = Object.keys(p).filter(k => !OCULTOS.test(k) && k !== tk && p[k] !== '' && p[k] != null).map(k => `<div class="pf"><span class="pl">${E(rotulo(k))}</span>${valorDe(p[k])}</div>`).join('');
+  const sub = p._nombre && p._nombre !== tit ? `<div style="color:#6B7A90;font-size:11.5px;margin-top:2px">${E(p._nombre)}</div>` : '';
+  return `<b class="pt">${E(tit)}</b>${sub}${filas ? '<div class="pcuerpo">' + filas + '</div>' : ''}<div class="pfte">${E(capa.titulo)} · ${E(estDe(capa).fte || 'Municipalidad de Trelew')}</div>`;
 }
 function estiloLinea(st, p) {
   if (st.nivel) { const n = +((String(p.descripcion || '').match(/Nivel\s*(\d)/) || [])[1] || 1), e = ESC[Math.min(5, Math.max(1, n)) - 1]; return { color: e[1], weight: e[2], opacity: .9 }; }
@@ -435,7 +447,7 @@ async function prender(cod, si) {
     const est = f => /Polygon/.test(f.geometry.type)
         ? { color: st.c, weight: grande(f) ? 2 : (st.w || 1), dashArray: grande(f) ? '6 5' : null, fillColor: st.c, fillOpacity: grande(f) ? 0 : (st.op || .3) }
         : estiloLinea(st, f.properties || {});
-    const pop = (f, l) => l.bindPopup(() => popupDe(f.properties || {}, capa), { maxWidth: 300 });
+    const pop = (f, l) => l.bindPopup(() => popupDe(f.properties || {}, capa), { maxWidth: 340, minWidth: 240 });
     const fc = l => ({ type: 'FeatureCollection', features: l });
     const g = Lf.layerGroup();
     const grandes = fs.filter(grande), vect = fs.filter(f => !/Point/.test(f.geometry.type) && !grande(f)), pts = fs.filter(f => /Point/.test(f.geometry.type));
