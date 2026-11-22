@@ -417,7 +417,7 @@ function rotulo(k) {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 function valorDe(v) {
-  const t = String(v).trim(), partes = t.split(/\s*[;,\/]\s*|\s+-\s+/).filter(Boolean);
+  const t = String(v).trim(), partes = t.split(/\s*[;,]\s*|\s+-\s+/).filter(Boolean);
   if (t.length > 45 && partes.length >= 3 && partes.every(x => x.length <= 40)) return `<span class="pchips">${partes.map(x => `<span class="pchip">${E(x)}</span>`).join('')}</span>`;
   return `<span class="pv">${E(t)}</span>`;
 }
