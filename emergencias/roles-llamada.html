@@ -93,6 +93,9 @@ const vacio = v => !String(v == null ? '' : v).trim() || /s\/d/i.test(String(v))
 const val = v => vacio(v) ? `<span class="sd">${E(String(v || '').trim() || SD)}</span>` : E(v);
 const telHtml = t => vacio(t) ? val(t) : (/^[\d\s\-+()]{3,}$/.test(String(t).trim()) ? `<a class="tel" href="tel:${E(String(t).replace(/[^\d+]/g, ''))}">${E(t)}</a>` : `<b>${E(t)}</b>`);
 const tipoDe = n => { const e = (D.establecimientos || []).find(x => x.nombre === n); return e ? e.tipo : (D.modelos.indexOf(n) >= 0 ? '' : ''); };
+// 22/11/2026 · «COEsp · parte externa» tiene sus propias situaciones (niveles del circuito de alerta), no las contingencias del hospital.
+const contsDe = n => { const e = (D.establecimientos || []).find(x => x.nombre === n); return (e && e.conts) || D.contingencias; };
+const esCoe = n => tipoDe(n) === 'COEsp';
 const esModelo = n => (D.modelos || []).indexOf(n) >= 0;
 function resolver(n, c, t) {
   const T = D.turnos[t], de = a => D.filas.filter(f => f.ambito === a && f.cont === c && (f.turno === T || f.turno === D.ambos)).sort((a, b) => (+a.paso || 0) - (+b.paso || 0));
@@ -110,7 +113,7 @@ async function cargar() {
     D = r;
     const todos = D.establecimientos.map(e => e.nombre).concat(D.puede ? D.modelos : []);
     if (todos.indexOf(est) < 0) est = todos[0];
-    if (D.contingencias.indexOf(cont) < 0) cont = D.contingencias[0];
+    if (contsDe(est).indexOf(cont) < 0) cont = contsDe(est)[0];
     D.fichaDe = est;
     pintar();
   } catch (e) {
@@ -141,7 +144,7 @@ function pintar() {
     <label>Establecimiento <select id="sEst">${opts}</select></label>
     <label>Turno <select id="sTur">${D.turnos.map((t, i) => `<option value="${i}" ${i === turno ? 'selected' : ''}>${E(t)}</option>`).join('')}</select></label>
   </div>
-  <div class="chips no-imp" role="group" aria-label="Contingencia">${D.contingencias.map(c => { const s = estadoCont(est, c); return `<button type="button" data-c="${E(c)}" aria-pressed="${c === cont}"><span class="pt ${s}"></span>${E(c)}</button>`; }).join('')}</div>
+  <div class="chips no-imp" role="group" aria-label="Contingencia">${contsDe(est).map(c => { const s = estadoCont(est, c); return `<button type="button" data-c="${E(c)}" aria-pressed="${c === cont}"><span class="pt ${s}"></span>${E(c)}</button>`; }).join('')}</div>
   <section class="card">
     <div class="solo-imp"><b style="font-size:18pt">ROL DE LLAMADA · ${E(cont.toUpperCase())}</b><br>${E(est)} · ${E(D.turnos[turno])}</div>
     <div class="no-imp"><h2>${E(cont)}</h2><div class="sub">${E(est)} · ${E(D.turnos[turno])} · ${origen}${R.pasos.length ? ` · ${R.pasos.length} pasos · ${sdN ? `<span class="sd">${sdN} datos en s/d</span>` : 'sin datos pendientes'}` : ''}${res && !esModelo(est) ? ` · ${res.completas} de ${res.total} contingencias completas` : ''}</div></div>

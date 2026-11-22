@@ -339,7 +339,7 @@ async function rolesTablero(e) {
   const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const sel = e ? N.filter(n => norm(n.nombre) === norm(e.nombre) || norm(n.nombre) === norm(e.corto)) : N;
   if (e && !sel.length) return;
-  const hosp = sel.filter(n => !/CAPS/.test(n.tipo)), caps = sel.filter(n => /CAPS/.test(n.tipo));
+  const hosp = sel.filter(n => !/CAPS|COEsp/.test(n.tipo)), caps = sel.filter(n => /CAPS/.test(n.tipo));
   const capsComp = caps.filter(n => R[n.nombre] && R[n.nombre].completas === R[n.nombre].total).length;
   box.innerHTML = sec('Roles de llamada · en diseño', 'var(--viol)', 'lo ve solo Higiene y Seguridad Laboral') + `<div class="card" style="min-height:0">
     ${hosp.map(n => { const x = R[n.nombre] || { completas: 0, cargadas: 0, total: (RL.contingencias || []).length || 11 }; return `<div style="margin:4px 0">${dot(c(x))}<a href="roles-llamada.html?est=${encodeURIComponent(n.nombre)}">${E(n.nombre)}</a>: ${x.completas} de ${x.total} contingencias completas · ${x.cargadas} con pasos</div>`; }).join('')}
