@@ -155,11 +155,11 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
     <p class="asof" id="zAsof">Tramos registrados por Defensa Civil a la fecha de consulta.</p>
     <div class="zones" id="zones"></div>
     <div class="leg"><span><i style="background:#D32F2F"></i>No habilitada</span><span><i style="background:#F47B00"></i>Extrema precaución / solo 4x4</span><span><i style="background:#E0A100"></i>Transitar con precaución</span></div>
-    <details class="tram"><summary><span class="ms">expand_more</span>Tramos con corte, restricción o novedad<small id="tramCnt"></small></summary>
+    <details class="tram"><summary><span class="ms">expand_more</span>Registros a la fecha de tramos con corte, restricción o novedad<small id="tramCnt"></small></summary>
     <div class="tw"><table class="tt"><thead><tr><th>Ruta y tramo</th><th>Zona</th><th>Condición</th><th>Detalle de Defensa Civil</th><th>Actualizado</th></tr></thead><tbody id="tramos"></tbody></table></div>
     <p class="src" id="sinDet"></p>
     </details>
-    <details class="tram ref"><summary>Meseta y costa fuera del Área Programática (referencia)</summary><div class="tw"><table class="tt"><tbody id="tramosRef"></tbody></table></div></details>
+    <details class="tram ref"><summary><span class="ms">expand_more</span>Registros a la fecha fuera del Área Programática (referencia)</summary><div class="tw"><table class="tt"><tbody id="tramosRef"></tbody></table></div></details>
     <p class="src">Fuente única: Defensa Civil del Chubut, mapa de estado de rutas (chubut.gob.ar/destacado/1291), <span id="rConsult"></span>. Un tramo que no muestra fecha reciente puede no haber sido actualizado por Defensa Civil. Se actualiza sola con la misma consulta de la tarjeta «Rutas · Defensa Civil» del inicio.</p>
   </section>
 
@@ -268,8 +268,8 @@ function ponRutas(r){
  const L=((r&&r.tramos)||[]).filter(t=>t.cond&&t.cond!=='normal'), A=L.filter(t=>ZID[t.id]), R=L.filter(t=>!ZID[t.id]);
  const con=A.filter(t=>cl(t)!=='pr'||String(t.detalle||'').trim()), sin=A.filter(t=>cl(t)==='pr'&&!String(t.detalle||'').trim());
  con.sort((a,b)=>C[cl(a)][2]-C[cl(b)][2]);
- document.getElementById('tramos').innerHTML=con.map(t=>`<tr><td><b>${Es(t.ruta)}</b> ${Es(tit(t.tramo))}</td><td><i class="zd" style="background:${Z[ZID[t.id]][1]}"></i>${Z[ZID[t.id]][0]}</td><td>${pill(cl(t))}</td><td>${Es(String(t.detalle||'').replace(/^⚠️\s*/,''))}</td><td class="fe">${Es(t.actualizado||'s/d')}</td></tr>`).join('')||'<tr><td colspan="5" class="vacio">Sin tramos con corte, restricción o novedad en el área.</td></tr>';
- document.getElementById('tramCnt').textContent=con.length+' tramos';
+ document.getElementById('tramos').innerHTML=con.map(t=>`<tr><td><b>${Es(t.ruta)}</b> ${Es(tit(t.tramo))}</td><td><i class="zd" style="background:${Z[ZID[t.id]][1]}"></i>${Z[ZID[t.id]][0]}</td><td>${pill(cl(t))}</td><td>${Es(String(t.detalle||'').replace(/^⚠️\s*/,''))}</td><td class="fe">${Es(t.actualizado||'s/d')}</td></tr>`).join('')||'<tr><td colspan="5" class="vacio">Sin registros a la fecha de tramos con corte, restricción o novedad en el área.</td></tr>';
+ document.getElementById('tramCnt').textContent=con.length+' registros';
  document.getElementById('sinDet').innerHTML=sin.length?'Con precaución y sin detalle cargado: '+sin.map(t=>`${Es(t.ruta)} ${Es(tit(t.tramo))} (${Z[ZID[t.id]][0]}, actualizado el ${Es(String(t.actualizado||'s/d').slice(0,10))})`).join(' · ')+'.':'';
  document.getElementById('tramosRef').innerHTML=R.map(t=>`<tr><td><b>${Es(t.ruta)}</b> ${Es(tit(t.tramo))}</td><td>${pill(cl(t))}</td><td>${Es(String(t.detalle||'').replace(/^⚠️\s*/,''))||'—'}</td><td class="fe">${Es(t.actualizado||'s/d')}</td></tr>`).join('')||'<tr><td class="vacio">Sin tramos.</td></tr>';
  const cnt=(z,c)=>A.filter(t=>ZID[t.id]===z&&cl(t)===c).length;
