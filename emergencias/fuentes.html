@@ -84,6 +84,28 @@ li a{color:#172B4D;text-decoration:underline;text-decoration-color:#2F5BEA}
 .vcuerpo{flex:1;overflow:auto;padding:12px 8px 40px;display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-overflow-scrolling:touch}
 .vpag,.vimg{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:100%;height:auto}
 .vmsg{color:#fff;font-size:13.5px;margin:6px 0}.vmsg.mal{background:#FFF6EC;color:#8a3b00;border-radius:10px;padding:10px 14px}
+/* 23/11/2026 · Belén: «está muy difícil de encontrar la bibliografía para cualquiera que no soy yo». Buscador, «Para empezar», 4 grupos por uso y boletines por serie. */
+.busca{position:relative;margin:0 0 12px}.busca .ms{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#2F5BEA}
+.busca input{width:100%;border:1.5px solid #C5D1F2;border-radius:12px;padding:12px 42px 12px 42px;font:inherit;font-size:15px;background:#fff;color:#172B4D}
+.busca input:focus{outline:0;border-color:#2F5BEA;box-shadow:0 0 0 3px #E4EAFB}
+.busca button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#4B5B73;padding:6px;display:none}.busca.con button{display:block}
+.ayuda-c{font-size:12.5px;color:var(--suave);margin:-4px 0 14px}
+.empezar{background:#FFF6EC;border:1px solid #F5C99A;border-left:5px solid #F57C00;border-radius:14px;padding:8px 18px 10px;margin-bottom:14px}
+.empezar h2{font-size:15px;margin:8px 0 2px;display:flex;align-items:center;gap:8px;color:#172B4D}.empezar h2 .ms{color:#F57C00}
+.empezar>p{margin:0 0 4px;font-size:12.5px;color:var(--suave)}.empezar li{border-color:#F5DEC4}
+.gr-d{font-size:12.5px;font-weight:500;color:var(--suave);margin:2px 0 0 28px}
+.filtros{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.filtros button{border:1.5px solid #C5D1F2;background:#fff;color:#172B4D;border-radius:999px;padding:4px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.filtros button.on{background:#2F5BEA;border-color:#2F5BEA;color:#fff}
+.sub-t{display:inline-block;font-size:11px;font-weight:700;color:#4B5B73;background:#F5F7FB;border:1px solid #E4EAFB;border-radius:6px;padding:0 6px;vertical-align:1px}
+details.serie{border:1px solid #E4EAFB;border-radius:12px;margin:8px 0;background:#fff}
+details.serie>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;align-items:center;gap:10px}details.serie>summary::-webkit-details-marker{display:none}
+details.serie>summary .st{flex:1;min-width:0}details.serie>summary .st b{display:block;font-size:14px}details.serie>summary .st small{display:block;color:var(--suave);font-size:12.5px}
+details.serie>summary .n{background:#E4EAFB;border-radius:999px;padding:0 9px;font-size:12px;font-weight:700}
+details.serie>summary .fl{color:#2F5BEA;transition:transform .2s}details.serie[open]>summary .fl{transform:rotate(180deg)}
+details.serie ol{padding:0 12px 6px 32px}
+.res-c{font-size:13px;color:var(--suave);margin:0 0 8px}
+@media print{.busca,.ayuda-c,.filtros{display:none}}
 </style>
 </head>
 <body>
@@ -254,21 +276,84 @@ function notaHtml(n) {
   if (!L.length) return '';
   return `<small>${lineaHtml(L[0])}</small>` + (L.length > 1 ? `<details class="det"><summary>Ver detalle (${L.length - 1})</summary><ul>${L.slice(1).map(l => `<li>${lineaHtml(l)}</li>`).join('')}</ul></details>` : '');
 }
-// 14/11/2026 · Cada subtema se pliega (Belén: que no ocupe tanta vista).
-const abierto = () => false; // 14/11/2026 · Todas cerradas hasta que se tocan (regla de Belén); al abrir una se cierran las otras (starh.js).
-document.addEventListener('click', ev => { const a = ev.target.closest('.subs a'); if (!a) return; const sec = document.querySelector(a.getAttribute('href')); const d = sec && sec.querySelector('details.gr'); if (d) d.open = true; });
+// 23/11/2026 · Belén: «muy difícil de encontrar la bibliografía para cualquiera que no soy yo». Se agrupa por uso (4 grupos);
+// el Subtema de la hoja FUENTES (col. F) queda como etiqueta y como filtro dentro del grupo. No cambia la hoja ni el servidor.
+const GRUPOS = [
+  { k: 'obligatorio', t: 'Lo obligatorio', d: 'Leyes, decretos y ordenanzas que se cumplen.', ico: 'gavel', subs: ['Normativa'] },
+  { k: 'guias', t: 'Guías y herramientas para trabajar', d: 'Herramientas OPS/OMS, cursos gratuitos, videos y seminarios.', ico: 'construction', subs: ['Herramientas OPS/OMS', 'Cursos gratuitos', 'Videos y seminarios'] },
+  { k: 'situacion', t: 'Situación actual', d: 'Boletines y partes de monitoreo, por serie. Tocá una serie para ver todos sus informes.', ico: 'water_drop', subs: ['Boletines y partes de monitoreo'] },
+  { k: 'profundizar', t: 'Para profundizar', d: 'Bibliografía, salud mental, archivos del Área Programática y links a páginas.', ico: 'menu_book', subs: ['Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas'] }
+];
+const grupoDe = f => { const s = subDe(f); return GRUPOS.find(g => g.subs.indexOf(s) >= 0) || GRUPOS[3]; };
+const SUB_CORTO = { 'Herramientas OPS/OMS': 'Herramienta', 'Cursos gratuitos': 'Curso', 'Videos y seminarios': 'Video', 'Bibliografía de gestión de riesgos': 'Bibliografía', 'Archivos de APTW': 'APTW', 'Links a páginas': 'Link' };
+function itemHtml(f, o) {
+  o = o || {};
+  const dest = esDest(f) && !o.sinDest, s = subDe(f);
+  return `<li${dest ? ' class="dest"' : ''}>${dest ? '<span class="dest-t"><span class="ms">star</span>Destacado</span><br>' : ''}${o.grupo ? `<span class="sub-t">${E(grupoDe(f).t)}</span> ` : ''}${o.sub && SUB_CORTO[s] ? `<span class="sub-t">${E(SUB_CORTO[s])}</span> ` : ''}${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
+    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}" data-tit="${E(String(f.cita || '').slice(0, 140))}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`;
+}
+// Boletines y partes por serie (Belén: «todos los boletines y todos los informes, pero que se vean los informes del IPA… tocar y lista desplegable»).
+// Serie = organismo (antes del primer punto de la cita) + tipo de informe (desde Boletín/Parte/Pronóstico/Informe hasta el número o la fecha).
+const fechaDe = f => { const m = String(f.cita || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\.?\s*$/); return m ? +(m[3] + m[2].padStart(2, '0') + m[1].padStart(2, '0')) : 0; };
+const fechaTxt = f => (String(f.cita || '').match(/(\d{1,2}\/\d{1,2}\/\d{4})\.?\s*$/) || [])[1] || 's/d';
+function serieDe(f) {
+  const c = String(f.cita || ''), i = c.indexOf('. '), org = (i > 0 ? c.slice(0, i) : 's/d (revisar)').replace(/^Organismo emisor:\s*/i, '');
+  const resto = i > 0 ? c.slice(i + 2) : c, m = resto.match(/^(Bolet[ií]n|Parte|Pron[oó]stico|Informe)[^·(]*?(?=\s+(?:N\.?\s?º|N-|\d|·|\()|[.·(]|$)/i);
+  const tipo = (m ? m[0] : resto.split(/[·.(]/)[0]).trim();
+  const sig = (org.match(/\(([A-ZÁÉÍÓÚ][A-Za-zÁÉÍÓÚáéíóú-]{1,12})\)/) || [])[1];
+  return { k: (tipo + '|' + org).toLowerCase(), tipo: tipo, org: sig && org.length > 30 ? sig : org };
+}
+const detalleUlt = f => { const c = String(f.cita || ''), n = (c.match(/N\.?\s?º\s*\d+[^·.]*?(?=\s*·|\.)/) || [])[0]; return (n ? n.trim() + ' · ' : '') + fechaTxt(f); };
+function seriesHtml(lista) {
+  const S2 = {}, orden = [];
+  lista.forEach(f => { const s = serieDe(f); if (!S2[s.k]) { S2[s.k] = { s: s, l: [] }; orden.push(s.k); } S2[s.k].l.push(f); });
+  orden.forEach(k => S2[k].l.sort((a, b) => fechaDe(b) - fechaDe(a)));
+  orden.sort((a, b) => S2[b].l.length - S2[a].l.length || fechaDe(S2[b].l[0]) - fechaDe(S2[a].l[0]));
+  return orden.map(k => { const x = S2[k], u = x.l[0];
+    return `<details class="serie"><summary><span class="ms" style="color:#2F5BEA">description</span><span class="st"><b>${E(x.s.tipo)} · ${E(x.s.org)}</b><small>Último: ${E(detalleUlt(u))}</small></span><b class="n">${x.l.length}</b><span class="ms fl">expand_more</span></summary><ol>${x.l.map(f => itemHtml(f, { sinDest: true })).join('')}</ol></details>`; }).join('');
+}
+const abierto = () => false; // 14/11/2026 · Todas cerradas hasta que se tocan (regla de Belén).
+const norm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+let consulta = '';
+function cuerpoGrupo(G, items, filtro) {
+  if (G.k === 'situacion') return seriesHtml(items);
+  const subs = G.subs.filter(s => items.some(f => subDe(f) === s));
+  const otros = items.some(f => G.subs.indexOf(subDe(f)) < 0);
+  const vis = filtro ? items.filter(f => subDe(f) === filtro) : items;
+  const chips = subs.length + (otros ? 1 : 0) > 1 ? `<div class="filtros" data-g="${G.k}"><button type="button" class="${filtro ? '' : 'on'}" data-f="">Todos (${items.length})</button>${subs.map(s => `<button type="button" class="${filtro === s ? 'on' : ''}" data-f="${E(s)}">${E(s)} (${items.filter(f => subDe(f) === s).length})</button>`).join('')}</div>` : '';
+  return chips + `<ol>${vis.map(f => itemHtml(f, { sub: subs.length > 1 })).join('')}</ol>`;
+}
 function pintar(lista, nota) {
   actual = lista;
-  const g = {}; lista.forEach(f => { const k = subDe(f); (g[k] = g[k] || []).push(f); });
-  Object.keys(g).forEach(k => { g[k] = g[k].filter(esDest).concat(g[k].filter(f => !esDest(f))); }); // destacadas primero
-  const claves = Object.keys(g).sort((a, b) => (SUBT.indexOf(a) + 99) % 99 - (SUBT.indexOf(b) + 99) % 99);
-  const indice = `<nav class="subs">${claves.map(k => `<a href="#${idS(k)}"><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)} <b>${g[k].length}</b></a>`).join('')}</nav>`;
-  app.innerHTML = barraAdm() + indice + claves.map(k => `<section class="grupo" id="${idS(k)}"><details class="gr" data-k="${E(k)}"${abierto(k) ? ' open' : ''}><summary><h2><span class="ms">${ICO_S[k] || 'description'}</span>${E(k)}<b class="n">${g[k].length}</b><span class="ms fl">expand_more</span></h2></summary><ol>${g[k].map(f => `<li${esDest(f) ? ' class="dest"' : ''}>${esDest(f) ? '<span class="dest-t"><span class="ms">star</span>Destacado</span><br>' : ''}${f.modulo && !/^(general|normativa)$/i.test(f.modulo) ? `<span class="mod-t">${E(modNom(f.modulo))}</span> ` : ''}${E(f.cita)}
-    ${f.enlace ? `<br><a href="${E(f.enlace)}" target="_blank" rel="noopener">${E(f.enlace.replace(/^https?:\/\//, '').split('/')[0])} · abrir</a>` : ''}${f.archivoId ? `<br><button class="chip-a leer" type="button" data-leer="${E(f.archivoId)}" data-tit="${E(String(f.cita || '').slice(0, 140))}"><span class="ms" style="font-size:15px">menu_book</span>Leer el documento</button>` : ''}${f.archivo && esAdm() ? `${f.archivoId ? ' ' : '<br>'}<a class="chip-a" href="${E(f.archivo)}" target="_blank" rel="noopener"><span class="ms" style="font-size:15px">folder_open</span>Archivo en 07 · REFERENCIAS</a>` : ''}${notaHtml(f.nota)}</li>`).join('')}</ol></details></section>`).join('')
-    + `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».</p>`;
-  // 14/11/2026 · Si se entra con #sub-… (p. ej. desde los boletines del inicio), se abre ese subtema.
-  if (/^#sub-/.test(location.hash)) { const sec = document.getElementById(location.hash.slice(1)); const d = sec && sec.querySelector('details.gr'); if (d) { d.open = true; sec.scrollIntoView({ block: 'start' }); } }
+  const pie = `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».${esAdm() ? ' Para que un documento aparezca en «Para empezar», su Nota tiene que empezar con ★.' : ''}</p>`;
+  const busca = `<div class="busca${consulta ? ' con' : ''}"><span class="ms">search</span><input id="qF" type="search" placeholder="Buscá por tema: inundación, incendio, El Niño, residuos…" value="${E(consulta)}" autocomplete="off" aria-label="Buscar en la bibliografía"><button type="button" id="qX" aria-label="Borrar la búsqueda"><span class="ms">close</span></button></div>`;
+  let cuerpo;
+  if (norm(consulta).trim()) {
+    const pal = norm(consulta).split(/\s+/).filter(Boolean);
+    const r = lista.filter(f => { const t = norm([f.cita, f.nota, subDe(f), f.modulo, grupoDe(f).t].join(' ')); return pal.every(p => t.indexOf(p) >= 0); });
+    cuerpo = `<p class="res-c">${r.length ? r.length + (r.length === 1 ? ' documento encontrado.' : ' documentos encontrados.') : 'No hay documentos con esas palabras. Probá con otra palabra o abrí un grupo.'}</p>` + (r.length ? `<section class="grupo"><ol>${r.map(f => itemHtml(f, { grupo: true, sinDest: true })).join('')}</ol></section>` : '');
+  } else {
+    const dest = lista.filter(esDest);
+    const emp = dest.length ? `<section class="empezar"><h2><span class="ms">star</span>Para empezar</h2><p>Si es la primera vez, empezá por acá.</p><ol>${dest.map(f => itemHtml(f, { sinDest: true, grupo: true })).join('')}</ol></section>` : '';
+    const g = {}; lista.forEach(f => { const k = grupoDe(f).k; (g[k] = g[k] || []).push(f); });
+    Object.keys(g).forEach(k => { g[k] = g[k].filter(esDest).concat(g[k].filter(f => !esDest(f))); });
+    cuerpo = emp + GRUPOS.filter(G => g[G.k]).map(G => `<section class="grupo" id="g-${G.k}"><details class="gr" data-k="${G.k}"${abierto() ? ' open' : ''}><summary><h2><span class="ms">${G.ico}</span>${E(G.t)}<b class="n">${g[G.k].length}</b><span class="ms fl">expand_more</span></h2><p class="gr-d">${E(G.d)}</p></summary><div class="gr-c">${cuerpoGrupo(G, g[G.k], '')}</div></details></section>`).join('');
+  }
+  app.innerHTML = barraAdm() + busca + (consulta ? '' : '<p class="ayuda-c">Escribí una palabra para buscar en toda la lista, o abrí uno de los grupos.</p>') + cuerpo + pie;
+  // Enlaces viejos (#sub-…, p. ej. desde los boletines del inicio) abren el grupo que corresponde.
+  const h = location.hash; let gk = '';
+  if (/^#sub-bolet/.test(h)) gk = 'situacion'; else if (/^#sub-normativa/.test(h)) gk = 'obligatorio'; else if (/^#sub-(herramientas|cursos|videos)/.test(h)) gk = 'guias'; else if (/^#sub-/.test(h)) gk = 'profundizar'; else if (/^#g-/.test(h)) gk = h.slice(3);
+  if (gk && !consulta) { const sec = document.getElementById('g-' + gk), d = sec && sec.querySelector('details.gr'); if (d) { d.open = true; sec.scrollIntoView({ block: 'start' }); } }
 }
+let tBusca = null;
+document.addEventListener('input', ev => { if (ev.target.id !== 'qF') return; consulta = ev.target.value; clearTimeout(tBusca);
+  tBusca = setTimeout(() => { const pos = ev.target.selectionStart; pintar(actual, 'Búsqueda.'); const q = document.getElementById('qF'); if (q) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (e) {} } }, 250); });
+document.addEventListener('click', ev => {
+  if (ev.target.closest('#qX')) { consulta = ''; pintar(actual, 'Lista completa.'); const q = document.getElementById('qF'); if (q) q.focus(); return; }
+  const b = ev.target.closest('.filtros button'); if (!b) return;
+  const k = b.parentNode.dataset.g, G = GRUPOS.find(x => x.k === k), cont = b.closest('.gr-c');
+  cont.innerHTML = cuerpoGrupo(G, actual.filter(f => grupoDe(f).k === k).sort((a, c) => esDest(c) - esDest(a)), b.dataset.f);
+});
 const guardadas = S.store.get('fuentes', null);
 pintar(guardadas || BASE, guardadas ? 'Últimos datos guardados.' : 'Lista base.');
 actualizar();
