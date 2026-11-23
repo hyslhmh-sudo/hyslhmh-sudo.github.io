@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<script>/* Sin sesión no se muestra nada: se vuelve al inicio para ingresar. */
+(function(){var ok=false;try{ok=!!localStorage.getItem('starh.token');}catch(e){}
+if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evolución del evento El Niño · Emergencias y desastres</title>
+<meta name="theme-color" content="#172B4D">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<style>
+/* 23/11/2026 · Evolución del evento El Niño (v0). Pedido de Belén: «espacio que muestre estado de avance del fenómeno El Niño para Argentina»
+ * + Chubut (meseta y este, APTW). REGLAS (07:13): cortes de rutas y caminos solo como datos, fuente única Defensa Civil del Chubut;
+ * nada de «ya pasó» por localidad; los riesgos del área aún no fueron evaluados. Detalle: claude/el-nino-avance-2026-11-23.md.
+ * VOICE: tablero de la app de emergencias (COEsp): claro, directo, para leer en 10 segundos.
+   IDEA: el «velocímetro» del boletín DNPH + la regla de tiempo del evento, como un parte de situación.
+   PICTURE: aguja de fase El Niño y barra de avance junio 2026 → febrero 2027 con «hoy» marcado.
+   COLOUR and TYPE: paleta de la app (azul marino #172B4D → #2F5BEA, verde azulado, celeste, magenta); semáforo solo para riesgo. Plus Jakarta Sans.
+   LAYOUT: franja degradé con fase e indicadores; avance del evento; intensidad; embalse; lluvias; hitos; cómo se actualiza. */
+:root{color-scheme:light;--bg:light-dark(#F5F7FB,#0F1726);--card:light-dark(#fff,#18233A);--ink:light-dark(#172B4D,#E6ECF8);--sub:light-dark(#4B5B73,#A9B6CC);--line:light-dark(#C3CCDA,#2E3D5A);
+--navy:#172B4D;--blue:#2F5BEA;--sky:#2A7AD6;--teal:#0F9D79;--mag:#D6338A;--vio:#A33EC4;--amb:#E0A100;--ora:#F47B00;--red:#D32F2F}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;padding-bottom:20px;background:var(--bg);color:var(--ink);font:16px/1.55 "Plus Jakarta Sans",system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1100px;margin:0 auto;padding:16px max(4vw,14px) 40px}
+.kick{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--sky);text-transform:uppercase;margin:6px 0 2px}
+h1{font-size:clamp(26px,3.4vw,36px);line-height:1.1;margin:0 0 14px;text-wrap:balance}
+h2{font-size:19px;margin:0 0 4px}
+.sub{color:var(--sub);font-size:14px;margin:0 0 12px}
+.hero{background:linear-gradient(120deg,#172B4D,#2F5BEA);color:#fff;border-radius:18px;padding:20px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:center}
+.hero .big{font-size:clamp(24px,3vw,32px);font-weight:800;line-height:1.1;margin:4px 0 8px}
+.hero p{margin:0;color:#DDE6FD;font-size:14.5px}
+.gauge{width:100%;max-width:360px;justify-self:center}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px 14px;text-align:center}
+.kpi .dot{width:12px;height:12px;border-radius:50%;margin:0 auto 6px}
+.kpi b{display:block;font-size:24px;line-height:1.15}
+.kpi span{font-size:13px;color:var(--sub)}
+.card{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+/* barra de avance */
+.track{position:relative;margin:34px 6px 8px;height:22px;border-radius:11px;background:var(--line);overflow:visible}
+.track .done{position:absolute;inset:0 auto 0 0;border-radius:11px;background:linear-gradient(90deg,#2A7AD6,#0F9D79)}
+.track .phase{position:absolute;top:28px;font-size:12.5px;color:var(--sub);transform:translateX(-50%);white-space:nowrap}
+.mk{position:absolute;top:-30px;transform:translateX(-50%);text-align:center;font-size:12px;font-weight:700;white-space:nowrap}
+.mk i{display:block;width:3px;height:20px;margin:2px auto 0;background:currentColor;border-radius:2px}
+.months{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin:30px 6px 0}
+/* barras */
+.bar{display:grid;grid-template-columns:9.5em minmax(0,1fr) 3.5em;gap:10px;align-items:center;margin:8px 0;font-size:14px}
+.bar .b{height:18px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar .b i{display:block;height:100%;border-radius:9px}
+.bar .v{font-weight:800;text-align:right;white-space:nowrap}
+.fig{position:relative;min-height:230px}.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.chip{border:2px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:700;color:var(--sub);background:var(--card)}
+.chip.on{background:linear-gradient(120deg,#0A5E4E,#0F9D79);color:#fff;border-color:transparent}
+.tl{list-style:none;margin:0;padding:0;border-left:3px solid var(--line);margin-left:8px}
+.tl li{position:relative;padding:0 0 12px 18px;font-size:14px}
+.tl li::before{content:"";position:absolute;left:-9px;top:4px;width:15px;height:15px;border-radius:50%;background:var(--c,#2A7AD6);border:3px solid var(--card)}
+.tl b{display:block;font-size:13px;color:var(--sub);font-weight:700}
+.src{font-size:12.5px;color:var(--sub);margin:8px 0 0}
+.tag{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:1px 7px;color:#fff;background:var(--blue);vertical-align:1px}
+.note{background:light-dark(#FFF8E1,#2B2512);border:2px dashed var(--amb);border-radius:14px;padding:12px 14px;font-size:14px}
+.chub{padding:0;overflow:hidden}
+.chub>*:not(.chead):not(.river){margin-left:16px;margin-right:16px}
+.chub>.src:last-child{margin-bottom:16px}
+.chead{background:linear-gradient(120deg,#0A5E4E,#0F9D79 60%,#2A7AD6);color:#fff;padding:18px 20px;text-align:center}
+.ctit{font-size:clamp(20px,2.6vw,26px);font-weight:800;line-height:1.2;margin:4px 0 8px;text-wrap:balance}
+.chead p{margin:0 auto;max-width:760px;color:#E4F5EF;font-size:14.5px}
+.river{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:14px 16px 8px;padding:6px 14px;border-radius:999px;background:linear-gradient(90deg,#C9E2F7,#2A7AD6);font-size:12.5px;color:#0B4F6C;font-weight:700}
+.river b{color:#fff;letter-spacing:.06em;text-transform:uppercase;font-size:12px}
+.zones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.zone{border:2px solid var(--line);border-radius:14px;padding:12px;text-align:center;background:var(--card)}
+.zone .zn{display:flex;align-items:center;justify-content:center;gap:7px;font-weight:800;font-size:15.5px}
+.zone .zn i{width:11px;height:11px;border-radius:50%;flex:none}
+.zone .loc{font-size:13px;color:var(--sub);margin:4px 0 8px}
+.zone .cnt{display:inline-block;background:#E0A100;color:#3A2A00;font-weight:800;font-size:12.5px;border-radius:999px;padding:3px 10px;margin-bottom:8px}
+.zone .cnt.no{background:var(--line);color:var(--sub)}
+.zone .rk{font-size:13.5px;text-align:center;margin:0}
+.zone .rk b{color:var(--ink)}
+.chub h3{font-size:16px;margin:4px 0 8px}
+.al{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:10px;align-items:start;margin:0 0 10px;font-size:13.5px}
+.al .d{background:#E0A100;color:#3A2A00;border-radius:10px;padding:5px 0;text-align:center;font-weight:800;font-size:12.5px;line-height:1.15}
+.al .z{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.al .z span{border:2px solid var(--line);border-radius:999px;padding:0 8px;font-size:12px;font-weight:700;color:var(--sub)}
+.imp{margin:0;padding:0 0 0 18px;font-size:13.5px}.imp li{margin:0 0 6px}
+.zone .bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:6px}
+.zb{border-radius:10px;background:light-dark(#F5F7FB,#111A2C);padding:6px 2px}.zb b{display:block;font-size:22px;line-height:1.1}.zb span{font-size:11px;color:var(--sub);line-height:1.2;display:block}.zb.z0 b{opacity:.35}
+.leg{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;font-size:12.5px;color:var(--sub);margin-top:10px!important}.leg i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tw{overflow-x:auto}.tt{width:100%;border-collapse:collapse;font-size:13px}.tt th{text-align:left;font-size:12px;color:var(--sub);border-bottom:2px solid var(--line);padding:6px}.tt td{border-bottom:1px solid var(--line);padding:7px 6px;vertical-align:top}
+.cp{display:inline-block;color:#fff;font-weight:800;font-size:11.5px;border-radius:999px;padding:2px 9px;white-space:nowrap}.zd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.fe{white-space:nowrap;color:var(--sub)}
+.ref{margin-top:10px!important;font-size:13.5px}.ref summary{cursor:pointer;font-weight:700}
+@media(max-width:520px){.zones{grid-template-columns:1fr}}
+@media(max-width:640px){.tt thead{display:none}.tt tr{display:block;border-bottom:2px solid var(--line);padding:6px 0}.tt td{display:block;border:0;padding:2px 4px}}
+@media(max-width:900px){.zones{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+@media(max-width:420px){.bar{grid-template-columns:7em minmax(0,1fr) 3em}.track .phase{font-size:11px}}
+.ms{font-family:'Material Symbols Outlined';font-size:20px;line-height:1;display:inline-block;vertical-align:middle;font-feature-settings:'liga'}
+.barra{position:sticky;top:0;z-index:5;background:#172B4D;color:#F5F7FB;border-bottom:3px solid #2A7AD6;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+.barra h1{font-size:16px;margin:0;flex:1;line-height:1.3}.barra h1 small{display:block;font-size:11.5px;font-weight:500;opacity:.85}
+.icono{color:#fff;text-decoration:none;display:inline-flex;align-items:center;padding:8px 10px;border-radius:10px}.icono:hover{background:rgba(255,255,255,.14)}
+details.tram{margin:12px 16px 0;border:2px solid var(--line);border-radius:14px;padding:10px 12px}details.tram>summary{cursor:pointer;font-weight:800;font-size:15px;list-style:none;display:flex;align-items:center;gap:8px}
+details.tram>summary::-webkit-details-marker{display:none}details.tram>summary .ms{transition:transform .2s}details.tram[open]>summary .ms{transform:rotate(180deg)}
+details.tram>summary small{font-weight:600;color:var(--sub);font-size:12.5px;margin-left:auto}
+footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520px;height:auto;max-height:60px;object-fit:contain}
+.vacio{color:var(--sub);font-size:13.5px}
+</style>
+</head>
+<body>
+<header class="barra">
+  <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
+  <h1>Evolución del evento · El Niño 2026-2027<small>Argentina y Chubut · Área Programática Trelew · versión 0</small></h1>
+</header>
+<div class="wrap">
+    <h1>El Niño está activo y es fuerte, y estado de rutas en nuestra área</h1>
+
+  <section class="hero">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#C9D3E7">FASE ACTUAL · boletín DNPH N.º 12 · 19/11/2026</div>
+      <div class="big">Fase El Niño, 100 % de permanencia hasta enero</div>
+      <p>Probabilidad de que siga en El Niño en noviembre-diciembre-enero 2026/27. La aguja indica la fase, no la intensidad.</p>
+    </div>
+    <svg class="gauge" viewBox="0 0 300 175" role="img" aria-label="Aguja en El Niño">
+      <defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#2A7AD6"/><stop offset=".5" stop-color="#C9D3E7"/><stop offset="1" stop-color="#F47B00"/></linearGradient></defs>
+      <path d="M30 150 A120 120 0 0 1 270 150" fill="none" stroke="url(#gg)" stroke-width="26" stroke-linecap="round"/>
+      <g id="needle" style="transform-origin:150px 150px;transform:rotate(-90deg);transition:transform 1.2s ease"><path d="M146 150 L150 50 L154 150 Z" fill="#fff"/></g>
+      <circle cx="150" cy="150" r="11" fill="#fff"/>
+      <text x="22" y="172" fill="#DDE6FD" font-size="13" font-weight="700">La Niña</text>
+      <text x="150" y="22" fill="#DDE6FD" font-size="13" font-weight="700" text-anchor="middle">Neutral</text>
+      <text x="278" y="172" fill="#fff" font-size="14" font-weight="800" text-anchor="end">El Niño</text>
+    </svg>
+  </section>
+
+  <div class="kpis">
+    <div class="kpi"><div class="dot" style="background:var(--ora)"></div><b>Fuerte</b><span>intensidad (SMN, 02/11)</span></div>
+    <div class="kpi"><div class="dot" style="background:var(--vio)"></div><b>≈ diciembre</b><span>pico previsto (OMM)</span></div>
+    <div class="kpi"><div class="dot" style="background:var(--teal)"></div><b id="kEmb">s/d</b><span id="kEmbS">embalse Ameghino (IPA)</span></div>
+    <div class="kpi" id="kpiRutas"></div>
+  </div>
+
+  <section class="card chub">
+    <div class="chead">
+      <div class="kick" style="color:#fff;opacity:.85;margin:0">Chubut · Área Programática Trelew</div>
+      <div class="ctit">Estado de rutas y caminos en la meseta y el este de Chubut</div>
+      <p>Datos de Defensa Civil del Chubut: condición y estado de cada tramo, con la fecha en que Defensa Civil lo actualizó. Los riesgos para el área todavía no fueron evaluados.</p>
+    </div>
+    <div class="river" aria-hidden="true"><span>← oeste</span><b>Río Chubut</b><span>este →</span></div>
+    <div class="zones" id="zones"></div>
+    <div class="leg"><span><i style="background:#D32F2F"></i>No habilitada</span><span><i style="background:#F47B00"></i>Extrema precaución / solo 4x4</span><span><i style="background:#E0A100"></i>Transitar con precaución</span></div>
+    <details class="tram"><summary><span class="ms">expand_more</span>Tramos con corte, restricción o novedad<small id="tramCnt"></small></summary>
+    <div class="tw"><table class="tt"><thead><tr><th>Ruta y tramo</th><th>Zona</th><th>Condición</th><th>Detalle de Defensa Civil</th><th>Actualizado</th></tr></thead><tbody id="tramos"></tbody></table></div>
+    <p class="src" id="sinDet"></p>
+    </details>
+    <details class="tram ref"><summary>Meseta y costa fuera del Área Programática (referencia)</summary><div class="tw"><table class="tt"><tbody id="tramosRef"></tbody></table></div></details>
+    <p class="src">Fuente única: Defensa Civil del Chubut, mapa de estado de rutas (chubut.gob.ar/destacado/1291), <span id="rConsult"></span>. Un tramo que no muestra fecha reciente puede no haber sido actualizado por Defensa Civil. Se actualiza sola con la misma consulta de la tarjeta «Rutas · Defensa Civil» del inicio.</p>
+  </section>
+
+  <section class="card">
+    <h2>¿En qué parte del evento estamos?</h2>
+    <p class="sub">Desde la transición a El Niño (junio 2026) hasta la persistencia prevista por la OMM (febrero 2027). Las fases son orientativas.</p>
+    <div class="track" id="track"><div class="done" id="done"></div></div>
+    <div class="months" id="months"></div>
+    <p class="src"><span class="tag">MEJORA</span> OPS, Análisis de situación 24/06/2026 y Reportes de situación n.º 2 (16/10) y n.º 3 (18/11); SMN, ENOS al 02/11/2026.</p>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>¿Qué tan fuerte puede ser?</h2>
+      <p class="sub">Probabilidad de un El Niño de intensidad histórica (NOAA), según la OPS.</p>
+      <div id="bars"></div>
+      <p class="src">Bajó de 83 % a cerca de 60 %: sigue siendo más probable que no. NOAA vía OPS, reportes n.º 2 y n.º 3.</p>
+    </section>
+    <section class="card">
+      <h2>Lluvias esperadas · nov-dic-ene</h2>
+      <p class="sub">Centro y norte de Patagonia Central, la región del boletín en la que está Chubut. En el extremo sudoeste de esa región se espera lluvia normal.</p>
+      <div class="chips"><span class="chip">Inferior a lo normal</span><span class="chip">Normal</span><span class="chip on">Superior a lo normal</span></div>
+      <p class="src">Pronóstico trimestral por cuencas, boletines DNPH n.º 10 a 12. Es probabilístico: marca tendencia, no anuncia eventos. Las alertas del día, en el SMN.</p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Embalse Florentino Ameghino · cota semanal</h2>
+    <p class="sub" id="embSub">Dato oficial: partes del IPA cargados en Fuentes.</p>
+    <div class="fig"><svg id="emb" aria-label="Cota del embalse, partes IPA"></svg></div>
+    <p class="src" id="embSrc">Instituto Provincial del Agua (IPA), partes cargados en Fuentes › Boletines y partes de monitoreo.</p>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>Hitos</h2>
+      <ul class="tl" id="tl"></ul>
+    </section>
+    <section class="card">
+      <h2>Boletines DNPH: permanencia en El Niño</h2>
+      <p class="sub" id="bolSub">Boletines cargados en Fuentes.</p>
+      <div id="bol" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px"></div>
+      <p class="src">Del n.º 2 al 12, todos con 100 % de probabilidad de permanencia en fase El Niño para su trimestre. N.º 1: s/d (revisar).</p>
+      <div class="note" style="margin-top:12px"><b>Cómo se actualiza.</b> Rutas: solas, desde Defensa Civil. Embalse y boletines: solos, con cada boletín o parte que se carga en Fuentes › Boletines y partes de monitoreo (la fecha va al final de la cita). Fase, intensidad, pico, NOAA e hitos: se actualizan con cada boletín nuevo (v0, a pedido).</div>
+    </section>
+  </div>
+</div>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
+<script src="config.js"></script>
+<script src="starh.js"></script>
+<script>
+{
+const D=(d,m,y)=>new Date(y,m-1,d).getTime();
+const T0=D(1,6,2026),T1=D(28,2,2027),HOY=Date.now(),PICO=D(15,12,2026);
+const pos=t=>Math.max(0,Math.min(100,(t-T0)/(T1-T0)*100));
+const track=document.getElementById('track');
+document.getElementById('done').style.width=pos(HOY)+'%';
+const mk=(t,txt,c)=>`<div class="mk" style="left:${pos(t)}%;color:${c}">${txt}<i></i></div>`;
+const ph=[['Desarrollo',D(1,8,2026)],['Crecimiento',D(15,10,2026)],['Pico',PICO],['Declinación',D(1,2,2027)]];
+track.insertAdjacentHTML('beforeend',mk(HOY,'Hoy · '+new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}),'#2F5BEA')+mk(PICO,'Pico ≈ dic','#A33EC4')+ph.map(p=>`<div class="phase" style="left:${pos(p[1])}%">${p[0]}</div>`).join(''));
+document.getElementById('months').innerHTML=['jun','jul','ago','sep','oct','nov','dic','ene','feb'].map(m=>`<span>${m}</span>`).join('');
+
+document.getElementById('bars').innerHTML=[['OPS reporte 2 · 16/10',83,'#F47B00'],['OPS reporte 3 · 18/11',60,'#E0A100']].map(b=>`<div class="bar"><span>${b[0]}</span><div class="b"><i style="width:0;background:${b[2]}" data-w="${b[1]}"></i></div><span class="v">${b[1]===60?'≈ ':''}${b[1]} %</span></div>`).join('');
+
+// Embalse: partes del IPA cargados en Fuentes (cita «… (nivel 145,40 m · aportes 56,99 m³/s). 16/11/2026.»)
+let ipa=[];
+const s=document.getElementById('emb');
+const draw=()=>{if(!ipa.length){s.innerHTML='';return;}const W=s.clientWidth,H=s.clientHeight,l=46,r=16,t=20,b=30;
+ const vs=ipa.map(p=>p[1]),mn=Math.floor(Math.min(...vs))-1,mx=Math.ceil(Math.max(...vs))+1,n=ipa.length,L=n-1;
+ const x=i=>l+(n>1?i*(W-l-r)/(n-1):(W-l-r)/2),y=v=>t+(mx-v)/(mx-mn)*(H-t-b);
+ const pts=ipa.map((p,i)=>`${x(i)},${y(p[1])}`).join(' ');
+ let g='';const st=Math.max(1,Math.round((mx-mn)/5));for(let v=mn;v<=mx;v+=st)g+=`<line x1="${l}" x2="${W-r}" y1="${y(v)}" y2="${y(v)}" stroke="currentColor" opacity=".12"/><text x="${l-8}" y="${y(v)+4}" font-size="12" text-anchor="end" fill="currentColor" opacity=".7">${v}</text>`;
+ const sm=W<520, k=String(ipa[L][1].toFixed(2)).replace('.',',');
+ s.innerHTML=`<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A7AD6" stop-opacity=".35"/><stop offset="1" stop-color="#2A7AD6" stop-opacity="0"/></linearGradient></defs>${g}
+ <polygon points="${x(0)},${H-b} ${pts} ${x(L)},${H-b}" fill="url(#ag)"/><polyline points="${pts}" fill="none" stroke="#2A7AD6" stroke-width="3"/>
+ ${ipa.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p[1])}" r="${i===L?6:4}" fill="${i===L?'#0F9D79':'#2A7AD6'}"/>${(!sm||i%2===L%2)?`<text x="${x(i)}" y="${H-10}" font-size="12" text-anchor="middle" fill="currentColor" opacity=".7">${p[0]}</text>`:''}`).join('')}
+ <text x="${x(L)-8}" y="${y(ipa[L][1])-12}" font-size="13" font-weight="800" text-anchor="end" fill="#0F9D79">${k} m</text>`;};
+new ResizeObserver(draw).observe(s);
+function ponFuentes(F){
+ const B=(F||[]).filter(x=>x.subtema==='Boletines y partes de monitoreo');
+ const fecha=c=>(String(c||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\.?\s*$/)||[]);
+ const ts=c=>{const m=fecha(c);return m.length?new Date(+m[3],+m[2]-1,+m[1]).getTime():0};
+ const P=B.filter(x=>/Parte Embalse Florentino Ameghino/i.test(x.cita)).map(x=>{const m=String(x.cita).match(/nivel\s*([\d.,]+)\s*m/i),fm=fecha(x.cita);return m&&fm.length?[fm[1].padStart(2,'0')+'/'+fm[2].padStart(2,'0'),parseFloat(m[1].replace(',','.')),ts(x.cita)]:null}).filter(Boolean).sort((a,b)=>a[2]-b[2]);
+ ipa=P;draw();
+ if(P.length){const u=P[P.length-1],v=String(u[1].toFixed(2)).replace('.',',');document.getElementById('kEmb').textContent=v+' m';document.getElementById('kEmbS').textContent='embalse Ameghino (IPA, '+u[0]+')';
+  const d=P.length>1?(u[1]-P[0][1]):0;document.getElementById('embSub').innerHTML=P.length>1?`Cambió <b>${d>=0?'+':''}${d.toFixed(2).replace('.',',')} m</b> entre el ${P[0][0]} y el ${u[0]}. Dato oficial: partes del IPA.`:'Dato oficial: partes del IPA.';}
+ else{document.getElementById('embSub').textContent='Sin partes del IPA cargados en Fuentes: s/d (revisar).';}
+ const Bo=B.filter(x=>/Bolet[ií]n El Niño N\.?º\s*\d+\s*·\s*Situaci/i.test(x.cita)).map(x=>[+(String(x.cita).match(/N\.?º\s*(\d+)/i)||[])[1],(fecha(x.cita)[0]||'s/d').replace(/\.\s*$/,'')]).sort((a,b)=>a[0]-b[0]);
+ document.getElementById('bolSub').textContent=Bo.length?`${Bo.length} boletines cargados en Fuentes; el último, n.º ${Bo[Bo.length-1][0]} del ${Bo[Bo.length-1][1]}.`:'Sin boletines cargados en Fuentes: s/d (revisar).';
+ document.getElementById('bol').innerHTML=Bo.map(b=>`<div title="Boletín n.º ${b[0]} · ${b[1]}" style="border-radius:10px;padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:#fff;background:${b[0]===1?'#8796AE':'linear-gradient(120deg,#0A5E4E,#0F9D79)'}">N.º ${b[0]}<br>${b[0]===1?'s/d':'100 %'}</div>`).join('');
+}
+const hitos=[['24/06/2026','OPS: transición hacia El Niño; análisis de situación de salud pública','#2A7AD6'],['04/09/2026','Primer boletín DNPH: fase El Niño, 100 % de permanencia','#0F9D79'],['16/10/2026','OPS reporte 2: NOAA 83 % de intensidad histórica','#F47B00'],['02/11/2026','SMN: fase cálida de fuerte intensidad','#D6338A'],['18/11/2026','OPS reporte 3: ≈ 60 %; OMM prevé el pico en diciembre','#A33EC4'],['19/11/2026','Boletín DNPH n.º 12: lluvias superiores a lo normal en el centro y norte de Patagonia Central','#2F5BEA']];
+document.getElementById('tl').innerHTML=hitos.map(h=>`<li style="--c:${h[2]}"><b>${h[0]}</b>${h[1]}</li>`).join('');
+
+void Array.from({length:0},(_,i)=>`<div style="border-radius:10px;padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:#fff;background:linear-gradient(120deg,#0A5E4E,#0F9D79)">N.º ${i+1}<br>100 %</div>`).join('');
+
+const Z={M:['Meseta','#A33EC4','Paso de Indios · Los Altares · Cerro Cóndor · El Mirasol'],V:['Valle medio','#2A7AD6','Las Plumas · Dique F. Ameghino'],E:['VIRCH y costa','#0F9D79','28 de Julio · Dolavon · Gaiman · Trelew · Rawson'],S:['Costa sur','#D6338A','Camarones']};
+// Zona de cada tramo de Defensa Civil (por su id). Un tramo que no está acá va a «Fuera del Área Programática (referencia)».
+const ZID={16:'M',81:'M',82:'M',89:'M',80:'V',90:'V',12:'V',79:'E',62:'E',63:'E',1:'E',57:'E',18:'E',19:'E',35:'S',45:'S',44:'S',36:'S',41:'S',56:'S',58:'S',91:'S',37:'S'};
+const C={nh:['No habilitada','#D32F2F',0],ex:['Extrema precaución','#F47B00',1],pr:['Con precaución','#E0A100',2]};
+const cl=t=>/no\s*habilitada/i.test(t.estado||'')?'nh':t.cond==='extrema_precaucion'?'ex':'pr';
+const pill=c=>`<span class="cp" style="background:${C[c][1]}">${C[c][0]}</span>`;
+const Es=window.STARH?STARH.esc:(x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]));
+const tit=x=>String(x||'').toLowerCase().replace(/(^|[\s–(])([a-záéíóúñ])/g,(m,a,b)=>a+b.toUpperCase()).replace(/\b(Rp|Rn)(?=\s|\d|$)/g,m=>m.toUpperCase()).replace(/ De /g,' de ').replace(/ Del /g,' del ').replace(/ N[º°]/g,' n.º ');
+function ponRutas(r){
+ const L=((r&&r.tramos)||[]).filter(t=>t.cond&&t.cond!=='normal'), A=L.filter(t=>ZID[t.id]), R=L.filter(t=>!ZID[t.id]);
+ const con=A.filter(t=>cl(t)!=='pr'||String(t.detalle||'').trim()), sin=A.filter(t=>cl(t)==='pr'&&!String(t.detalle||'').trim());
+ con.sort((a,b)=>C[cl(a)][2]-C[cl(b)][2]);
+ document.getElementById('tramos').innerHTML=con.map(t=>`<tr><td><b>${Es(t.ruta)}</b> ${Es(tit(t.tramo))}</td><td><i class="zd" style="background:${Z[ZID[t.id]][1]}"></i>${Z[ZID[t.id]][0]}</td><td>${pill(cl(t))}</td><td>${Es(String(t.detalle||'').replace(/^⚠️\s*/,''))}</td><td class="fe">${Es(t.actualizado||'s/d')}</td></tr>`).join('')||'<tr><td colspan="5" class="vacio">Sin tramos con corte, restricción o novedad en el área.</td></tr>';
+ document.getElementById('tramCnt').textContent=con.length+' tramos';
+ document.getElementById('sinDet').innerHTML=sin.length?'Con precaución y sin detalle cargado: '+sin.map(t=>`${Es(t.ruta)} ${Es(tit(t.tramo))} (${Z[ZID[t.id]][0]}, actualizado el ${Es(String(t.actualizado||'s/d').slice(0,10))})`).join(' · ')+'.':'';
+ document.getElementById('tramosRef').innerHTML=R.map(t=>`<tr><td><b>${Es(t.ruta)}</b> ${Es(tit(t.tramo))}</td><td>${pill(cl(t))}</td><td>${Es(String(t.detalle||'').replace(/^⚠️\s*/,''))||'—'}</td><td class="fe">${Es(t.actualizado||'s/d')}</td></tr>`).join('')||'<tr><td class="vacio">Sin tramos.</td></tr>';
+ const cnt=(z,c)=>A.filter(t=>ZID[t.id]===z&&cl(t)===c).length;
+ document.getElementById('zones').innerHTML=Object.keys(Z).map(k=>{const z=Z[k];return `<div class="zone"><div class="zn"><i style="background:${z[1]}"></i>${z[0]}</div><div class="loc">${z[2]}</div><div class="bars">${['nh','ex','pr'].map(c=>{const n=cnt(k,c);return `<div class="zb${n?'':' z0'}"><b style="color:${n?C[c][1]:'inherit'}">${n}</b><span>${C[c][0].toLowerCase()}</span></div>`}).join('')}</div></div>`}).join('');
+ const nh=A.filter(t=>cl(t)==='nh').length,ex=A.filter(t=>cl(t)==='ex').length;
+ document.getElementById('kpiRutas').innerHTML=`<div class="dot" style="background:var(--red)"></div><b>${nh} + ${ex}</b><span>tramos no habilitados + extrema precaución en el área (Defensa Civil)</span>`;
+ document.getElementById('rConsult').textContent=r&&r.consultado?'consultado el '+r.consultado:(r&&r.error?r.error:'sin consulta todavía');
+}
+// Datos en vivo: la misma copia y la misma acción que el inicio (rutas_estado y fuentes).
+if(window.STARH){const S=STARH;
+ ponRutas(S.store.get('rutas.dc',null)); ponFuentes(S.store.get('fuentes.bo',null)||S.store.get('fuentes',null));
+ if(navigator.onLine){
+  S.api('rutas_estado',{},90000).then(r=>{if(r&&r.ok){S.store.set('rutas.dc',r);ponRutas(r);}}).catch(()=>{});
+  S.api('fuentes',{},60000).then(r=>{if(r&&r.ok){S.store.set('fuentes.bo',r.fuentes);ponFuentes(r.fuentes);}}).catch(()=>{});
+ }
+}
+
+const red=matchMedia('(prefers-reduced-motion: reduce)').matches;
+requestAnimationFrame(()=>{document.getElementById('needle').style.transform='rotate(62deg)';document.querySelectorAll('.bar i').forEach(e=>e.style.width=e.dataset.w+'%');if(red)document.getElementById('needle').style.transition='none'});
+}
+</script>
+</body>
+</html>
