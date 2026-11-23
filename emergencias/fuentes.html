@@ -326,7 +326,7 @@ function cuerpoGrupo(G, items, filtro) {
 }
 function pintar(lista, nota) {
   actual = lista;
-  const pie = `<p class="pie">${E(nota)} La lista se mantiene en la hoja FUENTES del libro «STAR-H y PHR · Tablero comparativo».${esAdm() ? ' Para que un documento aparezca en «Para empezar», su Nota tiene que empezar con ★.' : ''}</p>`;
+  const pie = ''; // 23/11/2026 07:24 · Belén: «sacar esto de la app, no necesito que se vea cada vez que actualizo» (nota de pie y aviso de la ★).
   const busca = `<div class="busca${consulta ? ' con' : ''}"><span class="ms">search</span><input id="qF" type="search" placeholder="Buscá por tema: inundación, incendio, El Niño, residuos…" value="${E(consulta)}" autocomplete="off" aria-label="Buscar en la bibliografía"><button type="button" id="qX" aria-label="Borrar la búsqueda"><span class="ms">close</span></button></div>`;
   let cuerpo;
   if (norm(consulta).trim()) {
