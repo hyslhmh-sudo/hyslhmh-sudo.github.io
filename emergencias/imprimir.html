@@ -343,6 +343,21 @@ function hojaISH(r, e, cargado) {
     });
     h += `<table style="margin-top:6px"><tbody>${P.campos.filter(c => !(Number(c.p) <= 11)).map(c => `<tr><td style="width:45%" class="lab">${esc(c.p)}. ${esc(c.t)}</td><td style="height:40px">${fv(c.k)}</td></tr>`).join('')}</tbody></table>`;
   }
+  // 23/11/2026 · Herramienta OPS 2024 de autoevaluación del ISH · gases medicinales (tal cual), con lo cargado si corresponde.
+  const GP = r.gasesPlantilla, GV = cargado && e && r.gases && r.gases[e.codigo] ? r.gases[e.codigo].v : {};
+  if (GP) {
+    const T = k => (GP.find(x => x.k === k) || {}).t || '';
+    h += `<h3>Anexo · ${esc(T('T-TIT'))}</h3><div class="guia">OPS, 2024. Marcar Sí o No en cada pregunta. Orienta los ítems 77 a 82 del ISH.</div>`;
+    GP.filter(x => x.tipo === 'bloque').forEach(b => {
+      h += `<h4>${esc(b.bloque)} · ${b.pb} %</h4>`;
+      GP.filter(x => x.tipo === 'item' && x.bloque === b.bloque).forEach(it => {
+        h += `<table><thead><tr><th>${esc(it.nom)} · ${it.pi} %</th><th style="width:7%" class="c">Sí</th><th style="width:7%" class="c">No</th></tr></thead><tbody>
+          ${GP.filter(x => x.tipo === 'pregunta' && x.item === it.item).map(q => `<tr><td class="it">${esc(q.t)}</td><td class="c"><b>${GV[q.k] === 'Sí' ? 'X' : ''}</b></td><td class="c"><b>${GV[q.k] === 'No' ? 'X' : ''}</b></td></tr>`).join('')}
+          <tr><td colspan="3" style="font-size:8pt;color:#555;white-space:pre-line">${esc(T('I' + it.item + '-C'))}</td></tr></tbody></table>`;
+      });
+    });
+    h += `<table style="margin-top:6px"><thead><tr><th style="width:14%">Índice de seguridad</th><th style="width:22%">Nivel de seguridad</th><th>¿Qué se debe hacer?</th></tr></thead><tbody>${GP.filter(x => x.tipo === 'categoria').map(k => `<tr><td>${esc(k.n)}</td><td class="lab">${esc(k.nom)}</td><td>${esc(k.t)}</td></tr>`).join('')}</tbody></table>`;
+  }
   h += observaciones('') + firmas(rw).replace('Referente del establecimiento', 'Coordinador de la evaluación');
   h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Textos de los ítems, amenazas y clasificaciones de seguridad: tal cual el Formulario 2 (OPS/OMS, 2018); Formulario 1, tal cual el formulario oficial. Índice orientativo: valores Bajo 0, Medio 0,5 y Alto 1; los pesos oficiales de la OPS de cada ítem y submódulo están en su hoja de cálculo, que no está disponible (s/d), salvo el submódulo 3.3.7 (Herramienta de autoevaluación del ISH · Gases medicinales, OPS 2024).</p>`;
   return h + pie('ish', r);

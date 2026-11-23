@@ -182,6 +182,11 @@ table.f1t th{background:var(--claro);font-weight:700;min-width:96px}
 table.f1t td.fila{font-weight:600;min-width:150px}
 table.f1t input,table.f1t select{width:100%;min-width:70px;border:1px solid #C5D1F2;border-radius:6px;padding:5px 6px;background:#fff}
 table.f1t td.fila input{margin-top:4px;font-weight:400}
+/* 23/11/2026 · Gases medicinales OPS 2024 */
+.gq{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--linea);font-size:13.5px}
+.gq select{border:1px solid #C5D1F2;border-radius:8px;padding:6px 8px;background:#fff;min-width:72px}
+.gres{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.gcrit{font-size:12.5px;color:var(--suave);white-space:pre-line;margin:4px 0 6px}
 .tab[aria-pressed="true"]{background:var(--fuerte);color:#fff;border-color:var(--fuerte)}
 .tab[aria-pressed="true"] small{color:#fff;opacity:.85}
 .indice{display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap}
@@ -268,9 +273,9 @@ async function sincronizar(manual) {
         if (!r.ok) throw r;
         r.resultados.forEach(x => { const it = cola.find(c => c.uid === x.uid); if (x.ok) { cola = cola.filter(c => c.uid !== x.uid); if (x.fila && it) reemplazar(it.red, x.tipo, x.fila); } else { ultimoError = x.error; if (it) it.error = x.error; } });
       }
-      for (const it of cola.filter(c => c.tipo === 'f1' && !c.error)) {
-        const r = await S.api('ish_f1_guardar', { red: it.red, codigo: it.codigo, valores: it.valores });
-        if (r.ok) { cola = cola.filter(c => c.uid !== it.uid); const rr = red(it.red); if (rr && r.f1) { rr.f1 = rr.f1 || {}; rr.f1[it.codigo] = r.f1; } } else if (r.sesion) throw r; else { it.error = r.error; ultimoError = r.error; }
+      for (const it of cola.filter(c => (c.tipo === 'f1' || c.tipo === 'gas') && !c.error)) {
+        const gas = it.tipo === 'gas', r = await S.api('ish_f1_guardar', { red: it.red, codigo: it.codigo, valores: it.valores, hoja: gas ? 'GASES' : 'F1' });
+        if (r.ok) { cola = cola.filter(c => c.uid !== it.uid); const rr = red(it.red), k = gas ? 'gases' : 'f1'; if (rr && r.f1 && !cola.some(c => c.tipo === it.tipo && c.red === it.red && c.codigo === it.codigo)) { rr[k] = rr[k] || {}; rr[k][it.codigo] = r.f1; } } else if (r.sesion) throw r; else { it.error = r.error; ultimoError = r.error; }
       }
       for (const it of cola.filter(c => c.tipo === 'estado' && !c.error)) {
         const r = await S.api('ish_estado', it);
@@ -286,7 +291,7 @@ async function sincronizar(manual) {
   } finally { sincronizando = false; pintarSync(); const ae = document.activeElement; if (!(ae && ae.dataset && ae.dataset.f1)) render(); }
 }
 function clave(c) { return c.tipo + '|' + c.red + '|' + c.codigo + '|' + (c.tipo === 'amenaza' ? c.id : c.tipo === 'item' ? c.n : ''); }
-function f1De(r, codigo) { r.f1 = r.f1 || {}; return (r.f1[codigo] = r.f1[codigo] || { v: {} }); }
+function f1De(r, codigo, gas) { const k = gas ? 'gases' : 'f1'; r[k] = r[k] || {}; return (r[k][codigo] = r[k][codigo] || { v: {} }); }
 function reemplazar(redN, tipo, fila) {
   const r = red(redN); if (!r) return;
   if (cola.some(c => c.tipo === tipo && c.red === redN && c.codigo === fila.codigo && (tipo === 'amenaza' ? c.id === fila.id : Number(c.n) === Number(fila.n)))) return;
@@ -300,7 +305,7 @@ async function actualizarCatalogo(avisar) {
     // 15/11/2026 · «Actualizar» (avisar) lee las planillas en el momento, sin la copia de 5 minutos del servidor.
     const r = await S.api('ish_catalogo', { fresco: !!avisar });
     if (!r.ok) { if (r.sesion) { S.sesion.cerrar(); toast(r.error); return ir('#/ingreso'); } throw r; }
-    cat = r; cola.forEach(c => c.tipo === 'estado' ? aplicarEstadoLocal(c) : c.tipo === 'f1' ? aplicarF1Local(c) : aplicarLocal(c));
+    cat = r; cola.forEach(c => c.tipo === 'estado' ? aplicarEstadoLocal(c) : (c.tipo === 'f1' || c.tipo === 'gas') ? aplicarF1Local(c) : aplicarLocal(c));
     guardarCat(); if (avisar) toast('Datos actualizados.'); render();
   } catch (e) {
     const m = (e && (e.error || e.message)) || 'No se pudo actualizar.';
@@ -312,9 +317,9 @@ function aplicarLocal(it) {
   if (it.tipo === 'amenaza') { const e = r.amenazas.find(x => x.codigo === it.codigo && x.id === it.id); if (e) ['nivel', 'prepararse', 'obs', 'fecha', 'evaluador'].forEach(k => e[k] = it[k] || ''); return; }
   const e = r.relevamiento.find(x => x.codigo === it.codigo && Number(x.n) === Number(it.n)); if (e) ['nivel', 'obs', 'fecha', 'evaluador'].forEach(k => e[k] = it[k] || '');
 }
-function aplicarF1Local(it) { const r = red(it.red); if (r) Object.assign(f1De(r, it.codigo).v, it.valores || {}); }
+function aplicarF1Local(it) { const r = red(it.red); if (r) Object.assign(f1De(r, it.codigo, it.tipo === 'gas').v, it.valores || {}); }
 function aplicarEstadoLocal(it) { const r = red(it.red), e = r && r.establecimientos.find(x => x.codigo === it.codigo); if (e) ['coordinador', 'fecha', 'estado', 'modelo'].forEach(k => { if (it[k] != null) e[k] = it[k]; }); }
-function encolar(it) { if (it.tipo === 'f1') { const v = cola.find(c => c.tipo === 'f1' && c.red === it.red && c.codigo === it.codigo); if (v) { it.valores = Object.assign({}, v.valores, it.valores); delete it.error; } } if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { it = Object.assign({}, v, it); delete it.error; } } cola = cola.filter(c => clave(c) !== clave(it)); cola.push(it); guardarCola(); programarSync(); }
+function encolar(it) { if (it.tipo === 'f1' || it.tipo === 'gas') { const v = cola.find(c => c.tipo === it.tipo && c.red === it.red && c.codigo === it.codigo); if (v) { it.valores = Object.assign({}, v.valores, it.valores); delete it.error; } } if (it.tipo === 'estado') { const v = cola.find(c => c.tipo === 'estado' && c.red === it.red && c.codigo === it.codigo); if (v) { it = Object.assign({}, v, it); delete it.error; } } cola = cola.filter(c => clave(c) !== clave(it)); cola.push(it); guardarCola(); programarSync(); }
 
 /* ---------- navegación ---------- */
 function ir(h) { if (location.hash !== h) location.hash = h; else render(); }
@@ -416,8 +421,8 @@ function vistaHospital(redN, codigo) {
           <label class="campo"><span>Estado</span><select name="estado" ${dis}>${['Pendiente', 'Convocado', 'En curso', 'Evaluado', 'Validado por la Dirección'].map(s => `<option ${s === e.estado ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
           <label class="campo"><span>Modelo de ponderación</span><select name="modelo" ${dis}>${[['Modelo 1', 'Modelo 1 · 50 / 30 / 20 (sismos o vientos fuertes)'], ['Modelo 2', 'Modelo 2 · un tercio cada módulo']].map(s => `<option value="${s[0]}" ${s[0] === (e.modelo || 'Modelo 1') ? 'selected' : ''}>${s[1]}</option>`).join('')}</select></label>
         </div>${puede ? '<button class="btn sec" type="submit"><span class="ms">save</span>Guardar datos</button>' : ''}</form></details></div>
-    <div class="tabs"><button class="tab" data-mod="F1" aria-pressed="${modActual === 'F1'}">F1 · Información general<small>${f1Cuenta(r, codigo)} campos con datos</small></button>${MODS.map(m => { const k = cuentaMod(m[0]); return `<button class="tab" data-mod="${m[0]}" aria-pressed="${modActual === m[0]}">${m[0]} · ${m[1]}<small>${k[0]} de ${k[1]}${m[0] !== '1' ? ' · ' + G.fmt2(c.mod[m[0]]) : ''}</small></button>`; }).join('')}</div>
-    ${modActual === 'F1' ? vistaF1(r, codigo, puede) : `<details class="guia"><summary><span class="ms" style="font-size:18px">lightbulb</span>Cómo completar este módulo</summary><div class="g-in">
+    <div class="tabs"><button class="tab" data-mod="F1" aria-pressed="${modActual === 'F1'}">F1 · Información general<small>${f1Cuenta(r, codigo)} campos con datos</small></button><button class="tab" data-mod="G" aria-pressed="${modActual === 'G'}">Gases · OPS 2024<small>${gasResumen(r, codigo)}</small></button>${MODS.map(m => { const k = cuentaMod(m[0]); return `<button class="tab" data-mod="${m[0]}" aria-pressed="${modActual === m[0]}">${m[0]} · ${m[1]}<small>${k[0]} de ${k[1]}${m[0] !== '1' ? ' · ' + G.fmt2(c.mod[m[0]]) : ''}</small></button>`; }).join('')}</div>
+    ${modActual === 'F1' ? vistaF1(r, codigo, puede) : modActual === 'G' ? vistaGases(r, codigo, puede) : `<details class="guia"><summary><span class="ms" style="font-size:18px">lightbulb</span>Cómo completar este módulo</summary><div class="g-in">
       <p>${S.esc(G.ISH_GUIA.modulos[modActual])}</p>
       ${modActual === '1' ? '<p>Para cada amenaza: <b>nivel</b> según la probabilidad y la intensidad esperables en la zona del hospital (Nulo, Bajo, Medio, Alto) y si el hospital <b>debe prepararse</b> para ella. Usar como base el relevamiento STAR-H del hospital.</p>'
         : `<div class="crit">${['Bajo', 'Medio', 'Alto'].map(n => `<b style="color:${COLOR[n][1]}">${n}</b><span>${S.esc(G.ISH_GUIA.niveles[n])}</span>`).join('')}</div><p style="margin-top:6px">${S.esc(G.ISH_GUIA.general[1])} ${S.esc(G.ISH_GUIA.general[2])}</p>`}</div></details>
@@ -459,12 +464,71 @@ function vistaF1(r, codigo, puede) {
     <div class="tarjeta" style="padding:4px 14px 10px">${antes.map(campo).join('')}${P.tablas.map(tabla).join('')}${despues.map(campo).join('')}</div>`;
 }
 document.addEventListener('change', ev => {
-  const t = ev.target; if (!t.dataset || !t.dataset.f1) return;
+  const t = ev.target; if (!t.dataset || !(t.dataset.f1 || t.dataset.gas)) return;
   const p = location.hash.slice(2).split('/').map(decodeURIComponent), r = red(p[1]); if (!r) return;
-  const valores = {}; valores[t.dataset.f1] = t.value.trim();
-  const it = { tipo: 'f1', uid: S.uid(), red: p[1], codigo: p[2], valores: valores };
+  const gas = !!t.dataset.gas, valores = {}; valores[gas ? t.dataset.gas : t.dataset.f1] = t.value.trim();
+  const it = { tipo: gas ? 'gas' : 'f1', uid: S.uid(), red: p[1], codigo: p[2], valores: valores };
   aplicarF1Local(it); guardarCat(); encolar(it);
+  if (gas) { const y = window.scrollY; render(); window.scrollTo(0, y); }
 });
+
+/* ---------- 23/11/2026 · Herramienta OPS 2024 para la autoevaluación del ISH (gases medicinales) · tal cual ----------
+ * Grado de cada ítem: mismas fórmulas que la hoja «Evaluación inst. gases med.» del Excel de la OPS.
+ * Índice = (1 × Σ Bajo + 2 × Σ Medio + 4 × Σ Alto) ÷ 400, con Σ = peso del ítem × peso del bloque ÷ 100. */
+const GAS_REGLA = {
+  '77': (s, n) => s > n ? 'Alto' : s === n ? 'Medio' : 'Bajo',
+  '78': (s, n, v) => { if (v['78-5'] === 'Sí') return 'Bajo'; const c = s + (v['78-5'] === 'No' ? 1 : 0); return c <= 3 ? 'Bajo' : c < 5 ? 'Medio' : 'Alto'; },
+  '81': (s, n) => s < n ? 'Bajo' : s === 2 ? 'Medio' : s === 3 ? 'Alto' : '',
+  '82': (s, n) => s < n ? 'Bajo' : s === 2 ? 'Medio' : s === 3 ? 'Alto' : '',
+  '79': s => s < 3 ? 'Bajo' : s <= 4 ? 'Medio' : 'Alto',
+  '80': (s, n) => s > n ? 'Alto' : s === n ? 'Medio' : 'Bajo'
+};
+function gasCalcular(r, codigo) {
+  const P = r.gasesPlantilla || [], v = ((r.gases || {})[codigo] || { v: {} }).v, items = {}, out = { items: {}, completo: true, resp: 0, tot: 0 };
+  P.filter(x => x.tipo === 'pregunta').forEach(x => { const it = items[x.item] = items[x.item] || { s: 0, n: 0, falta: 0 }; out.tot++;
+    // En el Excel, la pregunta 5 del ítem 78 cuenta al revés: suma «No» como positivo; acá se resuelve en la regla del 78.
+    if (v[x.k] === 'Sí') { if (x.k !== '78-5') it.s++; out.resp++; } else if (v[x.k] === 'No') { if (x.k !== '78-5') it.n++; out.resp++; } else it.falta++; });
+  const tot = { Bajo: 0, Medio: 0, Alto: 0 };
+  P.filter(x => x.tipo === 'item').forEach(x => {
+    const it = items[x.item] || { s: 0, n: 0, falta: 1 };
+    const g = it.falta ? '' : GAS_REGLA[x.item](it.s, it.n, v);
+    out.items[x.item] = g; if (!g) { out.completo = false; return; }
+    tot[g] += x.pi * x.pb / 100;
+  });
+  out.bloque = tot;
+  if (out.completo) { out.indice = Math.round((tot.Bajo + 2 * tot.Medio + 4 * tot.Alto) / 400 * 100) / 100; out.cat = out.indice <= 0.35 ? 0 : out.indice >= 0.66 ? 2 : 1; }
+  return out;
+}
+function gasResumen(r, codigo) { if (!r.gasesPlantilla) return 's/d'; const c = gasCalcular(r, codigo); return c.completo ? 'índice ' + G.fmt2(c.indice) : c.resp + ' de ' + c.tot + ' respuestas'; }
+function vistaGases(r, codigo, puede) {
+  const P = r.gasesPlantilla; if (!P) return '<div class="tarjeta vacio">Falta la hoja «GASES OPS 2024» en la planilla de esta red.</div>';
+  const v = f1De(r, codigo, true).v, c = gasCalcular(r, codigo), dis = puede ? '' : 'disabled', T = k => (P.find(x => x.k === k) || {}).t || '';
+  const rel = r.relevamiento.filter(x => x.codigo === codigo), cats = P.filter(x => x.tipo === 'categoria');
+  let h = `<div class="tarjeta" style="padding:12px 14px;font-size:13.5px"><b>${S.esc(T('T-TIT'))}</b> (OPS, 2024). ${S.esc(T('T-OBJ'))}
+    <details style="margin-top:6px"><summary><b>Cómo usar la herramienta</b></summary><p style="white-space:pre-line">${S.esc(T('T-USO'))}</p></details>
+    <p class="sub" style="margin-top:6px">En la app, en lugar de poner un 1 en la columna Sí o No, se elige Sí o No en cada pregunta; el grado de seguridad y el índice se calculan con las mismas fórmulas del Excel de la OPS. Esta autoevaluación orienta los ítems 77 a 82 del ISH; no los reemplaza ni los carga sola.</p></div>`;
+  P.filter(x => x.tipo === 'bloque').forEach(b => {
+    h += `<div class="grupo-tit">${S.esc(b.bloque)} · ${b.pb} %</div><div class="tarjeta" style="padding:6px 14px 10px">`;
+    P.filter(x => x.tipo === 'item' && x.bloque === b.bloque).forEach(it => {
+      const g = c.items[it.item], ish = rel.find(x => String(x.n) === it.item);
+      h += `<div style="margin-top:10px"><b>${S.esc(it.nom)}</b> <span class="sub">· ${it.pi} % del bloque</span>
+        <div class="gres">Grado de seguridad: ${g ? chip(g) : '<span class="chip pend">Faltan respuestas</span>'}<span class="sub">· En el ISH: ${ish && ish.nivel ? chip(ish.nivel) : 'sin evaluar'}</span></div>
+        <details><summary class="sub">Aspectos para evaluar</summary><div class="gcrit">${S.esc(T('I' + it.item + '-C'))}</div></details>
+        ${P.filter(x => x.tipo === 'pregunta' && x.item === it.item).map(q => `<div class="gq"><span>${S.esc(q.t)}</span><select data-gas="${q.k}" ${dis} aria-label="Respuesta"><option value=""></option>${['Sí', 'No'].map(o => `<option ${v[q.k] === o ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`).join('')}</div>`;
+    });
+    h += '</div>';
+  });
+  h += `<div class="grupo-tit">Resultados</div><div class="tarjeta" style="padding:12px 14px;font-size:13.5px">
+    <p>${S.esc(T('T-NOTA'))}</p>
+    <table class="tabla-esc"><tr><th></th><th>Bajo</th><th>Medio</th><th>Alto</th></tr>
+    ${P.filter(x => x.tipo === 'bloque').map(b => { const t = { Bajo: 0, Medio: 0, Alto: 0 }; P.filter(x => x.tipo === 'item' && x.bloque === b.bloque).forEach(it => { const g = c.items[it.item]; if (g) t[g] += it.pi * it.pb / 100; }); return `<tr><td>${S.esc(b.bloque)}</td>${['Bajo', 'Medio', 'Alto'].map(n => `<td>${String(Math.round(t[n] * 100) / 100).replace('.', ',')}</td>`).join('')}</tr>`; }).join('')}</table>
+    ${c.completo ? `<p style="margin-top:10px"><b>Índice de seguridad hospitalaria (gases medicinales): ${G.fmt2(c.indice)}</b> · Seguro ${G.fmt2(c.indice)} · No seguro ${G.fmt2(Math.round((1 - c.indice) * 100) / 100)}</p>
+      <p><b>Clasificación del nivel de seguridad hospitalaria: ${S.esc(cats[c.cat] ? cats[c.cat].nom : '')}</b>. ${S.esc(cats[c.cat] ? cats[c.cat].t : '')}</p>`
+      : `<p style="margin-top:10px">El índice y la clasificación aparecen cuando están respondidas todas las preguntas (${c.resp} de ${c.tot}).</p>`}
+    <table class="tabla-esc" style="margin-top:8px"><tr><th>Índice de seguridad</th><th>Nivel de seguridad</th><th>¿Qué se debe hacer?</th></tr>${cats.map(k => `<tr><td>${S.esc(k.n)}</td><td><b>${S.esc(k.nom)}</b></td><td>${S.esc(k.t)}</td></tr>`).join('')}</table>
+    <p class="sub" style="margin-top:8px">${S.esc(T('T-FUENTE'))} Herramienta: OPS, 2024 (OPS/PHE/CPI/23-0004).</p></div>`;
+  return h;
+}
 
 /* ---------- hoja de un ítem o amenaza ---------- */
 function abrirHoja(redN, codigo, id) {
