@@ -278,7 +278,7 @@ function ponRutas(r){
  document.getElementById('zAsof').innerHTML='Tramos <b>registrados a la fecha</b> por Defensa Civil del Chubut'+(r&&r.consultado?' · consulta del <b>'+Es(r.consultado)+'</b>':'')+'. No indica cuándo empezó cada corte: cada tramo muestra la última fecha en que Defensa Civil lo actualizó.';
  document.getElementById('zones').innerHTML=Object.keys(Z).map(k=>{const z=Z[k];return `<div class="zone"><div class="zn"><i style="background:${z[1]}"></i>${z[0]}</div><div class="loc">${z[2]}</div><div class="bars">${['nh','ex','pr'].map(c=>{const n=cnt(k,c);return `<div class="zb${n?'':' z0'}"><b style="color:${n?C[c][1]:'inherit'}">${n}</b><span>${C[c][0].toLowerCase()}</span></div>`}).join('')}</div><div class="upd">${rango(k)}</div></div>`}).join('');
  const nh=A.filter(t=>cl(t)==='nh').length,ex=A.filter(t=>cl(t)==='ex').length;
- document.getElementById('kpiRutas').innerHTML=`<div class="dot" style="background:var(--red)"></div><b>${nh} + ${ex}</b><span>tramos no habilitados + extrema precaución en el área (Defensa Civil)</span>`;
+ document.getElementById('kpiRutas').innerHTML=`<div class="dot" style="background:var(--red)"></div><b>${nh} ${nh===1?'tramo':'tramos'}</b><span>no ${nh===1?'habilitado':'habilitados'} en el área</span><span style="display:block;font-size:12px">y ${ex} con extrema precaución · registros a la fecha, Defensa Civil</span>`;
  document.getElementById('rConsult').textContent=r&&r.consultado?'consultado el '+r.consultado:(r&&r.error?r.error:'sin consulta todavía');
 }
 // Datos en vivo: la misma copia y la misma acción que el inicio (rutas_estado y fuentes).
