@@ -105,6 +105,18 @@ details.serie>summary .n{background:#E4EAFB;border-radius:999px;padding:0 9px;fo
 details.serie>summary .fl{color:#2F5BEA;transition:transform .2s}details.serie[open]>summary .fl{transform:rotate(180deg)}
 details.serie ol{padding:0 12px 6px 32px}
 .res-c{font-size:13px;color:var(--suave);margin:0 0 8px}
+/* 23/11/2026 07:25 · Belén: «¿podés darle un poco de color?». Cada grupo con su color de la paleta de la app (degradé oscuro → claro). */
+.grupo.gc{border-left:5px solid var(--c2);padding-left:16px}
+.grupo.gc details.gr>summary h2 .ico{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--c1),var(--c2));flex:none}
+.grupo.gc details.gr>summary h2 .ico .ms{color:#fff;font-size:21px}
+.grupo.gc details.gr>summary h2{color:var(--c1)}
+.grupo.gc details.gr>summary h2 .n{background:var(--c3);color:var(--c1)}
+.grupo.gc details.gr>summary h2 .fl{color:var(--c2)}
+.grupo.gc .gr-d{margin-left:44px}
+.grupo.gc details.gr[open]>summary{border-bottom:2px solid var(--c3);padding-bottom:10px}
+.grupo.gc .filtros button.on{background:var(--c2);border-color:var(--c2)}
+.grupo.gc details.serie>summary .ms:first-child{color:var(--c2)!important}
+.grupo.gc details.serie{border-color:var(--c3)}
 @media print{.busca,.ayuda-c,.filtros{display:none}}
 </style>
 </head>
@@ -279,11 +291,11 @@ function notaHtml(n) {
 // 23/11/2026 · Belén: «muy difícil de encontrar la bibliografía para cualquiera que no soy yo». Se agrupa por uso (4 grupos);
 // el Subtema de la hoja FUENTES (col. F) queda como etiqueta y como filtro dentro del grupo. No cambia la hoja ni el servidor.
 const GRUPOS = [
-  { k: 'obligatorio', t: 'Lo obligatorio', d: 'Leyes, decretos y ordenanzas que se cumplen.', ico: 'gavel', subs: ['Normativa'] },
-  { k: 'cursos', t: 'Cursos gratuitos', d: 'Cursos virtuales y gratuitos, con su enlace de inscripción.', ico: 'school', subs: ['Cursos gratuitos'] }, // 23/11/2026 07:14 · Belén: «TIENE QUE SEGUIR ESTANDO CURSOS»
-  { k: 'guias', t: 'Guías y herramientas para trabajar', d: 'Herramientas OPS/OMS, videos y seminarios.', ico: 'construction', subs: ['Herramientas OPS/OMS', 'Videos y seminarios'] },
-  { k: 'situacion', t: 'Situación actual', d: 'Boletines y partes de monitoreo, por serie. Tocá una serie para ver todos sus informes.', ico: 'water_drop', subs: ['Boletines y partes de monitoreo'] },
-  { k: 'profundizar', t: 'Para profundizar', d: 'Bibliografía, salud mental, archivos del Área Programática y links a páginas.', ico: 'menu_book', subs: ['Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas'] }
+  { k: 'obligatorio', c: ['#34476A', '#4067E3', '#E6ECFC'], t: 'Lo obligatorio', d: 'Leyes, decretos y ordenanzas que se cumplen.', ico: 'gavel', subs: ['Normativa'] },
+  { k: 'cursos', c: ['#4D206E', '#924FBC', '#F1E8F8'], t: 'Cursos gratuitos', d: 'Cursos virtuales y gratuitos, con su enlace de inscripción.', ico: 'school', subs: ['Cursos gratuitos'] }, // 23/11/2026 07:14 · Belén: «TIENE QUE SEGUIR ESTANDO CURSOS»
+  { k: 'guias', c: ['#0F4242', '#25A292', '#E0F3F0'], t: 'Guías y herramientas para trabajar', d: 'Herramientas OPS/OMS, videos y seminarios.', ico: 'construction', subs: ['Herramientas OPS/OMS', 'Videos y seminarios'] },
+  { k: 'situacion', c: ['#13407E', '#3B83D4', '#E3EEFA'], t: 'Situación actual', d: 'Boletines y partes de monitoreo, por serie. Tocá una serie para ver todos sus informes.', ico: 'water_drop', subs: ['Boletines y partes de monitoreo'] },
+  { k: 'profundizar', c: ['#7F5600', '#DFA617', '#FBF2DA'], t: 'Para profundizar', d: 'Bibliografía, salud mental, archivos del Área Programática y links a páginas.', ico: 'menu_book', subs: ['Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas'] }
 ];
 const grupoDe = f => { const s = subDe(f); return GRUPOS.find(g => g.subs.indexOf(s) >= 0) || GRUPOS[GRUPOS.length - 1]; };
 const SUB_CORTO = { 'Herramientas OPS/OMS': 'Herramienta', 'Cursos gratuitos': 'Curso', 'Videos y seminarios': 'Video', 'Bibliografía de gestión de riesgos': 'Bibliografía', 'Archivos de APTW': 'APTW', 'Links a páginas': 'Link' };
@@ -338,7 +350,7 @@ function pintar(lista, nota) {
     const emp = dest.length ? `<section class="empezar"><h2><span class="ms">star</span>Para empezar</h2><p>Si es la primera vez, empezá por acá.</p><ol>${dest.map(f => itemHtml(f, { sinDest: true, grupo: true })).join('')}</ol></section>` : '';
     const g = {}; lista.forEach(f => { const k = grupoDe(f).k; (g[k] = g[k] || []).push(f); });
     Object.keys(g).forEach(k => { g[k] = g[k].filter(esDest).concat(g[k].filter(f => !esDest(f))); });
-    cuerpo = emp + GRUPOS.filter(G => g[G.k]).map(G => `<section class="grupo" id="g-${G.k}"><details class="gr" data-k="${G.k}"${abierto() ? ' open' : ''}><summary><h2><span class="ms">${G.ico}</span>${E(G.t)}<b class="n">${g[G.k].length}</b><span class="ms fl">expand_more</span></h2><p class="gr-d">${E(G.d)}</p></summary><div class="gr-c">${cuerpoGrupo(G, g[G.k], '')}</div></details></section>`).join('');
+    cuerpo = emp + GRUPOS.filter(G => g[G.k]).map(G => `<section class="grupo gc" id="g-${G.k}" style="--c1:${G.c[0]};--c2:${G.c[1]};--c3:${G.c[2]}"><details class="gr" data-k="${G.k}"${abierto() ? ' open' : ''}><summary><h2><span class="ico"><span class="ms">${G.ico}</span></span>${E(G.t)}<b class="n">${g[G.k].length}</b><span class="ms fl">expand_more</span></h2><p class="gr-d">${E(G.d)}</p></summary><div class="gr-c">${cuerpoGrupo(G, g[G.k], '')}</div></details></section>`).join('');
   }
   app.innerHTML = barraAdm() + busca + (consulta ? '' : '<p class="ayuda-c">Escribí una palabra para buscar en toda la lista, o abrí uno de los grupos.</p>') + cuerpo + pie;
   // Enlaces viejos (#sub-…, p. ej. desde los boletines del inicio) abren el grupo que corresponde.
