@@ -295,9 +295,10 @@ const GRUPOS = [
   { k: 'cursos', c: ['#4D206E', '#924FBC', '#F1E8F8'], t: 'Cursos gratuitos', d: 'Cursos virtuales y gratuitos, con su enlace de inscripción.', ico: 'school', subs: ['Cursos gratuitos'] }, // 23/11/2026 07:14 · Belén: «TIENE QUE SEGUIR ESTANDO CURSOS»
   { k: 'guias', c: ['#0F4242', '#25A292', '#E0F3F0'], t: 'Guías y herramientas para trabajar', d: 'Herramientas OPS/OMS, videos y seminarios.', ico: 'construction', subs: ['Herramientas OPS/OMS', 'Videos y seminarios'] },
   { k: 'situacion', c: ['#13407E', '#3B83D4', '#E3EEFA'], t: 'Situación actual', d: 'Boletines y partes de monitoreo, por serie. Tocá una serie para ver todos sus informes.', ico: 'water_drop', subs: ['Boletines y partes de monitoreo'] },
-  { k: 'profundizar', c: ['#7F5600', '#DFA617', '#FBF2DA'], t: 'Para profundizar', d: 'Bibliografía, salud mental, archivos del Área Programática y links a páginas.', ico: 'menu_book', subs: ['Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW', 'Links a páginas'] }
+  { k: 'profundizar', c: ['#7F5600', '#DFA617', '#FBF2DA'], t: 'Para profundizar', d: 'Bibliografía, salud mental y archivos del Área Programática.', ico: 'menu_book', subs: ['Bibliografía de gestión de riesgos', 'Salud mental', 'Archivos de APTW'] },
+  { k: 'links', c: ['#7E1253', '#D23288', '#FBE6F1'], t: 'Links a páginas', d: 'Páginas web de organismos y servicios de consulta.', ico: 'link', subs: ['Links a páginas'] } // 23/11/2026 07:29 · Belén: «los links también deben quedar aparte»
 ];
-const grupoDe = f => { const s = subDe(f); return GRUPOS.find(g => g.subs.indexOf(s) >= 0) || GRUPOS[GRUPOS.length - 1]; };
+const grupoDe = f => { const s = subDe(f); return GRUPOS.find(g => g.subs.indexOf(s) >= 0) || GRUPOS.find(g => g.k === 'profundizar'); };
 const SUB_CORTO = { 'Herramientas OPS/OMS': 'Herramienta', 'Cursos gratuitos': 'Curso', 'Videos y seminarios': 'Video', 'Bibliografía de gestión de riesgos': 'Bibliografía', 'Archivos de APTW': 'APTW', 'Links a páginas': 'Link' };
 function itemHtml(f, o) {
   o = o || {};
@@ -355,7 +356,7 @@ function pintar(lista, nota) {
   app.innerHTML = barraAdm() + busca + (consulta ? '' : '<p class="ayuda-c">Escribí una palabra para buscar en toda la lista, o abrí uno de los grupos.</p>') + cuerpo + pie;
   // Enlaces viejos (#sub-…, p. ej. desde los boletines del inicio) abren el grupo que corresponde.
   const h = location.hash; let gk = '';
-  if (/^#sub-bolet/.test(h)) gk = 'situacion'; else if (/^#sub-normativa/.test(h)) gk = 'obligatorio'; else if (/^#sub-cursos/.test(h)) gk = 'cursos'; else if (/^#sub-(herramientas|videos)/.test(h)) gk = 'guias'; else if (/^#sub-/.test(h)) gk = 'profundizar'; else if (/^#g-/.test(h)) gk = h.slice(3);
+  if (/^#sub-bolet/.test(h)) gk = 'situacion'; else if (/^#sub-normativa/.test(h)) gk = 'obligatorio'; else if (/^#sub-cursos/.test(h)) gk = 'cursos'; else if (/^#sub-(herramientas|videos)/.test(h)) gk = 'guias'; else if (/^#sub-links/.test(h)) gk = 'links'; else if (/^#sub-/.test(h)) gk = 'profundizar'; else if (/^#g-/.test(h)) gk = h.slice(3);
   if (gk && !consulta) { const sec = document.getElementById('g-' + gk), d = sec && sec.querySelector('details.gr'); if (d) { d.open = true; sec.scrollIntoView({ block: 'start' }); } }
 }
 let tBusca = null;
