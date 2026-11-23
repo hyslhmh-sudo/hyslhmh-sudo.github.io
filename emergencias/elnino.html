@@ -188,9 +188,9 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
 
   <section class="card">
     <h2>Embalse Florentino Ameghino · cota semanal</h2>
-    <p class="sub" id="embSub">Dato oficial: partes del IPA cargados en Fuentes.</p>
+    <p class="sub" id="embSub">Dato oficial: partes del IPA.</p>
     <div class="fig"><svg id="emb" aria-label="Cota del embalse, partes IPA"></svg></div>
-    <p class="src" id="embSrc">Instituto Provincial del Agua (IPA), partes cargados en Fuentes › Boletines y partes de monitoreo.</p>
+    <p class="src" id="embSrc">Fuente: Instituto Provincial del Agua (IPA).</p>
   </section>
 
   <div class="grid2">
@@ -200,10 +200,10 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
     </section>
     <section class="card">
       <h2>Boletines DNPH: permanencia en El Niño</h2>
-      <p class="sub" id="bolSub">Boletines cargados en Fuentes.</p>
+      <p class="sub" id="bolSub">Boletines publicados por la DNPH.</p>
       <div id="bol" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px"></div>
-      <p class="src">Del n.º 2 al 12, todos con 100 % de probabilidad de permanencia en fase El Niño para su trimestre. N.º 1: s/d (revisar).</p>
-      <div class="note" style="margin-top:12px"><b>Cómo se actualiza.</b> Rutas: solas, desde Defensa Civil. Embalse y boletines: solos, con cada boletín o parte que se carga en Fuentes › Boletines y partes de monitoreo (la fecha va al final de la cita). Fase, intensidad, pico, NOAA e hitos: se actualizan con cada boletín nuevo (v0, a pedido).</div>
+      <p class="src">Del n.º 2 en adelante, todos con 100 % de probabilidad de permanencia en fase El Niño para su trimestre. N.º 1: porcentaje s/d (revisar).</p>
+      
     </section>
   </div>
 </div>
@@ -248,7 +248,7 @@ function ponFuentes(F){
   const d=P.length>1?(u[1]-P[0][1]):0;document.getElementById('embSub').innerHTML=P.length>1?`Cambió <b>${d>=0?'+':''}${d.toFixed(2).replace('.',',')} m</b> entre el ${P[0][0]} y el ${u[0]}. Dato oficial: partes del IPA.`:'Dato oficial: partes del IPA.';}
  else{document.getElementById('embSub').textContent='Sin partes del IPA cargados en Fuentes: s/d (revisar).';}
  const Bo=B.filter(x=>/Bolet[ií]n El Niño N\.?º\s*\d+\s*·\s*Situaci/i.test(x.cita)).map(x=>[+(String(x.cita).match(/N\.?º\s*(\d+)/i)||[])[1],(fecha(x.cita)[0]||'s/d').replace(/\.\s*$/,'')]).sort((a,b)=>a[0]-b[0]);
- document.getElementById('bolSub').textContent=Bo.length?`${Bo.length} boletines cargados en Fuentes; el último, n.º ${Bo[Bo.length-1][0]} del ${Bo[Bo.length-1][1]}.`:'Sin boletines cargados en Fuentes: s/d (revisar).';
+ document.getElementById('bolSub').textContent=Bo.length?`Boletines publicados por la DNPH desde el 04/09/2026; el último, n.º ${Bo[Bo.length-1][0]} del ${Bo[Bo.length-1][1]}.`:'Boletines: s/d (revisar).';
  document.getElementById('bol').innerHTML=Bo.map(b=>`<div title="Boletín n.º ${b[0]} · ${b[1]}" style="border-radius:10px;padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:#fff;background:${b[0]===1?'#8796AE':'linear-gradient(120deg,#0A5E4E,#0F9D79)'}">N.º ${b[0]}<br>${b[0]===1?'s/d':'100 %'}</div>`).join('');
 }
 const hitos=[['24/06/2026','OPS: transición hacia El Niño; análisis de situación de salud pública','#2A7AD6'],['04/09/2026','Primer boletín DNPH: fase El Niño, 100 % de permanencia','#0F9D79'],['16/10/2026','OPS reporte 2: NOAA 83 % de intensidad histórica','#F47B00'],['02/11/2026','SMN: fase cálida de fuerte intensidad','#D6338A'],['18/11/2026','OPS reporte 3: ≈ 60 %; OMM prevé el pico en diciembre','#A33EC4'],['19/11/2026','Boletín DNPH n.º 12: lluvias superiores a lo normal en el centro y norte de Patagonia Central','#2F5BEA']];
