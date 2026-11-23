@@ -330,8 +330,21 @@ function hojaISH(r, e, cargado) {
     <tr><td class="lab">Categoría</td><td></td><td class="c"><b>${c && c.categoria ? c.categoria.cat : ''}</b></td></tr></tbody></table>
     <table style="margin-top:6px"><thead><tr><th style="width:12%">Categoría</th><th style="width:14%">Índice</th><th>Qué significa</th></tr></thead><tbody>
     ${g.categorias.map(k => `<tr><td class="lab c">${k.cat}</td><td>${String(k.min).replace('.', ',')} a ${String(k.max).replace('.', ',')}</td><td>${esc(k.texto)}</td></tr>`).join('')}</tbody></table>`;
+  // 23/11/2026 · Formulario 1 OPS (tal cual), con lo cargado si corresponde.
+  const P = r.f1plantilla, F = cargado && e && r.f1 && r.f1[e.codigo] ? r.f1[e.codigo].v : {}, fv = k => esc(F[k] || '');
+  if (P) {
+    const pad = n => String(n).padStart(2, '0'); let pA = '';
+    h += `<h3>Anexo · Formulario 1 · Información general acerca del hospital</h3><div class="guia">Formularios para la evaluación (OPS/OMS, 2.ª ed., 2018). Se completa antes de la evaluación con la información que entrega el hospital.</div>
+      <table><tbody>${P.campos.filter(c => Number(c.p) <= 11).map(c => `<tr><td style="width:45%" class="lab">${esc(c.p)}. ${esc(c.t)}</td><td>${fv(c.k)}</td></tr>`).join('')}</tbody></table>`;
+    P.tablas.forEach(t => {
+      if (t.p !== pA) { h += `<p style="font-size:9pt;margin:8px 0 4px"><b>${esc(t.p)}.</b> ${esc(t.t)}</p>`; pA = t.p; }
+      h += `<h4>${esc(t.tit)}</h4><table><thead><tr><th style="width:22%"></th>${t.cols.map(c => `<th class="c" style="font-size:7.5pt">${esc(c)}</th>`).join('')}</tr></thead><tbody>
+        ${t.filas.map((fi, i) => `<tr><td class="lab">${esc(fi.f)}${fi.esp ? ': ' + (fv(t.k + '-' + pad(i + 1) + '-E') || '…………') : ''}</td>${t.cols.map((c, j) => `<td class="c">${fv(t.k + '-' + pad(i + 1) + '-' + (j + 1))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    });
+    h += `<table style="margin-top:6px"><tbody>${P.campos.filter(c => !(Number(c.p) <= 11)).map(c => `<tr><td style="width:45%" class="lab">${esc(c.p)}. ${esc(c.t)}</td><td style="height:40px">${fv(c.k)}</td></tr>`).join('')}</tbody></table>`;
+  }
   h += observaciones('') + firmas(rw).replace('Referente del establecimiento', 'Coordinador de la evaluación');
-  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Textos de los ítems, amenazas y clasificaciones de seguridad: tal cual el Formulario 2 (OPS/OMS, 2018). Índice orientativo: valores Bajo 0, Medio 0,5 y Alto 1; los pesos oficiales de la OPS de cada ítem y submódulo están en su hoja de cálculo, que no está disponible (s/d), salvo el submódulo 3.3.7 (Herramienta de autoevaluación del ISH · Gases medicinales, OPS 2024).</p>`;
+  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Textos de los ítems, amenazas y clasificaciones de seguridad: tal cual el Formulario 2 (OPS/OMS, 2018); Formulario 1, tal cual el formulario oficial. Índice orientativo: valores Bajo 0, Medio 0,5 y Alto 1; los pesos oficiales de la OPS de cada ítem y submódulo están en su hoja de cálculo, que no está disponible (s/d), salvo el submódulo 3.3.7 (Herramienta de autoevaluación del ISH · Gases medicinales, OPS 2024).</p>`;
   return h + pie('ish', r);
 }
 
