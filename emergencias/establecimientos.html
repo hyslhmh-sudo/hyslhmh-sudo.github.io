@@ -113,6 +113,19 @@ function fichaEstado(f) {
 const camasEst = e => { const c = {}; e.camas.forEach(x => { const n = num(x.n); if (n != null) c[x.cat] = (c[x.cat] || 0) + n; }); return c; };
 const ambs = e => (e.ficha && e.ficha.datos.ambs) || null;
 const sumObj = o => Object.keys(o || {}).reduce((a, k) => a + o[k], 0);
+// 23/11/2026 (Belén: «revisar ambulancias porque están los datos»): desde el 18/11 el estado usa la escala
+// Muy bueno · Bueno · Regular · Malo · Fuera de servicio; la tabla buscaba solo «Funciona» (escala vieja) y daba «0 de 7».
+// «En servicio» = todo lo que no está «Fuera de servicio» ni «No sabe» (sirve para las dos escalas).
+const ORDEN_AMB = ['Muy bueno', 'Bueno', 'Regular', 'Malo', 'Funciona', 'Funciona con problemas', 'Fuera de servicio', 'No sabe'];
+const ambDetalle = a => Object.keys(a).filter(k => a[k]).sort((x, y) => (ORDEN_AMB.indexOf(x) + 1 || 99) - (ORDEN_AMB.indexOf(y) + 1 || 99)).map(k => `${a[k]} ${E(k.toLowerCase())}`).join(' · ');
+// HMH y HZT comparten el servicio de ambulancias (15/11/2026): se cargan una sola vez, en la ficha del HZT.
+const COMPARTE = { 'Hospital María Humphreys': 'Hospital Zonal Trelew' };
+const sinAc = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[«»"].*$/, '').replace(/\(.*\)/, '').trim().toLowerCase();
+const compartidoCon = e => { const k = Object.keys(COMPARTE).find(n => sinAc(n) === sinAc(e.nombre)); return k ? datos.establecimientos.find(x => sinAc(x.nombre) === sinAc(COMPARTE[k])) || null : null; };
+function ambCelda(a) {
+  const tot = sumObj(a), fs = a['Fuera de servicio'] || 0, ns = a['No sabe'] || 0;
+  return `${tot - fs - ns} de ${tot} en servicio` + (fs ? ` <span class="chip mal">${fs} fuera de servicio</span>` : '') + `<br><small class="pie">${ambDetalle(a)}</small>`;
+}
 
 function filtrados() {
   const st = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -136,7 +149,7 @@ function pintar() {
   const kpis = `<div class="kpis">
     <div class="kpi"><span>Establecimientos</span><b>${L.length}</b><small>${E(AREA)}</small></div>
     <div class="kpi"><span>Camas (total estimado)</span><b>${fmt(camasTot)}</b><small>${camasSd ? `${camasSd} establecimiento${camasSd > 1 ? 's' : ''} sin dato (s/d)` : 'Todos con dato'}</small></div>
-    <div class="kpi"><span>Ambulancias cargadas en fichas</span><b>${ambTot || '—'}</b><small>${ambTot ? Object.keys(amb).map(k => `${amb[k]} ${E(k.toLowerCase())}`).join(' · ') : 'Todavía sin datos'}</small></div>
+    <div class="kpi"><span>Ambulancias cargadas en fichas</span><b>${ambTot || '—'}</b><small>${ambTot ? ambDetalle(amb) : 'Todavía sin datos'}</small></div>
     <div class="kpi"><span>Personal (fichas cargadas)</span><b>${conPers ? fmt(trab) : '—'}</b><small>${conPers ? `${fmt(med)} médicos · ${fmt(enf)} enfermeros · ${conPers} ficha${conPers > 1 ? 's' : ''}` : 'Todavía sin datos'}</small></div>
     ${conFicha ? `<div class="kpi"><span>Fichas de establecimiento</span><b>${conFicha}</b><small>${fe.Completa} completas · ${fe.Parcial} parciales · ${fe['Sin cargar']} sin cargar${sinRef ? ` · ${sinRef} sin referente` : ''}</small></div>` : ''}
   </div>`;
@@ -160,7 +173,8 @@ function pintar() {
 function filaHtml(e) {
   const f = e.ficha, d = f ? f.datos : {}, s = fichaEstado(f), a = d.ambs;
   const pers = f && (d.trab_total || d.med_total || d.enf_total) ? `${val(d.trab_total)} · ${val(d.med_total)} · ${val(d.enf_total)}` : SD;
-  const amb = a && sumObj(a) ? `${a['Funciona'] || 0} de ${sumObj(a)} funcionan` + (a['Fuera de servicio'] ? ` <span class="chip mal">${a['Fuera de servicio']} fuera de servicio</span>` : '') : SD;
+  const socio = compartidoCon(e), as = socio && ambs(socio);
+  const amb = a && sumObj(a) ? ambCelda(a) : as && sumObj(as) ? `<small class="pie">Servicio compartido con el ${E(socio.corto || socio.nombre)}:</small><br>${ambCelda(as)}` : SD;
   const ge = !f || !d.grupo ? SD : S.esSi(d.grupo) ? 'Sí' + (d.grupo_h ? ` · ${E(d.grupo_h)} h` : '') : E(d.grupo);
   const fi = !f ? '<span class="chip gris">Sin ficha todavía</span>' : `<span class="chip ${s.cls}">${E(s.txt)}</span>${f.referente ? '' : ' <span class="chip falta">Sin referente</span>'}${f.act ? `<br><small class="pie">${E(f.act)}</small>` : ''}`;
   const ab = abierto === e.id;
@@ -180,7 +194,8 @@ function detalleHtml(e) {
     const est = fichaEstado(f);
     const extra = [];
     if (d.arm && sumObj(d.arm)) extra.push(['Respiradores (ARM/AVM)', Object.keys(d.arm).map(k => `${d.arm[k]} ${E(k.toLowerCase())}`).join(' · ')]);
-    if (d.ambs && sumObj(d.ambs)) extra.push(['Ambulancias', Object.keys(d.ambs).map(k => `${d.ambs[k]} ${E(k.toLowerCase())}`).join(' · ')]);
+    if (d.ambs && sumObj(d.ambs)) extra.push(['Ambulancias', ambDetalle(d.ambs)]);
+    else { const so = compartidoCon(e), sa = so && ambs(so); if (sa && sumObj(sa)) extra.push(['Ambulancias', `Servicio compartido con el ${E(so.corto || so.nombre)} (se cargan en su ficha): ${ambDetalle(sa)}`]); }
     if (d.tanques) extra.push(['Tanques y cisternas', `${d.tanques.n} · ${fmt(d.tanques.litros)} litros`]);
     if (d.camas && d.camas.length) extra.push(['Camas según la ficha', d.camas.map(c => `${E(c.cat)}: ${E(c.n)}`).join(' · ')]);
     const pares = Object.keys(ETQ).filter(k => d[k] != null && d[k] !== '').map(k => [ETQ[k], val(d[k])]).concat(extra);
