@@ -298,28 +298,29 @@ function hojaISH(r, e, cargado) {
   const c0 = r.base0 || (r.establecimientos[0] ? r.establecimientos[0].codigo : '');
   const items = rel.length ? rel : r.relevamiento.filter(x => x.codigo === c0);
   const amen = am.length ? am : r.amenazas.filter(x => x.codigo === c0);
-  const NIVC = { 'Bajo': 'B', 'Medio': 'M', 'Alto': 'A', 'No evaluado': 'NE', 'No existe': 'NE' };
+  const NIVC = { 'Bajo': 'B', 'Medio': 'M', 'Alto': 'A', 'No evaluado': 'NE', 'Nulo': 'N', 'No existe': 'N' };
+  const CRIT = r.criterio || {};
   let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('ish', r)} · VERSIÓN 0</p>
     <h2 class="tit">Índice de Seguridad Hospitalaria (ISH)</h2>
-    <p class="subt">${esc(r.nombre)} · Lista de verificación OPS/OMS (Formulario 2, 2018)</p>`;
+    <p class="subt">${esc(r.nombre)} · Lista de verificación de la seguridad hospitalaria OPS/OMS (Formulario 2, Formularios para la evaluación, 2.ª ed., 2018)</p>`;
   h += datosEst(e, cargado, [
     ['Hospital', e ? esc(e.nombre) : ''], ['Código en la planilla', e ? esc(e.codigo) : ''],
     ['Fecha de la evaluación', v(e && e.fecha, cargado)], ['Coordinador de la evaluación', v(e && e.coordinador, cargado)],
     ['Modelo de ponderación', cargado && e ? esc(e.modelo || 'Modelo 1') : 'Modelo 1 (50 / 30 / 20) ☐   Modelo 2 (un tercio cada módulo) ☐']]);
   h += participantes(8);
   h += `<h3>3. Cómo completar</h3><ul class="inst">${g.general.map(t => `<li>${esc(t)}</li>`).join('')}
-    <li>En «Nivel» anotar <b>B</b> (bajo), <b>M</b> (medio), <b>A</b> (alto) o <b>NE</b> (no evaluado). En amenazas, <b>NE</b> es «no existe».</li></ul>
+    <li>En «Nivel» anotar <b>B</b> (bajo), <b>M</b> (medio), <b>A</b> (alto) o <b>NE</b> (no evaluado). En amenazas (módulo 1): <b>N</b> (nulo), <b>B</b>, <b>M</b> o <b>A</b>. Calificar cada ítem según su «Clasificación de seguridad» de la OPS, que figura debajo de cada uno.</li></ul>
     <table style="margin-top:6px"><thead><tr><th style="width:12%">Nivel</th><th>Cuándo se usa</th><th style="width:9%" class="c">Valor</th></tr></thead><tbody>
     ${['Bajo', 'Medio', 'Alto'].map(n => `<tr><td class="lab">${NIVC[n]} · ${n}</td><td>${esc(g.niveles[n])}</td><td class="c">${{ Bajo: '0', Medio: '0,5', Alto: '1' }[n]}</td></tr>`).join('')}</tbody></table>`;
   h += `<h3>4. Módulo 1 · Amenazas y propiedades del suelo</h3><div class="guia">${esc(g.modulos['1'])}</div>
     <table><thead><tr><th style="width:7%">ID</th><th style="width:24%">Grupo</th><th>Amenaza</th><th style="width:9%" class="c">Nivel</th><th style="width:10%" class="c">¿Prepararse?</th><th style="width:26%">Observaciones</th></tr></thead><tbody>
-    ${amen.map(a => { const x = cargado ? (am.find(z => z.id === a.id) || {}) : {}; return `<tr><td class="c"><b>${esc(a.id.replace('M1-', ''))}</b></td><td>${esc(a.cod)} · ${esc(a.grupo)}</td><td class="it">${esc(a.amenaza)}</td><td class="c"><b>${esc(NIVC[x.nivel] || '')}</b></td><td class="c">${esc(x.prepararse || '')}</td><td>${esc(x.obs || '')}</td></tr>`; }).join('')}</tbody></table>`;
+    ${amen.map(a => { const x = cargado ? (am.find(z => z.id === a.id) || {}) : {}; return `<tr><td class="c"><b>${esc(a.id.replace('M1-', ''))}</b></td><td>${esc(a.cod)} · ${esc(a.grupo)}</td><td class="it">${esc(a.amenaza)}${a.instr ? `<div style="font-size:8pt;color:#555;margin-top:2px">${esc(a.instr)}</div>` : ''}</td><td class="c"><b>${esc(NIVC[x.nivel] || '')}</b></td><td class="c">${esc(x.prepararse || '')}</td><td>${esc(x.obs || '')}</td></tr>`; }).join('')}</tbody></table>`;
   [['2', 'Seguridad estructural'], ['3', 'Seguridad no estructural'], ['4', 'Gestión de emergencias y desastres']].forEach((m, k) => {
     h += `<h3>${5 + k}. Módulo ${m[0]} · ${m[1]}</h3><div class="guia">${esc(g.modulos[m[0]])}</div>`;
     subs.filter(s => s[1] === m[0]).forEach(s => {
       const its = items.filter(i => i.sub === s[0]); if (!its.length) return;
       h += `<h4>${esc(s[0])} · ${esc(s[2])}</h4><table><thead><tr><th style="width:6%">N.º</th><th>Ítem</th><th style="width:8%" class="c">Nivel</th><th style="width:36%">Observaciones</th></tr></thead><tbody>
-        ${its.map(i => { const x = cargado ? (rel.find(z => Number(z.n) === Number(i.n)) || {}) : {}; return `<tr><td class="c"><b>${esc(i.n)}</b></td><td class="it">${esc(i.item)}</td><td class="c"><b>${esc(NIVC[x.nivel] || '')}</b></td><td>${esc(x.obs || '')}</td></tr>`; }).join('')}</tbody></table>`;
+        ${its.map(i => { const x = cargado ? (rel.find(z => Number(z.n) === Number(i.n)) || {}) : {}; return `<tr><td class="c"><b>${esc(i.n)}</b></td><td class="it">${esc(i.item)}${CRIT[i.n] ? `<div style="font-size:8pt;color:#555;margin-top:2px">${esc(CRIT[i.n])}</div>` : ''}</td><td class="c"><b>${esc(NIVC[x.nivel] || '')}</b></td><td>${esc(x.obs || '')}</td></tr>`; }).join('')}</tbody></table>`;
     });
   });
   const c = cargado && e ? G.ishCalcular(r, e.codigo) : null;
@@ -330,7 +331,7 @@ function hojaISH(r, e, cargado) {
     <table style="margin-top:6px"><thead><tr><th style="width:12%">Categoría</th><th style="width:14%">Índice</th><th>Qué significa</th></tr></thead><tbody>
     ${g.categorias.map(k => `<tr><td class="lab c">${k.cat}</td><td>${String(k.min).replace('.', ',')} a ${String(k.max).replace('.', ',')}</td><td>${esc(k.texto)}</td></tr>`).join('')}</tbody></table>`;
   h += observaciones('') + firmas(rw).replace('Referente del establecimiento', 'Coordinador de la evaluación');
-  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Valores Bajo 0, Medio 0,5 y Alto 1; pesos de submódulos e ítems iguales salvo que se carguen otros en la hoja PESOS.</p>`;
+  h += `<p class="nota">Fuente: OPS/OMS. Índice de seguridad hospitalaria. Guía para evaluadores, 2.ª ed., 2018 (Formulario 2). Textos de los ítems, amenazas y clasificaciones de seguridad: tal cual el Formulario 2 (OPS/OMS, 2018). Índice orientativo: valores Bajo 0, Medio 0,5 y Alto 1; los pesos oficiales de la OPS de cada ítem y submódulo están en su hoja de cálculo, que no está disponible (s/d), salvo el submódulo 3.3.7 (Herramienta de autoevaluación del ISH · Gases medicinales, OPS 2024).</p>`;
   return h + pie('ish', r);
 }
 

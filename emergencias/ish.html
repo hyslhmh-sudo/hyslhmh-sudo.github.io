@@ -216,9 +216,9 @@ let modActual = S.store.get('ish.mod', '1');
 let filtro = 'pend', busqueda = '', sincronizando = false, ultimoError = '';
 let borrador = null, listaHoja = [];
 const NIV = ['Bajo', 'Medio', 'Alto', 'No evaluado'];
-const AMN = ['No existe', 'Bajo', 'Medio', 'Alto'];
-const COLOR = { 'Alto': ['#C8E6C9', '#1B5E20'], 'Medio': ['#FFF3C4', '#5D4500'], 'Bajo': ['#FFD8B0', '#7A3300'], 'No evaluado': ['#EEF2F7', '#4B5B73'], 'No existe': ['#EEF2F7', '#4B5B73'] };
-const COLOR_AM = { 'Alto': ['#F8C9C7', '#7F1D1D'], 'Medio': COLOR['Medio'], 'Bajo': COLOR['Alto'], 'No existe': COLOR['No existe'] };
+const AMN = ['Nulo', 'Bajo', 'Medio', 'Alto'];
+const COLOR = { 'Alto': ['#C8E6C9', '#1B5E20'], 'Medio': ['#FFF3C4', '#5D4500'], 'Bajo': ['#FFD8B0', '#7A3300'], 'No evaluado': ['#EEF2F7', '#4B5B73'], 'Nulo': ['#EEF2F7', '#4B5B73'], 'No existe': ['#EEF2F7', '#4B5B73'] };
+const COLOR_AM = { 'Alto': ['#F8C9C7', '#7F1D1D'], 'Medio': COLOR['Medio'], 'Bajo': COLOR['Alto'], 'Nulo': COLOR['Nulo'], 'No existe': COLOR['Nulo'] };
 const MODS = [['1', 'Amenazas'], ['2', 'Estructural'], ['3', 'No estructural'], ['4', 'Gestión']];
 
 if (S.DEMO) { $('#demo').textContent = 'La app ISH necesita la conexión con el Apps Script (no tiene modo demostración).'; $('#demo').classList.remove('oculto'); }
@@ -392,6 +392,7 @@ function vistaHospital(redN, codigo) {
     <div class="tarjeta cab-est"><h2>${S.esc(e.nombre)}</h2>
       <div class="sub">${S.esc(e.codigo)} · ${S.esc(e.modelo || 'Modelo 1')} · ${c.evaluados} de ${c.total} ítems evaluados</div>
       <div class="indice">${chipCat(c.categoria)}<span class="big">${G.fmt2(c.indice)}</span><span class="sub" style="max-width:520px">${c.categoria ? S.esc(c.categoria.texto) : 'El índice aparece cuando los módulos 2, 3 y 4 tienen al menos un ítem evaluado.'}</span></div>
+      <p class="sub" style="margin-top:4px"><span class="ms" style="font-size:15px;vertical-align:-3px">info</span> ${S.esc(G.ISH_GUIA.indiceNota || 'Índice orientativo: faltan los pesos oficiales de la OPS (s/d).')}</p>
       <div class="secciones">${['2', '3', '4'].map(m => `<span class="sec-chip" style="background:${G.colorValor(c.mod[m])}"><b>${m}</b> ${G.fmt2(c.mod[m])}</span>`).join('')}</div>
       <details class="datos"><summary>Datos de la evaluación <span class="sub" style="font-weight:500">· Coordinación: ${S.esc(e.coordinador || 's/d')} · Fecha: ${S.esc(e.fecha || 's/d')}</span></summary>
         <form id="fDatos"><div class="rejilla">
@@ -403,7 +404,7 @@ function vistaHospital(redN, codigo) {
     <div class="tabs">${MODS.map(m => { const k = cuentaMod(m[0]); return `<button class="tab" data-mod="${m[0]}" aria-pressed="${modActual === m[0]}">${m[0]} · ${m[1]}<small>${k[0]} de ${k[1]}${m[0] !== '1' ? ' · ' + G.fmt2(c.mod[m[0]]) : ''}</small></button>`; }).join('')}</div>
     <details class="guia"><summary><span class="ms" style="font-size:18px">lightbulb</span>Cómo completar este módulo</summary><div class="g-in">
       <p>${S.esc(G.ISH_GUIA.modulos[modActual])}</p>
-      ${modActual === '1' ? '<p>Para cada amenaza: <b>nivel</b> según la probabilidad y la intensidad esperables en la zona del hospital (No existe, Bajo, Medio, Alto) y si el hospital <b>debe prepararse</b> para ella. Usar como base el relevamiento STAR-H del hospital.</p>'
+      ${modActual === '1' ? '<p>Para cada amenaza: <b>nivel</b> según la probabilidad y la intensidad esperables en la zona del hospital (Nulo, Bajo, Medio, Alto) y si el hospital <b>debe prepararse</b> para ella. Usar como base el relevamiento STAR-H del hospital.</p>'
         : `<div class="crit">${['Bajo', 'Medio', 'Alto'].map(n => `<b style="color:${COLOR[n][1]}">${n}</b><span>${S.esc(G.ISH_GUIA.niveles[n])}</span>`).join('')}</div><p style="margin-top:6px">${S.esc(G.ISH_GUIA.general[1])} ${S.esc(G.ISH_GUIA.general[2])}</p>`}</div></details>
     <div class="buscar"><span class="ms">search</span><input id="busq" type="search" placeholder="Buscar" value="${S.esc(busqueda)}"></div>
     <div class="filtros">${F('pend', 'Pendientes')}${F('hechas', 'Evaluados')}${F('bajo', modActual === '1' ? 'Medio o Alto' : 'Seguridad baja')}${F('todas', 'Todos')}</div>
@@ -436,13 +437,16 @@ function cerrarHoja() { $('#hoja').classList.add('oculto'); $('#hoja').innerHTML
 function pintarHoja() {
   const b = borrador, r = red(b.red), est = r.establecimientos.find(x => x.codigo === b.codigo), dis = b.puede ? '' : 'disabled', am = b.tipo === 'amenaza';
   const idx = listaHoja.indexOf(b.clave);
-  const op = (campo, lista) => `<div class="opciones ${lista.length === 4 ? 'cuatro' : lista.length === 3 ? 'tres' : 'dos'}">${lista.map(v => { const g = campo === 'nivel' ? (b.tipo === 'amenaza' ? { 'Alto': 5, 'Medio': 3, 'Bajo': 2, 'No existe': 1 } : { 'Alto': 1, 'Medio': 3, 'Bajo': 4 })[v] || '' : ''; return `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" ${g ? `data-g="${g}"` : ''} aria-pressed="${b[campo] === v}" ${dis}>${S.esc(v)}</button>`; }).join('')}</div>`;
-  const desc = am ? '' : `<div class="desc">${b.nivel && G.ISH_GUIA.niveles[b.nivel] ? S.esc(G.ISH_GUIA.niveles[b.nivel]) : b.nivel === 'No evaluado' ? 'No entra en el cálculo: el denominador se ajusta.' : 'Elegí un nivel. Ante la duda, el más bajo.'}</div>`;
+  const op = (campo, lista) => `<div class="opciones ${lista.length === 4 ? 'cuatro' : lista.length === 3 ? 'tres' : 'dos'}">${lista.map(v => { const g = campo === 'nivel' ? (b.tipo === 'amenaza' ? { 'Alto': 5, 'Medio': 3, 'Bajo': 2, 'Nulo': 1 } : { 'Alto': 1, 'Medio': 3, 'Bajo': 4 })[v] || '' : ''; return `<button type="button" class="op" data-campo="${campo}" data-valor="${S.esc(v)}" ${g ? `data-g="${g}"` : ''} aria-pressed="${b[campo] === v}" ${dis}>${S.esc(v)}</button>`; }).join('')}</div>`;
+  const crit = am ? '' : String((r.criterio || {})[b.n] || '');
+  const desc = am ? '' : `<div class="desc">${b.nivel === 'No evaluado' ? 'No entra en el cálculo: el denominador se ajusta. Anotá en Observaciones por qué no se evaluó.' : b.nivel ? 'Revisá que coincida con la clasificación de seguridad de la OPS de arriba.' : 'Elegí un nivel según la clasificación de seguridad de la OPS. Ante la duda, el más bajo.'}</div>`;
   $('#hoja').innerHTML = `<div class="hoja-in">
     <div class="hoja-cab"><b>${am ? S.esc(b.cod + ' · ' + b.grupo) : 'Ítem ' + S.esc(b.n) + ' · ' + S.esc(subNombre(b.sub))}<small>${S.esc(est.nombre)}</small></b><button class="icono" data-act="cerrarHoja" aria-label="Cerrar"><span class="ms">close</span></button></div>
     <div class="hoja-cuerpo">
       <div class="tarjeta contexto"><p style="font-size:15px;color:#172B4D"><b>${S.esc(am ? b.amenaza : b.item)}</b></p>
-        <p class="sub">${am ? 'Módulo 1 · no suma puntaje' : 'Módulo ' + S.esc(b.modulo) + ' · submódulo ' + S.esc(b.sub)} · OPS/OMS, Guía para evaluadores del ISH, 2018 (Formulario 2).</p></div>
+        <p class="sub">${am ? 'Módulo 1 · no suma puntaje' : 'Módulo ' + S.esc(b.modulo) + ' · submódulo ' + S.esc(b.sub)} · OPS/OMS, Índice de seguridad hospitalaria, Formularios para la evaluación, 2.ª ed., 2018 (Formulario 2).</p>
+        ${am && b.instr ? `<p style="margin-top:8px;font-size:13.5px;color:#33475B">${S.esc(b.instr)}</p>` : ''}
+        ${!am && crit ? `<p style="margin-top:8px;font-size:13.5px;color:#33475B;white-space:pre-line">${S.esc(crit)}</p>` : ''}</div>
       ${am ? `<div class="tarjeta dim"><h3>Nivel de la amenaza</h3>${op('nivel', AMN)}</div>
         <div class="tarjeta dim"><h3>¿El hospital debe prepararse para esta amenaza?</h3>${op('prepararse', ['Sí', 'No'])}</div>`
       : `<div class="tarjeta dim"><h3>Nivel de seguridad</h3>${op('nivel', NIV)}${desc}</div>`}
