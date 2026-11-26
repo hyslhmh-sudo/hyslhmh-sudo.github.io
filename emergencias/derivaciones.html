@@ -207,7 +207,7 @@ body{background:#FAF7F7}
   <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Derivaciones y albergues · COEsp</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="flot" class="flotante oculto"><span class="sub" id="flotTxt">Hay cambios sin guardar</span><button class="btn" data-act="guardarEst"><span class="ms">save</span>Guardar ficha</button></div>
 <div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
 <div id="imp" class="imp"></div>
@@ -311,7 +311,7 @@ function secTabs(act) {
 // Qué puede hacer el usuario en la localidad elegida
 function avisoCarga() {
   const r = redVista();
-  if (r.nombre === TODAS) return '<p class="sub" style="margin:-4px 2px 10px">Vista de todas las localidades: solo para ver e imprimir. Para cargar, elegí una localidad.</p>';
+  if (r.nombre === TODAS) return '';
   if (r.puedeInst) return '';
   return `<p class="sub" style="margin:-4px 2px 10px"><span class="ms" style="font-size:16px">visibility</span> Solo ver: tu usuario no carga en ${E(r.nombre)}. Si tenés que cargar, pedíselo a Higiene y Seguridad Laboral.</p>`;
 }
@@ -319,7 +319,7 @@ function redVista() { if (!red(redActual)) redActual = cat.redes[0].nombre; S.st
 const semAcuerdo = v => !v ? '<span class="sem g">Acuerdo s/d</span>' : /formal/i.test(v) ? `<span class="sem v">${E(v)}</span>` : /informal/i.test(v) ? `<span class="sem a">${E(v)}</span>` : /Sin/i.test(v) ? `<span class="sem n">${E(v)}</span>` : `<span class="sem g">${E(v)}</span>`;
 const semGuardia = v => !v ? '' : S.esSi(v) ? '<span class="sem v">Guardia 24 h</span>' : /No tiene/.test(v) ? '<span class="sem n">Sin guardia</span>' : `<span class="sem g">${E(v)}</span>`;
 const num = v => { const n = Number(String(v || '').replace(',', '.')); return isNaN(n) ? 0 : n; };
-const AVISO_EST = '<div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: las camas son una <b>estimación</b> de lo que cada institución podría recibir, no camas disponibles reales. En una emergencia la disponibilidad se confirma con cada institución.</div>';
+const AVISO_EST = '';
 
 /* ---------- escalones de derivación (04/11/2026) ----------
  * Si la emergencia es en una localidad: escalón 1 = la misma localidad; escalón 2 y 3 = las localidades cargadas en
@@ -391,10 +391,10 @@ function cuadroCamasHosp(esc) {
   const usados = [], grupos = esc.map(e => { const l = hosp.filter(h => e.locs.indexOf(h.loc) >= 0).sort((a, b) => e.locs.indexOf(a.loc) - e.locs.indexOf(b.loc)); usados.push(...l); return { t: e.n ? escTit(e) : '', l }; });
   const resto = hosp.filter(h => usados.indexOf(h) < 0);
   if (resto.length) grupos.push({ t: 'Sin escalón asignado · localidades que todavía no están en LOCALIDADES <span class="sem a">s/d (revisar)</span>', l: resto });
-  const reubicar = he ? `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px;border-left:4px solid #C62828"><b style="color:#8E1B1B">Pacientes a reubicar · evacuación de ${E(he.n)}</b> <span class="sub">(máximo: sus camas habilitadas; probable: las camas ocupadas estimadas según el supuesto)</span>
+  const reubicar = he ? `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px;border-left:4px solid #C62828"><b style="color:#8E1B1B">Pacientes a reubicar · evacuación de ${E(he.n)}</b>
     <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla">${cab('Pacientes probables')}${filaH(he, true)}</table></div></div>` : '';
   const tit = he ? `Dónde podrían ir · camas de internación de los demás hospitales (sin ${E(he.n)})` : 'Camas de internación por hospital';
-  return `${reubicar}<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">${tit}</b> <span class="sub">(camas habilitadas que informa cada hospital, por categoría, y camas probablemente disponibles según un supuesto)</span>
+  return `${reubicar}<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">${tit}</b>
     <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla">${cab('Probablemente disponibles')}
     ${grupos.filter(g => g.l.length).map(g => `${g.t ? `<tr><td colspan="${cats.length + 3}" style="background:#F6F1F1"><b>${g.t}</b></td></tr>` : ''}${g.l.map(h => filaH(h)).join('')}${g.t && grupos.filter(x => x.l.length).length > 1 ? filaSuma('Subtotal', g.l, '#FBF8F8') : ''}`).join('')}
     ${filaSuma('Total camas habilitadas', hosp, '#F1ECEC')}${filaDisp(hosp)}</table></div>
@@ -420,11 +420,11 @@ function cuadroArm(esc) {
     <td class="sub" style="min-width:180px">${[sd(x.ampliacion_de) ? '' : 'De: ' + E(x.ampliacion_de), sd(x.condiciones) ? '' : 'Condiciona: ' + E(x.condiciones), x.observaciones ? E(x.observaciones) : ''].filter(Boolean).join('<br>') || '—'}</td></tr>`;
   const sumaF = (tit, l, fondo) => `<tr style="background:${fondo}"><td colspan="4"><b>${tit}</b></td><td class="num"><b>${suma(l, 'instalados')}</b></td><td class="num"><b>${suma(l, 'operativos')}</b></td><td class="num"><b>${suma(l, 'fuera')}</b></td><td class="num" style="background:#E2F1E6"><b>${suma(l, 'ampliacion')}</b></td><td></td></tr>`;
   const vis = grupos.filter(g => g.l.length), tipos = [...new Set(l0.map(x => x.tipo).filter(t => !sd(t)))];
-  return `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Asistencia respiratoria mecánica (ARM) por hospital${he ? ' (sin ' + E(he.n) + ')' : ''}</b> <span class="sub">(equipos por servicio y tipo: instalados, operativos hoy, fuera de servicio y cuántos más podrían sumarse)</span>
+  return `<div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Asistencia respiratoria mecánica (ARM) por hospital${he ? ' (sin ' + E(he.n) + ')' : ''}</b>
     <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Hospital</th><th>Servicio y ubicación</th><th>Tipo de equipo</th><th>Sirve para</th><th class="num">Instalados</th><th class="num">Operativos</th><th class="num" title="Fuera de servicio o en reparación">Fuera de servicio</th><th class="num" title="Ampliación posible: equipos que podrían sumarse">Ampliación posible</th><th>De dónde y qué la condiciona</th></tr>
     ${vis.map(g => `${g.t ? `<tr><td colspan="9" style="background:#F6F1F1"><b>${g.t}</b></td></tr>` : ''}${g.l.map(fila).join('')}${g.t && vis.length > 1 ? sumaF('Subtotal', g.l, '#FBF8F8') : ''}`).join('')}
     ${tipos.map(t => sumaF('Total · ' + E(t), l0.filter(x => x.tipo === t), '#F1ECEC')).join('')}${sumaF('Total de equipos', l0, '#E9E2E2')}</table></div>
-    <p class="sub" style="margin:6px 0 0">Una fila por hospital, servicio y tipo de equipo. Los totales suman solo lo que tiene número («+ s/d» = hay filas sin dato). <b>Ampliación posible</b>: equipos que podrían sumarse (de otro servicio, de un depósito o en préstamo); depende del oxígeno y el aire comprimido, las tomas, la energía y el personal entrenado. En RECEPTORAS, «Puede recibir pacientes con ARM» se completa solo: «Sí» si hay respiradores de terapia o de transporte operativos. Los datos están en la hoja ARM Y EQUIPOS CRÍTICOS del libro de la app${esAdmin() ? ' (Administración los corrige ahí)' : ''}; en una emergencia se confirma con cada hospital.</p></div>`;
+</div>`;
 }
 
 const AVISO_EVAC = h => `<div class="aviso-datos" style="background:#FDECEC;color:#7A1F1F"><b>Evacuación de ${E(h.n)}:</b> ${E(h.n)} no figura como receptor. Se buscan lugares primero en ${E(h.loc || 's/d')} (escalón 1, otros establecimientos de la misma localidad) y después en las localidades del escalón 2 y 3, en el orden que acuerde el COEsp.</div>`;
@@ -441,13 +441,13 @@ function vistaInst() {
       <button class="btn sec" data-act="impInst"><span class="ms">print</span>Imprimir directorio</button></div>
     ${cuadroCamasHosp(esc)}
     ${cuadroArm(esc)}
-    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Capacidad estimada de recepción${todas ? '' : ' por escalón · emergencia en ' + E(r.nombre)}</b> <span class="sub">(suma de lo que podrían recibir las instituciones; categorías HAvBED más Maternidad y Urgencias; hoy, estimación propia con los supuestos S-01 y S-02 del cuadro de camas)</span>
+    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Capacidad estimada de recepción${todas ? '' : ' por escalón · emergencia en ' + E(r.nombre)}</b>
       <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo de cama</th>${grupos.map(g => `<th class="num">${g.e.n ? 'Escalón ' + g.e.n : 'Camas'}</th>`).join('')}${grupos.length > 1 ? '<th class="num">Total</th>' : ''}</tr>
       ${cat.camas.map(c => { const k = c[0] + '_est', v = grupos.map(g => suma(g.l, k)); return `<tr><td>${E(c[1])}</td>${v.map(x => `<td class="num"><b>${x}</b></td>`).join('')}${grupos.length > 1 ? `<td class="num"><b>${v.reduce((a, b) => a + b, 0)}</b></td>` : ''}</tr>`; }).join('')}
       <tr><td>Instituciones cargadas</td>${grupos.map(g => `<td class="num">${g.l.length}</td>`).join('')}${grupos.length > 1 ? `<td class="num">${grupos.reduce((a, g) => a + g.l.length, 0)}</td>` : ''}</tr>
       <tr><td>Con acuerdo formal firmado</td>${grupos.map(g => `<td class="num">${g.l.filter(x => /formal/i.test(x.acuerdo || '')).length}</td>`).join('')}${grupos.length > 1 ? '<td></td>' : ''}</tr>
       <tr><td>Reciben pacientes con asistencia respiratoria mecánica</td>${grupos.map(g => `<td class="num">${g.l.filter(x => S.esSi(x.arm)).length}</td>`).join('')}${grupos.length > 1 ? '<td></td>' : ''}</tr></table></div>
-      <p class="sub" style="margin:6px 0 0">MEJORA / buena práctica (Vítolo, 2026): al menos <b>dos destinos alternativos por tipo de paciente</b>, uno a 50 km o más, con acuerdo firmado y revisado cada año.</p></div>
+</div>
     ${grupos.map(g => `<h3>${escTit(g.e)}</h3><div class="lista">${filtra(g.l).map(x => { const ce = cat.camas.reduce((a, c) => a + num(x[c[0] + '_est']), 0);
       return `<button class="tarjeta inst" data-inst="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b>${semGuardia(x.guardia)}</div>
         <div class="sub">${E([x.tipo, x.localidad, num(x.distancia) > 0 ? x.distancia + ' km' : '', num(x.tiempo) > 0 ? x.tiempo + ' min' : ''].filter(Boolean).join(' · ') || 's/d')} · podría recibir de: ${E(x.recibe_de || 's/d')}</div>
@@ -483,7 +483,6 @@ function vistaAlb() {
   const filtra = l => l.filter(x => !q || (x.nombre + ' ' + x.localidad + ' ' + x.tipo).toLowerCase().indexOf(q.toLowerCase()) >= 0);
   const cap = l => l.reduce((a, x) => a + num(x.capacidad), 0);
   app.innerHTML = `${redesTabs(r)}${secTabs('alb')}${todas ? '' : AVISO_ESC(r.nombre)}
-    <div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: edificios que el municipio o Protección Civil <b>podría</b> habilitar como albergue, con capacidad estimada. La habilitación y la apertura las decide el COEsp.</div>
     <div class="buscar"><input id="q" type="search" placeholder="Buscar albergue, tipo o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="alb"><span class="ms">add</span>Agregar albergue en ' + E(r.nombre) + '</button>' : ''}
       <button class="btn sec" data-act="impAlb"><span class="ms">print</span>Imprimir directorio</button></div>
     <div class="kpis">${grupos.map(g => `<div class="tarjeta kpi"><b>${cap(g.l)}</b><span>${g.e.n ? 'personas · escalón ' + g.e.n : 'personas (capacidad estimada)'} (${g.l.length} albergue${g.l.length === 1 ? '' : 's'})</span></div>`).join('')}
@@ -527,11 +526,11 @@ function vistaPob() {
   app.innerHTML = `${redesTabs(r)}${secTabs('pob')}
     <div class="aviso-datos" style="background:#FDECEC;color:#7A1F1F"><b>Para qué sirve:</b> prever la demanda sanitaria (atención, ambulancias, traslados con custodia) si un evento afecta a estos lugares. <b>Nunca son albergues ni receptores.</b> Se trabaja con la capacidad (plazas), no con la ocupación del momento: no es un tablero dinámico, pero cada lugar se actualiza cada ${VIGENCIA_MESES} meses («A actualizar» cuando pasa ese plazo desde la fecha del dato). Sin datos personales.</div>
     <div class="buscar"><input id="q" type="search" placeholder="Buscar lugar, tipo o localidad" value="${E(q)}">${r.puedeInst ? '<button class="btn" data-act="nuevaFila" data-tipo="pob"><span class="ms">add</span>Agregar lugar en ' + E(r.nombre) + '</button>' : ''}</div>
-    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Demanda sanitaria posible por tipo</b> <span class="sub">(personas = plazas; «sin dato» = lugares con plazas en s/d)</span>
+    <div class="tarjeta" style="padding:12px 14px;margin-bottom:12px"><b style="color:#8E1B1B">Demanda sanitaria posible por tipo</b>
       <div class="tabla-wrap" style="margin-top:8px;border:0"><table class="tabla"><tr><th>Tipo</th><th class="num">Personas</th><th class="num">Necesitan traslado asistido</th><th class="num">Con custodia</th><th class="num">En zona de riesgo</th><th class="num">Lugares</th><th class="num">Sin dato</th><th class="num">A actualizar</th></tr>
       ${tipos.map(t => { const l = todos.filter(x => x.tipo === t); return fila(E(TIPO_PLURAL[t] || t), l.map(x => E(x.nombre || 's/d')).join(' · '), l); }).join('')}
       ${fila('Total', '', todos, true)}</table></div>
-      <p class="sub" style="margin:6px 0 0">«Con custodia» y «En zona de riesgo» suman las personas de esos lugares. Zona de riesgo según la lámina CART-COE-005 (fuera de su área queda s/d). Varones y mujeres, en la ficha de cada lugar.</p>
+
       ${sinContacto || sinDep || sinPlan ? `<p class="sub" style="margin:6px 0 0;color:#8A4A00"><b>Para completar en el relevamiento:</b> ${[sinContacto ? sinContacto + ' sin contacto las 24 horas' : '', sinDep ? sinDep + ' sin dato de personas con movilidad reducida o dependencia' : '', sinPlan ? sinPlan + ' sin dato de plan de evacuación propio' : ''].filter(Boolean).join(' · ')}.</p>` : ''}</div>
     ${(grupos.length ? grupos : [{ loc: todas ? 'todas las localidades' : r.nombre, l: [] }]).map(g => `<h3>Lugares en ${E(g.loc)}</h3><div class="lista">${filtra(g.l).map(x => `<button class="tarjeta inst" data-fila="pob" data-id="${E(x.id)}"><div class="est-cab"><b>${E(x.nombre || 's/d')}</b><span class="sem g">${E(x.tipo || 's/d')}</span>${S.esSi(x.custodia) ? '<span class="sem a">Traslado con custodia</span>' : ''}${enRiesgo(x) ? '<span class="sem r">Zona de riesgo</span>' : S.esPosible(x.zona_riesgo) ? '<span class="sem a">Riesgo posible</span>' : ''}${vencido(x) ? '<span class="sem n">A actualizar</span>' : ''}</div>
         <div class="sub">${E([x.localidad, x.direccion].filter(Boolean).join(' · ') || 's/d')}${x.ref_salud ? ' · referencia de salud: ' + E(x.ref_salud) : ''}</div>
@@ -565,7 +564,7 @@ function abrirFila(tipo, id) {
   if (tipo === 'inst') {
     const comunes = def.filter(c => !/_est$/.test(c.clave) && !/^camas_/.test(c.clave)), est = def.filter(c => /^camas_/.test(c.clave));
     cuerpo = `<div class="tarjeta" style="padding:6px 14px 10px;margin-bottom:10px"><div class="campos" style="padding:0">${comunes.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>
-    <div class="tarjeta" style="padding:10px 14px"><b style="color:#8E1B1B">Capacidad estimada de recepción</b><p class="sub" style="margin:2px 0 6px">Cuántos pacientes de cada tipo podría recibir la institución en una evacuación. Es un dato hipotético para planificar (categorías HAvBED más Maternidad y Urgencias), no la disponibilidad real del momento.</p>
+    <div class="tarjeta" style="padding:10px 14px"><b style="color:#8E1B1B">Capacidad estimada de recepción</b>
     <table class="grilla-camas"><tr><th>Tipo de cama</th><th>Camas estimadas</th></tr>${cat.camas.map(c => `<tr><td>${E(c[1])}</td>
       <td><input data-k="${c[0]}_est" inputmode="numeric" value="${E(x[c[0] + '_est'] || '')}" ${dis}></td></tr>`).join('')}</table>
     <div class="campos" style="padding:6px 0 0">${est.map(c => campoHTML(c, x[c.clave], dis, 'i_')).join('')}</div></div>`;
@@ -793,7 +792,7 @@ const semDens = t => /muy alta/i.test(t) ? `<span class="sem r">${E(t)}</span>` 
 function vistaDatos() {
   borrador = null;
   $('#titulo').innerHTML = 'Datos de la red<small>Camas de internación y población estimada · solo para ver</small>';
-  const cab = `${secTabs('datos')}<div class="aviso-datos" style="background:#FFF3C4;color:#5A4500">Base orientadora para planificar: las camas son las habilitadas según el establecimiento y la población es una <b>estimación</b>. No son camas libres ni un registro en tiempo real.</div>`;
+  const cab = `${secTabs('datos')}`;
   if (!datos) { app.innerHTML = cab + '<div class="vacio">Cargando…</div>'; cargarDatos(false); return; }
   if (datos.error && !datos.redes) { app.innerHTML = cab + `<div class="tarjeta vacio">${E(datos.error)}</div>`; return; }
   // Camas
@@ -905,7 +904,7 @@ $('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; 
 
 function vistaIngreso() {
   tema('');
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo usuario y clave de toda la app.</p>
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2>
     <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
@@ -931,11 +930,11 @@ function vistaAyuda() {
       <li><b>Datos de la red:</b> camas de internación habilitadas por establecimiento y por servicio, y población estimada por barrio de Trelew (Municipalidad de Trelew, 2025; datos estimados, provisorios, no oficiales). Es solo para ver: no son camas libres. Podés buscar un barrio y ordenar la tabla por densidad o por cantidad de habitantes.</li>
       <li>Si ves «Solo ver», tu usuario no carga en esa localidad. Si tenés que cargar, pedíselo a Higiene y Seguridad Laboral.</li>
       <li>Si falta un dato, poné «s/d (revisar)».</li></ol>
-    <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COEsp · Derivaciones y albergues (v0)» (carpeta 06 · COEsp): hojas LOCALIDADES, RECEPTORAS, ALBERGUES, POBLACION A CARGO y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
+    <h3>Para la administradora</h3><ol><li>Los datos están en la planilla «COEsp · Derivaciones y albergues» (carpeta 06 · COEsp): hojas LOCALIDADES, RECEPTORAS, ALBERGUES, POBLACION A CARGO y CRITERIOS.${cat && cat.planilla ? ` <a href="${E(cat.planilla)}" target="_blank" rel="noopener">Abrir planilla</a>.` : ''} La fila 2 de cada hoja tiene los nombres internos: no se cambian.</li>
       <li>El cuadro «Camas de internación por hospital» se arma con la hoja CAMAS del libro de la app (no de esta planilla): una fila por hospital y servicio, con localidad (escrita igual que en LOCALIDADES), camas, fuente, fecha, observaciones, categoría (columna del cuadro, con lista desplegable) e ID en RECEPTORAS (el que se quita cuando se evacúa ese hospital), disponibilidad supuesta (%) e ID del supuesto. Cada supuesto se explica en la hoja SUPUESTOS (título, etiqueta LEY/MEJORA o dato histórico, valor, a qué se aplica, explicación, cuidados y referencias, una por renglón con «texto — enlace»); sus referencias van también en FUENTES. Cuando haya dato real de ocupación, se cambia el porcentaje y el ID del supuesto en CAMAS. Para corregir o agregar camas, se edita esa hoja; la fila 2 tiene los nombres internos y no se cambia. Los hospitales cuya localidad no está en LOCALIDADES salen al final, «sin escalón asignado».</li>
       <li>El cuadro «Asistencia respiratoria mecánica (ARM) por hospital» se arma con la hoja ARM Y EQUIPOS CRÍTICOS del libro de la app: una fila por hospital, servicio y tipo de equipo (respirador de terapia, de transporte, VNI, máquina de anestesia), con para quién sirve (adultos, pediatría, neonatología), instalados, operativos, fuera de servicio, ampliación posible, de dónde saldría y qué la condiciona. El hospital se escribe igual que en CAMAS. La columna «Puede recibir pacientes con ARM» de RECEPTORAS se calcula sola desde esa hoja (hoja oculta «ARM (vínculo)»).</li>
       <li>Quién carga: Administración, en todas las localidades. Para habilitar a otra persona, en COEsp › Usuarios y accesos (o en ACCESOS STAR-H, columna «Derivación · localidades en que carga») poné sus localidades separadas por punto y coma, por ejemplo «Trelew; Gaiman», o «Todas». Vacío = solo ve. El servidor rechaza cualquier carga fuera de esas localidades.</li>
-      <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025 (v0)» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
+      <li><b>Datos de la red:</b> las camas se cargan en las fichas de evacuación (EVAC de cada red): el total en la ficha del establecimiento («Camas de internación habilitadas») y el detalle en cada dependencia («Camas o puestos de atención»). La población se corrige en la planilla «REFERENCIA · Trelew · Población estimada por barrio 2025» (07 · REFERENCIAS), donde también se asigna el establecimiento de referencia de cada barrio. La pestaña los lee sola.</li>
       <li>Para sumar una localidad, agregala en la hoja LOCALIDADES (código y nombre). La app la toma sola.</li><li>El orden de derivación de cada localidad se carga en la hoja LOCALIDADES, columnas «Escalón 2» y «Escalón 3»: localidades en orden, separadas por punto y coma (por ejemplo «Rawson; Gaiman; Dolavon»). Mientras diga «s/d (revisar)», la app muestra las demás localidades sin orden acordado.</li></ol>
     <p class="sub">Referencias (MEJORA / buena práctica): Proyecto Esfera (2018); FEMA, Guía FNSS (2010); HICS 254, 255 y 260 (California EMSA, 2014); OPS, EVAC-H (2024); Vítolo, Planes de contingencia hospitalarios (2026).</p></div>`;
 }

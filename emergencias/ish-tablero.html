@@ -97,7 +97,7 @@ body.embebido .barra,body.embebido footer,body.embebido .demo{display:none}
   <button class="icono" id="btnAct" title="Actualizar"><span class="ms">refresh</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Índice de Seguridad Hospitalaria OPS/OMS (2018)</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="tip" class="tooltip oculto" role="tooltip"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -136,7 +136,7 @@ function render() {
   S.store.set('ish.tab.vista', vista);
   const tabs = ops.length > 1 ? ops.map(o => `<button class="tab" data-vista="${E(o)}" aria-pressed="${o === vista}">${E(o)}</button>`).join('') : '';
   const imp = '<span class="esp"></span><button class="tab imp" data-act="imprimir"><span class="ms" style="font-size:18px">print</span> Imprimir</button>';
-  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}. Fuente: planillas ISH de cada red. Base: OPS/OMS, Índice de seguridad hospitalaria, Guía para evaluadores, 2.ª ed., 2018. Pesos: hoja PESOS de cada planilla.${navigator.onLine ? '' : ' Sin conexión: últimos datos guardados.'}</p>`;
+  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}.${navigator.onLine ? '' : ' Sin conexión: últimos datos guardados.'}</p>`;
   const lista = vista === 'Todos los hospitales' ? R : R.filter(r => r.nombre === vista);
   tema(vista === 'Todos los hospitales' ? 'Secretaría' : vista);
   $('#titulo').innerHTML = `ISH · ${E(vista)}<small>Índice de Seguridad Hospitalaria</small>`;
@@ -147,22 +147,22 @@ function vistaHosp(R) {
   const H = []; R.forEach(r => r.establecimientos.forEach(e => H.push({ r, e, c: G.ishCalcular(r, e.codigo) })));
   let h = `<div class="kpis" style="grid-template-columns:repeat(${Math.min(Math.max(H.length, 1), 4)},1fr)">${H.map(x => `<div class="tarjeta kpi" style="border-top:4px solid ${S.temaRed(x.r.nombre).fuerte}">${catH(x.c.categoria)}
     <span style="font-weight:700;color:${S.temaRed(x.r.nombre).fuerte}">${E(x.e.nombre)}</span><b>${G.fmt2(x.c.indice)}</b><span>índice · ${x.c.evaluados} de ${x.c.total} ítems · ${E(x.e.modelo || 'Modelo 1')}</span></div>`).join('')}</div>`;
-  h += `<div class="tarjeta panel"><h2>Índice y módulos por hospital</h2><p class="nota">Valores de 0 a 1. El índice aparece cuando los módulos 2, 3 y 4 tienen datos. Se aplica solo a hospitales (la herramienta de la OPS/OMS está diseñada para hospitales).</p>${leyenda()}
+  h += `<div class="tarjeta panel"><h2>Índice y módulos por hospital</h2>${leyenda()}
     <div class="tabla-wrap"><table class="calor"><tr><th>Hospital</th><th class="c">Categoría</th><th class="c">Índice</th><th class="c">2 · Estructural</th><th class="c">3 · No estructural</th><th class="c">4 · Gestión</th><th>Qué significa</th></tr>
     ${H.map(x => `<tr><td>${E(x.e.nombre)}</td><td class="c">${catH(x.c.categoria)}</td>${celda(x.c.indice, x.e.nombre + ': índice')}${['2', '3', '4'].map(m => celda(x.c.mod[m], x.e.nombre + ' · módulo ' + m)).join('')}<td style="font-size:12px">${x.c.categoria ? E(x.c.categoria.texto) : 's/d'}</td></tr>`).join('')}</table></div></div>`;
   const subs = datos.submodulos;
-  h += `<div class="tarjeta panel"><h2>Submódulos</h2><p class="nota">Promedio ponderado de los ítems evaluados de cada submódulo. Los valores bajos marcan dónde concentrar las intervenciones.</p>
+  h += `<div class="tarjeta panel"><h2>Submódulos</h2>
     <div class="tabla-wrap"><table class="calor"><tr><th>Submódulo</th>${H.map(x => `<th class="c">${E(x.e.codigo)}</th>`).join('')}</tr>
     ${subs.map(s => `<tr><td><b>${E(s[0])}</b> · ${E(s[2])}</td>${H.map(x => celda(x.c.sub[s[0]], x.e.nombre + ' · ' + s[2])).join('')}</tr>`).join('')}</table></div></div>`;
   // ítems con seguridad baja
   const bajos = [];
   H.forEach(x => x.r.relevamiento.filter(i => i.codigo === x.e.codigo && i.nivel === 'Bajo').forEach(i => bajos.push({ x, i })));
-  h += `<div class="tarjeta panel"><h2>Ítems con seguridad baja</h2><p class="nota">Base para el plan de intervenciones; las medidas las define cada hospital con su conducción.</p>
+  h += `<div class="tarjeta panel"><h2>Ítems con seguridad baja</h2>
     ${bajos.length ? `<div class="tabla-wrap"><table><tr><th>Hospital</th><th>N.º</th><th>Submódulo</th><th>Ítem</th><th>Observaciones</th></tr>${bajos.map(b => `<tr><td>${E(b.x.e.codigo)}</td><td>${E(b.i.n)}</td><td>${E(b.i.sub)}</td><td>${E(b.i.item)}</td><td>${E(b.i.obs || '')}</td></tr>`).join('')}</table></div>` : '<div class="vacio">Todavía no hay ítems con seguridad baja.</div>'}</div>`;
   // amenazas
   const am = [];
   H.forEach(x => x.r.amenazas.filter(a => a.codigo === x.e.codigo && (a.nivel === 'Alto' || a.nivel === 'Medio')).forEach(a => am.push({ x, a })));
-  h += `<div class="tarjeta panel"><h2>Módulo 1 · Amenazas de nivel medio o alto</h2><p class="nota">No suman al índice: indican frente a qué tiene que estar preparado cada hospital.</p>
+  h += `<div class="tarjeta panel"><h2>Módulo 1 · Amenazas de nivel medio o alto</h2>
     ${am.length ? `<div class="tabla-wrap"><table><tr><th>Hospital</th><th>Grupo</th><th>Amenaza</th><th class="c">Nivel</th><th class="c">Prepararse</th><th>Observaciones</th></tr>${am.sort((p, q) => (q.a.nivel === 'Alto') - (p.a.nivel === 'Alto')).map(b => `<tr><td>${E(b.x.e.codigo)}</td><td>${E(b.a.grupo)}</td><td>${E(b.a.amenaza)}</td><td class="c"><b>${E(b.a.nivel)}</b></td><td class="c">${E(b.a.prepararse || '')}</td><td>${E(b.a.obs || '')}</td></tr>`).join('')}</table></div>` : '<div class="vacio">Todavía no hay amenazas cargadas con nivel medio o alto.</div>'}</div>`;
   return h;
 }

@@ -213,7 +213,7 @@ table.f1t td.fila input{margin-top:4px;font-weight:400}
   <button data-act="salir"><span class="ms">logout</span>Salir</button>
 </div>
 <main id="app" aria-live="polite"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Índice de Seguridad Hospitalaria OPS/OMS (2018)</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="hoja" class="hoja oculto" role="dialog" aria-modal="true"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -351,7 +351,7 @@ function vistaIngreso() {
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn ancho" type="submit"><span class="ms">login</span>Ingresar</button>
     <div id="msgIngreso" class="msg oculto"></div>
-    <p class="sub" style="margin-top:14px">Es el mismo usuario y clave de STAR-H y PHR. Por ahora el ISH es solo para Administración.</p></form>`;
+    </form>`;
   $('#fIngreso').addEventListener('submit', async ev => {
     ev.preventDefault(); const f = ev.target, b = f.querySelector('button'), m = $('#msgIngreso'); b.disabled = true; m.classList.add('oculto');
     try {

@@ -180,7 +180,7 @@ footer p{font-size:11.5px;color:var(--tenue);margin:6px 0 0}
   <button data-act="salir"><span class="ms">logout</span>Salir</button>
 </div>
 <main id="app" aria-live="polite"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Metodología STAR-H (OPS, 2023)</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="hoja" class="hoja oculto" role="dialog" aria-modal="true"></div>
 
 <script src="config.js"></script>
@@ -385,7 +385,7 @@ function vistaIngreso() {
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn ancho" type="submit"><span class="ms">login</span>Ingresar</button>
     <div id="msgIngreso" class="msg oculto"></div>
-    <p class="sub" style="margin-top:14px">La clave la entrega Higiene y Seguridad Laboral. Si la olvidaste, pedí una nueva.</p>
+    
   </form>`;
   $('#fIngreso').addEventListener('submit', async ev => {
     ev.preventDefault();
@@ -438,7 +438,7 @@ function vistaInicio() {
     </div>
     <h2>Establecimientos</h2>
     <div class="lista">${filas}</div>
-    <p class="sub" style="margin-top:14px">Datos guardados en este dispositivo: ${cat.generado ? new Date(cat.generado).toLocaleString('es-AR') : 's/d'}.</p>`;
+    <p class="sub" style="margin-top:14px">Datos al ${cat.generado ? new Date(cat.generado).toLocaleString('es-AR') : 's/d'}.</p>`;
 }
 
 function vistaEstablecimiento(redN, codigo) {
@@ -599,7 +599,7 @@ function vistaInforme(redN, codigo) {
   <button class="volver no-print" data-ir="#/est/${encodeURIComponent(redN)}/${encodeURIComponent(codigo)}"><span class="ms">arrow_back</span>${S.esc(e.nombre)}</button>
   <div class="no-print" style="margin-bottom:10px"><button class="btn" onclick="window.print()"><span class="ms">print</span>Imprimir o guardar</button></div>
   <div class="tarjeta informe">
-    <p class="sub">Preparación y Respuesta a Emergencias y desastres · Higiene y Seguridad Laboral · versión 0</p>
+    <p class="sub">Preparación y Respuesta a Emergencias y desastres · Higiene y Seguridad Laboral</p>
     <h2>Evaluación estratégica del riesgo de emergencias y desastres (STAR-H)</h2>
     <p class="sub">${S.esc(e.nombre)} · ${S.esc(r.nombre)} · generado el ${S.hoy()} con los datos de la app</p>
     <h3>1. Datos generales del establecimiento</h3>${ficha}

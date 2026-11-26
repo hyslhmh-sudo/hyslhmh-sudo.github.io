@@ -84,7 +84,7 @@ body.blanco textarea{min-height:70px;border:1px solid #777}body.blanco select{-w
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Ficha del establecimiento<small>versión 0 · HZT, HMH, HSST, hospitales rurales, puestos sanitarios y CAPS</small></h1>
+  <h1>Ficha del establecimiento<small>HZT, HMH, HSST, hospitales rurales, puestos sanitarios y CAPS</small></h1>
   <button class="icono" type="button" onclick="imprimir(false)" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"></main>
@@ -310,7 +310,7 @@ async function cargarGrupos() {
     const sinClasif = (r.necesidad || {})['s/d (revisar)'];
     el.innerHTML = `<b>${E(ciudad)}: ${E(e.total)} personas registradas</b> (activas; las de baja no se cuentan).<br>Por tipo de necesidad: ${lista(r.necesidad)}<br>Por tipo de patología: ${lista(r.patologia)}`
       + (sinClasif ? `<br><span style="color:#B35500">Hay registros sin tipo de necesidad o de patología cargado: completarlos en el libro de pacientes.</span>` : '')
-      + `<br><small>Referencia: libro «PACIENTES · ${E(ciudad)} · Necesidades especiales (v0) · CONFIDENCIAL» (carpeta 08), solo cantidades, consultado ${new Date().toLocaleString('es-AR', { hour12: false })}. Para quien no es Administración, de 1 a 4 se muestra «&lt;5».</small>`;
+      + `<br><small>Datos al ${new Date().toLocaleString('es-AR', { hour12: false })}</small>`;
   } catch (x) {
     el.innerHTML = /lista cerrada|Sin acceso/i.test(String(x && (x.error || x.message) || x)) ? 'Las cantidades las ve solo la lista cerrada de pacientes con necesidades especiales.' : 'No se pudieron leer las cantidades: s/d (revisar).';
   }
@@ -470,7 +470,7 @@ function precargaCaps() {
 }
 function pintarDeps() {
   const box = document.getElementById('depsBox'); if (!box) return;
-  const cab = '<h4>Dependencias de este establecimiento</h4><p class="nota">Se completa sola con la hoja LUGARES (columna «Depende de»). No se carga acá: si falta o sobra alguna, se corrige en LUGARES. Los puestos sanitarios tienen su propia ficha.</p>';
+  const cab = '<h4>Dependencias de este establecimiento</h4>';
   if (!deps) { box.innerHTML = cab + (depsErr ? `<p class="nota">No se pudo cargar la lista (${E(depsErr)}).</p>` : '<p class="nota">Cargando…</p>'); return; }
   const L = deps.filter(d => d.id && esDeEste(d.depende)).sort((x, y) => String(x.tipo).localeCompare(String(y.tipo)) || String(x.nombre).localeCompare(String(y.nombre)));
   if (!L.length) { box.innerHTML = cab + '<p class="nota">No figura ninguna dependencia de este establecimiento en LUGARES.</p>'; return; }
@@ -483,7 +483,7 @@ function pintar() {
   const B = window.__blanco;
   app.innerHTML = B ? `<div class="blanco-cab"><b>Ficha del establecimiento · planilla para completar a mano</b><br>Establecimiento: ____________________________________ &nbsp; Fecha: ____/____/______<br>Completó (apellido y nombre): ____________________________________</div>
   <h2 class="paso">Paso 2 · Datos del establecimiento</h2><p class="pie" style="text-align:left">(El paso 1, «Mis datos», se completa en la app al ingresar.)</p>${SEC.map((s, i) => secHtml(s, i + 1)).join('')}
-  <p class="pie">Versión 0. Lo que no se sabe se deja en blanco o se anota «no sabe». Después se pasa a la app (se puede cargar por partes).</p>` : `${srv.puede ? `<div class="aviso" style="background:var(--claro)"><b>Algunos datos ya vienen cargados</b> con la información que tenemos (marcados «Precargado»): revisalos y corregilos si no son correctos. Si están bien, tocá <button class="btn" type="button" onclick="confirmarPre()" style="display:inline-flex;margin:4px 0">Confirmar los precargados</button><br><b>Se completa por partes.</b> No hace falta cargar todo de una vez: cada dato se guarda solo en el libro apenas lo escribís. Podés cerrar y seguir otro día, por la sección que quieras. Lo que no sabés, dejalo vacío.</div>` : `<div class="aviso"><b>Solo lectura.</b> Esta ficha la carga el referente del establecimiento (y Administración).</div>`}
+  <p class="pie">Lo que no se sabe se deja en blanco o se anota «no sabe».</p>` : `${srv.puede ? `<div class="aviso" style="background:var(--claro)"><b>Algunos datos ya vienen cargados</b> con la información que tenemos (marcados «Precargado»): revisalos y corregilos si no son correctos. Si están bien, tocá <button class="btn" type="button" onclick="confirmarPre()" style="display:inline-flex;margin:4px 0">Confirmar los precargados</button><br><b>Se completa por partes.</b> No hace falta cargar todo de una vez: cada dato se guarda solo en el libro apenas lo escribís. Podés cerrar y seguir otro día, por la sección que quieras. Lo que no sabés, dejalo vacío.</div>` : `<div class="aviso"><b>Solo lectura.</b> Esta ficha la carga el referente del establecimiento (y Administración).</div>`}
   <div class="cab"><label for="selEst">Establecimiento</label><select id="selEst">${(srv.establecimientos || ESTAB).map(e => `<option value="${E(e)}"${e === estab ? ' selected' : ''}>${E(e)}${(srv.mios || []).indexOf(e) < 0 ? ' (solo lectura)' : ''}</option>`).join('')}</select>
   <div id="estadoG" class="estadoG" aria-live="polite"></div>
   <div class="no-imp" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn" type="button" onclick="imprimir(true)"><span class="ms">print</span>Imprimir planilla en blanco</button><button class="btn" type="button" onclick="imprimir(false)"><span class="ms">print</span>Imprimir lo cargado</button></div>
@@ -491,7 +491,7 @@ function pintar() {
   <h2 class="paso">Paso 1 · Mis datos <small>(se completan al ingresar; para revisarlos, en el inicio tocá tu nombre)</small></h2>
   <h2 class="paso">Paso 2 · Datos del establecimiento <small>(se puede completar por partes)</small></h2>
   <fieldset ${srv.puede ? '' : 'disabled'} style="border:0;padding:0;margin:0;min-width:0">${SEC.map((s, i) => secHtml(s, i + 1)).join('')}</fieldset>
-  <p class="pie">Versión 0. Lo que no se sabe queda como «s/d (revisar)». Base orientadora: no es un registro en tiempo real.</p>`;
+`;
   progreso();  if (!B) rolesEnFicha();
 }
 // 21/11/2026 · Roles de llamada (en diseño): debajo de «Cadena de llamadas», resumen y acceso a la tarjeta. Solo para quien el servidor habilita (roles_acceso).

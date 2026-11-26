@@ -61,7 +61,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Anexos por hospital<small>COEsp · versión 0 · en elaboración</small></h1>
+  <h1>Anexos por hospital<small>Anexos A a M del COEsp por unidad</small></h1>
   <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
@@ -89,11 +89,11 @@ function pintar(r) {
       const f = idx[s[0] + '|' + u[0]], puede = admin && con.indexOf(s[0]) >= 0;
       const btn = puede ? `<button type="button" class="act${f && f.url ? '' : ' crear'}" data-sec="${s[0]}" data-uni="${E(u[0])}" title="${f && f.url ? 'Actualizar las tablas de datos con lo cargado hoy y abrir el Doc' : 'Crear el Doc con los datos de la app y abrirlo'}"><span class="ms">${f && f.url ? 'sync' : 'add'}</span>${f && f.url ? 'Actualizar' : 'Crear'}</button>` : '';
       if (!f || !f.url) return `<td>${btn || '<span class="vacio">—</span>'}</td>`;
-      const tit = `${f.titulo || ''} · ${u[1]} · versión ${f.version || '0'} · ${f.estado || 's/d'}${f.act ? ' · actualizado ' + f.act : ''}`;
+      const tit = `${f.titulo || ''} · ${u[1]} · ${f.estado || 's/d'}${f.act ? ' · actualizado ' + f.act : ''}`;
       return `<td><span class="celda"><a class="doc${u[0] === 'COMÚN' ? ' comun' : ''}" href="${E(f.url)}" target="_blank" rel="noopener" title="${E(tit)}" aria-label="${E(tit)}"><span class="ms">description</span></a>${btn}${f.act ? `<span class="fecha">${E(String(f.act).split(' ')[0])}</span>` : ''}</span></td>`;
     }).join('') + '</tr>';
   }).join('');
-  app.innerHTML = `<div class="aviso">Documentos en versión 0, en elaboración. Cada anexo tiene una <b>parte común</b> (vale para todas las unidades) y una <b>ficha por unidad</b> con lo propio de cada hospital o puesto sanitario.${admin ? ' Antes de ver o imprimir, tocá <b>«Actualizar»</b>: las tablas se renuevan con lo cargado hoy en la app.' : ''}</div>
+  app.innerHTML = `
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
   <p>Tocá un ícono para abrir el documento en Google Docs (se abre en otra pestaña). El ícono verde es la parte común; el azul, la ficha de la unidad. Una raya significa que ese documento todavía no está hecho. Debajo de cada ícono figura la fecha de la última actualización.</p>
   <p>Para abrir los documentos necesitás permiso en Drive. Si no podés abrir alguno, pedíselo a la administración de la app.</p>

@@ -88,13 +88,13 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Volver al inicio"><span class="ms">arrow_back</span></a>
-  <h1>Tablero de control<small id="subt">General, por unidad y por establecimiento · solo lectura · versión 0</small></h1>
+  <h1>Tablero de control<small id="subt">General, por unidad y por establecimiento</small></h1>
   <button class="icono oculto" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span><span class="t">Actualizar</span></button>
   <button class="icono oculto" id="bWord" aria-label="Descargar en Word"><span class="ms">description</span><span class="t">Word</span></button>
   <button class="icono oculto" id="bCsv" aria-label="Descargar planilla"><span class="ms">table_view</span><span class="t">Planilla</span></button>
 </header>
 <main id="app"><div class="vacio">Cargando…</div></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Tablero de control · versión 0</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <script src="config.js"></script>
 <script src="starh.js"></script>
 <script>
@@ -323,7 +323,6 @@ function pintar() {
   const subt = vista === 'general' ? AREA + ' · todas las unidades' : e ? `${E(e.tipo)} · ${E(u.nombre)}` : E(u.sub);
   app.innerHTML = `<div class="cabeza"><div><div class="kick">COESP · PREPARACIÓN Y RESPUESTA A EMERGENCIAS Y DESASTRES</div><div class="tit">${E(titulo)}</div><div class="sub">${subt}</div></div>
     <div class="sello">Datos al ${E(D.cuando || SD)}${offline ? ' · <b style="color:#8E1F1F">Sin conexión: última copia del dispositivo</b>' : ''}</div></div>
-    <div class="aviso">Base orientadora, no es un registro en tiempo real: las capacidades son estimadas. Lo que falta cargar figura «${SD}».</div>
     ${vista === 'general' ? general() : nivel(u, e)}
     <div id="rolesTab"></div>
     <div class="leyenda">${['v', 'a', 'r'].map(c => `<span>${dot(c)}${c === 'v' ? 'Normal' : c === 'a' ? 'Alerta' : 'Vencido o crítico'}</span>`).join('')}<span>${dot('n')}s/d o no corresponde aún</span></div>`;  rolesTablero(e);
@@ -343,8 +342,7 @@ async function rolesTablero(e) {
   const capsComp = caps.filter(n => R[n.nombre] && R[n.nombre].completas === R[n.nombre].total).length;
   box.innerHTML = sec('Roles de llamada · en diseño', 'var(--viol)', 'lo ve solo Higiene y Seguridad Laboral') + `<div class="card" style="min-height:0">
     ${hosp.map(n => { const x = R[n.nombre] || { completas: 0, cargadas: 0, total: (RL.contingencias || []).length || 11 }; return `<div style="margin:4px 0">${dot(c(x))}<a href="roles-llamada.html?est=${encodeURIComponent(n.nombre)}">${E(n.nombre)}</a>: ${x.completas} de ${x.total} contingencias completas · ${x.cargadas} con pasos</div>`; }).join('')}
-    ${caps.length ? `<div style="margin:4px 0">${dot(capsComp === caps.length ? 'v' : 'n')}CAPS: ${capsComp} de ${caps.length} con los roles completos <span class="muted">(usan el modelo común de CAPS hasta tener los propios)</span></div>` : ''}
-    <p class="muted" style="margin:6px 0 0">Completa = los dos turnos con pasos y sin «s/d» en quién llama, a quién ni número. Se carga en Gestión de la emergencia › Roles de llamada.</p></div>`;
+    ${caps.length ? `<div style="margin:4px 0">${dot(capsComp === caps.length ? 'v' : 'n')}CAPS: ${capsComp} de ${caps.length} con los roles completos</div>` : ''}</div>`;
 }
 function general() {
   // 20/11/2026 · Belén: «lo más urgente» se arma por establecimiento y albergue de toda la red (no por unidad), sin tope de 5.
@@ -392,7 +390,7 @@ function general() {
     + `<div class="tw esc"><table class="cmp"><thead><tr><th>Unidad</th><th>Médicos<sup>1</sup></th><th>Enfermeros<sup>2</sup></th><th>Ambulancias<sup>3</sup></th><th>Vehículos<sup>4</sup></th><th>Población a cargo<sup>5</sup></th>${esAdmin() ? '<th>Planes<sup>6</sup></th>' : ''}<th>Seguridad básica<sup>7</sup></th><th>Tareas<sup>8</sup></th><th>Ficha<sup>9</sup></th></tr></thead><tbody>${fil}</tbody></table></div>
     <div class="solo-movil"><p class="muted">${esAdmin() ? 'P planes · ' : ''}S seguridad básica · T tareas · F ficha. Tocá una unidad para ver los números.</p><div style="display:flex;flex-direction:column;gap:8px">${movil}</div></div>
     <div class="refs">${refs.filter(x => esAdmin() || x[0] !== '6').map(x => `<span><b>${x[0]}</b> ${E(x[1])}</span>`).join('')}</div>
-    <p class="muted" style="margin:8px 0 0">s/d = sin dato, revisar. Fuente: fichas de los establecimientos, BASE · Establecimientos (LUGARES), COE · Derivaciones y albergues y libro de la app · datos al ${E(D.cuando || SD)}</p>`
+    <p class="muted" style="margin:8px 0 0">Datos al ${E(D.cuando || SD)}</p>`
     + sec('Qué sigue funcionando', 'var(--turq)')
     + `<div class="card" style="min-height:0"><div class="pills">${EMERG.map(x => `<button class="pill" type="button" data-emerg="${E(x)}" aria-pressed="${ST.emerg === x}">${E(x)}</button>`).join('')}</div>
       <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 16px;margin-top:8px">${M.unidades.map(u => fila(E(u.nombre), contTxt(u.ests), contC(u.ests))).join('')}</div>
@@ -461,7 +459,7 @@ function nivel(u, e) {
       ${tarjeta('monitor_heart', '#0E8C8C', 'Pacientes con necesidades especiales', pacHtml + crit('c10', '', 'Total y de qué dependen. El mapa con un punto por paciente lo ve solo la lista cerrada con acceso a esos datos.'))}</div>`
     + sec('Seguimiento', 'var(--viol)') + `<div class="grid">
       ${tarjeta('checklist', '#6A3FA0', 'Tareas y pedidos', fila('Tareas abiertas', tar.abiertas) + fila('Vencidas', tar.venc) + fila('Vencen en 15 días', tar.prox) + crit('c11', '8', 'Tareas del COEsp según la columna «Hospital» de la matriz: Trelew suma HMH y HZT; «Toda el Área» aparece en Trelew y en HSST. Las tareas sin hospital asignado (s/d) cuentan solo en el total general.'), tar.c)}
-      ${tarjeta('badge', '#6A3FA0', 'Ficha del establecimiento', `<div style="height:10px;background:#EEF0F3;border-radius:5px;margin:8px 0"><div style="height:10px;border-radius:5px;width:${fichaPct || 0}%;background:${COL[pctCol(fichaPct)]}"></div></div>${fila('Completa', fichaPct == null ? SD : fichaPct + ' %')}${e && e.ficha ? `<button class="lnk" type="button" data-ficha="${E(e.ficha.est)}" style="margin-top:0">${e.puede ? 'Completar la ficha ›' : 'Ver la ficha ›'}</button>` : !e ? '<span class="muted">la ficha se completa en cada establecimiento</span>' : ''}` + crit('c12', '9', 'Porcentaje de secciones con datos; «s/d» cuenta como faltante. Verde 80 % o más, amarillo 50 a 79 %, rojo menos de 50 %.'), pctCol(fichaPct))}</div>`;
+      ${tarjeta('badge', '#6A3FA0', 'Ficha del establecimiento', `<div style="height:10px;background:#EEF0F3;border-radius:5px;margin:8px 0"><div style="height:10px;border-radius:5px;width:${fichaPct || 0}%;background:${COL[pctCol(fichaPct)]}"></div></div>${fila('Completa', fichaPct == null ? SD : fichaPct + ' %')}${e && e.ficha ? `<button class="lnk" type="button" data-ficha="${E(e.ficha.est)}" style="margin-top:0">${e.puede ? 'Completar la ficha ›' : 'Ver la ficha ›'}</button>` : ''}` + crit('c12', '9', 'Porcentaje de secciones con datos; «s/d» cuenta como faltante. Verde 80 % o más, amarillo 50 a 79 %, rojo menos de 50 %.'), pctCol(fichaPct))}</div>`;
 }
 
 /* ---------- descargas ---------- */
@@ -479,14 +477,14 @@ function csv() {
 function word() {
   const cuerpo = app.cloneNode(true); cuerpo.querySelectorAll('.no-imp,button.lnk,.solo-movil').forEach(n => n.remove()); cuerpo.querySelectorAll('.ms').forEach(n => n.remove());
   const css = 'body{font-family:Arial,sans-serif;font-size:9.5pt;color:#1D2129}table{border-collapse:collapse;width:100%}td,th{border:1pt solid #D3D7DF;padding:3pt 5pt;font-size:8.5pt}.card{border:1pt solid #D3D7DF;padding:6pt;margin:4pt 0}.dot{display:none}.big{font-size:14pt;font-weight:bold}h2{font-size:11pt;border-bottom:1.5pt solid #F57C00}';
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Tablero de control</title><style>${css}</style></head><body>${cuerpo.innerHTML}<p style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p><p style="text-align:center;font-size:8pt">Versión 0 · fecha de corte ${E(D.cuando || '')}</p></body></html>`;
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Tablero de control</title><style>${css}</style></head><body>${cuerpo.innerHTML}<p style="text-align:center"><img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="472" alt="HySL"></p><p style="text-align:center;font-size:8pt">Datos al ${E(D.cuando || '')}</p></body></html>`;
   bajar('Tablero de control - ' + fechaArch() + '.doc', 'application/msword', html);
 }
 
 /* ---------- ingreso ---------- */
 function vistaIngreso() {
   ['#bAct', '#bWord', '#bCsv'].forEach(s => $(s).classList.add('oculto'));
-  app.innerHTML = `<form class="ingreso" id="fIng"><h2 style="margin:0 0 4px">Tablero de control</h2><p class="sub">Ingresá con el mismo usuario y clave de las apps.</p>
+  app.innerHTML = `<form class="ingreso" id="fIng"><h2 style="margin:0 0 4px">Tablero de control</h2>
     <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" type="submit" style="width:100%"><span class="ms">login</span>Ingresar</button><div class="msg oculto" id="msg" style="margin-top:10px"></div></form>`;

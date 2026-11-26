@@ -66,7 +66,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Vulnerabilidad social por barrio · Trelew<small>Para decidir a quién avisar primero ante lluvia o inundación · versión 0</small></h1>
+  <h1>Vulnerabilidad social por barrio · Trelew<small>Barrios a priorizar ante lluvia o inundación</small></h1>
   <button class="icono no-imp" type="button" id="bImp" title="Imprimir las fichas de prioridad 1 y 2"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
@@ -179,7 +179,7 @@ function pintar() {
     <h2><span class="ms" style="color:var(--p2)">warning</span>Prioridad 2 <small>alta en una y media en la otra · ${P2.length} barrios</small></h2>
     <div class="fichas">${P2.map(ficha).join('') || '<div class="vacio">Sin barrios.</div>'}</div>
     <details class="mas" id="dTodos"${filtro.q || filtro.p ? ' open' : ''}><summary>Todos los barrios (${B.length})</summary>${tabla()}</details>
-    <p class="pie" style="margin-top:14px">Fuente: ${E(V.fuente || 's/d')} Lámina ${E(V.lamina || 'CART-COE-005')}, en Cartografía. Distancias en línea recta desde el centro del barrio.</p>`;
+`;
   const fq = document.getElementById('fq'), fp = document.getElementById('fp');
   if (fq) fq.addEventListener('input', () => { filtro.q = fq.value; const c = fq.selectionStart; pintar(); const x = document.getElementById('fq'); x.focus(); x.setSelectionRange(c, c); });
   if (fp) fp.addEventListener('change', () => { filtro.p = fp.value; pintar(); });

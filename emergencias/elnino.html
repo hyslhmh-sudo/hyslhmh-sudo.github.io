@@ -116,7 +116,7 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Evolución del evento · El Niño 2026-2027<small>Argentina y Chubut · Área Programática Trelew · versión 0</small></h1>
+  <h1>Evolución del evento · El Niño 2026-2027<small>Argentina y Chubut · Área Programática Trelew</small></h1>
 </header>
 <div class="wrap">
     <h1>Situación de El Niño en Argentina y en el Área Programática Trelew</h1>
@@ -165,7 +165,6 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
 
   <section class="card">
     <h2>¿En qué parte del evento estamos?</h2>
-    <p class="sub">Desde la transición a El Niño (junio 2026) hasta la persistencia prevista por la OMM (febrero 2027). Las fases son orientativas.</p>
     <div class="track" id="track"><div class="done" id="done"></div></div>
     <div class="months" id="months"></div>
     <p class="src"><span class="tag">MEJORA</span> OPS, Análisis de situación 24/06/2026 y Reportes de situación n.º 2 (16/10) y n.º 3 (18/11); SMN, ENOS al 02/11/2026.</p>
@@ -174,13 +173,11 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
   <div class="grid2">
     <section class="card">
       <h2>¿Qué tan fuerte puede ser?</h2>
-      <p class="sub">Probabilidad de un El Niño de intensidad histórica (NOAA), según la OPS.</p>
       <div id="bars"></div>
       <p class="src">Bajó de 83 % a cerca de 60 %: sigue siendo más probable que no. NOAA vía OPS, reportes n.º 2 y n.º 3.</p>
     </section>
     <section class="card">
       <h2>Lluvias esperadas · nov-dic-ene</h2>
-      <p class="sub">Centro y norte de Patagonia Central, la región del boletín en la que está Chubut. En el extremo sudoeste de esa región se espera lluvia normal.</p>
       <div class="chips"><span class="chip">Inferior a lo normal</span><span class="chip">Normal</span><span class="chip on">Superior a lo normal</span></div>
       <p class="src">Pronóstico trimestral por cuencas, boletines DNPH n.º 10 a 12. Es probabilístico: marca tendencia, no anuncia eventos. Las alertas del día, en el SMN.</p>
     </section>
@@ -188,7 +185,7 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
 
   <section class="card">
     <h2>Embalse Florentino Ameghino · cota semanal</h2>
-    <p class="sub" id="embSub">Dato oficial: partes del IPA.</p>
+    <p class="sub" id="embSub"></p>
     <div class="fig"><svg id="emb" aria-label="Cota del embalse, partes IPA"></svg></div>
     <p class="src" id="embSrc">Fuente: Instituto Provincial del Agua (IPA).</p>
   </section>
@@ -200,7 +197,7 @@ footer{text-align:center;padding:10px 0 20px}footer img{width:66%;max-width:520p
     </section>
     <section class="card">
       <h2>Boletines DNPH: permanencia en El Niño</h2>
-      <p class="sub" id="bolSub">Boletines publicados por la DNPH.</p>
+      <p class="sub" id="bolSub"></p>
       <div id="bol" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px"></div>
       <p class="src">Todos con 100 % de probabilidad de permanencia en fase El Niño para el trimestre de cada boletín.</p>
       
@@ -245,10 +242,10 @@ function ponFuentes(F){
  const P=B.filter(x=>/Parte Embalse Florentino Ameghino/i.test(x.cita)).map(x=>{const m=String(x.cita).match(/nivel\s*([\d.,]+)\s*m/i),fm=fecha(x.cita);return m&&fm.length?[fm[1].padStart(2,'0')+'/'+fm[2].padStart(2,'0'),parseFloat(m[1].replace(',','.')),ts(x.cita)]:null}).filter(Boolean).sort((a,b)=>a[2]-b[2]);
  ipa=P;draw();
  if(P.length){const u=P[P.length-1],v=String(u[1].toFixed(2)).replace('.',',');document.getElementById('kEmb').textContent=v+' m';document.getElementById('kEmbS').textContent='embalse Ameghino (IPA, '+u[0]+')';
-  const d=P.length>1?(u[1]-P[0][1]):0;document.getElementById('embSub').innerHTML=P.length>1?`Cambió <b>${d>=0?'+':''}${d.toFixed(2).replace('.',',')} m</b> entre el ${P[0][0]} y el ${u[0]}. Dato oficial: partes del IPA.`:'Dato oficial: partes del IPA.';}
+  const d=P.length>1?(u[1]-P[0][1]):0;document.getElementById('embSub').innerHTML=P.length>1?`Cambió <b>${d>=0?'+':''}${d.toFixed(2).replace('.',',')} m</b> entre el ${P[0][0]} y el ${u[0]}.`:'';}
  else{document.getElementById('embSub').textContent='Sin partes del IPA cargados en Fuentes: s/d (revisar).';}
  const Bo=B.filter(x=>/Bolet[ií]n El Niño N\.?º\s*\d+\s*·\s*Situaci/i.test(x.cita)).map(x=>[+(String(x.cita).match(/N\.?º\s*(\d+)/i)||[])[1],(fecha(x.cita)[0]||'s/d').replace(/\.\s*$/,'')]).sort((a,b)=>a[0]-b[0]);
- document.getElementById('bolSub').textContent=Bo.length?`Boletines publicados por la DNPH desde el 04/09/2026; el último, n.º ${Bo[Bo.length-1][0]} del ${Bo[Bo.length-1][1]}.`:'Boletines: s/d (revisar).';
+ document.getElementById('bolSub').textContent=Bo.length?`Último: n.º ${Bo[Bo.length-1][0]} del ${Bo[Bo.length-1][1]}.`:'Boletines: s/d (revisar).';
  document.getElementById('bol').innerHTML=Bo.map(b=>`<div title="Boletín n.º ${b[0]} · ${b[1]}" style="border-radius:10px;padding:8px 0;text-align:center;font-size:12px;font-weight:800;color:#fff;background:linear-gradient(120deg,#0A5E4E,#0F9D79)">N.º ${b[0]}<br>100 %</div>`).join('');
 }
 const hitos=[['24/06/2026','OPS: transición hacia El Niño; análisis de situación de salud pública','#2A7AD6'],['04/09/2026','Primer boletín DNPH: fase El Niño, 100 % de permanencia','#0F9D79'],['16/10/2026','OPS reporte 2: NOAA 83 % de intensidad histórica','#F47B00'],['02/11/2026','SMN: fase cálida de fuerte intensidad','#D6338A'],['18/11/2026','OPS reporte 3: ≈ 60 %; OMM prevé el pico en diciembre','#A33EC4'],['19/11/2026','Boletín DNPH n.º 12: lluvias superiores a lo normal en el centro y norte de Patagonia Central','#2F5BEA']];

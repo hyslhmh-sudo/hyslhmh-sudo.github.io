@@ -120,12 +120,12 @@ footer{text-align:center;padding:10px 16px 24px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1 id="titulo">Gestión de contingencias<small>Planes · versión 0</small></h1>
+  <h1 id="titulo">Gestión de contingencias<small>Planes</small></h1>
   <button class="icono oculto" id="btnAct" title="Actualizar" aria-label="Actualizar"><span class="ms">refresh</span></button>
   <button class="icono" id="btnAyuda" title="Ayuda" aria-label="Ayuda"><span class="ms">help</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Planes de contingencia · versión 0</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -185,7 +185,7 @@ function render() {
   if (r[0] === 'ayuda') return vistaAyuda();
   if (!datos) return;
   const hi = GC.info(est);
-  $('#titulo').innerHTML = `Gestión de contingencias · ${E(est)}<small>${r[0] === 'datos' ? 'Datos del hospital' : 'Planes'} · versión 0</small>`;
+  $('#titulo').innerHTML = `Gestión de contingencias · ${E(est)}<small>${r[0] === 'datos' ? 'Datos del hospital' : 'Planes'}</small>`;
   if (r[0] === 'p' && r[1]) return vistaPlan(r[1]);
   if (r[0] === 'datos') return vistaDatos();
   vistaLista();
@@ -200,7 +200,7 @@ function tarjetaPE() {
     <span class="ms fondo" aria-hidden="true">assignment</span>
     <span class="cab-pc"><span class="cod">PE-${E(est)}</span><span style="flex:1"></span><span class="est-chip ${hmh ? 'e1' : 'e0'}">${hmh ? 'En redacción · entrega 10/12/2026' : 'Sin empezar · 2027'}</span></span>
     <span class="nom">Plan de Evacuación y Autoprotección</span>
-    <span class="nota">Es el plan que exige la ley (Ley 19.587 y Dto. 351/79). Reúne la base común y los planes de incendio y de evacuación, que se trabajan adentro:</span>
+    <span class="nota">Base común y planes de incendio y de evacuación:</span>
     <span>${chips}</span>
     <span class="acc">${hmh ? '<a class="btn mini" href="plan.html#/p/HMH"><span class="ms">open_in_new</span>Abrir el Plan de Evacuación</a>' : '<span class="sub">Se arma en 2027 con la misma estructura que el del HMH.</span>'}</span>
   </div>`;
@@ -235,7 +235,7 @@ function vistaLista() {
     <div class="filtros"><span class="sub" style="font-weight:700">Ver:</span>${['Todos'].concat(ESTADOS).map(e => `<button class="fbtn" data-filtro="${E(e)}" aria-pressed="${filtro === e}">${E(e)}</button>`).join('')}
       <span style="flex:1"></span><label class="sub" for="selOrd" style="font-weight:700">Ordenar</label><select id="selOrd"><option value="redaccion" ${orden === 'redaccion' ? 'selected' : ''}>Por orden de redacción</option><option value="codigo" ${orden === 'codigo' ? 'selected' : ''}>Por código</option></select></div>
     ${l.length ? GRUPOS.map(g => { const lg = l.filter(p => tipoDe(p) === g[0]); return lg.length ? `<h3 style="margin:14px 2px 4px">${g[1]}</h3><p class="sub" style="margin:0 2px 8px">${g[2]}</p><div class="grilla">${lg.map(tarjetaPlan).join('')}</div>` : ''; }).join('') : '<div class="tarjeta vacio">No hay planes con ese estado.</div>'}
-    <p class="sub" style="margin-top:12px">Cada plan es del hospital elegido arriba e incluye sus dependencias (ver «2 · Datos del hospital»). Los participantes salen de COE › «Por proyecto» y se asignan desde ahí.</p>`;
+    `;
   GC.enlazar(c => { est = c; cargar(false); });
 }
 
@@ -244,10 +244,10 @@ function vistaDatos() {
   const hi = GC.info(est);
   app.innerHTML = GC.barra('datos') + REGLA + `
     <section class="tarjeta secc" aria-labelledby="hgen"><div class="acc" style="margin-bottom:6px"><h3 id="hgen" style="flex:1;margin:0">Datos generales del hospital</h3><button class="btn mini" data-act="nuevaFila" data-hoja="DATOS POR PLAN" data-plan="PGC"><span class="ms">add</span>Agregar dato</button></div>
-      <p class="sub">Los usan todos sus planes. Tocá una fila para corregirla. Si falta un dato, «s/d (revisar)».</p><div id="tgen"><div class="vacio">Leyendo…</div></div></section>
+      <div id="tgen"><div class="vacio">Leyendo…</div></div></section>
     ${seccionDependencias()}
     <section class="tarjeta secc" aria-labelledby="hevac"><h3 id="hevac">Fichas de evacuación</h3>
-      <p class="sub">Ficha detallada de evacuación de cada establecimiento y dependencia (población, edificio y salidas, gases, incendio, organización), en la planilla EVAC de la ${E(hi.red)}.</p>
+      
       <a class="btn sec mini" href="evac.html#/"><span class="ms">domain</span>Abrir las fichas de evacuación · ${E(hi.red)}</a></section>`;
   GC.enlazar(c => { est = c; cargar(false); });
   pintarGenerales();
@@ -265,7 +265,7 @@ function seccionDependencias() {
   const l = datos.dependencias || [];
   const col = ['Dependencia', 'Tipo', 'Dirección', 'Plantas', 'Planes que aplican'];
   return `<section class="tarjeta secc" style="margin-top:14px" aria-labelledby="hdep"><div class="acc" style="margin-bottom:6px"><h3 id="hdep" style="flex:1;margin:0">Dependencias que incluyen los planes · ${l.length}</h3><button class="btn sec mini" data-act="csvDep"><span class="ms">download</span>CSV</button><button class="btn mini" data-act="nuevaFila" data-hoja="DEPENDENCIAS"><span class="ms">add</span>Agregar dependencia</button></div>
-    <p class="sub">Tomadas de la BASE · Establecimientos de salud. Tocá una fila para completar sus datos (por ejemplo, qué planes le aplican).</p>
+    
     <div class="tabla-wrap"><table class="tabla"><thead><tr>${col.map(c => `<th>${E(c)}</th>`).join('')}</tr></thead><tbody>${l.length ? l.map(x => `<tr class="clic" data-hoja="DEPENDENCIAS" data-fila="${x.fila}">${col.map(c => `<td>${celda(x[c])}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${col.length}" class="vacio">Este hospital no tiene dependencias cargadas.</td></tr>`}</tbody></table></div></section>`;
 }
 
@@ -284,24 +284,24 @@ async function vistaPlan(clave) {
         <label class="campo"><span>Orden de redacción</span><input data-col="Orden de redacción" data-orig="${E(p['Orden de redacción'])}" value="${E(p['Orden de redacción'])}"></label>
       </div>
       <label class="campo"><span>Observaciones</span><textarea data-col="Observaciones" data-orig="${E(p.Observaciones)}">${E(p.Observaciones)}</textarea></label>
-      <div class="acc"><button class="btn" data-act="guardarFicha" data-fila="${p.fila}"><span class="ms">save</span>Guardar ficha</button><span class="sub">Versión 0 hasta el alta.</span></div>
+      <div class="acc"><button class="btn" data-act="guardarFicha" data-fila="${p.fila}"><span class="ms">save</span>Guardar ficha</button></div>
     </section>
     <section class="tarjeta secc" aria-labelledby="h2"><h3 id="h2">2 · Quiénes participan</h3>
-      <p class="sub">Se toma de COE › «Por proyecto», proyecto «${E(p['Proyecto COE'] || 's/d')}». Acá solo se ve.</p>
+      
       ${pa == null ? '<p class="sub"><span class="sdv">s/d (revisar)</span> Este plan no tiene proyecto en COE LISTAS.</p>' : pa.length ? pa.map(x => `<div class="persona"><b>${E(x.p.nombre)}</b><small>${E([x.funcion, x.p.institucion, x.p.tipo].filter(Boolean).join(' · '))}</small></div>`).join('') : '<p class="sub">Todavía no hay personas asignadas a este proyecto.</p>'}
       <div class="acc" style="margin-top:8px"><a class="btn sec mini" href="coe.html"><span class="ms">group_add</span>Asignar personas en el COE</a></div>
     </section>
     <section class="tarjeta secc" aria-labelledby="h3"><h3 id="h3">3 · Datos del plan</h3>
-      <p class="sub">Hoja DATOS POR PLAN de la planilla del plan. Tocá una fila para cargarla. Si falta un dato, «s/d (revisar)».</p>
+      
       <div id="tdatos"><div class="vacio">Leyendo…</div></div>
     </section>
     <section class="tarjeta secc" aria-labelledby="h4"><h3 id="h4">4 · Textos del plan</h3>
       <div class="kpis" style="margin-bottom:6px"><div class="tarjeta kpi"><b>${bl}</b><span>bloques en TEXTOS con «Plan» = ${E(clave)}</span></div><div class="tarjeta kpi"><b>${pr}</b><span>textos propios del establecimiento</span></div></div>
-      <p class="sub">Cada bloque lleva su etiqueta LEY o MEJORA y su cita. ${bl || enPE ? '' : 'Todavía no se escribió ningún texto de este plan.'} El texto se corrige en la planilla o por el chat, nunca en el Doc. Las {variables} toman el valor de «3 · Datos del plan» y de los datos generales del hospital.</p>
+      ${bl || enPE ? '' : '<p class="sub">Todavía no se escribió ningún texto de este plan.</p>'}
       <div id="ttextos">${bl ? '<div class="vacio">Leyendo el texto…</div>' : ''}</div>
     </section>
     <section class="tarjeta secc" aria-labelledby="h5"><h3 id="h5">5 · Descargar</h3>
-      <p class="sub">Todo sale con los datos de este momento. No se genera PDF (queda para tu aprobación final). Lo que corrijas en lo descargado no vuelve a la app: corregí en la app o por el chat.</p>
+      
       <div class="acc" style="margin-bottom:8px">
         ${ultimoDoc(clave) ? `<a class="btn" href="${E(ultimoDoc(clave).url)}" target="_blank" rel="noopener"><span class="ms">open_in_new</span>Abrir el último Doc</a><a class="btn sec" href="${E(docxDe(ultimoDoc(clave).url))}" target="_blank" rel="noopener"><span class="ms">download</span>Word (.docx)</a>` : ''}
         <button class="btn ${ultimoDoc(clave) ? 'sec' : ''}" data-act="docPlan" data-clave="${E(clave)}"><span class="ms">autorenew</span>${ultimoDoc(clave) ? 'Generar Doc nuevo' : 'Generar el Doc del plan'}</button>
@@ -347,7 +347,7 @@ async function pintarTextos(clave) {
   const l = r.textos || [];
   if (!$('#ttextos')) return;
   $('#ttextos').innerHTML = l.length ? l.map(b => `<details class="tarjeta" style="margin:8px 0;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">${E(b.titulo || b.codigo)} <span class="chip ${/LEY/.test(b.origen) ? '' : 'sd'}">${E(b.origen || 's/d')}</span>${b.propio ? ' <span class="chip ok">texto propio del hospital</span>' : ''}${b.estado && b.estado !== 'Aprobado v0' ? ` <span class="chip sd">${E(b.estado)}</span>` : ''}</summary>
-      <div class="sub" style="margin:6px 0 8px">${E(b.cita || 'cita s/d (revisar)')} · bloque ${E(b.codigo)}</div>${mdHtml(b.texto)}</details>`).join('') + '<p class="sub">Tocá cada título para desplegarlo.</p>' : '<div class="vacio">Sin texto cargado para este plan.</div>';
+      <div class="sub" style="margin:6px 0 8px">${E(b.cita || 'cita s/d (revisar)')} · bloque ${E(b.codigo)}</div>${mdHtml(b.texto)}</details>`).join('') : '<div class="vacio">Sin texto cargado para este plan.</div>';
 }
 function planActual() { return cat.planes.find(x => x.codigo === est) || {}; }
 function xlsxUrl() { const u = String(planActual().planilla || ''); const m = u.match(/\/d\/([-\w]{20,})/); return m ? 'https://docs.google.com/spreadsheets/d/' + m[1] + '/export?format=xlsx' : '#'; }
@@ -368,7 +368,7 @@ async function csvPlan(clave) {
 }
 function confirmarDoc(clave) {
   $('#dlg').innerHTML = `<div class="dlg-in"><div class="dlg-cab"><b>Doc del plan</b><button class="icono" data-act="cerrar" aria-label="Cerrar"><span class="ms">close</span></button></div>
-    <div class="dlg-cuerpo">${REGLA}<p class="sub">Se arma un Google Doc (versión 0) con la ficha del plan, los datos del establecimiento y del plan, las dependencias y el texto que tenga el plan, con el logo HySL al pie. Queda en la carpeta 05.3 · PLANES DE CONTINGENCIA y el Doc anterior de este plan va a la papelera. Tarda alrededor de un minuto. No se genera PDF.</p>${ultimoDoc(clave) ? '<p class="sub" style="background:#FFF3C4;border-radius:8px;padding:8px"><b>Atención:</b> lo que se haya escrito a mano en el Doc anterior se pierde. Si solo querés verlo, cerrá esto y tocá «Abrir el último Doc».</p>' : ''}</div>
+    <div class="dlg-cuerpo">${REGLA}<p class="sub">Se arma un Google Doc con la ficha del plan, los datos del establecimiento y del plan, las dependencias y el texto que tenga el plan, con el logo HySL al pie. Queda en la carpeta 05.3 · PLANES DE CONTINGENCIA y el Doc anterior de este plan va a la papelera. Tarda alrededor de un minuto. No se genera PDF.</p>${ultimoDoc(clave) ? '<p class="sub" style="background:#FFF3C4;border-radius:8px;padding:8px"><b>Atención:</b> lo que se haya escrito a mano en el Doc anterior se pierde. Si solo querés verlo, cerrá esto y tocá «Abrir el último Doc».</p>' : ''}</div>
     <div class="dlg-pie"><button class="btn sec" data-act="cerrar">Cancelar</button><button class="btn" data-act="docPlanOk" data-clave="${E(clave)}"><span class="ms">description</span>Generar ahora</button></div></div>`;
   $('#dlg').classList.remove('oculto');
 }
@@ -447,7 +447,7 @@ document.addEventListener('click', async ev => {
   if (a === 'docPlan') return confirmarDoc(t.dataset.clave);
   if (a === 'docPlanOk') return docPlan(t.dataset.clave);
   if (a === 'csvPlan') return csvPlan(t.dataset.clave);
-  if (a === 'csvDep') return bajarCsv(est + ' · Dependencias · v0', [['ID BASE', 'Dependencia', 'Tipo', 'Código SISA', 'Dirección', 'Localidad', 'Plantas', 'Mantenimiento permanente', 'Planes que aplican', 'Estado', 'Observaciones']].concat((datos.dependencias || []).map(x => ['ID BASE', 'Dependencia', 'Tipo', 'Código SISA', 'Dirección', 'Localidad', 'Plantas', 'Mantenimiento permanente', 'Planes que aplican', 'Estado', 'Observaciones'].map(c => x[c]))));
+  if (a === 'csvDep') return bajarCsv(est + ' · Dependencias', [['ID BASE', 'Dependencia', 'Tipo', 'Código SISA', 'Dirección', 'Localidad', 'Plantas', 'Mantenimiento permanente', 'Planes que aplican', 'Estado', 'Observaciones']].concat((datos.dependencias || []).map(x => ['ID BASE', 'Dependencia', 'Tipo', 'Código SISA', 'Dirección', 'Localidad', 'Plantas', 'Mantenimiento permanente', 'Planes que aplican', 'Estado', 'Observaciones'].map(c => x[c]))));
   if (a === 'nuevaFila') return abrirFila(t.dataset.hoja, null, t.dataset.plan);
   if (a === 'guardarFicha') { if (await guardar('PLANES DE CONTINGENCIA', t.dataset.fila, app, t)) await cargar(false); return; }
   if (a === 'guardarFila') { if (await guardar(editHoja, t.dataset.fila, $('#dlg'), t)) { cerrarDlg(); hojas = {}; await cargar(false); } return; }
@@ -479,7 +479,7 @@ function vistaAyuda() {
     <ul><li>Cada hospital tiene su planilla «PLAN · …» registrada en la hoja PLANES del libro de la app: PLANES DE CONTINGENCIA, DATOS POR PLAN (Plan = PGC para los datos generales), DEPENDENCIAS y TEXTOS PROPIOS. Todo se puede cargar también ahí.</li>
       <li>Los textos se escriben en TEXTOS de «PLAN · Texto común» con la columna «Plan» (PGC, PC-02, PC-04…). El plan general toma los bloques PGC; el borrador del Plan de Evacuación toma BASE, PC-01 y PC-03.</li>
       <li>Los proyectos del COE existen para los planes del HMH; en HZT y HSST «Proyecto COE» queda en s/d hasta crearlos en COE LISTAS.</li></ul>
-    <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79; OPS (2023) y OMS (2011) como MEJORA / buena práctica. La app es una base orientadora, no un registro en tiempo real. Todo queda en versión 0 hasta el alta.</p></div>`;
+    <p class="sub">Fundamento: Ley 19.587 y Decreto 351/79; OPS (2023) y OMS (2011) como MEJORA / buena práctica.</p></div>`;
   GC.enlazar(c => { est = c; cargar(false); });
 }
 

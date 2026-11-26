@@ -155,7 +155,7 @@ th{background:#F5F7FB}
   <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · COEsp</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
 <div id="imp" class="imp"></div>
 <script src="config.js"></script>
@@ -425,7 +425,7 @@ function encReu(word) {
     <td style="border:0;padding:0 0 4px"><b style="font-size:13pt;color:#172B4D">Preparación y Respuesta a Emergencias y desastres</b><br><span style="font-size:9pt;color:#4B5B73">Higiene y Seguridad Laboral</span></td>
 </tr></table>`;
 }
-function pieReu(word) { return `<div class="r-pie"><p style="font-size:7pt;color:#6B7A90;margin:4px 0 0">Documento en versión 0 · Se archiva junto con las demás actas, informes y bitácoras de la emergencia.</p><p align="center" style="text-align:center;margin:4px 0 0">${word ? '<img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL">' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto;max-height:10mm;object-fit:contain">'}</p></div>`; }
+function pieReu(word) { return `<div class="r-pie"><p align="center" style="text-align:center;margin:4px 0 0">${word ? '<img src="https://hyslhmh-sudo.github.io/emergencias/logo-hysl.png" width="__LOGOW__" alt="HySL">' : '<img src="logo-hysl.png" alt="HySL" style="width:66.67%;height:auto;max-height:10mm;object-fit:contain">'}</p></div>`; }
 function participantes() {
   if (!reuProy || !cat) return [];
   return cat.participaciones.filter(x => x.proyecto === reuProy).map(x => ({ p: per(x.persona), f: x.funcion }))
@@ -660,7 +660,7 @@ function vistaMatriz() {
       ${mEst ? `<button class="btn sec" data-act="mEst" data-e=""><span class="ms">filter_alt_off</span>${E(mEst)}</button>` : ''}
       <button class="btn sec" data-act="mImp"><span class="ms">print</span>Imprimir</button><button class="btn sec" data-act="mWord"><span class="ms">download</span>Word</button>
       ${mat.puedeCargar ? '<button class="btn" data-act="mNueva"><span class="ms">add</span>Agregar tarea</button>' : ''}</div>
-    <p class="sub" style="margin:0 2px 10px">Matriz operativa del COEsp de Trelew y Área Programática: ${F.length} tareas, ${cnt('Completada')} completadas. ${mat.puedeCargar ? 'Tocá «Editar» para actualizar estado, responsable, fecha o brechas.' : 'Solo consulta.'} Se revisa en cada reunión del COEsp.</p>
+    <p class="sub" style="margin:0 2px 10px">${F.length} tareas, ${cnt('Completada')} completadas.</p>
     <div class="lista">${l.map(x => `<div class="tarjeta per" style="box-shadow:inset 5px 0 0 ${M_COLOR[x.estado] || '#C5D1F2'}">
       <div class="per-cab"><b>${E(x.num)}. ${E(x.eje)}</b>${sdv(x.hospital) ? '' : `<span class="chip">${E(x.hospital)}</span>`}<span class="chip" style="background:${M_COLOR[x.estado] || '#F5F7FB'};color:${M_COLOR[x.estado] ? '#fff' : '#4B5B73'}">${E(x.estado || 's/d')}</span></div>
       <div>${E(x.tarea)}</div>${v('Responsable propuesto', x.respProp)}${v('Responsable designado', x.respDesig)}${v('Fecha comprometida', x.fecha)}${v('Plazo sugerido', x.plazo)}
@@ -917,7 +917,7 @@ async function dlgFicha(id) {
       <div class="rejilla"><label class="campo"><span>Reemplazante</span><select name="reemplazo"><option value="">Sin reemplazante</option>${otros.map(x => `<option value="${E(x.id)}" ${x.id === p.reemplazo ? 'selected' : ''}>${E(x.nombre)}</option>`).join('')}</select></label></div>
       <p class="sub" style="margin:-4px 0 6px">Lo que no sepas dejalo vacío: la persona lo completa en «Mis datos» al ingresar. El DNI hace falta para crear el ingreso.</p>
       <h4 class="sec-t">2 · Proyecto y función en el COEsp</h4>
-      <p class="sub" style="margin:0 0 6px">El COEsp es el grupo de personas; el proyecto es el tema que se trabaja. Tildá el proyecto y elegí la función (lista general de la OMS, versión 0: se corrige en la hoja COEsp LISTAS).</p>
+      
       <div class="ficha-proys">${pl.map(filaProy).join('')}</div>
       <h4 class="sec-t">3 · Ingreso a la app</h4>
       ${adm ? '<p class="sub">Cuenta de Administración: ve y edita todo. Desde acá no se cambia.</p>' : `
@@ -1209,7 +1209,7 @@ $('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; 
 window.addEventListener('hashchange', render);
 
 function vistaIngreso() {
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo usuario y clave de STAR-H, PHR e ISH.</p>
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2>
     <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
@@ -1234,7 +1234,7 @@ function vistaAyuda() {
     <h3>Matriz operativa</h3><p>La matriz de tareas del COEsp de Trelew y Área Programática (eje, actividad, responsables, plazo, producto, indicador, estado, fecha comprometida, brechas y hospital: HMH, HZT, HSST o Toda el Área, para que cada hospital vea lo suyo en el tablero de control). La ven todos los usuarios con acceso al COEsp; solo Administración la modifica con «Editar» o «Agregar tarea». Tocá un estado arriba para filtrar. Se imprime o se baja en Word (apaisada) para llevar a la reunión. Está en la hoja COEsp MATRIZ del libro: también se puede corregir ahí.</p>
     <h3>Solicitudes a organismos</h3><p>Solo para Administración. Una ficha por cada nota que se manda a un organismo (municipio, Provincia, IPA, cooperativas, universidad, etc.): qué se pide, para qué tareas de la matriz, enlace a la nota en Drive, fecha de envío, plazo, estado y respuesta. La app no envía nada: cuando mandás la nota, cargás la fecha de envío y el estado «Enviada». Si se cumple el plazo sin respuesta, la ficha aparece como «Vencida». Tocá un estado arriba para filtrar; se imprime o se baja en Word. Está en la hoja COEsp SOLICITUDES del libro: también se puede cargar ahí.</p>
     <h3>Desde la planilla</h3><p>Todo se puede cargar también en el libro «STAR-H y PHR · Tablero comparativo»: hojas COEsp PARTICIPANTES (personas), COEsp PROYECTOS (persona, proyecto y función; el nombre y el tipo se completan solos con el ID) y COEsp LISTAS (proyectos, funciones sugeridas, tipos y redes, que se pueden ampliar).</p>
-    <h3>Agregar persona · ficha única (16/11/2026)</h3><p>Solo Administración. En Mi perfil › Personas y accesos, «Agregar persona» (o «Ficha y accesos» en cada persona) abre una sola ficha con cuatro partes: <b>1 · Datos</b> personales y laborales (lo que no sepas queda vacío y la persona lo completa en «Mis datos»; el DNI hace falta para crear el ingreso); <b>2 · Proyecto y función</b>: el COEsp es el grupo de personas y el proyecto es el tema que se trabaja; el vigente (Comité de crisis El Niño 2026-2027) viene tildado y al lado se elige la función (lista general de la OMS, versión 0, que se corrige en la hoja COEsp LISTAS); <b>3 · Ingreso a la app</b>: el usuario es apellidos y nombres; al guardar se crea la cuenta unida a la persona y se ofrece generar la clave; <b>4 · Tarjetas</b>: para cada una, No ve / Ve / Edita y su alcance, Red VIRCH (todo el Área Programática) o un hospital (ese hospital y lo que depende de él). Los externos no acceden a pacientes salvo que tildes «Externo: habilitar el acceso a pacientes»; vulnerabilidad social sigue cerrada para externos. Todos ven el COEsp y la red de derivación.</p>
+    <h3>Agregar persona · ficha única (16/11/2026)</h3><p>Solo Administración. En Mi perfil › Personas y accesos, «Agregar persona» (o «Ficha y accesos» en cada persona) abre una sola ficha con cuatro partes: <b>1 · Datos</b> personales y laborales (lo que no sepas queda vacío y la persona lo completa en «Mis datos»; el DNI hace falta para crear el ingreso); <b>2 · Proyecto y función</b>: el COEsp es el grupo de personas y el proyecto es el tema que se trabaja; el vigente (Comité de crisis El Niño 2026-2027) viene tildado y al lado se elige la función (lista general de la OMS, que se corrige en la hoja COEsp LISTAS); <b>3 · Ingreso a la app</b>: el usuario es apellidos y nombres; al guardar se crea la cuenta unida a la persona y se ofrece generar la clave; <b>4 · Tarjetas</b>: para cada una, No ve / Ve / Edita y su alcance, Red VIRCH (todo el Área Programática) o un hospital (ese hospital y lo que depende de él). Los externos no acceden a pacientes salvo que tildes «Externo: habilitar el acceso a pacientes»; vulnerabilidad social sigue cerrada para externos. Todos ven el COEsp y la red de derivación.</p>
     <h3>Personas y accesos (Mi perfil)</h3><p>Solo Administración. Se entra desde Mi perfil (el botón con tu nombre en la pantalla de inicio) › Gestión del COEsp. Una sola lista: cada persona con su ingreso, sus proyectos y sus tarjetas. Ahí se agrega gente («Agregar persona»), se abre la ficha de cada uno y se genera la clave (se muestra una sola vez: anotala en la planilla CONFIDENCIAL). Para dar de baja a alguien, «Dar de baja» (en la lista o abajo en su ficha): con un solo toque deja de poder entrar y sale de Participantes; no se borra nada y se vuelve atrás con «Reactivar». Desde Mi perfil también entrás a Proyectos y funciones (solo para mirar), Por proyecto, Reuniones y actas, Matriz operativa y Solicitudes.</p>
     <p class="sub">Cada usuario ve solo los contactos de sus redes (más los de «Ambas redes», «Provincial» o sin red). Acceso: Administración carga y modifica; quien tenga «COEsp» en sus módulos puede consultar. Los datos de contacto son personales: usarlos solo para la gestión de emergencias.</p>
     <button class="btn sec" onclick="location.hash=''"><span class="ms">arrow_back</span>Volver</button></div>`;

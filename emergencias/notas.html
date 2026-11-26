@@ -66,7 +66,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Notas rápidas<small>versión 0 · visibles para todos los usuarios de la app</small></h1>
+  <h1>Notas rápidas<small>Visibles para todos los usuarios</small></h1>
   <button class="icono nueva" type="button" id="bNueva"><span class="ms">add</span>Nueva nota</button>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
@@ -113,7 +113,7 @@ function pintar() {
   <div class="sub"><label>Estado <select id="fEst"><option value="Abierta"${filtroEst === 'Abierta' ? ' selected' : ''}>Abiertas</option><option value="Cerrada"${filtroEst === 'Cerrada' ? ' selected' : ''}>Cerradas</option><option value=""${!filtroEst ? ' selected' : ''}>Todas</option></select></label>
     <label><input type="checkbox" id="fArch" style="width:auto"${archivo ? ' checked' : ''}> Incluir archivadas (cerradas hace más de 30 días)</label></div>
   ${L.length ? L.map(notaHtml).join('') : `<p class="pie">${vista === 'mias_pend' ? 'No tenés notas pendientes.' : 'No hay notas con estos filtros.'}</p>`}
-  <p class="pie">Versión 0. Registro completo en el libro de la app (hojas NOTAS y NOTAS · MOVIMIENTOS).</p>`;
+`;
 }
 function notaHtml(n) {
   const dest = esDest(n), leida = !!n.lect[D.yo], hecho = !!n.hechos[D.yo], abierta = n.estado === 'Abierta', ro = enVista();

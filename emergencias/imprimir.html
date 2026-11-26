@@ -216,7 +216,7 @@ function encabezado(r) {
 function codigo(m, r) { return ({ phr: 'EVA-PHR-', ish: 'EVA-ISH-' }[m] || 'EVA-STARH-') + (esTW(r) ? '001' : r.extra ? '003' : '002') + '-F01'; }
 function pie(m, r) {
   const quien = esTW(r) ? 'Servicio de Higiene y Seguridad Laboral' : 'Referente de Higiene y Seguridad Laboral';
-  return `<div class="pie"><div class="pt"><div><b>${codigo(m, r)} · VERSIÓN 0</b><br>${quien}</div><div>Impreso el ${S.hoy()}</div></div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"></div>`;
+  return `<div class="pie"><div class="pt"><div><b>${codigo(m, r)}</b><br>${quien}</div><div>Impreso el ${S.hoy()}</div></div><img src="logo-hysl.png" alt="HySL · Hospitales más seguros para las personas"></div>`;
 }
 function v(x, cargado) { return cargado ? esc(x == null || x === 's/d' ? '' : x) : ''; }
 function datosEst(e, cargado, filas) {
@@ -243,7 +243,7 @@ function hojaPHR(r, e, cargado) {
   const relId = {}; rel.forEach(x => relId[x.id] = x);
   const secc = (datos.phr.secciones || []);
   const tw = esTW(r), rw = !tw;
-  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('phr', r)} · VERSIÓN 0</p>
+  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('phr', r)}</p>
     <h2 class="tit">Relevamiento inicial del plan hospitalario de respuesta (PHR)</h2>
     <p class="subt">${esc(r.extra ? r.nombre.replace(' · otros establecimientos (en blanco)', '') : r.nombre + ' · Comité de crisis El Niño 2026-2027')}</p>`;
   h += datosEst(e, cargado, [
@@ -300,7 +300,7 @@ function hojaISH(r, e, cargado) {
   const amen = am.length ? am : r.amenazas.filter(x => x.codigo === c0);
   const NIVC = { 'Bajo': 'B', 'Medio': 'M', 'Alto': 'A', 'No evaluado': 'NE', 'Nulo': 'N', 'No existe': 'N' };
   const CRIT = r.criterio || {};
-  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('ish', r)} · VERSIÓN 0</p>
+  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('ish', r)}</p>
     <h2 class="tit">Índice de Seguridad Hospitalaria (ISH)</h2>
     <p class="subt">${esc(r.nombre)} · Lista de verificación de la seguridad hospitalaria OPS/OMS (Formulario 2, Formularios para la evaluación, 2.ª ed., 2018)</p>`;
   h += datosEst(e, cargado, [
@@ -368,7 +368,7 @@ function hojaSTARH(r, e, cargado) {
   const ev = e ? r.evaluaciones.filter(x => x.codigo === e.codigo) : [];
   const evId = {}; ev.forEach(x => evId[x.id] = x);
   const tw = esTW(r), rw = !tw;
-  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('starh', r)} · VERSIÓN 0</p>
+  let h = encabezado(r) + `<p class="kicker">FORMULARIO DE CAMPO · ${codigo('starh', r)}</p>
     <h2 class="tit">Relevamiento estratégico de riesgos STAR-H</h2>
     <p class="subt">${esc(r.extra ? r.nombre.replace(' · otros establecimientos (en blanco)', '') : r.nombre + ' · Comité de crisis El Niño 2026-2027')}</p>`;
   h += datosEst(e, cargado, [

@@ -114,7 +114,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Cartografía<small>Láminas y mapas del Área Programática Trelew · versión 0</small></h1>
+  <h1>Cartografía<small>Láminas y mapas del Área Programática Trelew</small></h1>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
 <dialog id="dlg"></dialog>
@@ -220,7 +220,7 @@ function actualizar(nota) {
     if (!r || !r.ok) throw r;
     LISTA = r.laminas || []; S.store.set('carto.lista', LISTA);
     if (r.carpeta) { CARPETA = r.carpeta; S.store.set('carto.carpeta', r.carpeta); }
-    notaPie = (nota || 'Actualizado.') + ' La lista está en la hoja CARTOGRAFÍA del libro de la app.'; pintar();
+    notaPie = nota || ''; pintar();
   }).catch(e => {
     const m = (e && (e.error || e.message)) || '';
     notaPie = /desconocida|disponible/i.test(m) ? 'Falta publicar la versión nueva del servidor de la app.' : 'No se pudo actualizar' + (m ? ': ' + m : '.') + ' Se muestran los últimos datos guardados.';
@@ -469,7 +469,7 @@ function panelCapas(C) {
       const sub = st.nivel ? '<div class="sub">' + ESC.map(e => `<div><span class="sw ln" style="background:${e[1]};height:${Math.max(2, e[2])}px"></span>${E(e[0])}</div>`).join('') + '<div style="color:#6B7A90">1 = aporte de ladera · 5 = colector principal</div></div>'
         : st.vias ? '<div class="sub">' + VIAS.map(e => `<div><span class="sw ln" style="background:${e[1]}"></span>${E(e[0])}</div>`).join('') + '</div>' : '';
       return `<label class="mcapa"><input type="checkbox" data-capa="${E(x.codigo)}"${st.on ? ' checked' : ''}>${st.cruz ? '<span class="sw" style="border:0;width:18px;height:18px;margin-top:0">' + CRUZ.replace(/width="24" height="24"/, 'width="18" height="18"') + '</span>' : `<span class="sw ${st.t === 'punto' ? 'pt' : st.t === 'linea' ? 'ln' : ''}" style="background:${st.c}${st.t === 'area' ? ';opacity:.7' : ''}"></span>`}<span class="nm">${E(x.titulo)}<small data-est="${E(x.codigo)}">${E(st.nota || '')}</small></span></label>${sub}`; }).join('');
-  }).join('') + `<p class="mnota"><b>Fuente de las capas:</b> Municipalidad de Trelew, Secretaría de Planificación y Desarrollo Urbano, Programa Ordenamiento Territorial (18/11/2026). Material de terceros, orientador: no reemplaza el relevamiento en terreno.<br><b>Epidemiología:</b> personas electrodependientes y en diálisis, sin nombre, DNI, domicilio ni teléfono; ubicación aproximada tomada del mapa de Epidemiología HMH y la Dirección de Organización Territorial (nov. 2026, pendiente revisión de domicilios). Solo aparecen las personas que figuran en ese mapa.<br><b>Barrios populares:</b> Registro Nacional de Barrios Populares (RENABAP), versión 06/12/2023 (mapa oficial de argentina.gob.ar, CC BY); 12 barrios del valle inferior con sus familias aproximadas (no son viviendas).<br><b>Mapa base:</b> © colaboradores de OpenStreetMap.<br>Tocá un punto, una línea o un área para ver sus datos.</p>`;
+  }).join('') + `<p class="mnota">Municipalidad de Trelew · Epidemiología HMH · RENABAP (CC BY) · © colaboradores de OpenStreetMap</p>`;
 }
 async function abrirMapa() {
   const v = mvis(), C = LISTA.filter(x => esCapa(x) && !/baja/i.test(x.estado || '') && x.archivoId);

@@ -74,7 +74,7 @@ tr.grupo-sec td{background:#E4EAFB;color:#172B4D;position:static!important}
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>COEsp · Reuniones, acuerdos y documentos<small id="sub">COEsp de Trelew y Área Programática · versión 0</small></h1>
+  <h1>COEsp · Reuniones, acuerdos y documentos<small id="sub">COEsp de Trelew y Área Programática</small></h1>
   <button class="icono" id="bComentar" hidden title="Comentar STAR-H o PHR"><span class="ms">rate_review</span><span>Comentar</span></button>
   <button class="icono" id="bAyuda" aria-label="Ayuda"><span class="ms">help</span></button>
   <button class="icono" id="bAct" aria-label="Actualizar"><span class="ms">refresh</span></button>
@@ -190,7 +190,7 @@ function vDocumentos() {
   const nVal = L0.filter(d => /validar/i.test(d.Estado)).length;
   const sel = (k, t, arr) => `<select data-f="${k}"><option value="">${t}</option>${arr.map(x => `<option ${x === filtro[k] ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>`;
   const secs = SECCIONES.concat(L.some(d => !d['Sección']) ? ['Sin sección'] : []);
-  const fila = d => `<tr><td>${d.Enlace ? `<a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a>` : E(d['Título'])}<br><span class="meta">${E(d.ID)} · v${E(d['Versión'] || '0')} · ${E(d.Fecha)}</span></td>
+  const fila = d => `<tr><td>${d.Enlace ? `<a href="${E(d.Enlace)}" target="_blank" rel="noopener">${E(d['Título'])}</a>` : E(d['Título'])}<br><span class="meta">${E(d.ID)} · ${E(d.Fecha)}</span></td>
       <td>${E(d.Clase)}</td><td>${E(d.Emisor)}<br><span class="meta">${E(d.Alcance)}${d.Establecimiento && d.Establecimiento !== '—' ? ' · ' + E(d.Establecimiento) : ''}</span></td>
       <td><span class="chip ${/validar|borrador/i.test(d.Estado) ? 'val' : 'ok'}">${E(d.Estado)}</span></td><td class="meta">${E(d['Visible para'])}</td>
       ${adm() ? `<td style="white-space:nowrap"><button class="btn sec chico" data-a="docEditar" data-id="${E(d.ID)}" title="Editar"><span class="ms">edit</span></button> <button class="btn sec chico" data-a="docBorrar" data-id="${E(d.ID)}" title="Borrar de la lista" aria-label="Borrar ${E(d['Título'])}"><span class="ms" style="color:#C62828">delete</span></button></td>` : ''}</tr>`;
@@ -201,7 +201,7 @@ function vDocumentos() {
     const tit = s === 'Z · Anexos' ? 'Anexos' : (s === 'Sin sección' ? 'Sin sección asignada' : 'Internos · ' + s);
     return `<tr class="grupo-sec"><td colspan="${nc}"><b>${E(tit)}</b> <span class="meta">(${g.length})</span></td></tr>` + (g.length ? g.map(fila).join('') : `<tr><td colspan="${nc}" class="vacio">Todavía sin documentos.</td></tr>`);
   }).join('');
-  return `<div class="aviso">Los documentos se ordenan en secciones: internos (A a M) y anexos. Cada uno indica quién lo emite (HySL, COEsp interno, COEsp completo, Dirección) y su alcance. Las notas de HySL solo las ve Administración. Las solicitudes a organismos salen del COEsp interno, con firma de la coordinación general y visto bueno de la Dirección.</div>
+  return `
     <div class="herr">${sel('docSec', 'Todas las secciones', secs)}${sel('docClase', 'Todas las clases', op('Clase'))}${sel('docEmisor', 'Todos los emisores', op('Emisor'))}
     <select data-f="docEstado"><option value="">Todos los estados</option><option value="__val" ${filtro.docEstado === '__val' ? 'selected' : ''}>Para validar (${nVal})</option>${op('Estado').map(x => `<option ${x === filtro.docEstado ? 'selected' : ''}>${E(x)}</option>`).join('')}</select>
     <input data-f="docQ" placeholder="Buscar título" value="${E(filtro.docQ || '')}"><span class="esp"></span>${adm() ? '<button class="btn" data-a="docNuevo"><span class="ms">add</span>Agregar</button>' : ''}</div>
@@ -212,7 +212,7 @@ function vDocumentos() {
 
 /* ---------- Órganos ---------- */
 function vOrganos() {
-  return `<div class="aviso">Las herramientas (STAR-H, ISH, PHR) no son órganos: tienen sus propios permisos. El COEsp interno es la parte interna (hospitales y Área Programática) del COEsp de Trelew y Área Programática.</div>` +
+  return `` +
   (D.organos || []).map(o => {
     const I = (D.integrantes || []).filter(i => i.organo === o.ID);
     const g = p => I.filter(i => p.test(i.parte));
@@ -232,7 +232,7 @@ function vLugares() {
   const areas = [...new Set((D.lugares || []).map(l => l.area).filter(Boolean))];
   const fa = filtro.lugArea === undefined ? 'Área Programática Trelew' : filtro.lugArea, q = (filtro.lugQ || '').toLowerCase();
   const L = (D.lugares || []).filter(l => (!fa || l.area === fa) && (!q || (l.nombre + ' ' + l.corto).toLowerCase().indexOf(q) >= 0));
-  return `<div class="aviso">Registro único de establecimientos (fuente: catálogo del Portal). Localidad, coordenadas y camas quedan «s/d (revisar)» hasta que cada establecimiento los confirme. Las capacidades son estimadas: la app es una base orientadora, no un registro en tiempo real.</div>
+  return `
     <div class="herr"><select data-f="lugArea"><option value="">Todas las áreas</option>${areas.map(a => `<option ${a === fa ? 'selected' : ''}>${E(a)}</option>`).join('')}</select>
     <input data-f="lugQ" placeholder="Buscar" value="${E(filtro.lugQ || '')}"><span class="esp"></span><span class="meta">${L.length} establecimientos</span></div>
     <div class="tabla"><table><thead><tr><th>Establecimiento</th><th>Tipo</th><th>Red</th><th>Localidad</th><th>Camas (est.)</th><th>SISA</th>${adm() ? '<th>Libro</th><th></th>' : ''}</tr></thead><tbody>
@@ -350,7 +350,7 @@ function imprimirPlanilla(r, asis) {
   <p><b>Reunión N.º:</b> ${E(r.num || '')} &nbsp; <b>Orden del día:</b> ${E(r.orden || '')}</p>
   <table><thead><tr><th>N.º</th><th>Apellido y nombre</th><th>Institución / función</th><th>Firma</th></tr></thead><tbody>
   ${filas.map((a, i) => `<tr><td class="n">${i + 1}</td><td>${E(a.nombre || '')}</td><td>${E(a.funcion || '')}</td><td class="f"></td></tr>`).join('')}</tbody></table>
-  <p style="margin-top:5mm;font-size:9.5pt">Versión 0. Una vez firmada, escanear y vincular el archivo a la reunión en la app.</p>
+  
   <footer><img src="${location.href.replace(/[^/]*$/, '')}logo-hysl.png" alt=""></footer>
   <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
   w.document.close();
@@ -358,7 +358,7 @@ function imprimirPlanilla(r, asis) {
 
 function dlgFila(tipo, id) {
   const cfg = {
-    doc: { t: 'Documento', lista: D.documentos, key: 'ID', camposF: () => [['Título', 'Título *'], ['Enlace', 'Enlace', 'url'], ['Fecha', 'Fecha'], ['Versión', 'Versión'], ['Establecimiento', 'Establecimiento'], ['Reunión', 'Reunión (ID, si corresponde)'], ['Observaciones', 'Observaciones', 'area']],
+    doc: { t: 'Documento', lista: D.documentos, key: 'ID', camposF: () => [['Título', 'Título *'], ['Enlace', 'Enlace', 'url'], ['Fecha', 'Fecha'], ['Establecimiento', 'Establecimiento'], ['Reunión', 'Reunión (ID, si corresponde)'], ['Observaciones', 'Observaciones', 'area']],
       sels: [['Sección', SECCIONES], ['Clase', ['Nota', 'Acta', 'Minuta', 'Acuerdo', 'Propuesta', 'Plan', 'Protocolo', 'Procedimiento', 'Modelo', 'Planilla', 'Informe', 'Otro']], ['Emisor', ['HySL', 'COEsp interno', 'COEsp completo', 'Dirección', 'Otro organismo']],
         ['Alcance', ['Área Programática Trelew', 'Red Trelew', 'Red Rawson', 'Establecimiento', 'Toda la red']], ['Órgano', [''].concat((D.organos || []).map(o => o.ID))],
         ['Estado', ['Borrador', 'Borrador (sin enviar)', 'Para validar', 'Validado', 'Firmado', 'Enviado', 'Vigente', 'Reemplazado']], ['Visible para', ['Integrantes del órgano', 'Parte interna', 'Todos', 'Solo Administración']]], accion: 'red_documento_guardar', prop: 'documento' },
@@ -369,7 +369,7 @@ function dlgFila(tipo, id) {
   }[tipo];
   const o = id ? (cfg.lista || []).filter(x => String(x[cfg.key]) === String(id))[0] || {} : {};
   abrir((id ? 'Editar ' : 'Agregar ') + cfg.t.toLowerCase(), cfg.sels.map(s => selC(s[0], s[0], o[s[0]] || s[1][0], s[1])).join('') + cfg.camposF().map(c => campo(c[0], c[1], o[c[0]], c[2])).join('') +
-    (tipo === 'doc' ? '<p class="meta">Para que no se pierda nada, todo documento queda en versión 0 hasta su aprobación. Lo que se corrige en el Doc no vuelve a la app.</p>' : ''),
+    (tipo === 'doc' ? '<p class="meta">Lo que se corrige en el Doc no vuelve a la app.</p>' : ''),
     `<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" data-a="filaGuardar" data-t="${tipo}" data-id="${E(id || '')}"><span class="ms">save</span>Guardar</button>`);
   dlg._cfg = cfg;
 }
@@ -437,7 +437,7 @@ function imprimirListado() {
     const base = location.href.replace(/[^/]*$/, '');
     const hoja = l => `<section><div class="conf">CONFIDENCIAL · DATOS PERSONALES Y DE SALUD</div>
       <h1>Pacientes con necesidades especiales · ${E(l.ciudad)}</h1>
-      <p class="sub">Establecimientos: ${E(l.establecimientos || 's/d')} · Activos: <b>${l.filas.length}</b> · Impreso por ${E(quien)} el ${E(ahora)} · Versión 0</p>
+      <p class="sub">Establecimientos: ${E(l.establecimientos || 's/d')} · Activos: <b>${l.filas.length}</b> · Impreso por ${E(quien)} el ${E(ahora)}</p>
       ${l.error ? `<p><b>${E(l.error)}</b></p>` : !l.filas.length ? '<p>Sin pacientes activos cargados.</p>' : `<table><thead><tr><th>N.º</th><th>Apellido y nombre</th><th>DNI</th><th>Fecha de nac.</th><th>Domicilio · barrio</th><th>Teléfono</th><th>Contacto alternativo</th><th>Patología · necesidad</th><th>Equipo · batería · oxígeno</th><th>Diálisis · cadena de frío</th><th>Traslado asistido</th><th>Establecimiento de referencia</th><th>Observaciones</th></tr></thead><tbody>
       ${l.filas.map((f, i) => `<tr><td>${i + 1}</td><td><b>${E(v(f, 'Apellido'))}</b> ${E(v(f, 'Nombre'))}</td><td>${E(v(f, 'DNI'))}</td><td>${E(v(f, 'Fecha de nacimiento'))}</td>
         <td>${j(f, ['Domicilio', 'Barrio o zona', 'Localidad'])}</td><td>${E(v(f, 'Teléfono'))}</td><td>${j(f, ['Contacto alternativo (familiar o cuidador)', 'Teléfono del contacto'])}</td>
@@ -505,7 +505,6 @@ function dlgIntegrante(org, iid, pid) {
     selC('parte', 'Parte', i.parte || '', [['', 'Según el tipo de actor de la ficha'], ['Interna', 'Interna (hospitales y Área Programática)'], ['Externa', 'Externa']]) +
     campo('funcion', 'Función', i.funcion || 'Integrante') +
     (iid ? campo('hasta', 'Hasta (dd/mm/aaaa) · deja de integrar el órgano, sin borrar la historia', '') : '') +
-    '<p class="meta">Integrar un órgano da acceso a sus reuniones, acuerdos y documentos según su parte. No habilita STAR-H, PHR, ISH, carga ni pacientes: eso se da en Accesos.</p>',
     `<button class="btn sec" type="button" data-c>Cancelar</button><button class="btn" type="button" data-a="intGuardar" data-id="${E(iid || '')}"><span class="ms">save</span>Guardar</button>`);
   dlg._int = i;
 }
@@ -515,7 +514,7 @@ async function generarActa(btn, id) {
   const r = (D.reuniones || []).filter(x => x.ID === id)[0] || {};
   if (r['Acta (Doc)'] && !confirm('Esta reunión ya tiene acta. Si la generó la app, la anterior va a la papelera y queda la nueva. Lo que hayas corregido a mano en ese Doc se pierde (las correcciones se hacen en la app). ¿Generar de nuevo?')) return;
   btn.disabled = true; const txt = btn.innerHTML; btn.innerHTML = '<span class="ms">hourglass_top</span>Generando…';
-  try { const x = await S.api('red_acta_generar', { id: id }, 180000); if (!x.ok) throw x; toast('Acta generada (versión 0).'); window.open(x.url, '_blank', 'noopener'); cargar(); }
+  try { const x = await S.api('red_acta_generar', { id: id }, 180000); if (!x.ok) throw x; toast('Acta generada.'); window.open(x.url, '_blank', 'noopener'); cargar(); }
   catch (e) { toast(errTxt(e)); btn.disabled = false; btn.innerHTML = txt; }
 }
 
@@ -536,7 +535,7 @@ function dlgAyuda() {
   const adminTxt = `<hr style="border:0;border-top:1px solid var(--linea);margin:12px 0"><p><b>Administración</b></p>
     <p><b>Dónde están los datos.</b> En el libro de la app: hojas ORGANOS, INTEGRANTES, PERMISOS, LUGARES, ENLACES, DOCUMENTOS, REUNIONES, ASISTENCIA, ACUERDOS y COMENTARIOS. Todo se puede editar también desde Sheets (respetar los encabezados de la fila 1).</p>
     <p><b>Reunión nueva.</b> «Nueva reunión» › órgano y quiénes (COEsp completo o COEsp interno) › tildá los presentes en el momento y sumá invitados en «Otros asistentes» › acuerdos y tareas uno por uno › Guardar. Después «Planilla de asistencia» para imprimir y firmar; el escaneo se sube a Drive y su enlace se pega en la reunión.</p>
-    <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COEsp, versión 0, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
+    <p><b>Acta.</b> «Generar el acta (Doc)» arma el Google Doc en 06 · COEsp, con el logo HySL al pie, y deja el enlace en la reunión. REGLA DE EDICIÓN: lo que se corrige en el Doc no vuelve a la app; corregí en la app y volvé a generar (el acta anterior generada por la app va a la papelera).</p>
     <p><b>Documentos.</b> «Agregar»: sección (A a M o Anexos; se guarda en DOCUMENTOS › «Sección» y coincide con las subcarpetas 06.A a 06.M y 06.Z de Drive), clase, emisor, alcance, estado y «Visible para» (Todos, Integrantes del órgano, Parte interna o Solo Administración). Lo emitido por HySL lo ves solo vos. El tacho rojo de cada fila lo borra de la lista: pide confirmación, el archivo de Drive no se toca y la fila queda en la hoja oculta PAPELERA del libro (para recuperarla, se copia de vuelta a DOCUMENTOS). Órganos e integrantes y Accesos solo los ve Administración.</p>
     <p><b>Accesos (pestaña).</b> Una fila por persona: órganos que integra, si tiene cuenta y un selector por herramienta (—, Ver, Comentar, Cargar, Aprobar) que se guarda al elegirlo. «Sumar a un órgano» (ícono de persona) la integra al COEsp o a un COE hospitalario. Para dejar de integrar un órgano, editá al integrante en «Órganos» y poné la fecha «Hasta».</p>
     <p><b>Permisos.</b> Hoja PERMISOS: una fila por persona, módulo y nivel (Ver, Comentar, Cargar, Aprobar). La persona se une a su cuenta por la columna N de ACCESOS STAR-H. Pacientes: lista cerrada, nunca externos. «Pacientes · listado con datos» (columna «Listado con datos»): imprime el listado CONFIDENCIAL con datos personales; para el referente de una ciudad, en PERMISOS poné Tipo de alcance «Localidad» y Alcance = su ciudad (como figura en LUGARES); con «Área» ve todas las ciudades. Cada impresión queda en REGISTRO APP.</p>

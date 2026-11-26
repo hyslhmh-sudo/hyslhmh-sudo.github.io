@@ -96,7 +96,7 @@ body.embebido .barra,body.embebido footer,body.embebido .demo{display:none}
   <button class="icono" id="btnAct" title="Actualizar"><span class="ms">refresh</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Metodología STAR-H (OPS, 2023)</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="tip" class="tooltip oculto" role="tooltip"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -159,7 +159,7 @@ function render() {
   if (opciones.indexOf(vista) < 0) vista = u.comparativo && R.length > 1 ? 'Comparativo' : R[0].nombre;
   S.store.set('tab.vista', vista);
   const tabs = opciones.length > 1 ? opciones.map(o => `<button class="tab" data-vista="${E(o)}" aria-pressed="${o === vista}">${o === 'Comparativo' ? '<span class="ms" style="font-size:18px">compare_arrows</span> ' : ''}${E(o)}</button>`).join('') : '';
-  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}. Fuente: planillas STAR-H de cada red.${navigator.onLine ? '' : ' Sin conexión: se muestran los últimos datos guardados.'}</p>`;
+  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}.${navigator.onLine ? '' : ' Sin conexión: se muestran los últimos datos guardados.'}</p>`;
   if (vista === 'Comparativo') { tema('Secretaría'); $('#titulo').innerHTML = 'STAR-H · Comparativo entre redes<small>Reporte conjunto de Higiene y Seguridad Laboral</small>'; app.innerHTML = `<div class="controles">${tabs}<span class="esp"></span><button class="tab imp" data-act="imprimir"><span class="ms" style="font-size:18px">print</span> Imprimir</button></div>` + vistaComparativo(R) + pie; }
   else { const r = R.find(x => x.nombre === vista); tema(r.nombre); $('#titulo').innerHTML = `STAR-H · ${E(r.nombre)}<small>Resultados del relevamiento</small>`; app.innerHTML = `<div class="controles">${tabs}<select id="selEst" aria-label="Establecimiento"><option value="">Toda la red</option>${r.establecimientos.map(e => `<option value="${E(e.codigo)}" ${e.codigo === estSel ? 'selected' : ''}>${E(e.codigo + ' · ' + e.nombre)}</option>`).join('')}</select><span class="esp"></span><button class="tab imp" data-act="imprimir"><span class="ms" style="font-size:18px">print</span> Imprimir</button></div>` + vistaRed(r) + pie; }
   const s = $('#selEst'); if (s) s.addEventListener('change', () => { estSel = s.value; verTodas = false; render(); });
@@ -201,8 +201,8 @@ function vistaRed(r) {
   // barras por establecimiento
   const porEst = est.map(e => ({ nombre: e.nombre, res: resumenFilas(r.filas.filter(f => f.codigo === e.codigo)) }))
     .sort((a, b) => (b.res.cuenta['Muy alto'] * 100 + b.res.cuenta['Alto']) - (a.res.cuenta['Muy alto'] * 100 + a.res.cuenta['Alto']));
-  h += `<div class="dos"><div class="tarjeta panel"><h2>Matriz de probabilidad e impacto</h2><p class="nota">Cantidad de amenazas evaluadas en cada combinación. Pasá el cursor o tocá una celda para ver cuáles son.</p>${mat}</div>
-    <div class="tarjeta panel"><h2>${estSel ? 'Amenazas por nivel de riesgo' : 'Nivel de riesgo por establecimiento'}</h2><p class="nota">Amenazas evaluadas según su nivel${estSel ? '' : ', ordenadas por cantidad de riesgos muy altos y altos'}.</p>${leyenda()}${barrasNivel(porEst)}</div></div>`;
+  h += `<div class="dos"><div class="tarjeta panel"><h2>Matriz de probabilidad e impacto</h2>${mat}</div>
+    <div class="tarjeta panel"><h2>${estSel ? 'Amenazas por nivel de riesgo' : 'Nivel de riesgo por establecimiento'}</h2>${leyenda()}${barrasNivel(porEst)}</div></div>`;
 
   // amenazas prioritarias
   const porAm = {};
@@ -213,13 +213,13 @@ function vistaRed(r) {
   });
   const lista = Object.values(porAm).sort((a, b) => b.max - a.max || b.altos.length - a.altos.length);
   const vis = verTodas ? lista : lista.slice(0, 12);
-  h += `<div class="tarjeta panel"><h2>Amenazas prioritarias</h2><p class="nota">Ordenadas por riesgo máximo${estSel ? '' : ' en la red'}. El criterio de respuesta del procedimiento: muy alto, prioridad inmediata y revisión a los 3 meses; alto, incluir en el plan de respuesta y revisar a los 6 meses.</p>
+  h += `<div class="tarjeta panel"><h2>Amenazas prioritarias</h2>
     ${lista.length ? `<div class="tabla-wrap"><table><tr><th>ID</th><th>Amenaza</th><th class="num">Riesgo máx.</th><th>Nivel</th>${estSel ? '' : '<th class="num">Promedio</th><th>Establecimientos con riesgo alto o muy alto</th>'}</tr>
     ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.amenaza)}</td><td class="num"><b>${F2(a.max)}</b></td><td>${chip(nivelDe(a.max))}</td>${estSel ? '' : `<td class="num">${(a.suma / a.n).toFixed(1).replace('.', ',')}</td><td>${a.altos.length ? `<b>${a.altos.length}</b> · ${E(a.altos.join('; '))}` : '<span class="pie">ninguno</span>'}</td>`}</tr>`).join('')}</table></div>
     ${lista.length > 12 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 12 primeras' : 'Ver las ' + lista.length + ' amenazas evaluadas'}</button>` : ''}` : '<div class="vacio">Todavía no hay amenazas evaluadas.</div>'}</div>`;
 
   // El Niño
-  h += `<div class="tarjeta panel"><h2>Amenazas asociadas a El Niño 2026-2027</h2><p class="nota">Riesgo de cada establecimiento frente a las amenazas cuya probabilidad aumenta con el fenómeno. «NA»: no aplica; «–»: sin evaluar.</p>
+  h += `<div class="tarjeta panel"><h2>Amenazas asociadas a El Niño 2026-2027</h2>
     <div class="tabla-wrap"><table class="calor"><tr><th>Establecimiento</th>${ELNINO.map(x => `<th class="c" title="${x[1]}">${x[0]}<br><span style="text-transform:none;font-weight:500">${x[1]}</span></th>`).join('')}</tr>
     ${est.map(e => `<tr><td>${E(e.nombre)}</td>${ELNINO.map(x => { const f = r.filas.find(y => y.codigo === e.codigo && y.id === x[0]);
       if (!f) return celda('', '·', 'No figura en el catálogo');
@@ -244,7 +244,7 @@ function vistaComparativo(R) {
     <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${chipTxt('Muy alto', o.x.cuenta['Muy alto'] + ' muy alto')}${chipTxt('Alto', o.x.cuenta['Alto'] + ' alto')}</div>
     <span style="display:block;margin-top:6px">Riesgo promedio: ${o.prom ? o.prom.toFixed(1).replace('.', ',') : 's/d'}</span></div>`).join('')}</div>`;
 
-  h += `<div class="tarjeta panel"><h2>Distribución de los riesgos por red</h2><p class="nota">Proporción de amenazas evaluadas en cada nivel. Las redes trabajan en forma independiente; la comparación ayuda a identificar necesidades comunes.</p>${leyenda()}
+  h += `<div class="tarjeta panel"><h2>Distribución de los riesgos por red</h2>${leyenda()}
     ${res.map(o => `<div class="fila-b"><span class="nom">${E(o.r.nombre)}</span><div class="pila">${NIV.filter(n => o.x.cuenta[n]).map(n => `<i style="flex:${o.x.cuenta[n]};background:${S.COLOR_NIVEL[n]}" data-tip="${E(o.r.nombre)}: ${o.x.cuenta[n]} ${n.toLowerCase()} (${Math.round(o.x.cuenta[n] * 100 / o.x.evaluadas)} %)"></i>`).join('')}</div><span class="n">${o.x.evaluadas}</span></div>`).join('')}</div>`;
 
   // amenazas comunes
@@ -257,13 +257,13 @@ function vistaComparativo(R) {
   const lista = Object.values(am).map(a => Object.assign(a, { max: Math.max(...Object.values(a.por).map(p => p.max)), redesAltas: Object.values(a.por).filter(p => p.altos).length }))
     .sort((a, b) => b.redesAltas - a.redesAltas || b.max - a.max || b.altos - a.altos);
   const vis = verTodas ? lista : lista.slice(0, 15);
-  h += `<div class="tarjeta panel"><h2>Amenazas comunes</h2><p class="nota">Riesgo máximo de cada amenaza en cada red, con la cantidad de establecimientos en nivel alto o muy alto. Primero, las que son altas en más de una red.</p>
+  h += `<div class="tarjeta panel"><h2>Amenazas comunes</h2>
     ${lista.length ? `<div class="tabla-wrap"><table class="calor"><tr><th>ID</th><th>Amenaza</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
     ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.amenaza)}</td>${R.map(r => { const p = a.por[r.nombre]; return p ? celda(nivelDe(p.max), F2(p.max) + (p.altos ? ` <span style="font-weight:600">· ${p.altos} est.</span>` : ''), `${r.nombre} · ${a.amenaza}: máximo ${F2(p.max)} (${nivelDe(p.max)}); ${p.altos} establecimiento(s) en alto o muy alto`) : celda('', '–', r.nombre + ': sin evaluar'); }).join('')}</tr>`).join('')}</table></div>
     ${lista.length > 15 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 15 primeras' : 'Ver las ' + lista.length + ' amenazas'}</button>` : ''}` : '<div class="vacio">Todavía no hay amenazas evaluadas.</div>'}</div>`;
 
   // El Niño
-  h += `<div class="tarjeta panel"><h2>El Niño 2026-2027 en cada red</h2><p class="nota">Riesgo máximo y cantidad de establecimientos en nivel alto o muy alto.</p><div class="tabla-wrap"><table class="calor"><tr><th>Amenaza</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
+  h += `<div class="tarjeta panel"><h2>El Niño 2026-2027 en cada red</h2><div class="tabla-wrap"><table class="calor"><tr><th>Amenaza</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
     ${ELNINO.map(x => `<tr><td>${x[0]} · ${x[1]}</td>${R.map(r => { const l = r.filas.filter(f => f.id === x[0] && f.riesgo !== ''); if (!l.length) return celda('', '–', 'Sin evaluar'); const mx = Math.max(...l.map(f => f.riesgo)), al = l.filter(f => f.nivel === 'Alto' || f.nivel === 'Muy alto').length; return celda(nivelDe(mx), F2(mx) + ` <span style="font-weight:600">· ${al}/${r.establecimientos.length}</span>`, `${r.nombre}: máximo ${F2(mx)}; ${al} de ${r.establecimientos.length} establecimientos en alto o muy alto`); }).join('')}</tr>`).join('')}</table></div></div>`;
 
   // ranking de establecimientos

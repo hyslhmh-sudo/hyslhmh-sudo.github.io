@@ -86,7 +86,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Transportes y distancias<small>Preparación · versión 0 · base orientadora</small></h1>
+  <h1>Transportes y distancias<small>Ambulancias, transportes especiales y distancias</small></h1>
   <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="pie">Cargando…</p></main>
@@ -152,7 +152,7 @@ function vAmb() {
     return `<div class="card">${cab}${lista}${listaM}
       ${h.puede ? `<button class="btn" type="button" data-amb="${E(h.est)}"><span class="ms">edit</span>Corregir ambulancias y vehículos</button>` : ''}</div>`;
   }).join('')}</div>
-  <p class="pie">Fuente: ficha de cada establecimiento (campos «Ambulancias» y «Vehículos de apoyo»). Se corrige acá o en la ficha: es el mismo dato. Lo corrige el referente de cada establecimiento y Administración. Estado: Muy bueno, Bueno, Regular, Malo o Fuera de servicio.</p>`;
+`;
 }
 // 15/11/2026 07:30 (Belén: «acá se debería ver y corregir solo lo de ambulancia»): se corrigen las ambulancias en la misma tarjeta,
 // sin ir a la ficha completa. Se guarda en el mismo campo «ambs» de la ficha (acción ficha_guardar): un solo dato.
@@ -272,7 +272,7 @@ function vMed() {
   const ms = D.base.medios.filter(m => !filtro || m.tipo === filtro);
   return `<div class="filtros">${C().puede ? '<button class="btn pri" type="button" id="mNuevo" style="margin-top:0"><span class="ms">add</span>Agregar medio</button>' : ''}<label>Tipo de medio <select id="fTipo"><option value="">Todos (${D.base.medios.length})</option>${tipos.map(t => `<option${t === filtro ? ' selected' : ''}>${E(t)}</option>`).join('')}</select></label></div>
   ${ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : '<p class="sd">Sin medios cargados.</p>'}
-  <p class="pie">Fuente: BASE · Establecimientos de salud, hoja MEDIOS DE TRASLADO (la cargan Administración y los referentes desde acá, con «Agregar medio» o «Corregir este medio»). Las ambulancias propias de los hospitales están en la primera pestaña.</p>`;
+`;
 }
 
 // 3) Transportes especiales: filtro por escenario sobre los mismos medios
@@ -282,7 +282,7 @@ function vEsp() {
   return `<p style="font-size:13.5px;margin-top:0">Elegí el escenario para ver qué medios sirven.</p>
   <div class="escs">${ESCENARIOS.map(s => `<button type="button" data-esc="${E(s)}" aria-pressed="${s === esc}">${E(s)} · ${cuenta(s)}</button>`).join('')}</div>
   ${!esc ? '' : ms.length ? `<div class="grid">${ms.map(tarjetaMedio).join('')}</div>` : `<div class="aviso">No hay medios cargados para «${E(esc)}». Se agrega en la pestaña «Medios de traslado», con «Agregar medio» o «Corregir este medio» (casillas «Sirve para»).</div>`}
-  <p class="pie">Es la misma lista de la pestaña anterior, filtrada por la columna «Sirve para (escenarios)». No se carga aparte.</p>`;
+`;
 }
 
 // 4) Distancias (BASE · DISTANCIAS): cualquier origen a cualquier destino
@@ -349,13 +349,13 @@ function vDis() {
   <div class="tabw"><table><thead><tr><th>Hasta</th><th>Tipo</th><th>Localidad</th><th class="n">km</th><th class="n">min</th><th>Fuente</th></tr></thead><tbody>
   ${filas.map(fila).join('')}
   </tbody></table></div>
-  <p class="pie">Distancia y tiempo en auto. Grupos en este orden: localidades, hospitales públicos (HMH, HZT y HSST primero), CAPS y centros de salud, puestos sanitarios, otros servicios de salud pública, instituciones de salud privadas, albergues, geriátricos, dispositivos intermedios de Salud Mental Comunitaria, otra población a cargo y recursos de apoyo; dentro de cada grupo, del más cercano al más lejano. Hacia el HMH: Google Maps, 14/11/2026 18 h, con el tránsito de ese momento. Resto: cálculo por calles con OSRM (OpenStreetMap), 15 y 16/11/2026, sin tránsito. Las localidades se miden desde su punto central (OpenStreetMap). Son estimados: no reemplazan la planificación del traslado. Fuente: BASE · Establecimientos de salud (hoja DISTANCIAS) y COE · Derivaciones y albergues (receptoras, albergues y población a cargo).</p>`;
+`;
 }
 
 function pintar() {
   if (!D) return;
   const cuerpo = tab === 'med' ? vMed() : tab === 'esp' ? vEsp() : tab === 'dis' ? vDis() : vAmb();
-  app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.<br>Base orientadora, versión 0: los datos son estimados y no son un registro en tiempo real. Si falta un dato figura «${SD}».${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
+  app.innerHTML = `<div class="aviso"><b>Distancias y tiempos en condiciones normales.</b> En una emergencia (inundación, barro, nieve, cortes), antes de trasladar verificá el estado de las rutas: <a href="https://chubut.gob.ar/destacado/1291" target="_blank" rel="noopener">Rutas · Defensa Civil Chubut</a>.${D.error ? '<br><b>' + E(D.error) + '</b>' : ''}</div>
   <details class="ayuda"><summary><span class="ms">help</span> Ayuda</summary>
   <p><b>Ambulancias y móviles de los hospitales:</b> cada hospital carga, en su ficha o acá con «Corregir ambulancias y vehículos», sus ambulancias (patente, marca y modelo, año, estado, si está en uso, equipamiento, pacientes en camilla, personas sentadas, si es apta para barro, ripio o anegamiento y observaciones) y sus vehículos de apoyo (patente, marca y modelo, año, función, estado, si está en uso, si se puede usar en una emergencia, si está disponible las 24 h, personas sentadas, si puede llevar camilla y observaciones). El estado es el mismo para todos: Muy bueno, Bueno, Regular, Malo o Fuera de servicio. El HMH y el HZT comparten el servicio (mismo equipo directivo): van en una sola tarjeta y se guardan en la ficha del HZT. Es el mismo dato de la ficha: no hace falta cargarlo dos veces. Lo corrige el referente de cada establecimiento y Administración.</p>
   <p><b>Medios de traslado:</b> medios que no son de los hospitales públicos (con marca y modelo, patente, año y estado si se conocen): ambulancias privadas y vehículos de bomberos, fuerzas, Defensa Civil u otros. Los cargan Administración y los referentes con «Agregar medio» (en esa pestaña); cada referente corrige los que cargó él y Administración corrige todos. Se guardan en la base maestra (hoja MEDIOS DE TRASLADO), que sirve de respaldo. El contacto sale de la hoja CONTACTOS y del teléfono del organismo.</p>

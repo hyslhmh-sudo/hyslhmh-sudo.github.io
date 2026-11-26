@@ -202,7 +202,7 @@ body{background:#FAF7F7}
   <button class="icono oculto" id="btnSalir" title="Salir" aria-label="Salir"><span class="ms">logout</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Gestión de contingencias</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="flot" class="flotante oculto"><span class="sub" id="flotTxt">Hay cambios sin guardar</span><button class="btn" data-act="guardarEst"><span class="ms">save</span>Guardar ficha</button></div>
 <div id="dlg" class="dlg oculto" role="dialog" aria-modal="true"></div>
 <div id="imp" class="imp"></div>
@@ -309,7 +309,7 @@ function vistaEst(redN, cod) {
         <button class="btn sec mini" data-act="imprimir" data-modo="blanco"><span class="ms" style="font-size:17px">print</span>Imprimir en blanco</button></div></div>
     <h3>Ficha del establecimiento</h3><div id="fichaEst">${seccionesHTML(lc, obj, dis, 'e_', true)}</div>
     <h3 style="display:flex;justify-content:space-between;align-items:center;gap:8px">Dependencias (${deps.length})${puede ? '<button class="btn mini" data-act="nuevaDep"><span class="ms" style="font-size:17px">add</span>Agregar dependencia</button>' : ''}</h3>
-    <p class="sub" style="margin:0 2px 8px">Una ficha por servicio, sector o área: internación, terapia, quirófano, guardia, consultorios, administración… Las áreas críticas primero.</p>
+    
     <div class="lista">${deps.map(d => `<button class="tarjeta dep" data-dep="${E(d.id)}"><span class="ms">meeting_room</span><b>${E(d.nombre)}<span class="sub" style="display:block;font-weight:500">${E([d.uso, d.sector, d.piso ? 'piso ' + d.piso : ''].filter(Boolean).join(' · ') || 's/d')}</span></b>${Number(d.pac_soporte) > 0 ? `<span class="critico" title="Pacientes con soporte vital: requieren el doble de personal para evacuar">${E(d.pac_soporte)} con soporte vital</span>` : ''}${chipEstado(d.estado)}<span class="sub">${avance(d, ld)} %</span></button>`).join('') || '<div class="tarjeta vacio">Todavía no hay dependencias cargadas.</div>'}</div>`;
   atarCampos($('#fichaEst'), borrador);
   const se = $('#selEstado'); if (se) se.addEventListener('change', () => { borrador.estado = se.value; avisarCambios(); $('#flot').classList.remove('oculto'); });
@@ -349,9 +349,9 @@ function vistaModelos() {
     <button class="btn" data-act="modImp" data-mod="${id}"><span class="ms">print</span>Imprimir</button>
     <button class="btn sec" data-act="modWord" data-mod="${id}"><span class="ms">download</span>Descargar en Word</button></div></div>`;
   app.innerHTML = `${GC.barra('imprimir', false)}
-    <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Los pacientes no se registran en la app. Estas planillas se imprimen o se descargan en Word para completarlas a mano o en la computadora en un simulacro o en una emergencia, y quedan en el establecimiento.</div>
+    <div class="aviso-datos" style="background:#E4EAFB;color:#172B4D">Los pacientes no se registran en la app.</div>
     <div class="tarjeta" style="padding:14px 16px;margin-bottom:12px"><div class="est-cab"><b><span class="ms" style="color:#C62828;margin-right:6px">badge</span>Tarjeta de prioridad de derivación</b></div>
-      <p class="sub" style="margin:6px 0 8px">Se ata a la muñeca o a la camilla y acompaña al paciente hasta el destino. El color indica la prioridad de derivación; tiene los datos del paciente, su estado, la atención que necesita, lo que lleva, el destino y un talón desprendible para el registro de evacuados. Dos tarjetas por hoja A4. Si la impresora es blanco y negro, el número y el nombre del color quedan escritos en grande.</p>
+      
       <div class="tj-mini">${PRIOR.map(p => `<span style="background:${p.c};color:${p.t}"><b>${p.n}</b> ${p.titulo.split(' · ')[1]}</span>`).join('')}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" data-act="tjImp" data-col=""><span class="ms">print</span>Imprimir las cuatro</button>
         ${PRIOR.map(p => `<button class="btn sec" data-act="tjImp" data-col="${p.n}" style="border-color:${p.c}"><span class="ms" style="color:${p.c}">print</span>${p.nombre.charAt(0) + p.nombre.slice(1).toLowerCase()}</button>`).join('')}
@@ -514,7 +514,7 @@ $('#btnSalir').addEventListener('click', () => { S.sesion.cerrar(); cat = null; 
 
 function vistaIngreso() {
   tema('');
-  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2><p class="sub">Mismo usuario y clave de STAR-H, PHR, ISH y COEsp.</p>
+  app.innerHTML = `<form class="tarjeta ingreso" id="fIng"><h2>Ingresar</h2>
     <label class="campo"><span>Usuario (nombre y apellido)</span><input name="dni" autocomplete="username" autocapitalize="words" spellcheck="false" required maxlength="200" placeholder="Como figura en tu acceso"></label>
     <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required maxlength="40"></label>
     <button class="btn" style="width:100%" type="submit"><span class="ms">login</span>Ingresar</button><div id="msg" class="msg oculto"></div></form>`;
@@ -537,7 +537,7 @@ function vistaAyuda() {
     <h3>Traslados y derivación</h3><p>Es una base orientadora para planificar, no un registro en tiempo real. En <b>Instituciones receptoras</b> se cargan las instituciones que podrían recibir pacientes y la cantidad <b>estimada</b> de camas por tipo, con el origen y la fecha de la estimación; en una emergencia la disponibilidad se confirma con cada institución. Los pacientes no se registran en la app: en <b>Planillas modelo de traslado</b> se imprimen o se descargan en Word el registro de pacientes evacuados y la ficha de traslado.</p>
     <h3>Albergues y criterios con el COEsp</h3><p>En <b>Albergues</b> se cargan las escuelas, gimnasios y otros edificios que el municipio o Protección Civil podría habilitar, con capacidad estimada, servicios (agua, energía, calefacción, cocina), accesibilidad, si pueden recibir personas con necesidades de salud y su centro de salud de referencia. La app calcula una capacidad orientativa según el Proyecto Esfera (3,5 m² por persona y 1 inodoro cada 20 personas). En <b>Criterios con el COEsp</b> está la propuesta de criterios de derivación para la mesa conjunta (qué sale del hospital, qué llega, qué va o viene del albergue y cómo se informa); se imprime o se baja en Word para la reunión y, cuando el COEsp valida un criterio, se cambia su estado y se anotan la fecha y el acta. En <b>Planillas modelo</b> están, además, el registro de ingresos por el evento, la ficha de derivación a albergue y el informe de derivaciones al COEsp.</p>
     <h3>Desde la planilla</h3><p>Cada red tiene su planilla EVAC (hojas ESTABLECIMIENTOS, DEPENDENCIAS, CAMPOS, INSTITUCIONES, ALBERGUES y CRITERIOS). En la hoja CAMPOS se agregan, se cambian o se desactivan campos, y la app los toma sola.</p>
-    <p class="sub">Modelos: OPS, EVAC-H: Evacuación de hospitales y sus áreas críticas (2024); OPS/OMS, Índice de seguridad hospitalaria, Formulario 1 e ítem 147 (2018); Decreto 351/79, Anexo VII, capítulo 18; Res. SRT 905/2015, Anexo II.</p></div>`;
+    </div>`;
 }
 
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});

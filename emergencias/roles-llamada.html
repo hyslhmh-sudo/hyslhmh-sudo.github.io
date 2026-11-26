@@ -74,7 +74,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Roles de llamada<small>Gestión de la emergencia · versión 0 · en diseño</small></h1>
+  <h1>Roles de llamada<small>Cadena de llamadas por establecimiento y contingencia</small></h1>
   <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir el cartel"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="sub">Cargando…</p></main>
@@ -129,7 +129,7 @@ function pintar() {
   const origen = R.origen === 'propio' ? '<span class="chip c-prop">Propio del establecimiento</span>' : R.origen === 'modelo' ? `<span class="chip c-mod">${esModelo(est) ? 'Modelo común' : 'Del modelo común: ' + E(tipoDe(est).replace('MODELO · ', ''))}</span>` : '<span class="chip c-sin">Sin cargar</span>';
   const sdN = R.pasos.reduce((n, p) => n + ['llama', 'aquien', 'numero', 'alterno', 'decir'].filter(k => vacio(p[k])).length, 0);
   app.innerHTML = `
-  <div class="aviso no-imp"><b>En diseño · versión 0.</b> Esta tarjeta la ve solo Higiene y Seguridad Laboral mientras se diseña. Base orientadora: los números se confirman antes de imprimir el cartel.</div>
+  
   <details class="ayuda no-imp"><summary><span class="ms">help</span> Ayuda</summary>
     <p><b>Qué es.</b> El rol de llamada dice, para cada establecimiento y cada contingencia, <b>quién llama a quién, en qué orden, a qué número, qué hacer si no atiende y qué decir</b>. Lo que hace cada rol después de la llamada está en las tarjetas y en los planes de contingencia (no se repite acá).</p>
     <p><b>Cómo se usa.</b> Elegí el establecimiento, la contingencia y el turno. El paso 0 (naranja) es el primer aviso. Los datos que faltan se ven en naranja como «s/d (revisar)». El punto de cada contingencia es verde si está completa en los dos turnos, naranja si tiene datos que faltan y gris si no está cargada.</p>
@@ -164,8 +164,8 @@ function pintar() {
     </div>
     <div class="msg" id="msg"></div>
   </section>
-  ${D.ficha && D.ficha.cadena && !esModelo(est) ? `<section class="card no-imp"><h2>Cadena de llamadas escrita en la ficha</h2><div class="sub">Texto libre del campo «Cadena de llamadas» de la ficha del establecimiento. Sirve de antecedente para cargar los pasos acá.</div><div class="cadena">${E(D.ficha.cadena)}</div></section>` : ''}
-  <p class="sub solo-imp">Versión 0 · ${E(new Date().toLocaleDateString('es-AR'))} · Higiene y Seguridad Laboral</p>`;
+  ${D.ficha && D.ficha.cadena && !esModelo(est) ? `<section class="card no-imp"><h2>Cadena de llamadas escrita en la ficha</h2><div class="cadena">${E(D.ficha.cadena)}</div></section>` : ''}
+  <p class="sub solo-imp">${E(new Date().toLocaleDateString('es-AR'))} · Higiene y Seguridad Laboral</p>`;
   document.getElementById('sEst').onchange = ev => { est = ev.target.value; app.querySelector('.card').style.opacity = .5; cargar(); };
   document.getElementById('sTur').onchange = ev => { turno = +ev.target.value; pintar(); };
   app.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cont = b.dataset.c; pintar(); });
@@ -260,7 +260,7 @@ function csv(pasos) {
   const cab = ['Establecimiento', 'Contingencia', 'Turno', 'Paso', 'Quién llama', 'A quién llama', 'Número o interno', 'Si no atiende', 'Qué decir', 'Etiqueta', 'Cita', 'Estado', 'Observaciones'];
   const filas = pasos.map(p => [est, cont, p.turno, p.paso, p.llama, p.aquien, p.numero, p.alterno, p.decir, p.etiqueta, p.cita, p.estado, p.obs]);
   const blob = new Blob(['﻿' + [cab].concat(filas).map(r => r.map(q).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = ('Rol de llamada · ' + est + ' · ' + cont + ' (v0).csv').replace(/[\\/:*?"<>|]/g, '-'); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = ('Rol de llamada · ' + est + ' · ' + cont + '.csv').replace(/[\\/:*?"<>|]/g, '-'); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 cargar();
 })();

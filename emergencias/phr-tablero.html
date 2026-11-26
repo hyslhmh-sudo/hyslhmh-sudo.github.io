@@ -92,7 +92,7 @@ body.embebido .barra,body.embebido footer,body.embebido .demo{display:none}
   <button class="icono" id="btnAct" title="Actualizar"><span class="ms">refresh</span></button>
 </header>
 <main id="app"></main>
-<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"><p>Higiene y Seguridad Laboral · Instructivo OPS para el plan hospitalario de respuesta (2023)</p></footer>
+<footer><img src="logo-hysl.png" alt="Hospitales más seguros para las personas"></footer>
 <div id="tip" class="tooltip oculto" role="tooltip"></div>
 <script src="config.js"></script>
 <script src="starh.js"></script>
@@ -133,7 +133,7 @@ function render() {
   if (ops.indexOf(vista) < 0) vista = u.comparativo && R.length > 1 ? 'Comparativo' : R[0].nombre;
   S.store.set('phr.tab.vista', vista);
   const tabs = ops.length > 1 ? ops.map(o => `<button class="tab" data-vista="${E(o)}" aria-pressed="${o === vista}">${E(o)}</button>`).join('') : '';
-  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}. Fuente: planillas PHR de cada red. Base: instructivo OPS para el plan hospitalario de respuesta (2023).${navigator.onLine ? '' : ' Sin conexión: últimos datos guardados.'}</p>`;
+  const pie = `<p class="pie">Datos al ${new Date(datos.generado).toLocaleString('es-AR')}.${navigator.onLine ? '' : ' Sin conexión: últimos datos guardados.'}</p>`;
   const imp = '<span class="esp"></span><button class="tab imp" data-act="imprimir"><span class="ms" style="font-size:18px">print</span> Imprimir</button>';
   if (vista === 'Comparativo') { tema('Secretaría'); $('#titulo').innerHTML = 'PHR · Comparativo entre redes<small>Relevamiento inicial del plan hospitalario de respuesta</small>'; app.innerHTML = `<div class="controles">${tabs}${imp}</div>` + vistaComparativo(R) + pie; }
   else {
@@ -159,12 +159,12 @@ function vistaRed(r) {
     [f.filter(x => x.estado === 'No cumple').length, 'ítems que no cumplen']]);
 
   // barras por sección
-  h += `<div class="tarjeta panel"><h2>Cumplimiento por sección</h2><p class="nota">Promedio de los ítems que aplican y tienen estado: Cumple 100 %, Parcial 50 %, No cumple 0 %.</p>${leyenda()}
+  h += `<div class="tarjeta panel"><h2>Cumplimiento por sección</h2>${leyenda()}
     ${secs.map(s => { const l = f.filter(x => x.sec === s[0]), q = pct(l), b = banda(q); return `<div class="fila-b"><span class="nom" title="${E(s[1])}"><b>${s[0]}</b> · ${E(s[1])}</span>
       <div class="pila">${q == null ? '' : `<i style="flex:0 0 ${Math.max(q, 1)}%;background:${b[2]}" data-tip="${E(s[1])}: ${q} % (${l.filter(x => x.estado).length} ítems relevados)"></i>`}</div><span class="n">${q == null ? 's/d' : q + ' %'}</span></div>`; }).join('')}</div>`;
 
   // mapa de calor establecimiento × sección
-  if (!estSel) h += `<div class="tarjeta panel"><h2>Establecimientos por sección</h2><p class="nota">Porcentaje de cumplimiento de cada establecimiento en cada sección. «s/d»: todavía sin datos.</p>
+  if (!estSel) h += `<div class="tarjeta panel"><h2>Establecimientos por sección</h2>
     <div class="tabla-wrap"><table class="calor"><tr><th>Establecimiento</th><th class="c">Total</th>${secs.map(s => `<th class="c" title="${E(s[1])}">${s[0]}</th>`).join('')}</tr>
     ${r.establecimientos.map(e => { const l = r.filas.filter(x => x.codigo === e.codigo); return `<tr><td>${E(e.nombre)}</td>${celda(pct(l), e.nombre + ': total')}${secs.map(s => celda(pct(l.filter(x => x.sec === s[0])), e.nombre + ' · ' + s[1])).join('')}</tr>`; }).join('')}</table></div>
     <p class="pie">${secs.map(s => `<b>${s[0]}</b> ${E(s[1])}`).join(' · ')}</p></div>`;
@@ -178,7 +178,7 @@ function vistaRed(r) {
   });
   const lista = Object.values(por).sort((a, b) => b.alta - a.alta || b.no - a.no || b.parcial - a.parcial);
   const vis = verTodas ? lista : lista.slice(0, 15);
-  h += `<div class="tarjeta panel"><h2>${estSel ? 'Brechas del establecimiento' : 'Brechas más frecuentes'}</h2><p class="nota">Ítems en «No cumple» o «Parcial», primero los marcados con prioridad alta. Sirven de base para el plan de trabajo; las medidas las define cada establecimiento.</p>
+  h += `<div class="tarjeta panel"><h2>${estSel ? 'Brechas del establecimiento' : 'Brechas más frecuentes'}</h2>
     ${lista.length ? `<div class="tabla-wrap"><table><tr><th>ID</th><th>Ítem</th><th class="num">No cumple</th><th class="num">Parcial</th><th class="num">Prioridad alta</th>${estSel ? '' : '<th>Establecimientos</th>'}</tr>
     ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.item)}</td><td class="num"><b>${a.no || ''}</b></td><td class="num">${a.parcial || ''}</td><td class="num">${a.alta || ''}</td>${estSel ? '' : `<td>${E(a.est.join('; '))}</td>`}</tr>`).join('')}</table></div>
     ${lista.length > 15 ? `<button class="mas" data-act="todas">${verTodas ? 'Ver solo las 15 primeras' : 'Ver las ' + lista.length + ' brechas'}</button>` : ''}` : '<div class="vacio">Todavía no hay brechas registradas.</div>'}</div>`;
@@ -194,7 +194,7 @@ function vistaComparativo(R) {
   let h = `<div class="kpis" style="grid-template-columns:repeat(${Math.min(R.length, 4)},1fr)">${R.map(r => { const ap = r.filas.filter(x => x.aplica !== 'No aplica'), q = pct(r.filas); return `<div class="tarjeta kpi" style="border-top:4px solid ${S.temaRed(r.nombre).fuerte}">
     <span style="font-weight:700;color:${S.temaRed(r.nombre).fuerte}">${E(r.nombre)}</span><b>${q == null ? 's/d' : q + ' %'}</b><span>cumplimiento · ${ap.length ? Math.round(ap.filter(x => x.estado).length * 100 / ap.length) : 0} % relevado</span>
     <span style="display:block;margin-top:6px">${r.establecimientos.filter(e => /Relevado|Validado/.test(e.estado)).length} de ${r.establecimientos.length} establecimientos relevados</span></div>`; }).join('')}</div>`;
-  h += `<div class="tarjeta panel"><h2>Cumplimiento por sección en cada red</h2><p class="nota">Las redes trabajan en forma independiente; la comparación ayuda a identificar necesidades comunes.</p>${leyenda()}
+  h += `<div class="tarjeta panel"><h2>Cumplimiento por sección en cada red</h2>${leyenda()}
     <div class="tabla-wrap"><table class="calor"><tr><th>Sección</th>${R.map(r => `<th class="c">${E(r.nombre)}</th>`).join('')}</tr>
     ${secs.map(s => `<tr><td><b>${s[0]}</b> · ${E(s[1])}</td>${R.map(r => celda(pct(r.filas.filter(x => x.sec === s[0])), r.nombre + ' · ' + s[1])).join('')}</tr>`).join('')}
     <tr><td><b>Total</b></td>${R.map(r => celda(pct(r.filas), r.nombre + ': total')).join('')}</tr></table></div></div>`;
@@ -205,7 +205,7 @@ function vistaComparativo(R) {
   }));
   const lista = Object.values(por).map(a => Object.assign(a, { redes: Object.keys(a.red).length })).sort((a, b) => b.redes - a.redes || b.total - a.total);
   const vis = verTodas ? lista : lista.slice(0, 15);
-  h += `<div class="tarjeta panel"><h2>Brechas comunes entre redes</h2><p class="nota">Cantidad de establecimientos de cada red con el ítem en «No cumple» (y en «Parcial»). Primero, las brechas presentes en más de una red.</p>
+  h += `<div class="tarjeta panel"><h2>Brechas comunes entre redes</h2>
     ${lista.length ? `<div class="tabla-wrap"><table><tr><th>ID</th><th>Ítem</th>${R.map(r => `<th class="num">${E(r.nombre)}</th>`).join('')}</tr>
     ${vis.map(a => `<tr><td>${E(a.id)}</td><td>${E(a.item)}</td>${R.map(r => { const k = a.red[r.nombre]; return `<td class="num">${k ? `<b>${k.no}</b> · ${k.parcial}` : '–'}</td>`; }).join('')}</tr>`).join('')}</table></div>
     <p class="pie">En cada celda: establecimientos en «No cumple» · en «Parcial».</p>

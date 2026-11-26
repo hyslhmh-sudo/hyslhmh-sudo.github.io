@@ -61,7 +61,7 @@ footer{text-align:center;padding:10px 16px 28px}footer img{width:66.67%;min-widt
 <body>
 <header class="barra">
   <a class="icono" href="index.html" aria-label="Inicio"><span class="ms">home</span></a>
-  <h1>Agenda telefónica<small>Internos, emergencias, organismos, empresas y proveedores · versión 0</small></h1>
+  <h1>Agenda telefónica<small>Internos, emergencias, organismos, empresas y proveedores</small></h1>
   <button class="icono" type="button" onclick="window.print()" aria-label="Imprimir"><span class="ms">print</span></button>
 </header>
 <main id="app"><p class="mini">Cargando…</p></main>
@@ -130,7 +130,7 @@ function bloque(nombreLoc, filas) {
     const fs = filas.filter(f => f.cat === c);
     if (POR_EST.indexOf(c) < 0) return `<h3 class="cat">${E(c)}</h3><div class="grid">${fs.map(item).join('')}</div>`;
     const ests = []; fs.forEach(f => { if (ests.indexOf(f.est) < 0) ests.push(f.est); });
-    return ests.map(e => `<h3 class="cat">${E(c)} · ${E(estNombre(e) || 'Todos')}</h3>${c === 'Interno' && e === 'HMH' && fs.some(f => f.guia) ? '<p class="mini" style="margin-top:-4px">Incluye la guía telefónica del HMH (servicio e interno), que se actualiza en el hospital. Desde afuera: línea general y pedir el interno.</p>' : ''}<div class="grid">${fs.filter(f => f.est === e).map(item).join('')}</div>`).join('');
+    return ests.map(e => `<h3 class="cat">${E(c)} · ${E(estNombre(e) || 'Todos')}</h3><div class="grid">${fs.filter(f => f.est === e).map(item).join('')}</div>`).join('');
   };
   return `<h2 class="loc"><span class="ms">location_city</span>${E(nombreLoc)}</h2>` + cats.map(grupo).join('')
     + (sinCat.length ? `<h3 class="cat">Otros</h3><div class="grid">${sinCat.map(item).join('')}</div>` : '');
@@ -166,7 +166,7 @@ function pintar() {
   <div class="chips cat" role="group" aria-label="Tipo"><button type="button" data-cat="" aria-pressed="${!cat}">Todos los tipos</button>${D.categorias.filter(c => D.filas.some(f => f.cat === c)).map(c => `<button type="button" data-cat="${E(c)}" aria-pressed="${c === cat}">${E(c)}</button>`).join('')}</div>
   <div class="acc no-imp"><button class="btn" type="button" id="csv"><span class="ms">download</span> Descargar CSV</button></div>
   ${cuerpo || '<p class="vacio">No hay contactos que coincidan con la búsqueda.</p>'}
-  <p class="mini">Versión 0. Fuente de cada dato en la planilla de la agenda. Actualizado según la última carga.</p>`;
+`;
   const inp = document.getElementById('q');
   inp.addEventListener('input', () => { q = inp.value; const p = inp.selectionStart; pintar(); const n = document.getElementById('q'); n.focus(); try { n.setSelectionRange(p, p); } catch (e) {} });
   app.querySelectorAll('[data-loc]').forEach(b => b.onclick = () => { loc = b.dataset.loc; pintar(); });
