@@ -154,7 +154,7 @@ const claseEst = e => 'e' + Math.max(0, ESTADOS.indexOf(e));
 const nOrden = p => { const n = parseInt(p['Orden de redacción'], 10); return p.Clave === 'PGC' ? 0 : isNaN(n) ? (EN_PE.indexOf(p.Clave) >= 0 ? 200 : 100) : n; };
 
 async function cargar(avisar) {
-  app.innerHTML = '<div class="vacio">Cargando… (lee la planilla del plan y el COE: puede tardar unos segundos)</div>';
+  app.innerHTML = '<div class="vacio">Cargando…</div>';
   try {
     if (!cat) { const c = await S.api('plan_catalogo'); if (!c.ok) throw c; cat = c; }
     if (!cat.planes.length) { app.innerHTML = REGLA + '<div class="tarjeta vacio">No hay establecimientos con plan (hoja PLANES).</div>'; return; }
