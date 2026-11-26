@@ -346,7 +346,7 @@ async function pintarTextos(clave) {
   catch (e) { caja.innerHTML = `<div class="vacio">${E((e && (e.error || e.message)) || 'No se pudo leer el texto.')}</div>`; return; }
   const l = r.textos || [];
   if (!$('#ttextos')) return;
-  $('#ttextos').innerHTML = l.length ? l.map(b => `<details class="tarjeta" style="margin:8px 0;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">${E(b.titulo || b.codigo)} <span class="chip ${/LEY/.test(b.origen) ? '' : 'sd'}">${E(b.origen || 's/d')}</span>${b.propio ? ' <span class="chip ok">texto propio del hospital</span>' : ''}${b.estado && b.estado !== 'Aprobado v0' ? ` <span class="chip sd">${E(b.estado)}</span>` : ''}</summary>
+  $('#ttextos').innerHTML = l.length ? l.map(b => `<details class="tarjeta" style="margin:8px 0;padding:10px 12px"><summary style="cursor:pointer;font-weight:700">${E(b.titulo || b.codigo)} <span class="chip ${/LEY/.test(b.origen) ? '' : 'sd'}">${E(b.origen || 's/d')}</span>${b.propio ? ' <span class="chip ok">texto propio del hospital</span>' : ''}${b.estado && !/^Aprobado( v0)?$/.test(b.estado) ? ` <span class="chip sd">${E(b.estado)}</span>` : ''}</summary>
       <div class="sub" style="margin:6px 0 8px">${E(b.cita || 'cita s/d (revisar)')} · bloque ${E(b.codigo)}</div>${mdHtml(b.texto)}</details>`).join('') : '<div class="vacio">Sin texto cargado para este plan.</div>';
 }
 function planActual() { return cat.planes.find(x => x.codigo === est) || {}; }

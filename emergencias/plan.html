@@ -176,7 +176,7 @@ async function vistaHoja(codigo, hoja, forzar) {
   const vis = []; d.cab.forEach((c, j) => { if (c && !d.calculadas[j] && vis.length < 4) vis.push(j); });
   const jEst = d.cab.indexOf('Estado'); if (jEst >= 0 && vis.indexOf(jEst) < 0) vis.push(jEst);
   const puede = d.puedeCargar;
-  $('#hoja').innerHTML = (hoja === 'TEXTOS PROPIOS' ? '<div class="regla">Un texto propio reemplaza al bloque común <b>solo en este establecimiento</b>. Copiá el código del bloque tal como está en el texto común (por ejemplo T-05-02) y escribí el texto completo que lo reemplaza. Con estado «Aprobado v0» entra limpio al borrador; con otro estado entra marcado para revisar.</div>' : '') +
+  $('#hoja').innerHTML = (hoja === 'TEXTOS PROPIOS' ? '<div class="regla">Un texto propio reemplaza al bloque común <b>solo en este establecimiento</b>. Copiá el código del bloque tal como está en el texto común (por ejemplo T-05-02) y escribí el texto completo que lo reemplaza. Con estado «Aprobado» entra limpio al borrador; con otro estado entra marcado para revisar.</div>' : '') +
     `<div class="acc" style="margin-bottom:10px"><span class="sub" style="flex:1">${d.filas.length} filas · tocá una fila para ver o cargar sus datos.${d.calculadas.some(Boolean) ? ' Las columnas calculadas se completan solas en la planilla.' : ''}</span>
       ${puede && d.nuevas ? '<button class="btn mini" data-act="nueva"><span class="ms">add</span>Agregar fila</button>' : ''}</div>
     <div class="tabla-wrap"><table class="tabla"><thead><tr>${vis.map(j => `<th>${E(d.cab[j])}</th>`).join('')}</tr></thead><tbody>` +
