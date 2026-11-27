@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow">
-<script>/* 01/11/2026 · Por ahora la app solo comparte PHR: esta pantalla es solo para Administración.
-   Sin sesión de Administración se vuelve al inicio sin mostrar nada. (Los datos además los bloquea el servidor.) */
-(function(){var ok=false;try{var u=JSON.parse(localStorage.getItem(localStorage.getItem('starh.vista.token')?'starh.vista.usuario':'starh.usuario')||'null');ok=!!(u&&u.rol==='Administración'&&localStorage.getItem('starh.token'));}catch(e){}
+<script>/* 27/11/2026 · STAR-H: lo ven todos los que ingresan; carga solo Administración (lo controla el servidor).
+   Sin sesión se vuelve al inicio sin mostrar nada. */
+(function(){var ok=false;try{var u=JSON.parse(localStorage.getItem(localStorage.getItem('starh.vista.token')?'starh.vista.usuario':'starh.usuario')||'null');ok=!!(u&&localStorage.getItem('starh.token'));}catch(e){}
 if(!ok){document.documentElement.style.display='none';location.replace('index.html');}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>STAR-H · Tablero</title>

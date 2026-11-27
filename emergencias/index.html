@@ -821,7 +821,7 @@ function pintar() {
   if (otro && !u.vistaDe) revisarDatos(false); // 14/11/2026 · en «Ver como» no se abre «Mis datos» (solo lectura)
   const candado = m => `<span class="candado"><span class="ms" style="font-size:15px">lock</span>${m.flag === 'ish' ? 'Solo Administración por ahora' : 'Sin acceso con tu usuario'}</span>`;
   // 15/11/2026 (Belén: «los usuarios deberían ver las tres»): STAR-H e ISH se muestran a todos los que ingresan; sin permiso, con candado y sin enlace.
-  const cerr = m => !!(u && ((m.flag && u[m.flag] === false) || (u.rol !== 'Administración' && ((m.k === 'starh' && !u.starh) || (m.k === 'ish' && !u.ish)))));
+  const cerr = m => !!(u && ((m.flag && m.k !== 'starh' && u[m.flag] === false) || (u.rol !== 'Administración' && m.k === 'ish' && !u.ish)));
   // 13/11/2026 (Belén: «todas las tarjetas deberían obedecer a la paleta de colores, mismo tamaño de título»): una sola tarjeta para todas las secciones,
   // con la paleta del sitio («alerta de triaje»: #172B4D, #2F5BEA, #E4EAFB, #F5F7FB y coral #F57C00 solo para alta prioridad). Respuesta: rellena en #172B4D con borde coral.
   const tarjeta = m => `<div class="tj${m.grupo === 'gem' || m.grupo === 'resil' || m.grupo === 'coesp' ? ' tj-resp' : ''}${m.grupo === 'prep' ? ' tj-info' : ''}${cerr(m) ? ' bloq' : ''}" ${cerr(m) ? 'aria-disabled="true"' : `role="link" tabindex="0" data-href="${m.href}"`} data-k="${m.k}" aria-label="${E(m.t)}" style="--bg:${m.bg || m.c || '#2F5BEA'};--c:${m.c || '#172B4D'};--cc:${m.cc || '#E4EAFB'}">
